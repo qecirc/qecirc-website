@@ -112,10 +112,11 @@ def check_circuit_vs_matrices(
         return ValidationResult(valid=False, mismatch_details=f"stim parse error: {exc}")
 
     n = Hx.shape[1]
-    if tableau.num_qubits < n:
+    circuit_qubits = len(tableau)
+    if circuit_qubits < n:
         return ValidationResult(
             valid=False,
-            mismatch_details=f"circuit acts on {tableau.num_qubits} qubits but code has n={n}",
+            mismatch_details=f"circuit acts on {circuit_qubits} qubits but code has n={n}",
         )
 
     # Apply qubit permutation if provided
