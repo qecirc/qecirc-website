@@ -1,73 +1,129 @@
 ---
-import type { CodeFilters } from "../lib/queries";
-
 interface Props {
-  filters: CodeFilters;
+  rawN: string;
+  rawK: string;
+  rawD: string;
+  errors: { n: boolean; k: boolean; d: boolean };
   hasFilters: boolean;
+  focus: string;
 }
 
-const { filters, hasFilters } = Astro.props;
+const { rawN, rawK, rawD, errors, hasFilters, focus } = Astro.props;
+const anyError = errors.n || errors.k || errors.d;
+
+function inputClass(hasError: boolean): string {
+  const base = "w-24 rounded-r border border-l-0 px-2 py-1 text-sm focus:outline-none border-gray-200 focus:border-gray-400";
+  return hasError ? `${base} ring-1 ring-red-300` : base;
+}
 ---
 
-<form id="code-filter" method="GET" action="/codes" class="mb-6 flex flex-wrap items-end gap-3">
-  <label class="text-sm">
-    <span class="block text-gray-500 mb-1">n</span>
-    <input
-      type="number"
-      name="n"
-      value={filters.n ?? ""}
-      min="1"
-      class="w-20 rounded border border-gray-200 px-2 py-1.5 text-sm focus:border-gray-400 focus:outline-none"
-      placeholder="any"
-    />
-  </label>
-  <label class="text-sm">
-    <span class="block text-gray-500 mb-1">k</span>
-    <input
-      type="number"
-      name="k"
-      value={filters.k ?? ""}
-      min="0"
-      class="w-20 rounded border border-gray-200 px-2 py-1.5 text-sm focus:border-gray-400 focus:outline-none"
-      placeholder="any"
-    />
-  </label>
-  <label class="text-sm">
-    <span class="block text-gray-500 mb-1">d</span>
-    <input
-      type="number"
-      name="d"
-      value={filters.d ?? ""}
-      min="1"
-      class="w-20 rounded border border-gray-200 px-2 py-1.5 text-sm focus:border-gray-400 focus:outline-none"
-      placeholder="any"
-    />
-  </label>
-  <button
-    type="submit"
-    class="rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700"
-  >
-    Apply
-  </button>
-  {hasFilters && (
-    <a href="/codes" class="text-sm text-gray-500 hover:text-gray-900 underline">Clear</a>
-  )}
+<form id="code-filter" method="GET" action="/codes" class="mb-6">
+  <div class="flex flex-wrap items-center gap-3">
+    <div class="flex items-center">
+      <span class="rounded-l border border-r-0 border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-500">n</span>
+      <input type="text" name="n" value={rawN} class={inputClass(errors.n)} placeholder=">3,<10" data-filter />
+    </div>
+    <div class="flex items-center">
+      <span class="rounded-l border border-r-0 border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-500">k</span>
+      <input type="text" name="k" value={rawK} class={inputClass(errors.k)} placeholder=">=2" data-filter />
+    </div>
+    <div class="flex items-center">
+      <span class="rounded-l border border-r-0 border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-500">d</span>
+      <input type="text" name="d" value={rawD} class={inputClass(errors.d)} placeholder="!=5" data-filter />
+    </div>
+    <div class="ml-auto text-xs" id="filter-status">
+      {anyError ? (
+        <span id="filter-error" class="text-red-500">Invalid filter</span>
+      ) : hasFilters ? (
+        <a href="/codes" class="text-gray-500 hover:text-gray-900 underline">Clear</a>
+      ) : (
+        <span class="text-gray-400">e.g. 7, &gt;3, &lt;=10, !=5</span>
+      )}
+      {!anyError && <span id="filter-error" class="text-red-500 hidden">Invalid filter</span>}
+    </div>
+  </div>
 </form>
 
-<script>
-  const form = document.getElementById("code-filter") as HTMLFormElement;
-  let debounceTimer: ReturnType<typeof setTimeout>;
+<script define:vars={{ focus }}>
+  const VALID_FIELDS = ["n", "k", "d"];
+  const form = document.getElementById("code-filter");
+  const errorSpan = document.getElementById("filter-error");
+  const statusDiv = document.getElementById("filter-status");
+  const inputs = form.querySelectorAll("input[data-filter]");
+  let debounceTimer;
+  let lastEditedField = "";
+
+  // Restore focus after page reload, then strip focus param from visible URL
+  if (focus && VALID_FIELDS.includes(focus)) {
+    const target = form.querySelector('input[name="' + focus + '"]');
+    if (target) {
+      target.focus();
+      const val = target.value;
+      target.setSelectionRange(val.length, val.length);
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete("focus");
+    history.replaceState(null, "", url.toString());
+  }
+
+  function isValidFilter(value) {
+    const trimmed = value.trim();
+    if (trimmed === "") return true;
+    const parts = trimmed.split(",");
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i].trim();
+      if (part === "") continue;
+      if (!/^(!=|>=|<=|>|<|=)?\s*\d+$/.test(part)) return false;
+    }
+    return true;
+  }
+
+  function validateAndUpdate() {
+    let hasError = false;
+    inputs.forEach(function (input) {
+      const invalid = !isValidFilter(input.value);
+      if (invalid) hasError = true;
+      if (invalid) {
+        input.classList.add("ring-1", "ring-red-300");
+      } else {
+        input.classList.remove("ring-1", "ring-red-300");
+      }
+    });
+    if (hasError) {
+      errorSpan.classList.remove("hidden");
+      // Hide other status children
+      Array.from(statusDiv.children).forEach(function (el) {
+        if (el !== errorSpan) el.classList.add("hidden");
+      });
+    } else {
+      errorSpan.classList.add("hidden");
+      Array.from(statusDiv.children).forEach(function (el) {
+        if (el !== errorSpan) el.classList.remove("hidden");
+      });
+    }
+    return !hasError;
+  }
 
   function submitFilters() {
-    const data = new FormData(form);
+    if (!validateAndUpdate()) return;
     const params = new URLSearchParams();
+    const data = new FormData(form);
     data.forEach(function (value, key) {
       if (typeof value === "string" && value.trim() !== "") {
         params.set(key, value.trim());
       }
     });
-    const qs = params.toString();
-    window.location.href = "/codes" + (qs ? "?" + qs : "");
+    if (lastEditedField && VALID_FIELDS.includes(lastEditedField)) {
+      params.set("focus", lastEditedField);
+    }
+    const target = "/codes" + (params.size > 0 ? "?" + params.toString() : "");
+    // Skip reload if URL would be the same (minus focus param)
+    const currentParams = new URLSearchParams(window.location.search);
+    currentParams.delete("focus");
+    const newCheck = new URLSearchParams(params);
+    newCheck.delete("focus");
+    if (newCheck.toString() === currentParams.toString()) return;
+    window.location.href = target;
   }
 
   form.addEventListener("submit", function (e) {
@@ -76,8 +132,12 @@ const { filters, hasFilters } = Astro.props;
     submitFilters();
   });
 
-  form.addEventListener("input", function () {
+  form.addEventListener("input", function (e) {
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(submitFilters, 400);
+    if (e.target && e.target.name && VALID_FIELDS.includes(e.target.name)) {
+      lastEditedField = e.target.name;
+    }
+    validateAndUpdate();
+    debounceTimer = setTimeout(submitFilters, 800);
   });
 </script>

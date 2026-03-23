@@ -97,10 +97,50 @@ export function getCircuitsForFunctionality(
   return rows.map((c) => ({ ...c, tags: getTagsFor("circuit", c.id) }));
 }
 
+type FilterOp = "=" | "!=" | ">" | ">=" | "<" | "<=";
+
+export interface FilterCondition {
+  op: FilterOp;
+  value: number;
+}
+
 export interface CodeFilters {
-  n?: number;
-  k?: number;
-  d?: number;
+  n?: FilterCondition[];
+  k?: FilterCondition[];
+  d?: FilterCondition[];
+}
+
+const VALID_OPS: FilterOp[] = ["=", "!=", ">=", ">", "<=", "<"];
+
+/** Parse a filter string like "7", ">3,<10", "!=1" into conditions. */
+export function parseFilterString(input: string): FilterCondition[] | null {
+  const raw = input.trim();
+  if (!raw) return null;
+
+  const parts = raw.split(",");
+  const conditions: FilterCondition[] = [];
+
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+
+    const match = trimmed.match(/^(!=|>=|<=|>|<|=)?\s*(\d+)$/);
+    if (!match) return null;
+
+    const op = (match[1] || "=") as FilterOp;
+    const value = parseInt(match[2], 10);
+    if (!Number.isFinite(value) || value < 0) return null;
+
+    conditions.push({ op, value });
+  }
+
+  return conditions.length > 0 ? conditions : null;
+}
+
+export function hasActiveFilters(filters: CodeFilters): boolean {
+  return (filters.n?.length ?? 0) > 0
+    || (filters.k?.length ?? 0) > 0
+    || (filters.d?.length ?? 0) > 0;
 }
 
 export function filterCodes(filters: CodeFilters): (Code & { tags: string[] })[] {
@@ -108,18 +148,18 @@ export function filterCodes(filters: CodeFilters): (Code & { tags: string[] })[]
   const conditions: string[] = [];
   const params: number[] = [];
 
-  if (filters.n != null) {
-    conditions.push("c.n = ?");
-    params.push(filters.n);
+  function addConditions(column: string, filter?: FilterCondition[]) {
+    if (!filter) return;
+    for (const { op, value } of filter) {
+      if (!(VALID_OPS as readonly string[]).includes(op)) continue;
+      conditions.push(`c.${column} ${op} ?`);
+      params.push(value);
+    }
   }
-  if (filters.k != null) {
-    conditions.push("c.k = ?");
-    params.push(filters.k);
-  }
-  if (filters.d != null) {
-    conditions.push("c.d = ?");
-    params.push(filters.d);
-  }
+
+  addConditions("n", filters.n);
+  addConditions("k", filters.k);
+  addConditions("d", filters.d);
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const codes = db
