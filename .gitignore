@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Node
+node_modules/
+.env
+.env.*
+
+# Build output
+dist/
+.astro/
+
+# Database (dev only)
+data/*.db
+
+# OS
+.DS_Store
