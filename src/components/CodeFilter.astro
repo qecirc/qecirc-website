@@ -1,0 +1,71 @@
+---
+import type { CodeFilters } from "../lib/queries";
+
+interface Props {
+  filters: CodeFilters;
+  hasFilters: boolean;
+}
+
+const { filters, hasFilters } = Astro.props;
+---
+
+<form id="code-filter" method="GET" action="/codes" class="mb-6 flex flex-wrap items-end gap-3">
+  <label class="text-sm">
+    <span class="block text-gray-500 mb-1">n</span>
+    <input
+      type="number"
+      name="n"
+      value={filters.n ?? ""}
+      min="1"
+      class="w-20 rounded border border-gray-200 px-2 py-1.5 text-sm focus:border-gray-400 focus:outline-none"
+      placeholder="any"
+    />
+  </label>
+  <label class="text-sm">
+    <span class="block text-gray-500 mb-1">k</span>
+    <input
+      type="number"
+      name="k"
+      value={filters.k ?? ""}
+      min="0"
+      class="w-20 rounded border border-gray-200 px-2 py-1.5 text-sm focus:border-gray-400 focus:outline-none"
+      placeholder="any"
+    />
+  </label>
+  <label class="text-sm">
+    <span class="block text-gray-500 mb-1">d</span>
+    <input
+      type="number"
+      name="d"
+      value={filters.d ?? ""}
+      min="1"
+      class="w-20 rounded border border-gray-200 px-2 py-1.5 text-sm focus:border-gray-400 focus:outline-none"
+      placeholder="any"
+    />
+  </label>
+  <button
+    type="submit"
+    class="rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700"
+  >
+    Apply
+  </button>
+  {hasFilters && (
+    <a href="/codes" class="text-sm text-gray-500 hover:text-gray-900 underline">Clear</a>
+  )}
+</form>
+
+<script>
+  const form = document.getElementById("code-filter") as HTMLFormElement;
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const data = new FormData(form);
+    const params = new URLSearchParams();
+    data.forEach(function (value, key) {
+      if (typeof value === "string" && value.trim() !== "") {
+        params.set(key, value.trim());
+      }
+    });
+    const qs = params.toString();
+    window.location.href = "/codes" + (qs ? "?" + qs : "");
+  });
+</script>

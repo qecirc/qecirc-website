@@ -3,17 +3,42 @@ export const prerender = false;
 
 import Layout from "../../components/Layout.astro";
 import CodeCard from "../../components/CodeCard.astro";
+import CodeFilter from "../../components/CodeFilter.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
-import { getAllCodes } from "../../lib/queries";
+import { filterCodes, countAllCodes } from "../../lib/queries";
+import type { CodeFilters } from "../../lib/queries";
 
-const codes = getAllCodes();
+function parseIntParam(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const num = parseInt(value, 10);
+  return Number.isFinite(num) && num >= 0 ? num : undefined;
+}
+
+const filters: CodeFilters = {
+  n: parseIntParam(Astro.url.searchParams.get("n")),
+  k: parseIntParam(Astro.url.searchParams.get("k")),
+  d: parseIntParam(Astro.url.searchParams.get("d")),
+};
+
+const hasFilters = filters.n != null || filters.k != null || filters.d != null;
+const codes = filterCodes(filters);
+const totalCount = hasFilters ? countAllCodes() : codes.length;
 ---
 
 <Layout title="Codes">
   <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Codes" }]} />
   <h1 class="text-2xl font-bold mb-6">Codes</h1>
+
+  <CodeFilter filters={filters} hasFilters={hasFilters} />
+
+  <p class="text-sm text-gray-500 mb-4">
+    {hasFilters
+      ? `Showing ${codes.length} of ${totalCount} codes`
+      : `${totalCount} ${totalCount === 1 ? "code" : "codes"}`}
+  </p>
+
   {codes.length === 0 ? (
-    <p class="text-gray-500">No codes yet.</p>
+    <p class="text-gray-500">No codes match the current filters.</p>
   ) : (
     <div class="grid gap-4">
       {codes.map((code) => (

@@ -97,6 +97,43 @@ export function getCircuitsForFunctionality(
   return rows.map((c) => ({ ...c, tags: getTagsFor("circuit", c.id) }));
 }
 
+export interface CodeFilters {
+  n?: number;
+  k?: number;
+  d?: number;
+}
+
+export function filterCodes(filters: CodeFilters): (Code & { tags: string[] })[] {
+  const db = getDb();
+  const conditions: string[] = [];
+  const params: number[] = [];
+
+  if (filters.n != null) {
+    conditions.push("c.n = ?");
+    params.push(filters.n);
+  }
+  if (filters.k != null) {
+    conditions.push("c.k = ?");
+    params.push(filters.k);
+  }
+  if (filters.d != null) {
+    conditions.push("c.d = ?");
+    params.push(filters.d);
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const codes = db
+    .prepare(`SELECT * FROM codes c ${where} ORDER BY c.name`)
+    .all(...params) as Code[];
+  return codes.map((c) => ({ ...c, tags: getTagsFor("code", c.id) }));
+}
+
+export function countAllCodes(): number {
+  const db = getDb();
+  const row = db.prepare("SELECT COUNT(*) as count FROM codes").get() as { count: number };
+  return row.count;
+}
+
 export function searchCodes(query: string): (Code & { tags: string[] })[] {
   const db = getDb();
   const escaped = query.replace(/[%_\\]/g, "\\$&");
