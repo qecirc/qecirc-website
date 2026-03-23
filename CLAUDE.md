@@ -85,11 +85,11 @@ There is **no automation** in the ingestion pipeline for now.
 | Styling    | Tailwind CSS                  | Standard utility-first, minimal custom CSS          |
 | Hosting    | Self-hosted (agnostic)        | Avoid platform lock-in                              |
 
-**Rendering strategy — Astro hybrid mode:**
+**Rendering strategy — Astro v6 (static default, SSR opt-in):**
 
-- Static pages: landing, code/functionality index pages (pre-rendered at build time)
-- SSR + API endpoints: search, tag filtering, circuit detail (rendered on request)
-- Interactive islands: filter UI, circuit viewer (client-side JS, minimal scope)
+- Static pages: landing page, 404 (pre-rendered at build time)
+- SSR pages (`prerender = false`): all `/codes/...` routes (rendered on request, read from SQLite)
+- Interactive islands: copy button in CodeBlock (minimal client-side JS)
 
 This keeps the site fast and simple while scaling comfortably to thousands of circuits.
 
@@ -104,7 +104,8 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 │   ├── lib/               # DB client, STIM parser, helpers
 │   └── types/             # Shared TypeScript types
 ├── data/
-│   └── qecirc.db          # SQLite database (gitignored in prod, seeded in dev)
+│   ├── migrations/        # SQL migration files (e.g. 001_initial.sql)
+│   └── qecirc.db          # SQLite database (gitignored, seeded in dev)
 ├── .github/
 │   └── ISSUE_TEMPLATE/    # Circuit submission issue template
 ├── docs/
@@ -159,6 +160,7 @@ npm run lint         # ESLint
 npm run test         # Run test suite
 npm run db:migrate   # Apply database migrations
 npm run db:seed      # Seed database with example circuits (dev only)
+npm run db:reset     # Drop database, re-migrate, and re-seed
 ```
 
 ---
