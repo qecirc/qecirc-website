@@ -1,0 +1,137 @@
+---
+---
+
+<div id="search-bar" class="relative">
+  <input
+    type="text"
+    class="search-input w-48 rounded border border-gray-200 bg-white px-3 py-1.5 text-sm placeholder-gray-400 focus:border-gray-400 focus:outline-none"
+    placeholder="Search codes..."
+    aria-label="Search codes"
+    autocomplete="off"
+  />
+  <ul class="search-results absolute right-0 top-full mt-1 w-72 rounded border border-gray-200 bg-white shadow-lg hidden z-50 max-h-80 overflow-y-auto">
+  </ul>
+</div>
+
+<script>
+  const container = document.getElementById("search-bar") as HTMLElement;
+  const input = container.querySelector("input") as HTMLInputElement;
+  const resultsList = container.querySelector("ul") as HTMLUListElement;
+
+  let debounceTimer: ReturnType<typeof setTimeout>;
+  let activeIndex = -1;
+
+  function show() {
+    resultsList.classList.remove("hidden");
+  }
+
+  function hide() {
+    resultsList.classList.add("hidden");
+    activeIndex = -1;
+  }
+
+  function updateActive() {
+    const items = resultsList.querySelectorAll("li");
+    items.forEach(function (item, i) {
+      if (i === activeIndex) {
+        item.classList.add("bg-gray-100");
+      } else {
+        item.classList.remove("bg-gray-100");
+      }
+    });
+  }
+
+  function navigateTo(slug: string) {
+    window.location.href = "/codes/" + slug;
+  }
+
+  async function doSearch(query: string) {
+    if (query.length < 2) {
+      hide();
+      return;
+    }
+
+    const res = await fetch("/api/search?q=" + encodeURIComponent(query));
+    const results: { name: string; slug: string; params: string; tags: string[] }[] = await res.json();
+
+    resultsList.innerHTML = "";
+    activeIndex = -1;
+
+    if (results.length === 0) {
+      resultsList.innerHTML = '<li class="px-3 py-2 text-sm text-gray-400">No results</li>';
+      show();
+      return;
+    }
+
+    results.forEach(function (code) {
+      const li = document.createElement("li");
+      li.className = "px-3 py-2 text-sm cursor-pointer hover:bg-gray-100";
+      li.dataset.slug = code.slug;
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "font-medium";
+      nameSpan.textContent = code.name;
+
+      const paramsSpan = document.createElement("span");
+      paramsSpan.className = "ml-1.5 text-gray-400";
+      paramsSpan.textContent = code.params;
+
+      li.appendChild(nameSpan);
+      li.appendChild(paramsSpan);
+
+      if (code.tags.length > 0) {
+        const tagsDiv = document.createElement("div");
+        tagsDiv.className = "flex flex-wrap gap-1 mt-0.5";
+        code.tags.forEach(function (tag) {
+          const tagSpan = document.createElement("span");
+          tagSpan.className = "inline-block rounded bg-gray-100 px-1.5 py-0 text-xs text-gray-500";
+          tagSpan.textContent = tag;
+          tagsDiv.appendChild(tagSpan);
+        });
+        li.appendChild(tagsDiv);
+      }
+
+      li.addEventListener("click", function () {
+        navigateTo(code.slug);
+      });
+
+      resultsList.appendChild(li);
+    });
+
+    show();
+  }
+
+  input.addEventListener("input", function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function () {
+      doSearch(input.value.trim());
+    }, 200);
+  });
+
+  input.addEventListener("keydown", function (e) {
+    const items = resultsList.querySelectorAll("li[data-slug]");
+    if (items.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      activeIndex = Math.min(activeIndex + 1, items.length - 1);
+      updateActive();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      activeIndex = Math.max(activeIndex - 1, 0);
+      updateActive();
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      const slug = (items[activeIndex] as HTMLElement).dataset.slug;
+      if (slug) navigateTo(slug);
+    } else if (e.key === "Escape") {
+      hide();
+    }
+  });
+
+  document.addEventListener("click", function (e) {
+    if (!container.contains(e.target as Node)) {
+      hide();
+    }
+  });
+</script>

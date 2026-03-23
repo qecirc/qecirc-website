@@ -97,6 +97,23 @@ export function getCircuitsForFunctionality(
   return rows.map((c) => ({ ...c, tags: getTagsFor("circuit", c.id) }));
 }
 
+export function searchCodes(query: string): (Code & { tags: string[] })[] {
+  const db = getDb();
+  const escaped = query.replace(/[%_\\]/g, "\\$&");
+  const pattern = `%${escaped}%`;
+  const codes = db
+    .prepare(
+      `SELECT DISTINCT c.* FROM codes c
+       LEFT JOIN taggings tg ON tg.taggable_id = c.id AND tg.taggable_type = 'code'
+       LEFT JOIN tags t ON t.id = tg.tag_id
+       WHERE c.name LIKE ? ESCAPE '\\' OR t.name LIKE ? ESCAPE '\\'
+       ORDER BY c.name
+       LIMIT 20`,
+    )
+    .all(pattern, pattern) as Code[];
+  return codes.map((c) => ({ ...c, tags: getTagsFor("code", c.id) }));
+}
+
 export function getCircuitBySlug(
   functionalityId: number,
   slug: string,

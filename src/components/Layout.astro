@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import SearchBar from "./SearchBar.astro";
 
 interface Props {
   title: string;
@@ -19,6 +20,9 @@ const { title } = Astro.props;
       <nav class="mx-auto max-w-4xl px-4 py-4 flex items-center gap-6">
         <a href="/" class="text-lg font-semibold">QECirc</a>
         <a href="/codes" class="text-sm text-gray-600 hover:text-gray-900">Codes</a>
+        <div class="ml-auto">
+          <SearchBar />
+        </div>
       </nav>
     </header>
     <main class="mx-auto max-w-4xl px-4 py-8">
