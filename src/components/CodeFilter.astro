@@ -56,8 +56,9 @@ const { filters, hasFilters } = Astro.props;
 
 <script>
   const form = document.getElementById("code-filter") as HTMLFormElement;
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
+  let debounceTimer: ReturnType<typeof setTimeout>;
+
+  function submitFilters() {
     const data = new FormData(form);
     const params = new URLSearchParams();
     data.forEach(function (value, key) {
@@ -67,5 +68,16 @@ const { filters, hasFilters } = Astro.props;
     });
     const qs = params.toString();
     window.location.href = "/codes" + (qs ? "?" + qs : "");
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    clearTimeout(debounceTimer);
+    submitFilters();
+  });
+
+  form.addEventListener("input", function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(submitFilters, 400);
   });
 </script>
