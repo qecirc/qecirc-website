@@ -108,6 +108,24 @@ export interface CodeFilters {
   n?: FilterCondition[];
   k?: FilterCondition[];
   d?: FilterCondition[];
+  tags?: string[];
+}
+
+export interface TagWithCount {
+  name: string;
+  count: number;
+}
+
+export function getCodeTagsWithCount(): TagWithCount[] {
+  const db = getDb();
+  return db
+    .prepare(
+      `SELECT t.name, COUNT(*) as count FROM tags t
+       JOIN taggings tg ON t.id = tg.tag_id
+       WHERE tg.taggable_type = 'code'
+       GROUP BY t.name ORDER BY t.name`,
+    )
+    .all() as TagWithCount[];
 }
 
 const VALID_OPS: FilterOp[] = ["=", "!=", ">=", ">", "<=", "<"];
@@ -140,13 +158,14 @@ export function parseFilterString(input: string): FilterCondition[] | null {
 export function hasActiveFilters(filters: CodeFilters): boolean {
   return (filters.n?.length ?? 0) > 0
     || (filters.k?.length ?? 0) > 0
-    || (filters.d?.length ?? 0) > 0;
+    || (filters.d?.length ?? 0) > 0
+    || (filters.tags?.length ?? 0) > 0;
 }
 
 export function filterCodes(filters: CodeFilters): (Code & { tags: string[] })[] {
   const db = getDb();
   const conditions: string[] = [];
-  const params: number[] = [];
+  const params: (number | string)[] = [];
 
   function addConditions(column: string, filter?: FilterCondition[]) {
     if (!filter) return;
@@ -160,6 +179,16 @@ export function filterCodes(filters: CodeFilters): (Code & { tags: string[] })[]
   addConditions("n", filters.n);
   addConditions("k", filters.k);
   addConditions("d", filters.d);
+
+  if (filters.tags) {
+    for (const tag of filters.tags) {
+      conditions.push(
+        `EXISTS (SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+         WHERE tg.taggable_id = c.id AND tg.taggable_type = 'code' AND t.name = ?)`,
+      );
+      params.push(tag);
+    }
+  }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const codes = db

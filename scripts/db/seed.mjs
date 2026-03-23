@@ -89,7 +89,6 @@ db.transaction(() => {
   addTag("CSS", codeId, "code");
   addTag("stabilizer", codeId, "code");
   addTag("color-code", codeId, "code");
-  addTag("[[7,1,3]]", codeId, "code");
 
   addTag("state-preparation", funcId, "functionality");
 

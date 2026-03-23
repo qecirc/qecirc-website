@@ -1,4 +1,6 @@
 ---
+import type { TagWithCount } from "../lib/queries";
+
 interface Props {
   rawN: string;
   rawK: string;
@@ -6,18 +8,34 @@ interface Props {
   errors: { n: boolean; k: boolean; d: boolean };
   hasFilters: boolean;
   focus: string;
+  allTags: TagWithCount[];
+  selectedTags: string[];
+  currentUrl: URL;
 }
 
-const { rawN, rawK, rawD, errors, hasFilters, focus } = Astro.props;
+const { rawN, rawK, rawD, errors, hasFilters, focus, allTags, selectedTags, currentUrl } = Astro.props;
 const anyError = errors.n || errors.k || errors.d;
+const selectedSet = new Set(selectedTags);
 
 function inputClass(hasError: boolean): string {
   const base = "w-24 rounded-r border border-l-0 px-2 py-1 text-sm focus:outline-none border-gray-200 focus:border-gray-400";
   return hasError ? `${base} ring-1 ring-red-300` : base;
 }
+
+function tagToggleUrl(tagName: string): string {
+  const params = new URLSearchParams(currentUrl.search);
+  params.delete("tag");
+  params.delete("focus");
+  const newTags = selectedSet.has(tagName)
+    ? selectedTags.filter((t) => t !== tagName)
+    : [...selectedTags, tagName];
+  for (const t of newTags) params.append("tag", t);
+  const qs = params.toString();
+  return "/codes" + (qs ? "?" + qs : "");
+}
 ---
 
-<form id="code-filter" method="GET" action="/codes" class="mb-6">
+<form id="code-filter" method="GET" action="/codes" class="mb-6 space-y-2">
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex items-center">
       <span class="rounded-l border border-r-0 border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-500">n</span>
@@ -42,6 +60,28 @@ function inputClass(hasError: boolean): string {
       {!anyError && <span id="filter-error" class="text-red-500 hidden">Invalid filter</span>}
     </div>
   </div>
+
+  {allTags.length > 0 && (
+    <div class="flex flex-wrap gap-1.5">
+      {allTags.map((tag) => {
+        const isSelected = selectedSet.has(tag.name);
+        const href = tagToggleUrl(tag.name);
+        return (
+          <a
+            href={href}
+            class:list={[
+              "inline-block rounded px-2 py-0.5 text-xs transition-colors",
+              isSelected
+                ? "bg-gray-900 text-white hover:bg-gray-700"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+            ]}
+          >
+            {tag.name} ({tag.count})
+          </a>
+        );
+      })}
+    </div>
+  )}
 </form>
 
 <script define:vars={{ focus }}>
@@ -91,7 +131,6 @@ function inputClass(hasError: boolean): string {
     });
     if (hasError) {
       errorSpan.classList.remove("hidden");
-      // Hide other status children
       Array.from(statusDiv.children).forEach(function (el) {
         if (el !== errorSpan) el.classList.add("hidden");
       });
@@ -113,6 +152,9 @@ function inputClass(hasError: boolean): string {
         params.set(key, value.trim());
       }
     });
+    // Preserve tag params from current URL
+    const currentTags = new URLSearchParams(window.location.search).getAll("tag");
+    currentTags.forEach(function (t) { params.append("tag", t); });
     if (lastEditedField && VALID_FIELDS.includes(lastEditedField)) {
       params.set("focus", lastEditedField);
     }
