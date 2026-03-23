@@ -5,18 +5,21 @@ import { formatCodeParams } from "../lib/queries";
 
 interface Props {
   code: Code & { tags: string[] };
+  baseUrl?: URL;
 }
 
-const { code } = Astro.props;
+const { code, baseUrl } = Astro.props;
 const { name, slug, description, tags } = code;
 const params = formatCodeParams(code);
 ---
 
-<a href={`/codes/${slug}`} class="block rounded border border-gray-200 p-4 hover:border-gray-400 transition-colors">
-  <div class="flex items-baseline gap-2 mb-1">
-    <h3 class="font-medium">{name}</h3>
-    <span class="text-sm text-gray-500">{params}</span>
-  </div>
-  {description && <p class="text-sm text-gray-600 mb-2 line-clamp-2">{description}</p>}
-  <TagList tags={tags} />
-</a>
+<div class="rounded border border-gray-200 p-4 hover:border-gray-400 transition-colors">
+  <a href={`/codes/${slug}`} class="block">
+    <div class="flex items-baseline gap-2 mb-1">
+      <h3 class="font-medium">{name}</h3>
+      <span class="text-sm text-gray-500">{params}</span>
+    </div>
+    {description && <p class="text-sm text-gray-600 mb-2 line-clamp-2">{description}</p>}
+  </a>
+  <TagList tags={tags} baseUrl={baseUrl} />
+</div>

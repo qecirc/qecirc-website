@@ -62,7 +62,7 @@ const totalCount = active ? countAllCodes() : codes.length;
   ) : (
     <div class="grid gap-4">
       {codes.map((code) => (
-        <CodeCard code={code} />
+        <CodeCard code={code} baseUrl={Astro.url} />
       ))}
     </div>
   )}
