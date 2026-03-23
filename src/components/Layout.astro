@@ -1,0 +1,33 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} - QECirc</title>
+  </head>
+  <body class="min-h-screen bg-white text-gray-900 antialiased">
+    <header class="border-b border-gray-200">
+      <nav class="mx-auto max-w-4xl px-4 py-4 flex items-center gap-6">
+        <a href="/" class="text-lg font-semibold">QECirc</a>
+        <a href="/codes" class="text-sm text-gray-600 hover:text-gray-900">Codes</a>
+      </nav>
+    </header>
+    <main class="mx-auto max-w-4xl px-4 py-8">
+      <slot />
+    </main>
+    <footer class="border-t border-gray-200 mt-16">
+      <div class="mx-auto max-w-4xl px-4 py-6 text-sm text-gray-500">
+        QECirc — A community-driven library for quantum error correction circuits.
+      </div>
+    </footer>
+  </body>
+</html>

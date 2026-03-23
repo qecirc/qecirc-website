@@ -1,0 +1,68 @@
+---
+export const prerender = false;
+
+import Layout from "../../../components/Layout.astro";
+import Breadcrumb from "../../../components/Breadcrumb.astro";
+import TagList from "../../../components/TagList.astro";
+import {
+  getCodeBySlug,
+  getFunctionalityBySlug,
+  getCircuitsForFunctionality,
+  getTagsFor,
+} from "../../../lib/queries";
+
+const { code: codeSlug, functionality: funcSlug } = Astro.params;
+const code = getCodeBySlug(codeSlug!);
+
+if (!code) {
+  return Astro.rewrite("/404");
+}
+
+const functionality = getFunctionalityBySlug(code.id, funcSlug!);
+
+if (!functionality) {
+  return Astro.rewrite("/404");
+}
+
+const circuits = getCircuitsForFunctionality(functionality.id);
+const tags = getTagsFor("functionality", functionality.id);
+---
+
+<Layout title={`${functionality.name} - ${code.name}`}>
+  <Breadcrumb items={[
+    { label: "Home", href: "/" },
+    { label: "Codes", href: "/codes" },
+    { label: code.name, href: `/codes/${codeSlug}` },
+    { label: functionality.name },
+  ]} />
+
+  <h1 class="text-2xl font-bold mb-1">{functionality.name}</h1>
+  <p class="text-sm text-gray-500 mb-4">{code.name}</p>
+
+  {functionality.description && (
+    <p class="text-gray-600 mb-4">{functionality.description}</p>
+  )}
+  <div class="mb-8">
+    <TagList tags={tags} />
+  </div>
+
+  <h2 class="text-lg font-semibold mb-4">Circuits</h2>
+  {circuits.length === 0 ? (
+    <p class="text-gray-500">No circuits yet.</p>
+  ) : (
+    <div class="grid gap-3">
+      {circuits.map((circuit) => (
+        <a
+          href={`/codes/${codeSlug}/${funcSlug}/${circuit.slug}`}
+          class="block rounded border border-gray-200 p-4 hover:border-gray-400 transition-colors"
+        >
+          <div class="flex items-baseline gap-2 mb-1">
+            <h3 class="font-medium">{circuit.name}</h3>
+            <span class="text-xs text-gray-400 uppercase">{circuit.format}</span>
+          </div>
+          <TagList tags={circuit.tags} />
+        </a>
+      ))}
+    </div>
+  )}
+</Layout>

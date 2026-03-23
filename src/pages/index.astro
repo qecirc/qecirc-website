@@ -1,14 +1,19 @@
 ---
-import "../styles/global.css";
+import Layout from "../components/Layout.astro";
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>QECirc</title>
-  </head>
-  <body>
-    <h1>QECirc</h1>
-  </body>
-</html>
+<Layout title="Home">
+  <div class="max-w-2xl">
+    <h1 class="text-3xl font-bold mb-4">QECirc</h1>
+    <p class="text-gray-600 mb-6">
+      A community-driven library for quantum error correction circuits.
+      Browse codes and their circuits, stored in extended STIM format.
+    </p>
+    <a
+      href="/codes"
+      class="inline-block rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
+    >
+      Browse Codes
+    </a>
+  </div>
+</Layout>

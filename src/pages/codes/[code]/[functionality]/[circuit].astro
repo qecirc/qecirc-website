@@ -1,0 +1,62 @@
+---
+export const prerender = false;
+
+import Layout from "../../../../components/Layout.astro";
+import Breadcrumb from "../../../../components/Breadcrumb.astro";
+import TagList from "../../../../components/TagList.astro";
+import CodeBlock from "../../../../components/CodeBlock.astro";
+import {
+  getCodeBySlug,
+  getFunctionalityBySlug,
+  getCircuitBySlug,
+  getTagsFor,
+} from "../../../../lib/queries";
+
+const {
+  code: codeSlug,
+  functionality: funcSlug,
+  circuit: circuitSlug,
+} = Astro.params;
+
+const code = getCodeBySlug(codeSlug!);
+if (!code) return Astro.rewrite("/404");
+
+const functionality = getFunctionalityBySlug(code.id, funcSlug!);
+if (!functionality) return Astro.rewrite("/404");
+
+const circuit = getCircuitBySlug(functionality.id, circuitSlug!);
+if (!circuit) return Astro.rewrite("/404");
+
+const tags = getTagsFor("circuit", circuit.id);
+---
+
+<Layout title={`${circuit.name} - ${code.name}`}>
+  <Breadcrumb items={[
+    { label: "Home", href: "/" },
+    { label: "Codes", href: "/codes" },
+    { label: code.name, href: `/codes/${codeSlug}` },
+    { label: functionality.name, href: `/codes/${codeSlug}/${funcSlug}` },
+    { label: circuit.name },
+  ]} />
+
+  <h1 class="text-2xl font-bold mb-1">{circuit.name}</h1>
+  <p class="text-sm text-gray-500 mb-4">{code.name} / {functionality.name}</p>
+
+  <div class="mb-6 space-y-2">
+    <div class="text-sm">
+      <span class="text-gray-500">Source:</span>{" "}
+      {circuit.source.startsWith("http") ? (
+        <a href={circuit.source} class="underline hover:text-gray-900" target="_blank" rel="noopener">{circuit.source}</a>
+      ) : (
+        <span>{circuit.source}</span>
+      )}
+    </div>
+    <div class="text-sm">
+      <span class="text-gray-500">Format:</span>{" "}
+      <span class="uppercase">{circuit.format}</span>
+    </div>
+    <TagList tags={tags} />
+  </div>
+
+  <CodeBlock code={circuit.body} label={`${circuit.format.toUpperCase()} Circuit`} />
+</Layout>
