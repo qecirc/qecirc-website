@@ -36,20 +36,24 @@ polymorphic join so all three levels support tagging uniformly.
 
 ```
 codes
-  id, name, slug, description, created_at
+  id, name, slug, description, n, k, d, created_at
+  -- n, k, d: code parameters [[n,k,d]] for direct querying/sorting
 
 functionalities
   id, code_id → codes, name, slug, description, created_at
 
 circuits
   id, functionality_id → functionalities, name, slug,
-  source, body (extended STIM text), created_at
+  source, format (default 'stim'), body, created_at
+  -- source: provenance (DOI, URL, or citation)
+  -- format: circuit format identifier (e.g. 'stim')
 
 tags
   id, name                          -- e.g. "CSS", "distance:3", "single-shot"
 
 taggings
   tag_id → tags, taggable_id, taggable_type  -- taggable_type ∈ {code, functionality, circuit}
+  -- composite PK (tag_id, taggable_id, taggable_type)
 ```
 
 ---
