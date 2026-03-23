@@ -80,7 +80,7 @@ There is **no automation** in the ingestion pipeline for now.
 
 | Layer      | Choice                        | Rationale                                          |
 |------------|-------------------------------|----------------------------------------------------|
-| Framework  | Astro (TypeScript, hybrid)    | Static-first with SSR islands for dynamic filtering |
+| Framework  | Astro v6 (TypeScript)         | Static-first with SSR opt-in for dynamic pages      |
 | Database   | SQLite via `better-sqlite3`   | Zero external services, file-based, simple          |
 | Styling    | Tailwind CSS                  | Standard utility-first, minimal custom CSS          |
 | Hosting    | Self-hosted (agnostic)        | Avoid platform lock-in                              |
@@ -88,8 +88,8 @@ There is **no automation** in the ingestion pipeline for now.
 **Rendering strategy — Astro v6 (static default, SSR opt-in):**
 
 - Static pages: landing page, 404 (pre-rendered at build time)
-- SSR pages (`prerender = false`): all `/codes/...` routes (rendered on request, read from SQLite)
-- Interactive islands: copy button in CodeBlock (minimal client-side JS)
+- SSR pages (`prerender = false`): all `/codes/...` routes, `/api/search` (rendered on request, read from SQLite)
+- Client-side JS (minimal): search bar (debounced fetch), CodeBlock copy button, filter input validation + auto-submit
 
 This keeps the site fast and simple while scaling comfortably to thousands of circuits.
 
@@ -110,7 +110,10 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 │   └── ISSUE_TEMPLATE/    # Circuit submission issue template
 ├── docs/
 │   └── circuit-format.md  # Extended STIM format spec (extensions beyond tsim only)
-├── scripts/               # One-off data and migration scripts
+├── scripts/
+│   ├── add_circuit/       # Circuit ingestion modules (Python)
+│   ├── db/                # DB migration, seed, and reset scripts (Node)
+│   └── tests/             # Python tests for ingestion scripts
 └── public/
 ```
 
