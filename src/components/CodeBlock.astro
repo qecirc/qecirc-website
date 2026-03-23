@@ -18,11 +18,11 @@ const formatted = lines
   .join("\n");
 ---
 
-<div class="rounded border border-gray-200 bg-gray-50 overflow-hidden">
-  <div class="border-b border-gray-200 px-4 py-2 text-xs text-gray-500 flex items-center justify-between">
+<div class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden">
+  <div class="border-b border-gray-200 dark:border-gray-800 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
     <span>{label ?? ""}</span>
     <button
-      class="copy-btn text-gray-400 hover:text-gray-700 cursor-pointer"
+      class="copy-btn text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
       data-code={code.trimEnd()}
       aria-label="Copy to clipboard"
     >

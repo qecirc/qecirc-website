@@ -23,7 +23,7 @@ function tagUrl(tag: string): string {
 {tags.length > 0 && (
   <div class="flex flex-wrap gap-1.5">
     {tags.map((tag) => (
-      <a href={tagUrl(tag)} class="inline-block rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-200 transition-colors">
+      <a href={tagUrl(tag)} class="inline-block rounded bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
         {tag}
       </a>
     ))}

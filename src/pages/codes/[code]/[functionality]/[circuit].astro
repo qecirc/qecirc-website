@@ -40,19 +40,19 @@ const tags = getTagsFor("circuit", circuit.id);
   ]} />
 
   <h1 class="text-2xl font-bold mb-1">{circuit.name}</h1>
-  <p class="text-sm text-gray-500 mb-4">{code.name} / {functionality.name}</p>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{code.name} / {functionality.name}</p>
 
   <div class="mb-6 space-y-2">
     <div class="text-sm">
-      <span class="text-gray-500">Source:</span>{" "}
+      <span class="text-gray-500 dark:text-gray-400">Source:</span>{" "}
       {circuit.source.startsWith("http") ? (
-        <a href={circuit.source} class="underline hover:text-gray-900" target="_blank" rel="noopener">{circuit.source}</a>
+        <a href={circuit.source} class="underline hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">{circuit.source}</a>
       ) : (
         <span>{circuit.source}</span>
       )}
     </div>
     <div class="text-sm">
-      <span class="text-gray-500">Format:</span>{" "}
+      <span class="text-gray-500 dark:text-gray-400">Format:</span>{" "}
       <span class="uppercase">{circuit.format}</span>
     </div>
     <TagList tags={tags} />

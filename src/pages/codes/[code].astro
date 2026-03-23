@@ -26,9 +26,9 @@ const params = formatCodeParams(code);
   ]} />
 
   <h1 class="text-2xl font-bold mb-1">{code.name}</h1>
-  <p class="text-gray-500 mb-4">{params}</p>
+  <p class="text-gray-500 dark:text-gray-400 mb-4">{params}</p>
 
-  {code.description && <p class="text-gray-600 mb-4">{code.description}</p>}
+  {code.description && <p class="text-gray-600 dark:text-gray-400 mb-4">{code.description}</p>}
   <div class="mb-8">
     <TagList tags={tags} />
   </div>
@@ -41,11 +41,11 @@ const params = formatCodeParams(code);
       {functionalities.map((func) => (
         <a
           href={`/codes/${codeSlug}/${func.slug}`}
-          class="block rounded border border-gray-200 p-4 hover:border-gray-400 transition-colors"
+          class="block rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
         >
           <h3 class="font-medium mb-1">{func.name}</h3>
           {func.description && (
-            <p class="text-sm text-gray-600 mb-2">{func.description}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{func.description}</p>
           )}
           <TagList tags={func.tags} />
         </a>

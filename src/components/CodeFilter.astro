@@ -18,7 +18,7 @@ const anyError = errors.n || errors.k || errors.d;
 const selectedSet = new Set(selectedTags);
 
 function inputClass(hasError: boolean): string {
-  const base = "w-24 rounded-r border border-l-0 px-2 py-1 text-sm focus:outline-none border-gray-200 focus:border-gray-400";
+  const base = "w-24 rounded-r border border-l-0 px-2 py-1 text-sm focus:outline-none border-gray-200 dark:border-gray-700 dark:bg-gray-900 focus:border-gray-400 dark:focus:border-gray-500";
   return hasError ? `${base} ring-1 ring-red-300` : base;
 }
 
@@ -38,22 +38,22 @@ function tagToggleUrl(tagName: string): string {
 <form id="code-filter" method="GET" action="/codes" class="mb-6 space-y-2">
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex items-center">
-      <span class="rounded-l border border-r-0 border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-500">n</span>
+      <span class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">n</span>
       <input type="text" name="n" value={rawN} class={inputClass(errors.n)} placeholder=">3,<10" data-filter />
     </div>
     <div class="flex items-center">
-      <span class="rounded-l border border-r-0 border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-500">k</span>
+      <span class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">k</span>
       <input type="text" name="k" value={rawK} class={inputClass(errors.k)} placeholder=">=2" data-filter />
     </div>
     <div class="flex items-center">
-      <span class="rounded-l border border-r-0 border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-500">d</span>
+      <span class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">d</span>
       <input type="text" name="d" value={rawD} class={inputClass(errors.d)} placeholder="!=5" data-filter />
     </div>
     <div class="ml-auto text-xs" id="filter-status">
       {anyError ? (
         <span id="filter-error" class="text-red-500">Invalid filter</span>
       ) : hasFilters ? (
-        <a href="/codes" class="text-gray-500 hover:text-gray-900 underline">Clear</a>
+        <a href="/codes" class="text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 underline">Clear</a>
       ) : (
         <span class="text-gray-400">e.g. 7, &gt;3, &lt;=10, !=5</span>
       )}
@@ -72,8 +72,8 @@ function tagToggleUrl(tagName: string): string {
             class:list={[
               "inline-block rounded px-2 py-0.5 text-xs transition-colors",
               isSelected
-                ? "bg-gray-900 text-white hover:bg-gray-700"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+                ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700",
             ]}
           >
             {tag.name} ({tag.count})

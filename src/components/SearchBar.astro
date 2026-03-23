@@ -4,12 +4,12 @@
 <div id="search-bar" class="relative">
   <input
     type="text"
-    class="search-input w-48 rounded border border-gray-200 bg-white px-3 py-1.5 text-sm placeholder-gray-400 focus:border-gray-400 focus:outline-none"
+    class="search-input w-48 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm placeholder-gray-400 focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none"
     placeholder="Search codes..."
     aria-label="Search codes"
     autocomplete="off"
   />
-  <ul class="search-results absolute right-0 top-full mt-1 w-72 rounded border border-gray-200 bg-white shadow-lg hidden z-50 max-h-80 overflow-y-auto">
+  <ul class="search-results absolute right-0 top-full mt-1 w-72 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg hidden z-50 max-h-80 overflow-y-auto">
   </ul>
 </div>
 
@@ -34,9 +34,9 @@
     const items = resultsList.querySelectorAll("li");
     items.forEach(function (item, i) {
       if (i === activeIndex) {
-        item.classList.add("bg-gray-100");
+        item.classList.add("bg-gray-100", "dark:bg-gray-800");
       } else {
-        item.classList.remove("bg-gray-100");
+        item.classList.remove("bg-gray-100", "dark:bg-gray-800");
       }
     });
   }
@@ -65,7 +65,7 @@
 
     results.forEach(function (code) {
       const li = document.createElement("li");
-      li.className = "px-3 py-2 text-sm cursor-pointer hover:bg-gray-100";
+      li.className = "px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800";
       li.dataset.slug = code.slug;
 
       const nameSpan = document.createElement("span");
@@ -84,7 +84,7 @@
         tagsDiv.className = "flex flex-wrap gap-1 mt-0.5";
         code.tags.forEach(function (tag) {
           const tagSpan = document.createElement("span");
-          tagSpan.className = "inline-block rounded bg-gray-100 px-1.5 py-0 text-xs text-gray-500";
+          tagSpan.className = "inline-block rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0 text-xs text-gray-500 dark:text-gray-400";
           tagSpan.textContent = tag;
           tagsDiv.appendChild(tagSpan);
         });

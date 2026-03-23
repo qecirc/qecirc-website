@@ -14,13 +14,34 @@ const { title } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title} - QECirc</title>
+    <script is:inline>
+      (function () {
+        var stored = localStorage.getItem("theme");
+        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (stored === "dark" || (!stored && prefersDark)) {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
   </head>
-  <body class="min-h-screen bg-white text-gray-900 antialiased">
-    <header class="border-b border-gray-200">
+  <body class="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased">
+    <header class="border-b border-gray-200 dark:border-gray-800">
       <nav class="mx-auto max-w-4xl px-4 py-4 flex items-center gap-6">
         <a href="/" class="text-lg font-semibold">QECirc</a>
-        <a href="/codes" class="text-sm text-gray-600 hover:text-gray-900">Codes</a>
-        <div class="ml-auto">
+        <a href="/codes" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">Codes</a>
+        <div class="ml-auto flex items-center gap-3">
+          <button
+            id="theme-toggle"
+            class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
+            aria-label="Toggle dark mode"
+          >
+            <svg class="w-4 h-4 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+            <svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+          </button>
           <SearchBar />
         </div>
       </nav>
@@ -28,10 +49,16 @@ const { title } = Astro.props;
     <main class="mx-auto max-w-4xl px-4 py-8">
       <slot />
     </main>
-    <footer class="border-t border-gray-200 mt-16">
-      <div class="mx-auto max-w-4xl px-4 py-6 text-sm text-gray-500">
+    <footer class="border-t border-gray-200 dark:border-gray-800 mt-16">
+      <div class="mx-auto max-w-4xl px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
         QECirc — A community-driven library for quantum error correction circuits.
       </div>
     </footer>
+    <script is:inline>
+      document.getElementById("theme-toggle").addEventListener("click", function () {
+        var dark = document.documentElement.classList.toggle("dark");
+        localStorage.setItem("theme", dark ? "dark" : "light");
+      });
+    </script>
   </body>
 </html>
