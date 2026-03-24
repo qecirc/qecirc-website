@@ -4,10 +4,14 @@ export interface Code {
   id: number;
   name: string;
   slug: string;
-  description: string | null;
   n: number;
   k: number;
   d: number | null;
+  zoo_url: string | null;
+  hx: string | null;
+  hz: string | null;
+  logical_x: string | null;
+  logical_z: string | null;
 }
 
 export interface Circuit {

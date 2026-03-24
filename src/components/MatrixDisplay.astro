@@ -1,0 +1,21 @@
+---
+interface Props {
+  label: string;
+  matrix: number[][];
+}
+
+const { label, matrix } = Astro.props;
+
+// Format matrix rows with aligned columns
+const flat = matrix.flat();
+const colWidth = flat.length > 0 ? Math.max(...flat.map((v) => String(v).length)) : 1;
+const rows = matrix.map(
+  (row) => row.map((v) => String(v).padStart(colWidth, " ")).join("  "),
+);
+const formatted = rows.map((r) => `[ ${r} ]`).join("\n");
+---
+
+<div class="mb-3">
+  <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium">{label}</p>
+  <pre class="text-sm leading-relaxed font-mono bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 px-3 py-2 overflow-x-auto"><code set:text={formatted} /></pre>
+</div>

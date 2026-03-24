@@ -19,9 +19,16 @@ CX 6 4 5 3 2 0
 CX 6 3 4 5 0 1
 `;
 
+// Check matrices (Hx = Hz for CSS Steane code)
+const steaneH = [[1,1,0,0,1,1,0],[1,0,1,0,1,0,1],[0,0,0,1,1,1,1]];
+
+// Logical operators (all-ones for Steane code)
+const steaneLx = [[1,1,1,1,1,1,1]];
+const steaneLz = [[1,1,1,1,1,1,1]];
+
 const insertCode = db.prepare(`
-  INSERT INTO codes (name, slug, description, n, k, d)
-  VALUES (?, ?, ?, ?, ?, ?)
+  INSERT INTO codes (name, slug, n, k, d, zoo_url, hx, hz, logical_x, logical_z)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const insertCircuit = db.prepare(`
@@ -56,8 +63,12 @@ db.transaction(() => {
   const { lastInsertRowid: codeId } = insertCode.run(
     "Steane Code",
     "steane-code",
-    "The [[7,1,3]] Steane code is a CSS code that encodes 1 logical qubit into 7 physical qubits with distance 3. It is the smallest code in the color code family and can correct any single-qubit error.",
     7, 1, 3,
+    "https://errorcorrectionzoo.org/c/steane",
+    JSON.stringify(steaneH),
+    JSON.stringify(steaneH),  // Hx = Hz for the Steane code
+    JSON.stringify(steaneLx),
+    JSON.stringify(steaneLz),
   );
 
   // Circuit

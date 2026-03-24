@@ -9,7 +9,7 @@ interface Props {
 }
 
 const { code, baseUrl } = Astro.props;
-const { name, slug, description, tags } = code;
+const { name, slug, tags } = code;
 const params = formatCodeParams(code);
 ---
 
@@ -19,7 +19,6 @@ const params = formatCodeParams(code);
       <h3 class="font-medium">{name}</h3>
       <span class="text-sm text-gray-500 dark:text-gray-400">{params}</span>
     </div>
-    {description && <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">{description}</p>}
   </a>
   <TagList tags={tags} baseUrl={baseUrl} />
 </div>

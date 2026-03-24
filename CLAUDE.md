@@ -33,8 +33,11 @@ Circuits also have numeric **metrics** for filtering: `gate_count`, `depth`, `qu
 
 ```
 codes
-  id, name, slug, description, n, k, d, created_at
+  id, name, slug, n, k, d, zoo_url,
+  hx, hz, logical_x, logical_z, created_at
   -- n, k, d: code parameters [[n,k,d]] for direct querying/sorting
+  -- zoo_url: optional link to QEC Zoo
+  -- hx, hz, logical_x, logical_z: JSON-encoded matrices (e.g. [[1,0],[0,1]])
 
 circuits
   id, code_id → codes, name, slug, description, source,
