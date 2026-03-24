@@ -39,13 +39,18 @@ codes
   -- zoo_url: optional link to QEC Zoo
   -- hx, hz, logical_x, logical_z: JSON-encoded matrices (e.g. [[1,0],[0,1]])
 
+tools
+  id, name, slug, description, homepage_url, github_url, created_at
+  -- software tools used to create circuits
+
 circuits
   id, code_id → codes, name, slug, description, source,
   gate_count, depth, qubit_count,
-  crumble_url, quirk_url, created_at
+  crumble_url, quirk_url, tool_id → tools, created_at
   -- source: provenance (DOI, URL, or citation)
   -- gate_count, depth, qubit_count: numeric metrics for filtering
-  -- crumble_url, quirk_url: optional external tool links
+  -- crumble_url, quirk_url: optional external visualization links
+  -- tool_id: optional link to tool used to create the circuit
 
 circuit_bodies
   id, circuit_id → circuits, format, body
@@ -56,7 +61,7 @@ tags
   id, name                          -- e.g. "CSS", "distance:3", "encoding"
 
 taggings
-  tag_id → tags, taggable_id, taggable_type  -- taggable_type ∈ {code, circuit}
+  tag_id → tags, taggable_id, taggable_type  -- taggable_type ∈ {code, circuit, tool}
   -- composite PK (tag_id, taggable_id, taggable_type)
 ```
 

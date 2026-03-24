@@ -1,0 +1,45 @@
+---
+import type { Tool } from "../lib/queries";
+
+interface Props {
+  tool: Tool & { tags: string[]; circuit_count: number };
+}
+
+const { tool } = Astro.props;
+---
+
+<div class="rounded border border-gray-200 dark:border-gray-800 p-4">
+  <div class="flex items-baseline gap-2 mb-1">
+    <h3 class="font-medium">{tool.name}</h3>
+    <span class="text-xs text-gray-400 dark:text-gray-500">
+      {tool.circuit_count} circuit{tool.circuit_count !== 1 ? "s" : ""}
+    </span>
+  </div>
+
+  {tool.description && (
+    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{tool.description}</p>
+  )}
+
+  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mb-2">
+    {tool.homepage_url && (
+      <a href={tool.homepage_url} class="underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
+        Homepage &#x2197;
+      </a>
+    )}
+    {tool.github_url && (
+      <a href={tool.github_url} class="underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
+        GitHub &#x2197;
+      </a>
+    )}
+  </div>
+
+  {tool.tags.length > 0 && (
+    <div class="flex flex-wrap gap-1.5">
+      {tool.tags.map((tag) => (
+        <span class="inline-block rounded bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-700 dark:text-gray-300">
+          {tag}
+        </span>
+      ))}
+    </div>
+  )}
+</div>

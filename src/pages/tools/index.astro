@@ -1,0 +1,82 @@
+---
+export const prerender = false;
+
+import Layout from "../../components/Layout.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import ToolCard from "../../components/ToolCard.astro";
+import {
+  getAllTools,
+  filterTools,
+  getToolTagsWithCount,
+  hasActiveToolFilters,
+} from "../../lib/queries";
+import type { ToolFilters } from "../../lib/queries";
+
+const selectedTags = Astro.url.searchParams.getAll("tag");
+
+const filters: ToolFilters = {
+  tags: selectedTags.length > 0 ? selectedTags : undefined,
+};
+
+const hasFilters = hasActiveToolFilters(filters);
+const tools = hasFilters ? filterTools(filters) : getAllTools();
+const allTags = getToolTagsWithCount();
+const selectedSet = new Set(selectedTags);
+
+function tagToggleUrl(tagName: string): string {
+  const params = new URLSearchParams(Astro.url.search);
+  params.delete("tag");
+  const newTags = selectedSet.has(tagName)
+    ? selectedTags.filter((t) => t !== tagName)
+    : [...selectedTags, tagName];
+  for (const t of newTags) params.append("tag", t);
+  const qs = params.toString();
+  return "/tools" + (qs ? "?" + qs : "");
+}
+---
+
+<Layout title="Tools">
+  <Breadcrumb items={[
+    { label: "Home", href: "/" },
+    { label: "Tools" },
+  ]} />
+
+  <h1 class="text-2xl font-bold mb-4">Tools</h1>
+
+  {allTags.length > 0 && (
+    <div class="flex flex-wrap gap-1.5 mb-6">
+      {allTags.map((tag) => {
+        const isSelected = selectedSet.has(tag.name);
+        return (
+          <a
+            href={tagToggleUrl(tag.name)}
+            class:list={[
+              "inline-block rounded px-2 py-0.5 text-xs transition-colors",
+              isSelected
+                ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700",
+            ]}
+          >
+            {tag.name} ({tag.count})
+          </a>
+        );
+      })}
+      {hasFilters && (
+        <a href="/tools" class="text-xs text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 underline ml-2">Clear</a>
+      )}
+    </div>
+  )}
+
+  {tools.length === 0 ? (
+    <div class="text-center py-8">
+      <p class="text-gray-500 dark:text-gray-400 mb-2">No tools match your filters.</p>
+      <a href="/tools" class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
+    </div>
+  ) : (
+    <div class="grid gap-3">
+      {tools.map((tool) => (
+        <ToolCard tool={tool} />
+      ))}
+    </div>
+  )}
+</Layout>

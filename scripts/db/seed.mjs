@@ -19,7 +19,7 @@ CX 6 4 5 3 2 0
 CX 6 3 4 5 0 1
 `;
 
-// Check matrices (Hx = Hz for CSS Steane code)
+// Check matrices (Hx = Hz for the Steane code)
 const steaneH = [[1,1,0,0,1,1,0],[1,0,1,0,1,0,1],[0,0,0,1,1,1,1]];
 
 // Logical operators (all-ones for Steane code)
@@ -31,9 +31,14 @@ const insertCode = db.prepare(`
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
+const insertTool = db.prepare(`
+  INSERT INTO tools (name, slug, description, homepage_url, github_url)
+  VALUES (?, ?, ?, ?, ?)
+`);
+
 const insertCircuit = db.prepare(`
-  INSERT INTO circuits (code_id, name, slug, description, source, gate_count, depth, qubit_count, crumble_url, quirk_url)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO circuits (code_id, name, slug, description, source, gate_count, depth, qubit_count, crumble_url, quirk_url, tool_id)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const insertBody = db.prepare(`
@@ -59,6 +64,19 @@ function addTag(name, taggableId, taggableType) {
 }
 
 db.transaction(() => {
+  // Tools
+  const { lastInsertRowid: mqtQeccId } = insertTool.run(
+    "MQT QECC",
+    "mqt-qecc",
+    "Tools for quantum error correcting codes, part of the Munich Quantum Toolkit.",
+    "https://mqt.readthedocs.io/projects/qecc/en/latest/",
+    "https://github.com/munich-quantum-toolkit/qecc",
+  );
+
+  addTag("Python", mqtQeccId, "tool");
+  addTag("encoding", mqtQeccId, "tool");
+  addTag("state-preparation", mqtQeccId, "tool");
+
   // Code
   const { lastInsertRowid: codeId } = insertCode.run(
     "Steane Code",
@@ -71,7 +89,7 @@ db.transaction(() => {
     JSON.stringify(steaneLz),
   );
 
-  // Circuit
+  // Circuit (linked to MQT QECC)
   const { lastInsertRowid: circuitId } = insertCircuit.run(
     codeId,
     "Standard Encoding",
@@ -83,6 +101,7 @@ db.transaction(() => {
     7,   // qubit_count
     "https://algassert.com/crumble#circuit=Q(0,0)0;Q(1,0)1;Q(2,0)2;Q(3,0)3;Q(4,0)4;Q(5,0)5;Q(6,0)6;H_4_5_6;TICK;CX_5_1;TICK;CX_1_2_4_0;TICK;CX_6_4_5_3_2_0;TICK;CX_6_3_4_5_0_1",
     "https://algassert.com/quirk",
+    mqtQeccId,
   );
 
   // Circuit bodies (multi-format)

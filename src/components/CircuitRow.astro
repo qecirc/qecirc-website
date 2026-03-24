@@ -1,13 +1,14 @@
 ---
-import type { Circuit, CircuitBody } from "../lib/queries";
+import type { Circuit, CircuitBody, Tool } from "../lib/queries";
 import CodeBlock from "./CodeBlock.astro";
 
 interface Props {
   circuit: Circuit & { tags: string[] };
   bodies: CircuitBody[];
+  tool?: Tool;
 }
 
-const { circuit, bodies } = Astro.props;
+const { circuit, bodies, tool } = Astro.props;
 const hasMultipleFormats = bodies.length > 1;
 ---
 
@@ -74,6 +75,18 @@ const hasMultipleFormats = bodies.length > 1;
             <span>{circuit.source}</span>
           )}
         </div>
+        {tool && (
+          <div>
+            <span class="text-gray-500 dark:text-gray-400">Tool:</span>{" "}
+            {tool.homepage_url ? (
+              <a href={tool.homepage_url} class="underline hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
+                {tool.name} &#x2197;
+              </a>
+            ) : (
+              <span>{tool.name}</span>
+            )}
+          </div>
+        )}
         {(circuit.crumble_url || circuit.quirk_url) && (
           <div class="flex items-center gap-3">
             <span class="text-gray-500 dark:text-gray-400">View in:</span>

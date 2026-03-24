@@ -26,6 +26,7 @@ export interface Circuit {
   qubit_count: number | null;
   crumble_url: string | null;
   quirk_url: string | null;
+  tool_id: number | null;
 }
 
 export interface CircuitBody {
@@ -33,7 +34,20 @@ export interface CircuitBody {
   body: string;
 }
 
-export type TaggableType = "code" | "circuit";
+export interface Tool {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  homepage_url: string | null;
+  github_url: string | null;
+}
+
+export interface ToolFilters {
+  tags?: string[];
+}
+
+export type TaggableType = "code" | "circuit" | "tool";
 
 export function formatCodeParams(code: Code): string {
   return code.d != null ? `[[${code.n},${code.k},${code.d}]]` : `[[${code.n},${code.k}]]`;
@@ -302,5 +316,96 @@ export function getBodiesForCircuits(circuitIds: number[]): Map<number, CircuitB
     });
   }
 
+  return result;
+}
+
+// --- Tool queries ---
+
+type ToolWithMeta = Tool & { tags: string[]; circuit_count: number };
+
+function enrichTools(tools: Tool[]): ToolWithMeta[] {
+  const db = getDb();
+  return tools.map((t) => {
+    const tags = getTagsFor("tool", t.id);
+    const row = db
+      .prepare("SELECT COUNT(*) as count FROM circuits WHERE tool_id = ?")
+      .get(t.id) as { count: number };
+    return { ...t, tags, circuit_count: row.count };
+  });
+}
+
+export function getAllTools(): ToolWithMeta[] {
+  const db = getDb();
+  const tools = db.prepare("SELECT * FROM tools ORDER BY name").all() as Tool[];
+  return enrichTools(tools);
+}
+
+export function getToolTagsWithCount(): TagWithCount[] {
+  const db = getDb();
+  return db
+    .prepare(
+      `SELECT t.name, COUNT(*) as count FROM tags t
+       JOIN taggings tg ON t.id = tg.tag_id
+       WHERE tg.taggable_type = 'tool'
+       GROUP BY t.name ORDER BY t.name`,
+    )
+    .all() as TagWithCount[];
+}
+
+export function filterTools(filters: ToolFilters): ToolWithMeta[] {
+  const db = getDb();
+  const conditions: string[] = [];
+  const params: (number | string)[] = [];
+
+  if (filters.tags) {
+    for (const tag of filters.tags) {
+      conditions.push(
+        `EXISTS (SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+         WHERE tg.taggable_id = c.id AND tg.taggable_type = ? AND t.name = ?)`,
+      );
+      params.push("tool", tag);
+    }
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const tools = db
+    .prepare(`SELECT * FROM tools c ${where} ORDER BY c.name`)
+    .all(...params) as Tool[];
+  return enrichTools(tools);
+}
+
+export function hasActiveToolFilters(filters: ToolFilters): boolean {
+  return (filters.tags?.length ?? 0) > 0;
+}
+
+export function getToolById(id: number): Tool | undefined {
+  const db = getDb();
+  return db.prepare("SELECT * FROM tools WHERE id = ?").get(id) as Tool | undefined;
+}
+
+export function getToolsForCircuits(circuitIds: number[]): Map<number, Tool> {
+  const db = getDb();
+  const result = new Map<number, Tool>();
+  if (circuitIds.length === 0) return result;
+
+  const placeholders = circuitIds.map(() => "?").join(",");
+  const rows = db
+    .prepare(
+      `SELECT c.id as circuit_id, t.* FROM circuits c
+       JOIN tools t ON t.id = c.tool_id
+       WHERE c.id IN (${placeholders}) AND c.tool_id IS NOT NULL`,
+    )
+    .all(...circuitIds) as (Tool & { circuit_id: number })[];
+
+  for (const row of rows) {
+    result.set(row.circuit_id, {
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      description: row.description,
+      homepage_url: row.homepage_url,
+      github_url: row.github_url,
+    });
+  }
   return result;
 }

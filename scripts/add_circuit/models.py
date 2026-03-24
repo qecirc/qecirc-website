@@ -53,3 +53,4 @@ class IngestionPayload:
     circuit_bodies: list[CircuitBodyEntry] = field(default_factory=list)
     crumble_url: str = ""
     quirk_url: str = ""
+    tool_name: str = ""  # resolved to tool_id during ingestion
