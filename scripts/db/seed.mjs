@@ -31,14 +31,9 @@ const insertCode = db.prepare(`
   VALUES (?, ?, ?, ?, ?, ?)
 `);
 
-const insertFunctionality = db.prepare(`
-  INSERT INTO functionalities (code_id, name, slug, description)
-  VALUES (?, ?, ?, ?)
-`);
-
 const insertCircuit = db.prepare(`
-  INSERT INTO circuits (functionality_id, name, slug, source, format, body)
-  VALUES (?, ?, ?, ?, ?, ?)
+  INSERT INTO circuits (code_id, name, slug, description, source, format, body, gate_count, depth, qubit_count)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const insertTag = db.prepare(`
@@ -67,31 +62,28 @@ db.transaction(() => {
     7, 1, 3,
   );
 
-  // Functionality
-  const { lastInsertRowid: funcId } = insertFunctionality.run(
-    codeId,
-    "Encoding",
-    "encoding",
-    "Prepares the logical |0\u27E9 state by encoding 1 logical qubit into 7 physical qubits.",
-  );
-
-  // Circuit
+  // Circuit (directly under code, no functionality intermediary)
   const { lastInsertRowid: circuitId } = insertCircuit.run(
-    funcId,
+    codeId,
     "Standard Encoding",
     "standard-encoding",
+    "Prepares the logical |0\u27E9 state by encoding 1 logical qubit into 7 physical qubits.",
     "https://doi.org/10.1098/rspa.1996.0136",
     "stim",
     steaneCircuit,
+    12,  // gate_count: 3 H + 9 CX
+    8,   // depth
+    7,   // qubit_count
   );
 
-  // Tags
+  // Code tags
   addTag("CSS", codeId, "code");
   addTag("stabilizer", codeId, "code");
   addTag("color-code", codeId, "code");
 
-  addTag("state-preparation", funcId, "functionality");
-
+  // Circuit tags (including "encoding" which was formerly a functionality)
+  addTag("encoding", circuitId, "circuit");
+  addTag("state-preparation", circuitId, "circuit");
   addTag("distance:3", circuitId, "circuit");
 })();
 

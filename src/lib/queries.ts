@@ -10,25 +10,21 @@ export interface Code {
   d: number | null;
 }
 
-export interface Functionality {
+export interface Circuit {
   id: number;
   code_id: number;
   name: string;
   slug: string;
   description: string | null;
-}
-
-export interface Circuit {
-  id: number;
-  functionality_id: number;
-  name: string;
-  slug: string;
   source: string;
   format: string;
   body: string;
+  gate_count: number | null;
+  depth: number | null;
+  qubit_count: number | null;
 }
 
-export type TaggableType = "code" | "functionality" | "circuit";
+export type TaggableType = "code" | "circuit";
 
 export function formatCodeParams(code: Code): string {
   return code.d != null ? `[[${code.n},${code.k},${code.d}]]` : `[[${code.n},${code.k}]]`;
@@ -65,38 +61,6 @@ export function getCodeBySlug(slug: string): Code | undefined {
     .get(slug) as Code | undefined;
 }
 
-export function getFunctionalitiesForCode(
-  codeId: number,
-): (Functionality & { tags: string[] })[] {
-  const db = getDb();
-  const rows = db
-    .prepare("SELECT * FROM functionalities WHERE code_id = ? ORDER BY name")
-    .all(codeId) as Functionality[];
-  return rows.map((f) => ({ ...f, tags: getTagsFor("functionality", f.id) }));
-}
-
-export function getFunctionalityBySlug(
-  codeId: number,
-  slug: string,
-): Functionality | undefined {
-  const db = getDb();
-  return db
-    .prepare("SELECT * FROM functionalities WHERE code_id = ? AND slug = ?")
-    .get(codeId, slug) as Functionality | undefined;
-}
-
-export function getCircuitsForFunctionality(
-  functionalityId: number,
-): (Circuit & { tags: string[] })[] {
-  const db = getDb();
-  const rows = db
-    .prepare(
-      "SELECT * FROM circuits WHERE functionality_id = ? ORDER BY name",
-    )
-    .all(functionalityId) as Circuit[];
-  return rows.map((c) => ({ ...c, tags: getTagsFor("circuit", c.id) }));
-}
-
 type FilterOp = "=" | "!=" | ">" | ">=" | "<" | "<=";
 
 export interface FilterCondition {
@@ -108,6 +72,13 @@ export interface CodeFilters {
   n?: FilterCondition[];
   k?: FilterCondition[];
   d?: FilterCondition[];
+  tags?: string[];
+}
+
+export interface CircuitFilters {
+  gate_count?: FilterCondition[];
+  depth?: FilterCondition[];
+  qubit_count?: FilterCondition[];
   tags?: string[];
 }
 
@@ -162,33 +133,52 @@ export function hasActiveFilters(filters: CodeFilters): boolean {
     || (filters.tags?.length ?? 0) > 0;
 }
 
+export function hasActiveCircuitFilters(filters: CircuitFilters): boolean {
+  return (filters.gate_count?.length ?? 0) > 0
+    || (filters.depth?.length ?? 0) > 0
+    || (filters.qubit_count?.length ?? 0) > 0
+    || (filters.tags?.length ?? 0) > 0;
+}
+
+function addConditions(
+  column: string,
+  filter: FilterCondition[] | undefined,
+  conditions: string[],
+  params: (number | string)[],
+) {
+  if (!filter) return;
+  for (const { op, value } of filter) {
+    if (!(VALID_OPS as readonly string[]).includes(op)) continue;
+    conditions.push(`c.${column} ${op} ?`);
+    params.push(value);
+  }
+}
+
+function addTagConditions(
+  tags: string[] | undefined,
+  taggableType: TaggableType,
+  conditions: string[],
+  params: (number | string)[],
+) {
+  if (!tags) return;
+  for (const tag of tags) {
+    conditions.push(
+      `EXISTS (SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+       WHERE tg.taggable_id = c.id AND tg.taggable_type = ? AND t.name = ?)`,
+    );
+    params.push(taggableType, tag);
+  }
+}
+
 export function filterCodes(filters: CodeFilters): (Code & { tags: string[] })[] {
   const db = getDb();
   const conditions: string[] = [];
   const params: (number | string)[] = [];
 
-  function addConditions(column: string, filter?: FilterCondition[]) {
-    if (!filter) return;
-    for (const { op, value } of filter) {
-      if (!(VALID_OPS as readonly string[]).includes(op)) continue;
-      conditions.push(`c.${column} ${op} ?`);
-      params.push(value);
-    }
-  }
-
-  addConditions("n", filters.n);
-  addConditions("k", filters.k);
-  addConditions("d", filters.d);
-
-  if (filters.tags) {
-    for (const tag of filters.tags) {
-      conditions.push(
-        `EXISTS (SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
-         WHERE tg.taggable_id = c.id AND tg.taggable_type = 'code' AND t.name = ?)`,
-      );
-      params.push(tag);
-    }
-  }
+  addConditions("n", filters.n, conditions, params);
+  addConditions("k", filters.k, conditions, params);
+  addConditions("d", filters.d, conditions, params);
+  addTagConditions(filters.tags, "code", conditions, params);
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const codes = db
@@ -220,14 +210,55 @@ export function searchCodes(query: string): (Code & { tags: string[] })[] {
   return codes.map((c) => ({ ...c, tags: getTagsFor("code", c.id) }));
 }
 
-export function getCircuitBySlug(
-  functionalityId: number,
-  slug: string,
-): Circuit | undefined {
+// --- Circuit queries ---
+
+export function getCircuitsForCode(
+  codeId: number,
+): (Circuit & { tags: string[] })[] {
+  const db = getDb();
+  const rows = db
+    .prepare("SELECT * FROM circuits WHERE code_id = ? ORDER BY name")
+    .all(codeId) as Circuit[];
+  return rows.map((c) => ({ ...c, tags: getTagsFor("circuit", c.id) }));
+}
+
+export function countCircuitsForCode(codeId: number): number {
+  const db = getDb();
+  const row = db
+    .prepare("SELECT COUNT(*) as count FROM circuits WHERE code_id = ?")
+    .get(codeId) as { count: number };
+  return row.count;
+}
+
+export function getCircuitTagsForCode(codeId: number): TagWithCount[] {
   const db = getDb();
   return db
     .prepare(
-      "SELECT * FROM circuits WHERE functionality_id = ? AND slug = ?",
+      `SELECT t.name, COUNT(*) as count FROM tags t
+       JOIN taggings tg ON t.id = tg.tag_id
+       JOIN circuits c ON c.id = tg.taggable_id
+       WHERE tg.taggable_type = 'circuit' AND c.code_id = ?
+       GROUP BY t.name ORDER BY t.name`,
     )
-    .get(functionalityId, slug) as Circuit | undefined;
+    .all(codeId) as TagWithCount[];
+}
+
+export function filterCircuitsForCode(
+  codeId: number,
+  filters: CircuitFilters,
+): (Circuit & { tags: string[] })[] {
+  const db = getDb();
+  const conditions: string[] = ["c.code_id = ?"];
+  const params: (number | string)[] = [codeId];
+
+  addConditions("gate_count", filters.gate_count, conditions, params);
+  addConditions("depth", filters.depth, conditions, params);
+  addConditions("qubit_count", filters.qubit_count, conditions, params);
+  addTagConditions(filters.tags, "circuit", conditions, params);
+
+  const where = `WHERE ${conditions.join(" AND ")}`;
+  const circuits = db
+    .prepare(`SELECT * FROM circuits c ${where} ORDER BY c.name`)
+    .all(...params) as Circuit[];
+  return circuits.map((c) => ({ ...c, tags: getTagsFor("circuit", c.id) }));
 }

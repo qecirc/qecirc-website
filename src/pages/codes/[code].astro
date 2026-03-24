@@ -4,7 +4,20 @@ export const prerender = false;
 import Layout from "../../components/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
 import TagList from "../../components/TagList.astro";
-import { getCodeBySlug, getFunctionalitiesForCode, getTagsFor, formatCodeParams } from "../../lib/queries";
+import CircuitFilter from "../../components/CircuitFilter.astro";
+import CircuitRow from "../../components/CircuitRow.astro";
+import {
+  getCodeBySlug,
+  getTagsFor,
+  formatCodeParams,
+  parseFilterString,
+  hasActiveCircuitFilters,
+  filterCircuitsForCode,
+  getCircuitsForCode,
+  countCircuitsForCode,
+  getCircuitTagsForCode,
+} from "../../lib/queries";
+import type { CircuitFilters } from "../../lib/queries";
 
 const { code: codeSlug } = Astro.params;
 const code = getCodeBySlug(codeSlug!);
@@ -13,9 +26,44 @@ if (!code) {
   return Astro.rewrite("/404");
 }
 
-const functionalities = getFunctionalitiesForCode(code.id);
 const tags = getTagsFor("code", code.id);
 const params = formatCodeParams(code);
+
+// Parse circuit filter params
+const rawGateCount = Astro.url.searchParams.get("gate_count") ?? "";
+const rawDepth = Astro.url.searchParams.get("depth") ?? "";
+const rawQubitCount = Astro.url.searchParams.get("qubit_count") ?? "";
+const selectedTags = Astro.url.searchParams.getAll("tag");
+
+const VALID_FOCUS = new Set(["gate_count", "depth", "qubit_count", ""]);
+const rawFocus = Astro.url.searchParams.get("focus") ?? "";
+const focus = VALID_FOCUS.has(rawFocus) ? rawFocus : "";
+
+const parsedGateCount = rawGateCount ? parseFilterString(rawGateCount) : undefined;
+const parsedDepth = rawDepth ? parseFilterString(rawDepth) : undefined;
+const parsedQubitCount = rawQubitCount ? parseFilterString(rawQubitCount) : undefined;
+
+const errors = {
+  gate_count: rawGateCount !== "" && parsedGateCount === null,
+  depth: rawDepth !== "" && parsedDepth === null,
+  qubit_count: rawQubitCount !== "" && parsedQubitCount === null,
+};
+
+const filters: CircuitFilters = {
+  gate_count: parsedGateCount ?? undefined,
+  depth: parsedDepth ?? undefined,
+  qubit_count: parsedQubitCount ?? undefined,
+  tags: selectedTags.length > 0 ? selectedTags : undefined,
+};
+
+const hasFilters = hasActiveCircuitFilters(filters);
+const totalCount = countCircuitsForCode(code.id);
+const circuits = hasFilters ? filterCircuitsForCode(code.id, filters) : getCircuitsForCode(code.id);
+const allCircuitTags = getCircuitTagsForCode(code.id);
+
+const countLabel = hasFilters
+  ? `${circuits.length} of ${totalCount} circuit${totalCount !== 1 ? "s" : ""}`
+  : `${totalCount} circuit${totalCount !== 1 ? "s" : ""}`;
 ---
 
 <Layout title={code.name}>
@@ -33,22 +81,33 @@ const params = formatCodeParams(code);
     <TagList tags={tags} />
   </div>
 
-  <h2 class="text-lg font-semibold mb-4">Circuit Functionalities</h2>
-  {functionalities.length === 0 ? (
-    <p class="text-gray-500">No functionalities yet.</p>
+  <div class="flex items-baseline justify-between mb-2">
+    <h2 class="text-lg font-semibold">Circuits</h2>
+    <span class="text-sm text-gray-500 dark:text-gray-400">{countLabel}</span>
+  </div>
+
+  <CircuitFilter
+    rawGateCount={rawGateCount}
+    rawDepth={rawDepth}
+    rawQubitCount={rawQubitCount}
+    errors={errors}
+    hasFilters={hasFilters}
+    focus={focus}
+    allTags={allCircuitTags}
+    selectedTags={selectedTags}
+    currentUrl={Astro.url}
+    codeSlug={codeSlug!}
+  />
+
+  {circuits.length === 0 ? (
+    <div class="text-center py-8">
+      <p class="text-gray-500 dark:text-gray-400 mb-2">No circuits match your filters.</p>
+      <a href={`/codes/${codeSlug}`} class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
+    </div>
   ) : (
-    <div class="grid gap-3">
-      {functionalities.map((func) => (
-        <a
-          href={`/codes/${codeSlug}/${func.slug}`}
-          class="block rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
-        >
-          <h3 class="font-medium mb-1">{func.name}</h3>
-          {func.description && (
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{func.description}</p>
-          )}
-          <TagList tags={func.tags} />
-        </a>
+    <div class="space-y-2">
+      {circuits.map((circuit) => (
+        <CircuitRow circuit={circuit} />
       ))}
     </div>
   )}

@@ -89,7 +89,7 @@ class TestClassifyFunctionality:
 class TestCircuitProperties:
     def test_qubit_count(self):
         props = circuit_properties(ENCODING_CIRCUIT)
-        assert props.n_qubits == 4
+        assert props.qubit_count == 4
 
     def test_depth_from_ticks(self):
         props = circuit_properties(CIRCUIT_WITH_TICKS)
@@ -106,7 +106,7 @@ class TestCircuitProperties:
 
     def test_empty_circuit(self):
         props = circuit_properties(EMPTY_CIRCUIT)
-        assert props.n_qubits == 0
+        assert props.qubit_count == 0
         assert props.gate_count == 0
 
 

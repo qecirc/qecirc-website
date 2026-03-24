@@ -12,7 +12,7 @@ class CodeParams:
 
 @dataclass
 class CircuitProperties:
-    n_qubits: int
+    qubit_count: int
     depth: int
     gate_count: int
     detected_functionality: Optional[str] = None
@@ -39,11 +39,9 @@ class IngestionPayload:
     code_slug: str
     code_tags: list[TagEntry] = field(default_factory=list)
     qubit_permutation: Optional[list[int]] = None
-    functionality_name: str = ""
-    functionality_slug: str = ""
-    functionality_tags: list[TagEntry] = field(default_factory=list)
     circuit_name: str = ""
     circuit_slug: str = ""
+    circuit_description: str = ""
     circuit_source: str = ""
     circuit_tags: list[TagEntry] = field(default_factory=list)
     circuit_body: str = ""

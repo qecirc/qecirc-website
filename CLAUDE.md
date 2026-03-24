@@ -12,47 +12,43 @@ Circuits are stored in an extended STIM format (see [tsim](https://github.com/Qu
 
 ```
 Code                          e.g. "Surface Code"
-  └── Circuit Functionality       e.g. "Syndrome Extraction"
-        └── Circuit                   e.g. "distance-3, single-shot"
+  └── Circuit                     e.g. "Standard Encoding"
 ```
 
-**Circuit Functionality** is user-defined — any string is valid (e.g. `syndrome-extraction`,
-`state-preparation`, `encoding`, `decoding`). There is no fixed enum.
+Circuits belong directly to codes. Circuit type (e.g. `encoding`, `syndrome-extraction`)
+is represented as a tag, not a separate entity.
 
-Each level supports **tags** to aid discovery and filtering:
+Both levels support **tags** to aid discovery and filtering:
 
-| Level                  | Example tags                              |
-|------------------------|-------------------------------------------|
-| Code                   | `CSS`, `topological`, `bosonic`           |
-| Circuit Functionality  | `single-shot`, `fault-tolerant`           |
-| Circuit                | `depth-optimal`, `distance:3`             |
+| Level    | Example tags                                        |
+|----------|-----------------------------------------------------|
+| Code     | `CSS`, `topological`, `bosonic`                     |
+| Circuit  | `encoding`, `fault-tolerant`, `distance:3`          |
 
 Tags can be either **structured** (`key:value`, e.g. `distance:3`) or **free-form strings**.
 
-### Database Schema
+Circuits also have numeric **metrics** for filtering: `gate_count`, `depth`, `qubit_count`.
 
-Each hierarchy level is its own table. Tags are stored in a shared `tags` table with a
-polymorphic join so all three levels support tagging uniformly.
+### Database Schema
 
 ```
 codes
   id, name, slug, description, n, k, d, created_at
   -- n, k, d: code parameters [[n,k,d]] for direct querying/sorting
 
-functionalities
-  id, code_id → codes, name, slug, description, created_at
-
 circuits
-  id, functionality_id → functionalities, name, slug,
-  source, format (default 'stim'), body, created_at
+  id, code_id → codes, name, slug, description,
+  source, format (default 'stim'), body,
+  gate_count, depth, qubit_count, created_at
   -- source: provenance (DOI, URL, or citation)
   -- format: circuit format identifier (e.g. 'stim')
+  -- gate_count, depth, qubit_count: numeric metrics for filtering
 
 tags
-  id, name                          -- e.g. "CSS", "distance:3", "single-shot"
+  id, name                          -- e.g. "CSS", "distance:3", "encoding"
 
 taggings
-  tag_id → tags, taggable_id, taggable_type  -- taggable_type ∈ {code, functionality, circuit}
+  tag_id → tags, taggable_id, taggable_type  -- taggable_type ∈ {code, circuit}
   -- composite PK (tag_id, taggable_id, taggable_type)
 ```
 

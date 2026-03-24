@@ -30,16 +30,22 @@ def suggest_code_tags(params: CodeParams, Hx: np.ndarray, Hz: np.ndarray) -> lis
     return tags
 
 
-def suggest_functionality_tags(functionality: str, circuit_text: str) -> list[TagEntry]:
+def suggest_classification_tags(detected_functionality: str, circuit_text: str) -> list[TagEntry]:
+    """Suggest circuit tags based on detected functionality classification."""
     tags: list[TagEntry] = []
+
+    # Add the detected functionality itself as a tag
+    if detected_functionality:
+        tags.append(TagEntry(name=detected_functionality, status="suggested"))
+
     text_lower = circuit_text.lower()
 
     # Flag qubits suggest fault-tolerant syndrome extraction
-    if functionality == "syndrome-extraction" and "flag" in text_lower:
+    if detected_functionality == "syndrome-extraction" and "flag" in text_lower:
         tags.append(TagEntry(name="fault-tolerant", status="suggested"))
 
     # No repeated REPEAT blocks → likely single-shot
-    if functionality == "syndrome-extraction" and circuit_text.upper().count("REPEAT") == 0:
+    if detected_functionality == "syndrome-extraction" and circuit_text.upper().count("REPEAT") == 0:
         tags.append(TagEntry(name="single-shot", status="suggested"))
 
     return tags

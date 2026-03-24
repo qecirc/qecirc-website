@@ -9,7 +9,7 @@ from scripts.add_circuit.models import CodeParams
 from scripts.add_circuit.tag_suggest import (
     suggest_circuit_tags,
     suggest_code_tags,
-    suggest_functionality_tags,
+    suggest_classification_tags,
     CircuitProperties,
 )
 
@@ -45,7 +45,7 @@ def Hz_422():
 
 @pytest.fixture
 def props_encoding():
-    return CircuitProperties(n_qubits=4, depth=3, gate_count=4, detected_functionality="encoding")
+    return CircuitProperties(qubit_count=4, depth=3, gate_count=4, detected_functionality="encoding")
 
 
 # ---------------------------------------------------------------------------
@@ -106,32 +106,39 @@ class TestSuggestCodeTags:
 
 
 # ---------------------------------------------------------------------------
-# suggest_functionality_tags
+# suggest_classification_tags
 # ---------------------------------------------------------------------------
 
-class TestSuggestFunctionalityTags:
+class TestSuggestClassificationTags:
     def test_single_shot_flagged_without_repeat(self):
         circuit = "H 4\nCNOT 4 0\nM 4\n"
-        tags = suggest_functionality_tags("syndrome-extraction", circuit)
+        tags = suggest_classification_tags("syndrome-extraction", circuit)
         names = [t.name for t in tags]
         assert "single-shot" in names
 
     def test_no_single_shot_with_repeat(self):
         circuit = "REPEAT 10 {\nH 4\nCNOT 4 0\nM 4\n}\n"
-        tags = suggest_functionality_tags("syndrome-extraction", circuit)
+        tags = suggest_classification_tags("syndrome-extraction", circuit)
         names = [t.name for t in tags]
         assert "single-shot" not in names
 
     def test_fault_tolerant_flagged_with_flag_qubits(self):
         circuit = "# flag qubit\nH 5\nCNOT 5 0\nM 5\n"
-        tags = suggest_functionality_tags("syndrome-extraction", circuit)
+        tags = suggest_classification_tags("syndrome-extraction", circuit)
         names = [t.name for t in tags]
         assert "fault-tolerant" in names
 
-    def test_no_tags_for_encoding(self):
+    def test_functionality_added_as_tag(self):
         circuit = "CNOT 0 1\n"
-        tags = suggest_functionality_tags("encoding", circuit)
-        assert tags == []
+        tags = suggest_classification_tags("encoding", circuit)
+        names = [t.name for t in tags]
+        assert "encoding" in names
+
+    def test_syndrome_extraction_added_as_tag(self):
+        circuit = "REPEAT 10 {\nH 4\nCNOT 4 0\nM 4\n}\n"
+        tags = suggest_classification_tags("syndrome-extraction", circuit)
+        names = [t.name for t in tags]
+        assert "syndrome-extraction" in names
 
 
 # ---------------------------------------------------------------------------

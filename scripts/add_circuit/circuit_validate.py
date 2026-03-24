@@ -78,7 +78,7 @@ def circuit_properties(circuit_text: str) -> CircuitProperties:
                 pass
 
     return CircuitProperties(
-        n_qubits=max_qubit + 1 if max_qubit >= 0 else 0,
+        qubit_count=max_qubit + 1 if max_qubit >= 0 else 0,
         depth=depth,
         gate_count=gate_count,
         detected_functionality=classify_functionality(circuit_text),
