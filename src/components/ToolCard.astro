@@ -1,11 +1,13 @@
 ---
+import TagList from "./TagList.astro";
 import type { Tool } from "../lib/queries";
 
 interface Props {
   tool: Tool & { tags: string[]; circuit_count: number };
+  baseUrl?: URL;
 }
 
-const { tool } = Astro.props;
+const { tool, baseUrl } = Astro.props;
 ---
 
 <div class="rounded border border-gray-200 dark:border-gray-800 p-4">
@@ -33,13 +35,5 @@ const { tool } = Astro.props;
     )}
   </div>
 
-  {tool.tags.length > 0 && (
-    <div class="flex flex-wrap gap-1.5">
-      {tool.tags.map((tag) => (
-        <span class="inline-block rounded bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-700 dark:text-gray-300">
-          {tag}
-        </span>
-      ))}
-    </div>
-  )}
+  <TagList tags={tool.tags} baseUrl={baseUrl} basePath="/tools" />
 </div>

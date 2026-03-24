@@ -75,7 +75,7 @@ function tagToggleUrl(tagName: string): string {
   ) : (
     <div class="grid gap-3">
       {tools.map((tool) => (
-        <ToolCard tool={tool} />
+        <ToolCard tool={tool} baseUrl={Astro.url} />
       ))}
     </div>
   )}

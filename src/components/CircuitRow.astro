@@ -6,9 +6,26 @@ interface Props {
   circuit: Circuit & { tags: string[] };
   bodies: CircuitBody[];
   tool?: Tool;
+  codeSlug: string;
+  currentUrl: URL;
 }
 
-const { circuit, bodies, tool } = Astro.props;
+const { circuit, bodies, tool, codeSlug, currentUrl } = Astro.props;
+
+function tagToggleUrl(tagName: string): string {
+  const params = new URLSearchParams(currentUrl.search);
+  params.delete("focus");
+  const existing = params.getAll("tag");
+  params.delete("tag");
+  const newTags = existing.includes(tagName)
+    ? existing.filter((t) => t !== tagName)
+    : [...existing, tagName];
+  for (const t of newTags) params.append("tag", t);
+  const qs = params.toString();
+  return `/codes/${codeSlug}` + (qs ? "?" + qs : "");
+}
+
+const selectedTags = new Set(currentUrl.searchParams.getAll("tag"));
 const hasMultipleFormats = bodies.length > 1;
 ---
 
@@ -49,14 +66,23 @@ const hasMultipleFormats = bodies.length > 1;
       )}
     </span>
 
-    <div class="flex flex-wrap gap-1 ml-auto">
-      {circuit.tags.map((tag) => (
-        <span class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 text-xs rounded">
-          {tag}
-        </span>
-      ))}
-    </div>
+    <div class="ml-auto"></div>
   </button>
+  <div class="flex flex-wrap gap-1 px-4 pb-2 -mt-1">
+    {circuit.tags.map((tag) => (
+      <a
+        href={tagToggleUrl(tag)}
+        class:list={[
+          "inline-block rounded px-1.5 py-0.5 text-xs transition-colors",
+          selectedTags.has(tag)
+            ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
+            : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+        ]}
+      >
+        {tag}
+      </a>
+    ))}
+  </div>
 
   <div class="circuit-detail overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;">
     <div class="border-t border-gray-200 dark:border-gray-800 px-4 py-4 space-y-3">

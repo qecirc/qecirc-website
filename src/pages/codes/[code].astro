@@ -159,7 +159,7 @@ const countLabel = hasFilters
   ) : (
     <div class="space-y-2">
       {circuits.map((circuit) => (
-        <CircuitRow circuit={circuit} bodies={bodiesMap.get(circuit.id) ?? []} tool={toolsMap.get(circuit.id)} />
+        <CircuitRow circuit={circuit} bodies={bodiesMap.get(circuit.id) ?? []} tool={toolsMap.get(circuit.id)} codeSlug={codeSlug!} currentUrl={Astro.url} />
       ))}
     </div>
   )}

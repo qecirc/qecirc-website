@@ -2,9 +2,10 @@
 interface Props {
   tags: string[];
   baseUrl?: URL;
+  basePath?: string;
 }
 
-const { tags, baseUrl } = Astro.props;
+const { tags, baseUrl, basePath = "/codes" } = Astro.props;
 
 function tagUrl(tag: string): string {
   if (baseUrl) {
@@ -14,9 +15,9 @@ function tagUrl(tag: string): string {
       params.append("tag", tag);
     }
     const qs = params.toString();
-    return "/codes" + (qs ? "?" + qs : "");
+    return basePath + (qs ? "?" + qs : "");
   }
-  return "/codes?tag=" + encodeURIComponent(tag);
+  return basePath + "?tag=" + encodeURIComponent(tag);
 }
 ---
 
