@@ -11,18 +11,21 @@ const { tool, baseUrl } = Astro.props;
 ---
 
 <div class="rounded border border-gray-200 dark:border-gray-800 p-4">
-  <div class="flex items-baseline gap-2 mb-1">
+  <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
     <h3 class="font-medium">{tool.name}</h3>
     <span class="text-xs text-gray-400 dark:text-gray-500">
       {tool.circuit_count} circuit{tool.circuit_count !== 1 ? "s" : ""}
     </span>
+    <div class="ml-auto">
+      <TagList tags={tool.tags} baseUrl={baseUrl} basePath="/tools" />
+    </div>
   </div>
 
   {tool.description && (
-    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{tool.description}</p>
+    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{tool.description}</p>
   )}
 
-  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mb-2">
+  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
     {tool.homepage_url && (
       <a href={tool.homepage_url} class="underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
         Homepage &#x2197;
@@ -34,6 +37,4 @@ const { tool, baseUrl } = Astro.props;
       </a>
     )}
   </div>
-
-  <TagList tags={tool.tags} baseUrl={baseUrl} basePath="/tools" />
 </div>

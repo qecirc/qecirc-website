@@ -14,11 +14,13 @@ const params = formatCodeParams(code);
 ---
 
 <div class="rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
-  <a href={`/codes/${slug}`} class="block">
-    <div class="flex items-baseline gap-2 mb-1">
+  <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+    <a href={`/codes/${slug}`} class="flex items-baseline gap-2">
       <h3 class="font-medium">{name}</h3>
       <span class="text-sm text-gray-500 dark:text-gray-400">{params}</span>
+    </a>
+    <div class="ml-auto">
+      <TagList tags={tags} baseUrl={baseUrl} />
     </div>
-  </a>
-  <TagList tags={tags} baseUrl={baseUrl} />
+  </div>
 </div>
