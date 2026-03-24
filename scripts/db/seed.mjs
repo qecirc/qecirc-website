@@ -10,20 +10,13 @@ db.pragma("foreign_keys = ON");
 
 // --- Steane Code [[7,1,3]] ---
 
-const steaneCircuit = `# Steane [[7,1,3]] encoding circuit
-# Encodes 1 logical qubit into 7 physical qubits
-H 4
-H 5
-H 6
+// Compact STIM format: gates on same tick grouped per line
+const steaneStim = `# Steane [[7,1,3]] encoding circuit
+H 4 5 6
 CX 5 1
-CX 1 2
-CX 4 0
-CX 6 4
-CX 5 3
-CX 2 0
-CX 6 3
-CX 4 5
-CX 0 1
+CX 1 2 4 0
+CX 6 4 5 3 2 0
+CX 6 3 4 5 0 1
 `;
 
 const insertCode = db.prepare(`
@@ -32,8 +25,13 @@ const insertCode = db.prepare(`
 `);
 
 const insertCircuit = db.prepare(`
-  INSERT INTO circuits (code_id, name, slug, description, source, format, body, gate_count, depth, qubit_count)
+  INSERT INTO circuits (code_id, name, slug, description, source, gate_count, depth, qubit_count, crumble_url, quirk_url)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+const insertBody = db.prepare(`
+  INSERT INTO circuit_bodies (circuit_id, format, body)
+  VALUES (?, ?, ?)
 `);
 
 const insertTag = db.prepare(`
@@ -62,26 +60,29 @@ db.transaction(() => {
     7, 1, 3,
   );
 
-  // Circuit (directly under code, no functionality intermediary)
+  // Circuit
   const { lastInsertRowid: circuitId } = insertCircuit.run(
     codeId,
     "Standard Encoding",
     "standard-encoding",
-    "Prepares the logical |0\u27E9 state by encoding 1 logical qubit into 7 physical qubits.",
+    "Encodes 1 logical qubit into 7 physical qubits preparing the logical |0\u27E9 state.",
     "https://doi.org/10.1098/rspa.1996.0136",
-    "stim",
-    steaneCircuit,
     12,  // gate_count: 3 H + 9 CX
     8,   // depth
     7,   // qubit_count
+    "https://algassert.com/crumble#circuit=Q(0,0)0;Q(1,0)1;Q(2,0)2;Q(3,0)3;Q(4,0)4;Q(5,0)5;Q(6,0)6;H_4_5_6;TICK;CX_5_1;TICK;CX_1_2_4_0;TICK;CX_6_4_5_3_2_0;TICK;CX_6_3_4_5_0_1",
+    "https://algassert.com/quirk",
   );
+
+  // Circuit bodies (multi-format)
+  insertBody.run(circuitId, "stim", steaneStim);
 
   // Code tags
   addTag("CSS", codeId, "code");
   addTag("stabilizer", codeId, "code");
   addTag("color-code", codeId, "code");
 
-  // Circuit tags (including "encoding" which was formerly a functionality)
+  // Circuit tags
   addTag("encoding", circuitId, "circuit");
   addTag("state-preparation", circuitId, "circuit");
   addTag("distance:3", circuitId, "circuit");

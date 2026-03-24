@@ -32,6 +32,12 @@ class ValidationResult:
 
 
 @dataclass
+class CircuitBodyEntry:
+    format: str  # "stim", "qasm", "cirq"
+    body: str
+
+
+@dataclass
 class IngestionPayload:
     code_status: str  # "existing" | "new"
     code_id: Optional[int]
@@ -44,4 +50,6 @@ class IngestionPayload:
     circuit_description: str = ""
     circuit_source: str = ""
     circuit_tags: list[TagEntry] = field(default_factory=list)
-    circuit_body: str = ""
+    circuit_bodies: list[CircuitBodyEntry] = field(default_factory=list)
+    crumble_url: str = ""
+    quirk_url: str = ""

@@ -17,11 +17,16 @@ export interface Circuit {
   slug: string;
   description: string | null;
   source: string;
-  format: string;
-  body: string;
   gate_count: number | null;
   depth: number | null;
   qubit_count: number | null;
+  crumble_url: string | null;
+  quirk_url: string | null;
+}
+
+export interface CircuitBody {
+  format: string;
+  body: string;
 }
 
 export type TaggableType = "code" | "circuit";
@@ -261,4 +266,37 @@ export function filterCircuitsForCode(
     .prepare(`SELECT * FROM circuits c ${where} ORDER BY c.name`)
     .all(...params) as Circuit[];
   return circuits.map((c) => ({ ...c, tags: getTagsFor("circuit", c.id) }));
+}
+
+const FORMAT_ORDER = ["stim", "qasm", "cirq"];
+
+export function getBodiesForCircuits(circuitIds: number[]): Map<number, CircuitBody[]> {
+  const db = getDb();
+  const result = new Map<number, CircuitBody[]>();
+  if (circuitIds.length === 0) return result;
+
+  const placeholders = circuitIds.map(() => "?").join(",");
+  const rows = db
+    .prepare(
+      `SELECT circuit_id, format, body FROM circuit_bodies
+       WHERE circuit_id IN (${placeholders})`,
+    )
+    .all(...circuitIds) as (CircuitBody & { circuit_id: number })[];
+
+  for (const row of rows) {
+    const list = result.get(row.circuit_id) ?? [];
+    list.push({ format: row.format, body: row.body });
+    result.set(row.circuit_id, list);
+  }
+
+  // Sort each circuit's bodies by preferred format order
+  for (const [id, bodies] of result) {
+    bodies.sort((a, b) => {
+      const ai = FORMAT_ORDER.indexOf(a.format);
+      const bi = FORMAT_ORDER.indexOf(b.format);
+      return (ai === -1 ? Infinity : ai) - (bi === -1 ? Infinity : bi);
+    });
+  }
+
+  return result;
 }

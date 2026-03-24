@@ -16,6 +16,7 @@ import {
   getCircuitsForCode,
   countCircuitsForCode,
   getCircuitTagsForCode,
+  getBodiesForCircuits,
 } from "../../lib/queries";
 import type { CircuitFilters } from "../../lib/queries";
 
@@ -60,6 +61,7 @@ const hasFilters = hasActiveCircuitFilters(filters);
 const totalCount = countCircuitsForCode(code.id);
 const circuits = hasFilters ? filterCircuitsForCode(code.id, filters) : getCircuitsForCode(code.id);
 const allCircuitTags = getCircuitTagsForCode(code.id);
+const bodiesMap = getBodiesForCircuits(circuits.map((c) => c.id));
 
 const countLabel = hasFilters
   ? `${circuits.length} of ${totalCount} circuit${totalCount !== 1 ? "s" : ""}`
@@ -107,7 +109,7 @@ const countLabel = hasFilters
   ) : (
     <div class="space-y-2">
       {circuits.map((circuit) => (
-        <CircuitRow circuit={circuit} />
+        <CircuitRow circuit={circuit} bodies={bodiesMap.get(circuit.id) ?? []} />
       ))}
     </div>
   )}

@@ -1,12 +1,14 @@
 ---
-import type { Circuit } from "../lib/queries";
+import type { Circuit, CircuitBody } from "../lib/queries";
 import CodeBlock from "./CodeBlock.astro";
 
 interface Props {
   circuit: Circuit & { tags: string[] };
+  bodies: CircuitBody[];
 }
 
-const { circuit } = Astro.props;
+const { circuit, bodies } = Astro.props;
+const hasMultipleFormats = bodies.length > 1;
 ---
 
 <div id={circuit.slug} class="rounded border border-gray-200 dark:border-gray-800">
@@ -60,28 +62,63 @@ const { circuit } = Astro.props;
       {circuit.description && (
         <p class="text-sm text-gray-600 dark:text-gray-400">{circuit.description}</p>
       )}
-      <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
         <div>
           <span class="text-gray-500 dark:text-gray-400">Source:</span>{" "}
           {circuit.source.startsWith("http") ? (
-            <a
-              href={circuit.source}
-              class="underline hover:text-gray-900 dark:hover:text-gray-100"
-              target="_blank"
-              rel="noopener"
-            >
+            <a href={circuit.source} class="underline hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
               {circuit.source}
             </a>
           ) : (
             <span>{circuit.source}</span>
           )}
         </div>
-        <div>
-          <span class="text-gray-500 dark:text-gray-400">Format:</span>{" "}
-          <span class="uppercase">{circuit.format}</span>
-        </div>
+        {(circuit.crumble_url || circuit.quirk_url) && (
+          <div class="flex items-center gap-3">
+            <span class="text-gray-500 dark:text-gray-400">View in:</span>
+            {circuit.crumble_url && (
+              <a href={circuit.crumble_url} class="underline hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
+                Crumble &#x2197;
+              </a>
+            )}
+            {circuit.quirk_url && (
+              <a href={circuit.quirk_url} class="underline hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
+                Quirk &#x2197;
+              </a>
+            )}
+          </div>
+        )}
       </div>
-      <CodeBlock code={circuit.body} label={`${circuit.format.toUpperCase()} Circuit`} />
+
+      {hasMultipleFormats ? (
+        <div class="format-switcher">
+          <div class="flex gap-1 mb-2">
+            {bodies.map((b, i) => (
+              <button
+                class:list={[
+                  "format-tab px-3 py-1 text-xs rounded cursor-pointer transition-colors",
+                  i === 0
+                    ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+                ]}
+                data-format={b.format}
+              >
+                {b.format.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          {bodies.map((b, i) => (
+            <div class="format-body" data-format={b.format} style={i === 0 ? "" : "display:none"}>
+              <CodeBlock code={b.body} label={`${b.format.toUpperCase()} Circuit`} />
+            </div>
+          ))}
+        </div>
+      ) : bodies.length === 1 ? (
+        <CodeBlock code={bodies[0].body} label={`${bodies[0].format.toUpperCase()} Circuit`} />
+      ) : (
+        <p class="text-sm text-gray-400">No circuit body available.</p>
+      )}
     </div>
   </div>
 </div>
@@ -127,6 +164,42 @@ const { circuit } = Astro.props;
     });
   }
 
+  // Format switcher logic
+  function initFormatSwitchers() {
+    document.querySelectorAll(".format-switcher").forEach(function (switcher) {
+      const tabs = switcher.querySelectorAll(".format-tab");
+      const bodies = switcher.querySelectorAll(".format-body");
+
+      tabs.forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          const format = (tab as HTMLElement).dataset.format;
+
+          // Update tab styles
+          tabs.forEach(function (t) {
+            if ((t as HTMLElement).dataset.format === format) {
+              t.className = "format-tab px-3 py-1 text-xs rounded cursor-pointer transition-colors bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900";
+            } else {
+              t.className = "format-tab px-3 py-1 text-xs rounded cursor-pointer transition-colors bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700";
+            }
+          });
+
+          // Toggle body visibility
+          bodies.forEach(function (b) {
+            (b as HTMLElement).style.display = (b as HTMLElement).dataset.format === format ? "" : "none";
+          });
+
+          // Recalculate max-height after layout reflow from format switch
+          const detail = switcher.closest(".circuit-detail") as HTMLElement;
+          if (detail && detail.style.maxHeight !== "0px") {
+            requestAnimationFrame(function () {
+              detail.style.maxHeight = detail.scrollHeight + "px";
+            });
+          }
+        });
+      });
+    });
+  }
+
   function expandFromHash() {
     const hash = location.hash.slice(1);
     if (!hash) return;
@@ -140,6 +213,7 @@ const { circuit } = Astro.props;
   }
 
   initCircuitRows();
+  initFormatSwitchers();
   expandFromHash();
   window.addEventListener("hashchange", expandFromHash);
 </script>

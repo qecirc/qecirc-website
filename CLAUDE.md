@@ -37,12 +37,17 @@ codes
   -- n, k, d: code parameters [[n,k,d]] for direct querying/sorting
 
 circuits
-  id, code_id → codes, name, slug, description,
-  source, format (default 'stim'), body,
-  gate_count, depth, qubit_count, created_at
+  id, code_id → codes, name, slug, description, source,
+  gate_count, depth, qubit_count,
+  crumble_url, quirk_url, created_at
   -- source: provenance (DOI, URL, or citation)
-  -- format: circuit format identifier (e.g. 'stim')
   -- gate_count, depth, qubit_count: numeric metrics for filtering
+  -- crumble_url, quirk_url: optional external tool links
+
+circuit_bodies
+  id, circuit_id → circuits, format, body
+  -- format: circuit format identifier (e.g. 'stim', 'qasm', 'cirq')
+  -- UNIQUE(circuit_id, format): one body per format per circuit
 
 tags
   id, name                          -- e.g. "CSS", "distance:3", "encoding"
