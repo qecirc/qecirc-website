@@ -378,6 +378,23 @@ export function hasActiveToolFilters(filters: ToolFilters): boolean {
   return (filters.tags?.length ?? 0) > 0;
 }
 
+export function searchTools(query: string): (Tool & { tags: string[] })[] {
+  const db = getDb();
+  const escaped = query.replace(/[%_\\]/g, "\\$&");
+  const pattern = `%${escaped}%`;
+  const tools = db
+    .prepare(
+      `SELECT DISTINCT c.* FROM tools c
+       LEFT JOIN taggings tg ON tg.taggable_id = c.id AND tg.taggable_type = 'tool'
+       LEFT JOIN tags t ON t.id = tg.tag_id
+       WHERE c.name LIKE ? ESCAPE '\\' OR t.name LIKE ? ESCAPE '\\'
+       ORDER BY c.name
+       LIMIT 10`,
+    )
+    .all(pattern, pattern) as Tool[];
+  return tools.map((t) => ({ ...t, tags: getTagsFor("tool", t.id) }));
+}
+
 export function getToolById(id: number): Tool | undefined {
   const db = getDb();
   return db.prepare("SELECT * FROM tools WHERE id = ?").get(id) as Tool | undefined;
