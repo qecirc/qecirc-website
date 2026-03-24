@@ -1,0 +1,25 @@
+---
+import Layout from "../components/Layout.astro";
+import Breadcrumb from "../components/Breadcrumb.astro";
+---
+
+<Layout title="Contribute">
+  <Breadcrumb items={[
+    { label: "Home", href: "/" },
+    { label: "Contribute" },
+  ]} />
+
+  <h1 class="text-2xl font-bold mb-4">Contribute</h1>
+
+  <div class="space-y-4 text-gray-600 dark:text-gray-400">
+    <p>
+      QECirc is a community-driven library. We welcome contributions of new quantum error correction circuits.
+    </p>
+    <p>
+      To submit a circuit, open a
+      <a href="https://github.com/your-org/qecirc-website/issues/new" class="underline text-gray-900 dark:text-gray-100 hover:text-gray-600 dark:hover:text-gray-300" target="_blank" rel="noopener">GitHub Issue</a>
+      or reach out via email at
+      <a href="mailto:dummy@email.com" class="underline text-gray-900 dark:text-gray-100 hover:text-gray-600 dark:hover:text-gray-300">dummy@email.com</a>.
+    </p>
+  </div>
+</Layout>
