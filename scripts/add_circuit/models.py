@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 
@@ -22,35 +22,3 @@ class CircuitProperties:
 class TagEntry:
     name: str
     status: str  # "confirmed" | "suggested"
-
-
-@dataclass
-class ValidationResult:
-    valid: bool
-    detected_functionality: Optional[str] = None
-    mismatch_details: Optional[str] = None
-
-
-@dataclass
-class CircuitBodyEntry:
-    format: str  # "stim", "qasm", "cirq"
-    body: str
-
-
-@dataclass
-class IngestionPayload:
-    code_status: str  # "existing" | "new"
-    code_id: Optional[int]
-    code_name: str
-    code_slug: str
-    code_tags: list[TagEntry] = field(default_factory=list)
-    qubit_permutation: Optional[list[int]] = None
-    circuit_name: str = ""
-    circuit_slug: str = ""
-    circuit_description: str = ""
-    circuit_source: str = ""
-    circuit_tags: list[TagEntry] = field(default_factory=list)
-    circuit_bodies: list[CircuitBodyEntry] = field(default_factory=list)
-    crumble_url: str = ""
-    quirk_url: str = ""
-    tool_name: str = ""  # resolved to tool_id during ingestion

@@ -2,15 +2,16 @@
 Tests for code_identify.py.
 
 Examples used:
-  [[4,2,2]] CSS code   — Hx = Hz = [[1,1,1,1]]
-  [[7,1,3]] Steane     — Hx = Hz = Hamming parity check matrix
-  [[5,1,3]] 5-qubit    — general stabilizer (not CSS)
+  [[4,2,2]] CSS code   -- Hx = Hz = [[1,1,1,1]]
+  [[7,1,3]] Steane     -- Hx = Hz = Hamming parity check matrix
+  [[5,1,3]] 5-qubit    -- general stabilizer (not CSS)
 """
 
 import numpy as np
 import pytest
 
 from scripts.add_circuit.code_identify import (
+    canonical_form,
     canonical_hash,
     check_commutativity,
     extract_params,
@@ -43,7 +44,7 @@ def code_713():
 
 @pytest.fixture
 def code_513():
-    """[[5,1,3]] 5-qubit perfect code — general stabilizer, not CSS."""
+    """[[5,1,3]] 5-qubit perfect code -- general stabilizer, not CSS."""
     Hx = np.array([
         [1, 0, 0, 1, 0],
         [0, 1, 0, 0, 1],
@@ -80,7 +81,7 @@ class TestGf2Rref:
         assert R[1, 1] == 1
 
     def test_mod2_arithmetic(self):
-        # Two identical rows → second row should vanish
+        # Two identical rows -> second row should vanish
         M = np.array([[1, 0, 1], [1, 0, 1]])
         R = gf2_rref(M)
         assert np.all(R[1] == 0)
@@ -120,14 +121,8 @@ class TestCheckCommutativity:
         assert check_commutativity(*code_513)
 
     def test_non_commuting_rejected(self):
-        # X on qubit 0 and Z on qubit 0 anti-commute
-        Hx = np.array([[1, 0]])
-        Hz = np.array([[1, 0]])
-        # Hx·Hz^T + Hz·Hx^T = [[1]] + [[1]] = [[0]] — actually this is CSS, commutes
-        # Build a genuinely non-commuting pair:
         Hx = np.array([[1, 0], [0, 0]])
         Hz = np.array([[0, 0], [1, 0]])
-        # Row 0 of Hx vs row 1 of Hz: [1,0]·[1,0]^T = 1, [0,0]·[0,0]^T = 0 → sum = 1 ≠ 0
         assert not check_commutativity(Hx, Hz)
 
 
@@ -171,6 +166,36 @@ class TestExtractParams:
 
 
 # ---------------------------------------------------------------------------
+# canonical_form
+# ---------------------------------------------------------------------------
+
+class TestCanonicalForm:
+    def test_returns_rref_matrices(self, code_713):
+        Hx, Hz = code_713
+        canon_Hx, canon_Hz, perm = canonical_form(Hx, Hz)
+        # RREF matrices should have no all-zero rows
+        assert np.all(np.any(canon_Hx, axis=1))
+        assert np.all(np.any(canon_Hz, axis=1))
+
+    def test_permutation_length(self, code_713):
+        Hx, Hz = code_713
+        _, _, perm = canonical_form(Hx, Hz)
+        assert len(perm) == Hx.shape[1]
+        assert sorted(perm) == list(range(Hx.shape[1]))
+
+    def test_column_permutation_gives_same_canonical(self, code_713):
+        Hx, Hz = code_713
+        # Permute columns
+        p = [3, 1, 5, 0, 6, 2, 4]
+        Hx_p = Hx[:, p]
+        Hz_p = Hz[:, p]
+        canon1_Hx, canon1_Hz, _ = canonical_form(Hx, Hz)
+        canon2_Hx, canon2_Hz, _ = canonical_form(Hx_p, Hz_p)
+        assert np.array_equal(canon1_Hx, canon2_Hx)
+        assert np.array_equal(canon1_Hz, canon2_Hz)
+
+
+# ---------------------------------------------------------------------------
 # canonical_hash
 # ---------------------------------------------------------------------------
 
@@ -185,10 +210,24 @@ class TestCanonicalHash:
 
     def test_row_permutation_same_hash(self, code_713):
         Hx, Hz = code_713
-        # Swap rows — should yield same canonical hash
         Hx_perm = Hx[[1, 0, 2], :]
         Hz_perm = Hz[[1, 0, 2], :]
         assert canonical_hash(Hx, Hz) == canonical_hash(Hx_perm, Hz_perm)
+
+    def test_column_permutation_same_hash(self, code_713):
+        Hx, Hz = code_713
+        p = [3, 1, 5, 0, 6, 2, 4]
+        assert canonical_hash(Hx, Hz) == canonical_hash(Hx[:, p], Hz[:, p])
+
+    def test_column_permutation_same_hash_422(self, code_422):
+        Hx, Hz = code_422
+        p = [2, 0, 3, 1]
+        assert canonical_hash(Hx, Hz) == canonical_hash(Hx[:, p], Hz[:, p])
+
+    def test_column_permutation_same_hash_513(self, code_513):
+        Hx, Hz = code_513
+        p = [4, 2, 0, 3, 1]
+        assert canonical_hash(Hx, Hz) == canonical_hash(Hx[:, p], Hz[:, p])
 
 
 # ---------------------------------------------------------------------------
@@ -200,23 +239,45 @@ class TestFindQubitPermutation:
         Hx, Hz = code_422
         perm = find_qubit_permutation(Hx, Hz, Hx, Hz)
         assert perm is not None
-        assert Hx[:, perm].tolist() == Hx.tolist()
+        assert np.array_equal(gf2_rref(Hx[:, perm]), gf2_rref(Hx))
 
-    def test_known_permutation_recovered(self, code_422):
-        Hx, Hz = code_422
-        # [[4,2,2]]: all columns are identical, any permutation works
-        perm = find_qubit_permutation(Hx, Hz, Hx, Hz)
+    def test_known_permutation_recovered(self, code_713):
+        Hx, Hz = code_713
+        p = [3, 1, 5, 0, 6, 2, 4]
+        Hx_p = Hx[:, p]
+        Hz_p = Hz[:, p]
+        perm = find_qubit_permutation(Hx_p, Hz_p, Hx, Hz)
         assert perm is not None
-        assert len(perm) == 4
+        assert np.array_equal(gf2_rref(Hx_p[:, perm]), gf2_rref(Hx))
+        assert np.array_equal(gf2_rref(Hz_p[:, perm]), gf2_rref(Hz))
 
     def test_different_codes_no_permutation(self, code_422, code_713):
         Hx1, Hz1 = code_422
         Hx2, Hz2 = code_713
         assert find_qubit_permutation(Hx1, Hz1, Hx2, Hz2) is None
 
-    def test_large_code_skipped(self):
-        # n > 12: permutation search is skipped, returns None
-        n = 13
-        Hx = np.eye(n, dtype=int)
-        Hz = np.eye(n, dtype=int)
-        assert find_qubit_permutation(Hx, Hz, Hx, Hz) is None
+    def test_works_for_large_codes(self):
+        """Canonicalization-based approach works for any n, not just n <= 12."""
+        # Use a large CSS code (Hx @ Hz.T = 0 mod 2 trivially since Hz = Hx)
+        n = 20
+        rng = np.random.default_rng(42)
+        Hx = rng.integers(0, 2, size=(5, n)).astype(int)
+        Hz = Hx.copy()  # self-dual CSS: Hx @ Hx.T = 0 mod 2 for even-weight rows
+        # Force even weight rows so Hx @ Hz.T = 0 mod 2
+        for i in range(Hx.shape[0]):
+            if Hx[i].sum() % 2 == 1:
+                Hx[i, 0] ^= 1
+                Hz[i, 0] ^= 1
+        perm = find_qubit_permutation(Hx, Hz, Hx, Hz)
+        assert perm is not None
+        assert np.array_equal(gf2_rref(Hx[:, perm]), gf2_rref(Hx))
+
+    def test_513_permutation(self, code_513):
+        Hx, Hz = code_513
+        p = [4, 2, 0, 3, 1]
+        Hx_p = Hx[:, p]
+        Hz_p = Hz[:, p]
+        perm = find_qubit_permutation(Hx_p, Hz_p, Hx, Hz)
+        assert perm is not None
+        assert np.array_equal(gf2_rref(Hx_p[:, perm]), gf2_rref(Hx))
+        assert np.array_equal(gf2_rref(Hz_p[:, perm]), gf2_rref(Hz))

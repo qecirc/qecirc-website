@@ -1,37 +1,38 @@
 """
 Circuit validation: parse a STIM circuit and classify its functionality.
-
-Stabilizer-tableau-based correctness checking (requiring the stim package) is
-isolated in `check_circuit_vs_matrices` so the rest of the module is testable
-without it.
 """
 
+import re
 from pathlib import Path
 from typing import Optional
 
-import numpy as np
-
-from .models import CircuitProperties, ValidationResult
+from .models import CircuitProperties
 
 # STIM instruction sets used for heuristic classification
 _MEASURE_OPS = {"M", "MX", "MY", "MZ", "MR", "MRX", "MRY", "MRZ"}
 _ENTANGLE_OPS = {"CNOT", "CX", "CZ", "CY", "SWAP", "ISWAP"}
 _RESET_OPS = {"R", "RX", "RY", "RZ"}
+_META_OPS = {"QUBIT_COORDS", "DETECTOR", "OBSERVABLE_INCLUDE", "TICK", "REPEAT"}
 
 
 def load_circuit(path: str | Path) -> str:
     return Path(path).read_text()
 
 
+def _parse_op(line: str) -> Optional[str]:
+    """Extract the operation name from a STIM instruction line, or None for non-ops."""
+    line = line.strip()
+    if not line or line.startswith("#") or line in ("{", "}"):
+        return None
+    return line.split()[0].split("(")[0].upper()
+
+
 def _instructions(circuit_text: str) -> set[str]:
     ops = set()
     for line in circuit_text.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        token = line.split()[0].split("(")[0].upper()
-        if token not in {"QUBIT_COORDS", "DETECTOR", "OBSERVABLE_INCLUDE", "TICK", "REPEAT"}:
-            ops.add(token)
+        op = _parse_op(line)
+        if op and op not in _META_OPS:
+            ops.add(op)
     return ops
 
 
@@ -55,88 +56,79 @@ def classify_functionality(circuit_text: str) -> Optional[str]:
     return None
 
 
+def _parse_repeat_blocks(circuit_text: str) -> list[tuple[int, str]]:
+    """
+    Parse REPEAT blocks recursively, returning (repeat_count, block_body) pairs.
+    Non-repeated lines get repeat_count=1. Nested REPEAT blocks multiply counts.
+    """
+    blocks: list[tuple[int, str]] = []
+    lines = circuit_text.splitlines()
+    i = 0
+    while i < len(lines):
+        stripped = lines[i].strip()
+        m = re.match(r"REPEAT\s+(\d+)\s*\{?", stripped, re.IGNORECASE)
+        if m:
+            count = int(m.group(1))
+            # Collect lines until matching closing brace
+            brace_depth = 1 if "{" in stripped else 0
+            body_lines = []
+            i += 1
+            while i < len(lines):
+                cur = lines[i].strip()
+                if cur == "{":
+                    if brace_depth == 0:
+                        brace_depth = 1
+                        i += 1
+                        continue
+                    brace_depth += 1
+                elif cur == "}" or cur.endswith("}"):
+                    brace_depth -= 1
+                    if brace_depth == 0:
+                        i += 1
+                        break
+                if brace_depth >= 1:
+                    body_lines.append(lines[i])
+                i += 1
+            # Recurse into body to handle nested REPEAT blocks
+            for inner_count, inner_body in _parse_repeat_blocks("\n".join(body_lines)):
+                blocks.append((count * inner_count, inner_body))
+        else:
+            blocks.append((1, lines[i]))
+            i += 1
+    return blocks
+
+
 def circuit_properties(circuit_text: str) -> CircuitProperties:
-    """Extract basic structural properties without running a simulation."""
+    """Extract basic structural properties, correctly accounting for REPEAT blocks."""
     max_qubit = -1
     gate_count = 0
-    depth = circuit_text.upper().count("TICK")
+    depth = 0
 
-    for line in circuit_text.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        parts = line.split()
-        op = parts[0].split("(")[0].upper()
-        if op in ("QUBIT_COORDS", "DETECTOR", "OBSERVABLE_INCLUDE", "TICK", "REPEAT", "#"):
-            continue
-        gate_count += 1
-        for token in parts[1:]:
-            try:
-                q = int(token)
-                max_qubit = max(max_qubit, q)
-            except ValueError:
-                pass
+    for repeat_count, block in _parse_repeat_blocks(circuit_text):
+        block_depth = 0
+        for line in block.splitlines():
+            op = _parse_op(line)
+            if op is None:
+                continue
+            if op == "TICK":
+                block_depth += 1
+                continue
+            if op in _META_OPS:
+                continue
+            # Count this gate (multiplied by repeat count)
+            gate_count += repeat_count
+            parts = line.strip().split()
+            for token in parts[1:]:
+                try:
+                    q = int(token)
+                    max_qubit = max(max_qubit, q)
+                except ValueError:
+                    pass
+        depth += block_depth * repeat_count
 
     return CircuitProperties(
         qubit_count=max_qubit + 1 if max_qubit >= 0 else 0,
         depth=depth,
         gate_count=gate_count,
         detected_functionality=classify_functionality(circuit_text),
-    )
-
-
-def check_circuit_vs_matrices(
-    circuit_text: str,
-    Hx: np.ndarray,
-    Hz: np.ndarray,
-    qubit_permutation: Optional[list[int]] = None,
-) -> ValidationResult:
-    """
-    Verify the circuit's stabilizer tableau is consistent with Hx and Hz.
-
-    Requires the `stim` package. Returns ValidationResult(valid=False) with
-    details if stim is unavailable or the check fails.
-    """
-    try:
-        import stim  # type: ignore
-    except ImportError:
-        return ValidationResult(
-            valid=False,
-            mismatch_details="stim package not installed; skipping tableau check",
-        )
-
-    try:
-        circuit = stim.Circuit(circuit_text)
-        tableau = circuit.to_tableau()
-    except Exception as exc:
-        return ValidationResult(valid=False, mismatch_details=f"stim parse error: {exc}")
-
-    n = Hx.shape[1]
-    circuit_qubits = len(tableau)
-    if circuit_qubits < n:
-        return ValidationResult(
-            valid=False,
-            mismatch_details=f"circuit acts on {circuit_qubits} qubits but code has n={n}",
-        )
-
-    # Apply qubit permutation if provided
-    Hx_check = Hx[:, qubit_permutation] if qubit_permutation else Hx
-    Hz_check = Hz[:, qubit_permutation] if qubit_permutation else Hz
-
-    # Check that each stabilizer generator is preserved by the circuit
-    mismatches = []
-    for i, row in enumerate(Hx_check):
-        ps = stim.PauliString(
-            "".join("X" if x else "I" for x in row)
-            + "".join("Z" if z else "I" for z in Hz_check[i])
-        )
-        # TODO: compare against output tableau stabilizers
-        # Full implementation requires mapping logical → physical qubits
-        _ = ps  # placeholder
-
-    # Placeholder: return valid until full tableau check is implemented
-    return ValidationResult(
-        valid=True,
-        detected_functionality=classify_functionality(circuit_text),
-        mismatch_details="tableau check not yet fully implemented",
     )

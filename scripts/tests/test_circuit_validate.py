@@ -1,21 +1,13 @@
 """
 Tests for circuit_validate.py.
-
-Stim-dependent checks (check_circuit_vs_matrices) are tested with stim mocked
-so the suite runs without the stim package installed.
 """
-
-from unittest.mock import patch
 
 import pytest
 
 from scripts.add_circuit.circuit_validate import (
     circuit_properties,
     classify_functionality,
-    check_circuit_vs_matrices,
 )
-
-import numpy as np
 
 # ---------------------------------------------------------------------------
 # Sample circuits (minimal STIM snippets)
@@ -53,6 +45,29 @@ TICK
 CNOT 0 1
 TICK
 CNOT 0 2
+"""
+
+CIRCUIT_WITH_REPEAT = """\
+H 0
+TICK
+REPEAT 10 {
+    CNOT 0 1
+    TICK
+    CNOT 0 2
+    TICK
+}
+H 1
+"""
+
+CIRCUIT_NESTED_REPEAT = """\
+REPEAT 5 {
+    H 0
+    TICK
+    REPEAT 3 {
+        CNOT 0 1
+        TICK
+    }
+}
 """
 
 
@@ -109,39 +124,27 @@ class TestCircuitProperties:
         assert props.qubit_count == 0
         assert props.gate_count == 0
 
+    def test_repeat_gate_count(self):
+        props = circuit_properties(CIRCUIT_WITH_REPEAT)
+        # H(1) + 10*(CNOT + CNOT) + H(1) = 22
+        assert props.gate_count == 22
 
-# ---------------------------------------------------------------------------
-# check_circuit_vs_matrices (stim mocked)
-# ---------------------------------------------------------------------------
+    def test_repeat_depth(self):
+        props = circuit_properties(CIRCUIT_WITH_REPEAT)
+        # 1 TICK before REPEAT + 10 * 2 TICKs inside = 21
+        assert props.depth == 21
 
-class TestCheckCircuitVsMatrices:
-    def test_stim_not_installed_returns_invalid(self):
-        Hx = np.array([[1, 1, 1, 1]])
-        Hz = np.array([[1, 1, 1, 1]])
-        with patch.dict("sys.modules", {"stim": None}):
-            result = check_circuit_vs_matrices(ENCODING_CIRCUIT, Hx, Hz)
-        assert not result.valid
-        assert "stim" in result.mismatch_details.lower()
+    def test_repeat_qubit_count(self):
+        props = circuit_properties(CIRCUIT_WITH_REPEAT)
+        # Qubits 0, 1, 2
+        assert props.qubit_count == 3
 
-    def test_stim_parse_error_returns_invalid(self):
-        Hx = np.array([[1, 1, 1, 1]])
-        Hz = np.array([[1, 1, 1, 1]])
-        # Pass gibberish that stim cannot parse
-        try:
-            import stim  # noqa: F401
-            result = check_circuit_vs_matrices("NOT_A_VALID_STIM_INSTRUCTION 0", Hx, Hz)
-            assert not result.valid
-        except ImportError:
-            pytest.skip("stim not installed")
+    def test_nested_repeat_gate_count(self):
+        props = circuit_properties(CIRCUIT_NESTED_REPEAT)
+        # 5*(H) + 5*3*(CNOT) = 20
+        assert props.gate_count == 20
 
-    def test_too_few_qubits_returns_invalid(self):
-        Hx = np.ones((1, 10), dtype=int)
-        Hz = np.ones((1, 10), dtype=int)
-        try:
-            import stim  # noqa: F401
-            # Circuit only touches 4 qubits, code needs 10
-            result = check_circuit_vs_matrices(ENCODING_CIRCUIT, Hx, Hz)
-            assert not result.valid
-            assert "qubits" in result.mismatch_details
-        except ImportError:
-            pytest.skip("stim not installed")
+    def test_nested_repeat_depth(self):
+        props = circuit_properties(CIRCUIT_NESTED_REPEAT)
+        # 5*(1 TICK + 3*1 TICK) = 20
+        assert props.depth == 20

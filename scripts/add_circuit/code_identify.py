@@ -44,12 +44,12 @@ def gf2_rank(M: np.ndarray) -> int:
 # ---------------------------------------------------------------------------
 
 def check_commutativity(Hx: np.ndarray, Hz: np.ndarray) -> bool:
-    """Verify all stabilizer generators mutually commute: Hx·Hz^T + Hz·Hx^T = 0 mod 2."""
+    """Verify all stabilizer generators mutually commute: Hx*Hz^T + Hz*Hx^T = 0 mod 2."""
     return bool(np.all((Hx @ Hz.T + Hz @ Hx.T) % 2 == 0))
 
 
 def is_css(Hx: np.ndarray, Hz: np.ndarray) -> bool:
-    """CSS codes satisfy Hx·Hz^T = 0 mod 2 (X and Z generators commute independently)."""
+    """CSS codes satisfy Hx*Hz^T = 0 mod 2 (X and Z generators commute independently)."""
     return bool(np.all((Hx @ Hz.T) % 2 == 0))
 
 
@@ -68,14 +68,47 @@ def extract_params(Hx: np.ndarray, Hz: np.ndarray) -> CodeParams:
 # Canonicalization
 # ---------------------------------------------------------------------------
 
+def canonical_form(Hx: np.ndarray, Hz: np.ndarray) -> tuple[np.ndarray, np.ndarray, list[int]]:
+    """
+    Compute the canonical representation of a code given by (Hx, Hz).
+
+    Steps:
+    1. RREF of [Hx | Hz] to canonicalize row space
+    2. Sort qubit columns by their joint (X_col, Z_col) profile so that
+       column permutations of the same code produce the same result
+
+    Returns (canon_Hx, canon_Hz, column_permutation) where the permutation
+    maps canonical column index -> original column index.
+    """
+    n = Hx.shape[1]
+    symplectic = np.hstack([Hx, Hz])
+    rref = gf2_rref(symplectic)
+    # Remove all-zero rows
+    rref = rref[np.any(rref, axis=1)]
+    # Sort qubits by their joint X and Z column profile.
+    # Column j in X part and column j+n in Z part belong to the same qubit.
+    joint_cols = np.vstack([rref[:, :n], rref[:, n:]])  # shape (2*rows, n)
+    joint_keys = [(tuple(joint_cols[:, j].tolist()), j) for j in range(n)]
+    joint_keys.sort()
+    qubit_perm = [k[1] for k in joint_keys]
+
+    canon_Hx = gf2_rref(Hx[:, qubit_perm])
+    canon_Hz = gf2_rref(Hz[:, qubit_perm])
+    # Remove all-zero rows
+    canon_Hx = canon_Hx[np.any(canon_Hx, axis=1)]
+    canon_Hz = canon_Hz[np.any(canon_Hz, axis=1)]
+
+    return canon_Hx, canon_Hz, qubit_perm
+
+
 def canonical_hash(Hx: np.ndarray, Hz: np.ndarray) -> str:
     """
-    Stable hash for code identity. Uses RREF of the combined symplectic matrix
-    [Hx | Hz] so that equivalent generator sets produce the same hash.
+    Stable hash for code identity. Invariant under row operations and column
+    (qubit) permutations, so equivalent codes always produce the same hash.
     """
-    symplectic = np.hstack([Hx, Hz])
-    canonical = gf2_rref(symplectic)
-    return hashlib.sha256(canonical.tobytes()).hexdigest()
+    canon_Hx, canon_Hz, _ = canonical_form(Hx, Hz)
+    combined = np.hstack([canon_Hx, canon_Hz])
+    return hashlib.sha256(combined.tobytes()).hexdigest()
 
 
 # ---------------------------------------------------------------------------
@@ -91,40 +124,39 @@ def find_qubit_permutation(
     """
     Find a column permutation mapping (Hx_new, Hz_new) to (Hx_ref, Hz_ref).
 
-    Uses a column-weight-profile prefilter then tries candidate permutations.
-    Returns None if no permutation is found (codes may be inequivalent, or the
-    search space was too large).
+    Both codes must have the same canonical hash for this to succeed. The
+    permutation is computed by canonicalizing both and composing:
+        new_qubit_order -> canonical -> ref_qubit_order (inverse)
 
-    NOTE: This is a best-effort heuristic. For large codes it may not find a
-    permutation even when one exists.
+    Returns a permutation list p such that Hx_new[:, p] is row-equivalent to
+    Hx_ref (and same for Hz), or None if no permutation exists.
     """
     n = Hx_new.shape[1]
     if Hx_ref.shape[1] != n:
         return None
 
-    # Prefilter: column weight profiles must match
-    def col_weights(Hx, Hz):
-        return sorted(
-            (int(Hx[:, i].sum()), int(Hz[:, i].sum())) for i in range(Hx.shape[1])
-        )
+    _, _, perm_new = canonical_form(Hx_new, Hz_new)
+    _, _, perm_ref = canonical_form(Hx_ref, Hz_ref)
 
-    if col_weights(Hx_new, Hz_new) != col_weights(Hx_ref, Hz_ref):
+    # perm_new maps canonical position -> original new qubit
+    # perm_ref maps canonical position -> original ref qubit
+    # We want p such that new[:, p] ~ ref, i.e. for each ref qubit position j,
+    # find which new qubit maps to the same canonical position.
+    # inv_perm_ref[ref_qubit] = canonical_position
+    inv_perm_ref = [0] * n
+    for canon_pos, ref_qubit in enumerate(perm_ref):
+        inv_perm_ref[ref_qubit] = canon_pos
+
+    # result[ref_qubit_j] = new_qubit that maps to same canonical position
+    result = [0] * n
+    for ref_qubit in range(n):
+        canon_pos = inv_perm_ref[ref_qubit]
+        result[ref_qubit] = perm_new[canon_pos]
+
+    # Verify the permutation actually works (RREF equivalence)
+    if not np.array_equal(gf2_rref(Hx_new[:, result]), gf2_rref(Hx_ref)):
+        return None
+    if not np.array_equal(gf2_rref(Hz_new[:, result]), gf2_rref(Hz_ref)):
         return None
 
-    # For small codes, try all permutations (n <= 12 only to stay fast)
-    if n > 12:
-        return None
-
-    from itertools import permutations
-
-    target_Hx = gf2_rref(Hx_ref)
-    target_Hz = gf2_rref(Hz_ref)
-
-    for perm in permutations(range(n)):
-        perm = list(perm)
-        if np.array_equal(gf2_rref(Hx_new[:, perm]), target_Hx) and np.array_equal(
-            gf2_rref(Hz_new[:, perm]), target_Hz
-        ):
-            return perm
-
-    return None
+    return result
