@@ -123,6 +123,8 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 ├── .github/
 │   └── ISSUE_TEMPLATE/    # Circuit submission issue template
 ├── docs/
+│   ├── database.md        # Database & dev server management
+│   ├── adding-circuits.md # Circuit ingestion workflow + YAML format reference
 │   └── circuit-format.md  # Extended STIM format spec (extensions beyond tsim only)
 ├── scripts/
 │   ├── add_circuit/       # Circuit ingestion modules (Python)
@@ -160,6 +162,7 @@ chore(deps): update astro to v5.5.0
 
 ## Key Principles
 
+- **YAML is the source of truth** — all library data in `data_yaml/`, SQLite is derived
 - **Minimal dependencies** — exhaust built-ins and stdlib before adding a package
 - **No external services** — SQLite only, no hosted DB, no third-party APIs
 - **Hosting-agnostic** — use standard Node.js; avoid platform-specific APIs
@@ -175,7 +178,7 @@ npm run build                       # Production build
 npm run preview                     # Preview production build locally
 npm run lint                        # ESLint
 npm run test                        # Run test suite
-npm run db:create                   # Build database from data_yaml/ source files
+npm run db:create                   # Build database from data_yaml/ (restart dev server after)
 npm run db:migrate                  # Apply database migrations
 npm run db:reset                    # Drop database and re-migrate (empty DB)
 npm run db:clear -- --yes           # Remove codes + circuits, keep tools
@@ -187,9 +190,12 @@ npm run db:clear:tools -- --yes     # Remove tools, keep codes + circuits
 
 ```bash
 npm install                         # Install Node dependencies
+uv sync                             # Install Python dependencies
 npm run db:create                   # Build database from YAML source files
 npm run dev                         # Start dev server
 ```
+
+After editing YAML files: `npm run db:create && npm run dev` (dev server caches the DB connection).
 
 ---
 
