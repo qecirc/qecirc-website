@@ -1,0 +1,4 @@
+name: Flag at Origin
+description: Code and data for fault-tolerant flag-based syndrome extraction circuits.
+github_url: https://github.com/Quantinuum/flag_at_origin_paper
+tags: [Python, fault-tolerant, syndrome-extraction, flag]

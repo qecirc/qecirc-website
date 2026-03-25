@@ -1,0 +1,4 @@
+name: CliffordOpt
+description: Optimisation of Clifford circuits for fault-tolerant quantum error correction.
+github_url: https://github.com/m-webster/CliffordOpt
+tags: [Python, optimization, Clifford]

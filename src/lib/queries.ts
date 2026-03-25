@@ -337,7 +337,14 @@ function enrichTools(tools: Tool[]): ToolWithMeta[] {
 
 export function getAllTools(): ToolWithMeta[] {
   const db = getDb();
-  const tools = db.prepare("SELECT * FROM tools ORDER BY name").all() as Tool[];
+  const tools = db
+    .prepare(
+      `SELECT t.* FROM tools t
+       LEFT JOIN circuits c ON c.tool_id = t.id
+       GROUP BY t.id
+       ORDER BY COUNT(c.id) DESC, t.name`,
+    )
+    .all() as Tool[];
   return enrichTools(tools);
 }
 
@@ -370,7 +377,13 @@ export function filterTools(filters: ToolFilters): ToolWithMeta[] {
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const tools = db
-    .prepare(`SELECT * FROM tools c ${where} ORDER BY c.name`)
+    .prepare(
+      `SELECT c.* FROM tools c
+       LEFT JOIN circuits ci ON ci.tool_id = c.id
+       ${where}
+       GROUP BY c.id
+       ORDER BY COUNT(ci.id) DESC, c.name`,
+    )
     .all(...params) as Tool[];
   return enrichTools(tools);
 }
