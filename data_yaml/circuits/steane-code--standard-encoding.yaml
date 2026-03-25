@@ -7,4 +7,4 @@ depth: 8
 qubit_count: 7
 crumble_url: "https://algassert.com/crumble#circuit=Q(0,0)0;Q(1,0)1;Q(2,0)2;Q(3,0)3;Q(4,0)4;Q(5,0)5;Q(6,0)6;H_4_5_6;TICK;CX_5_1;TICK;CX_1_2_4_0;TICK;CX_6_4_5_3_2_0;TICK;CX_6_3_4_5_0_1"
 quirk_url: https://algassert.com/quirk
-tags: [encoding, state-preparation, "distance:3"]
+tags: [encoding, state-preparation]
