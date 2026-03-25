@@ -82,7 +82,7 @@ Circuits are submitted by opening a GitHub Issue using the provided template.
 A maintainer reviews the issue, then uses the ingestion pipeline to add the circuit.
 
 See **[docs/adding-circuits.md](docs/adding-circuits.md)** for the full workflow:
-`generate` (YAML) → review → `export` (YAML files) → `db:create` (rebuild DB).
+`generate` (writes to `data_yaml/`) → review via `git diff` → `db:create` (rebuild DB).
 
 ---
 

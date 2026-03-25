@@ -1,12 +1,13 @@
 # Adding Circuits
 
-Three-step workflow: **generate** a YAML payload, **review** it, then **export** to `data_yaml/` source files.
+Two-step workflow: **generate** (writes YAML + body files to `data_yaml/`) → **rebuild** the database.
+
+Review changes via `git diff` before rebuilding.
 
 ## Prerequisites
 
 ```bash
 uv sync                # install Python dependencies
-npm run db:create      # ensure database is built (needed for dedup check)
 ```
 
 ## What You Need
@@ -16,8 +17,6 @@ npm run db:create      # ensure database is built (needed for dedup check)
 - **Metadata**: code name, circuit name(s), source (DOI/URL), tool slug, code distance
 
 ## Step 1: Generate
-
-The `generate` script computes all derived data from the matrices and circuit files:
 
 ```bash
 python -m scripts.add_circuit.generate \
@@ -29,9 +28,13 @@ python -m scripts.add_circuit.generate \
   --source "https://doi.org/..." \
   --tool "tool-slug" \
   --zoo-url "https://errorcorrectionzoo.org/c/..." \
-  --d 3 \
-  -o payload.yaml
+  --d 3
 ```
+
+This computes all derived data and writes directly to `data_yaml/`:
+- **Code YAML** (if new): `data_yaml/codes/<code-slug>.yaml`
+- **Circuit YAML**: `data_yaml/circuits/<code-slug>--<circuit-slug>.yaml`
+- **Body files**: `.stim`, `.qasm`, `.cirq` (same stem as the circuit YAML)
 
 ### Flags
 
@@ -48,7 +51,6 @@ python -m scripts.add_circuit.generate \
 | `--zoo-url` | no | QEC Zoo URL for the code |
 | `--d` | no | Code distance (computed automatically if omitted) |
 | `--data-dir` | no | Path to data_yaml directory (default: `data_yaml`) |
-| `-o` | no | Output path (default: `payload.yaml`) |
 
 Multiple circuits per code: pass multiple `--stim` files and match with multiple `--circuit-name`, `--source`, `--tool`, `--description` values.
 
@@ -64,33 +66,15 @@ Multiple circuits per code: pass multiple `--stim` files and match with multiple
 - Suggested tags with status (`confirmed`/`suggested`)
 - Dedup: if the code already exists in `data_yaml/codes/`, status is `existing` and circuits are relabeled to match the stored qubit ordering
 
-## Step 2: Review
-
-Open the generated payload YAML and check:
-
-- **`code.status`**: `new` (will create code file) or `existing` (code already in `data_yaml/`)
-- **`validation`** per circuit: should be `passed`
-- **`tags`**: remove unwanted suggestions, add missing tags
-- **`slug`** values: these become URL paths and filenames
-- **`bodies`**: verify format conversions look correct
-
-## Step 3: Export
+## Step 2: Review and rebuild
 
 ```bash
-# Preview what files will be created
-python -m scripts.add_circuit.export --dry-run payload.yaml
-
-# Export to data_yaml/
-python -m scripts.add_circuit.export payload.yaml
+# Review what was generated
+git diff
 
 # Rebuild the database and restart the server
 npm run db:create && npm run dev
 ```
-
-This creates the following files in `data_yaml/`:
-- **Code YAML** (if new): `data_yaml/codes/<code-slug>.yaml`
-- **Circuit YAML**: `data_yaml/circuits/<code-slug>--<circuit-slug>.yaml`
-- **Body files**: `data_yaml/circuits/<code-slug>--<circuit-slug>.stim` (and `.qasm`, `.cirq` if conversions succeeded)
 
 ## File Formats
 
@@ -104,7 +88,7 @@ github_url: https://github.com/munich-quantum-toolkit/qecc
 tags: [Python, encoding, state-preparation]
 ```
 
-The slug is derived from the filename (e.g., `mqt-qecc.yaml` -> slug `mqt-qecc`). Tools must be added manually before circuits can reference them.
+The slug is derived from the filename. Tools must be added manually before circuits can reference them.
 
 ### Code (`data_yaml/codes/<slug>.yaml`)
 
@@ -139,20 +123,14 @@ quirk_url: https://algassert.com/quirk
 tags: [encoding, state-preparation]
 ```
 
-The circuit slug and code reference are both derived from the filename. The double dash (`--`) separates the code slug from the circuit slug: `steane-code--standard-encoding.yaml`.
-
-Body files share the same stem with a format-specific extension:
-- `steane-code--standard-encoding.stim` — STIM circuit body
-- `steane-code--standard-encoding.qasm` — OpenQASM body (optional)
-- `steane-code--standard-encoding.cirq` — Cirq body (optional)
+The circuit slug and code reference are derived from the filename (double dash `--` separator). Body files share the same stem with format-specific extensions (`.stim`, `.qasm`, `.cirq`).
 
 ## Full Example: Steane Code [[7,1,3]]
 
 Example input files are in `docs/examples/`.
 
-### 1. Generate
-
 ```bash
+# Generate — writes to data_yaml/
 python -m scripts.add_circuit.generate \
   --hx docs/examples/steane_hx.json \
   --hz docs/examples/steane_hz.json \
@@ -162,27 +140,19 @@ python -m scripts.add_circuit.generate \
   --source "https://doi.org/10.1098/rspa.1996.0136" \
   --tool "mqt-qecc" \
   --zoo-url "https://errorcorrectionzoo.org/c/steane" \
-  --d 3 \
-  -o steane_payload.yaml
-```
+  --d 3
 
-### 2. Review
+# Review
+git diff
 
-```bash
-cat steane_payload.yaml
-```
-
-### 3. Export and rebuild
-
-```bash
-python -m scripts.add_circuit.export --dry-run steane_payload.yaml
-python -m scripts.add_circuit.export steane_payload.yaml
+# Rebuild and restart
 npm run db:create && npm run dev
 ```
 
 ## Notes
 
+- **Restart the dev server** after `db:create` — the Astro process caches the DB connection.
 - **Tools** must exist as YAML files in `data_yaml/tools/` before circuits can reference them by slug.
 - **Distance** (`--d`) is computed automatically using `ldpc` if omitted, but providing it is faster and avoids timeout issues for large codes.
-- Running generate twice for the same code detects the existing entry in `data_yaml/codes/` and sets `status: existing`.
+- Running generate twice for the same code detects the existing entry and sets status to `existing`.
 - To edit existing data, modify the YAML files directly and run `npm run db:create && npm run dev`.

@@ -12,8 +12,7 @@
     "db:clear": "node scripts/db/clear.mjs",
     "db:clear:circuits": "node scripts/db/clear.mjs --circuits-only",
     "db:clear:tools": "node scripts/db/clear.mjs --tools-only",
-    "generate": "python -m scripts.add_circuit.generate",
-    "export": "python -m scripts.add_circuit.export"
+    "generate": "python -m scripts.add_circuit.generate"
   },
   "dependencies": {
     "@astrojs/node": "^10.0.3",
