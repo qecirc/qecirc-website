@@ -128,6 +128,27 @@ cat steane_payload.yaml
 python -m scripts.add_circuit.insert steane_payload.yaml
 ```
 
+## Database Management
+
+All clear commands require `--yes` to execute. Without it, they print what would be deleted and exit.
+
+```bash
+npm run db:reset                    # Full reset: drop DB, re-run migrations (empty DB)
+npm run db:clear -- --yes           # Remove codes + circuits, keep tools
+npm run db:clear:circuits -- --yes  # Remove circuits only, keep codes + tools
+npm run db:clear:tools -- --yes     # Remove tools, keep codes + circuits
+npm run db:migrate                  # Apply pending migrations
+```
+
+| Command | Codes | Circuits | Tools |
+|---------|-------|----------|-------|
+| `db:reset` | deleted | deleted | deleted |
+| `db:clear` | deleted | deleted | kept |
+| `db:clear:circuits` | kept | deleted | kept |
+| `db:clear:tools` | kept | kept | deleted |
+
+Orphaned tags (tags with no remaining taggings) are cleaned up automatically.
+
 ## Notes
 
 - **Tools** must exist in the database before you can reference them by slug. Add them via SQL or the seed script.

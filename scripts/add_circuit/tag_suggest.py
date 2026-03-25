@@ -13,12 +13,6 @@ def suggest_code_tags(params: CodeParams) -> list[TagEntry]:
     if params.is_css:
         tags.append(TagEntry(name="CSS", status="confirmed"))
 
-    # [[n,k,d]] label
-    if params.d is not None:
-        tags.append(TagEntry(name=f"[[{params.n},{params.k},{params.d}]]", status="confirmed"))
-    else:
-        tags.append(TagEntry(name=f"[[{params.n},{params.k},?]]", status="suggested"))
-
     return tags
 
 
@@ -48,8 +42,5 @@ def suggest_circuit_tags(props: CircuitProperties, params: CodeParams) -> list[T
 
     if props.depth > 0:
         tags.append(TagEntry(name=f"depth:{props.depth}", status="confirmed"))
-
-    if params.d is not None:
-        tags.append(TagEntry(name=f"distance:{params.d}", status="confirmed"))
 
     return tags

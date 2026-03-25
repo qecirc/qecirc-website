@@ -52,18 +52,10 @@ class TestSuggestCodeTags:
         names = [t.name for t in tags]
         assert "CSS" not in names
 
-    def test_nkd_label_confirmed_when_d_known(self, params_422):
+    def test_no_nkd_tag(self, params_422):
         tags = suggest_code_tags(params_422)
-        confirmed = [t for t in tags if t.status == "confirmed"]
-        nkd_tags = [t for t in confirmed if t.name.startswith("[[")]
-        assert len(nkd_tags) == 1
-        assert nkd_tags[0].name == "[[4,2,2]]"
-
-    def test_nkd_label_suggested_when_d_unknown(self):
-        params = CodeParams(n=4, k=2, is_css=True, d=None)
-        tags = suggest_code_tags(params)
-        suggested = [t for t in tags if t.status == "suggested" and t.name.startswith("[[")]
-        assert any("?" in t.name for t in suggested)
+        nkd_tags = [t for t in tags if t.name.startswith("[[")]
+        assert len(nkd_tags) == 0
 
 
 # ---------------------------------------------------------------------------
@@ -113,14 +105,7 @@ class TestSuggestCircuitTags:
         assert len(depth_tags) == 1
         assert depth_tags[0].status == "confirmed"
 
-    def test_distance_tag_when_d_known(self, params_422, props_encoding):
+    def test_no_distance_tag(self, params_422, props_encoding):
         tags = suggest_circuit_tags(props_encoding, params_422)
-        dist_tags = [t for t in tags if t.name.startswith("distance:")]
-        assert len(dist_tags) == 1
-        assert dist_tags[0].name == "distance:2"
-
-    def test_no_distance_tag_when_d_unknown(self, props_encoding):
-        params = CodeParams(n=4, k=2, is_css=True, d=None)
-        tags = suggest_circuit_tags(props_encoding, params)
         dist_tags = [t for t in tags if t.name.startswith("distance:")]
         assert len(dist_tags) == 0

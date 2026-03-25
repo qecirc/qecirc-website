@@ -15,6 +15,5 @@ for (const suffix of ["", "-wal", "-shm"]) {
 console.log("Database removed.");
 
 execSync("node scripts/db/migrate.mjs", { cwd: root, stdio: "inherit" });
-execSync("node scripts/db/seed.mjs", { cwd: root, stdio: "inherit" });
 
 console.log("Reset complete.");

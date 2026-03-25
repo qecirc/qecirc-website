@@ -56,7 +56,6 @@ class TestComputeCodeData:
         tag_names = [t["name"] for t in code["tags"]]
         assert "CSS" in tag_names
         assert "self-dual" in tag_names
-        assert "[[7,1,3]]" in tag_names
 
     def test_no_duplicate_tags(self, steane_H):
         result = compute_code_data(steane_H, steane_H, d=3)

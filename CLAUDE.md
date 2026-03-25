@@ -166,14 +166,17 @@ chore(deps): update astro to v5.5.0
 ## Commands
 
 ```bash
-npm run dev          # Start local development server
-npm run build        # Production build
-npm run preview      # Preview production build locally
-npm run lint         # ESLint
-npm run test         # Run test suite
-npm run db:migrate   # Apply database migrations
-npm run db:seed      # Seed database with example circuits (dev only)
-npm run db:reset     # Drop database, re-migrate, and re-seed
+npm run dev                         # Start local development server
+npm run build                       # Production build
+npm run preview                     # Preview production build locally
+npm run lint                        # ESLint
+npm run test                        # Run test suite
+npm run db:migrate                  # Apply database migrations
+npm run db:seed                     # Seed database with example data
+npm run db:reset                    # Drop database and re-migrate (empty DB)
+npm run db:clear -- --yes           # Remove codes + circuits, keep tools
+npm run db:clear:circuits -- --yes  # Remove circuits only, keep codes + tools
+npm run db:clear:tools -- --yes     # Remove tools, keep codes + circuits
 ```
 
 ---

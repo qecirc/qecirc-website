@@ -9,6 +9,9 @@
     "db:migrate": "node scripts/db/migrate.mjs",
     "db:seed": "node scripts/db/seed.mjs",
     "db:reset": "node scripts/db/reset.mjs",
+    "db:clear": "node scripts/db/clear.mjs",
+    "db:clear:circuits": "node scripts/db/clear.mjs --circuits-only",
+    "db:clear:tools": "node scripts/db/clear.mjs --tools-only",
     "generate": "python -m scripts.add_circuit.generate",
     "insert": "python -m scripts.add_circuit.insert"
   },

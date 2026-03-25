@@ -74,7 +74,6 @@ class TestComputeCircuitData:
         result = compute_circuit_data(STEANE_STIM, STEANE_H, STEANE_H, CODE_PARAMS)
         tag_names = [t["name"] for t in result["tags"]]
         assert "encoding" in tag_names
-        assert "distance:3" in tag_names
 
     def test_no_permutation_no_original(self):
         result = compute_circuit_data(STEANE_STIM, STEANE_H, STEANE_H, CODE_PARAMS)
