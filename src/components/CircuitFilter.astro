@@ -1,5 +1,5 @@
 ---
-import type { TagWithCount } from "../lib/queries";
+import type { TagWithCount, CircuitSort, CircuitSortField } from "../lib/queries";
 
 interface Props {
   rawGateCount: string;
@@ -12,9 +12,10 @@ interface Props {
   selectedTags: string[];
   currentUrl: URL;
   codeSlug: string;
+  sort: CircuitSort;
 }
 
-const { rawGateCount, rawDepth, rawQubitCount, errors, hasFilters, focus, allTags, selectedTags, currentUrl, codeSlug } = Astro.props;
+const { rawGateCount, rawDepth, rawQubitCount, errors, hasFilters, focus, allTags, selectedTags, currentUrl, codeSlug, sort } = Astro.props;
 const anyError = errors.gate_count || errors.depth || errors.qubit_count;
 const selectedSet = new Set(selectedTags);
 const basePath = `/codes/${codeSlug}`;
@@ -22,6 +23,38 @@ const basePath = `/codes/${codeSlug}`;
 function inputClass(hasError: boolean): string {
   const base = "w-24 rounded-r border border-l-0 px-2 py-1 text-sm focus:outline-none border-gray-200 dark:border-gray-700 dark:bg-gray-900 focus:border-gray-400 dark:focus:border-gray-500";
   return hasError ? `${base} ring-1 ring-red-300` : base;
+}
+
+const sortLabels: { field: CircuitSortField; label: string; activeClass: string }[] = [
+  { field: "gate_count", label: "Gates", activeClass: "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700" },
+  { field: "depth", label: "Depth", activeClass: "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700" },
+  { field: "qubit_count", label: "Qubits", activeClass: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700" },
+];
+
+function labelInfo(field: CircuitSortField) {
+  const meta = sortLabels.find((s) => s.field === field)!;
+  const isActive = sort.field === field;
+  const arrow = isActive ? (sort.dir === "desc" ? " \u25BC" : " \u25B2") : "";
+  const cls = isActive
+    ? `${meta.activeClass} cursor-pointer`
+    : "bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer";
+  return { arrow, cls };
+}
+
+function sortToggleUrl(field: CircuitSortField): string {
+  const params = new URLSearchParams(currentUrl.search);
+  params.delete("focus");
+  if (sort.field === field) {
+    // Toggle direction
+    params.set("sort", field);
+    params.set("sort_dir", sort.dir === "desc" ? "asc" : "desc");
+  } else {
+    // Activate with desc default
+    params.set("sort", field);
+    params.set("sort_dir", "desc");
+  }
+  const qs = params.toString();
+  return basePath + (qs ? "?" + qs : "");
 }
 
 function tagToggleUrl(tagName: string): string {
@@ -35,20 +68,23 @@ function tagToggleUrl(tagName: string): string {
   const qs = params.toString();
   return basePath + (qs ? "?" + qs : "");
 }
+const gateSort = labelInfo("gate_count");
+const depthSort = labelInfo("depth");
+const qubitSort = labelInfo("qubit_count");
 ---
 
 <form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2">
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex items-center">
-      <span class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">Gates</span>
+      <a href={sortToggleUrl("gate_count")} class={`rounded-l border border-r-0 px-2 py-1 text-xs transition-colors ${gateSort.cls}`}>Gates{gateSort.arrow}</a>
       <input type="text" name="gate_count" value={rawGateCount} class={inputClass(errors.gate_count)} placeholder=">10" data-filter />
     </div>
     <div class="flex items-center">
-      <span class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">Depth</span>
+      <a href={sortToggleUrl("depth")} class={`rounded-l border border-r-0 px-2 py-1 text-xs transition-colors ${depthSort.cls}`}>Depth{depthSort.arrow}</a>
       <input type="text" name="depth" value={rawDepth} class={inputClass(errors.depth)} placeholder="<=5" data-filter />
     </div>
     <div class="flex items-center">
-      <span class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">Qubits</span>
+      <a href={sortToggleUrl("qubit_count")} class={`rounded-l border border-r-0 px-2 py-1 text-xs transition-colors ${qubitSort.cls}`}>Qubits{qubitSort.arrow}</a>
       <input type="text" name="qubit_count" value={rawQubitCount} class={inputClass(errors.qubit_count)} placeholder="7" data-filter />
     </div>
     <div class="ml-auto text-xs" id="circuit-filter-status">
@@ -154,9 +190,13 @@ function tagToggleUrl(tagName: string): string {
         params.set(key, value.trim());
       }
     });
-    // Preserve tag params from current URL
-    const currentTags = new URLSearchParams(window.location.search).getAll("tag");
-    currentTags.forEach(function (t) { params.append("tag", t); });
+    // Preserve tag and sort params from current URL
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.getAll("tag").forEach(function (t) { params.append("tag", t); });
+    const sortField = urlParams.get("sort");
+    const sortDir = urlParams.get("sort_dir");
+    if (sortField) { params.set("sort", sortField); }
+    if (sortDir) { params.set("sort_dir", sortDir); }
     if (lastEditedField && VALID_FIELDS.includes(lastEditedField)) {
       params.set("focus", lastEditedField);
     }

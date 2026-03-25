@@ -99,11 +99,30 @@ export interface CodeFilters {
   tags?: string[];
 }
 
+export type CircuitSortField = "qubit_count" | "depth" | "gate_count";
+export type SortDir = "asc" | "desc";
+
+export interface CircuitSort {
+  field: CircuitSortField;
+  dir: SortDir;
+}
+
 export interface CircuitFilters {
   gate_count?: FilterCondition[];
   depth?: FilterCondition[];
   qubit_count?: FilterCondition[];
   tags?: string[];
+}
+
+const VALID_SORT_FIELDS: readonly string[] = ["qubit_count", "depth", "gate_count"];
+
+function buildOrderBy(sort?: CircuitSort): string {
+  if (!sort || !VALID_SORT_FIELDS.includes(sort.field)) {
+    return "ORDER BY c.name";
+  }
+  const dir = sort.dir === "asc" ? "ASC" : "DESC";
+  // safe: field validated against VALID_SORT_FIELDS allowlist; NULLs always last
+  return `ORDER BY CASE WHEN c.${sort.field} IS NULL THEN 1 ELSE 0 END, c.${sort.field} ${dir}, c.name`;
 }
 
 export interface TagWithCount {
@@ -238,10 +257,12 @@ export function searchCodes(query: string): (Code & { tags: string[] })[] {
 
 export function getCircuitsForCode(
   codeId: number,
+  sort?: CircuitSort,
 ): (Circuit & { tags: string[] })[] {
   const db = getDb();
+  const orderBy = buildOrderBy(sort);
   const rows = db
-    .prepare("SELECT * FROM circuits WHERE code_id = ? ORDER BY name")
+    .prepare(`SELECT * FROM circuits c WHERE c.code_id = ? ${orderBy}`)
     .all(codeId) as Circuit[];
   return rows.map((c) => ({ ...c, tags: getTagsFor("circuit", c.id) }));
 }
@@ -270,6 +291,7 @@ export function getCircuitTagsForCode(codeId: number): TagWithCount[] {
 export function filterCircuitsForCode(
   codeId: number,
   filters: CircuitFilters,
+  sort?: CircuitSort,
 ): (Circuit & { tags: string[] })[] {
   const db = getDb();
   const conditions: string[] = ["c.code_id = ?"];
@@ -281,8 +303,9 @@ export function filterCircuitsForCode(
   addTagConditions(filters.tags, "circuit", conditions, params);
 
   const where = `WHERE ${conditions.join(" AND ")}`;
+  const orderBy = buildOrderBy(sort);
   const circuits = db
-    .prepare(`SELECT * FROM circuits c ${where} ORDER BY c.name`)
+    .prepare(`SELECT * FROM circuits c ${where} ${orderBy}`)
     .all(...params) as Circuit[];
   return circuits.map((c) => ({ ...c, tags: getTagsFor("circuit", c.id) }));
 }

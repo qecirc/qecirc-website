@@ -20,7 +20,7 @@ import {
   getBodiesForCircuits,
   getToolsForCircuits,
 } from "../../lib/queries";
-import type { CircuitFilters } from "../../lib/queries";
+import type { CircuitFilters, CircuitSort, CircuitSortField, SortDir } from "../../lib/queries";
 
 const { code: codeSlug } = Astro.params;
 const code = getCodeBySlug(codeSlug!);
@@ -53,6 +53,15 @@ const VALID_FOCUS = new Set(["gate_count", "depth", "qubit_count", ""]);
 const rawFocus = Astro.url.searchParams.get("focus") ?? "";
 const focus = VALID_FOCUS.has(rawFocus) ? rawFocus : "";
 
+// Parse sort params
+const VALID_SORT_FIELDS = new Set<CircuitSortField>(["qubit_count", "depth", "gate_count"]);
+const VALID_SORT_DIRS = new Set<SortDir>(["asc", "desc"]);
+const rawSort = Astro.url.searchParams.get("sort") ?? "";
+const rawSortDir = Astro.url.searchParams.get("sort_dir") ?? "";
+const sort: CircuitSort = VALID_SORT_FIELDS.has(rawSort as CircuitSortField)
+  ? { field: rawSort as CircuitSortField, dir: VALID_SORT_DIRS.has(rawSortDir as SortDir) ? rawSortDir as SortDir : "desc" }
+  : { field: "gate_count", dir: "desc" };
+
 const parsedGateCount = rawGateCount ? parseFilterString(rawGateCount) : undefined;
 const parsedDepth = rawDepth ? parseFilterString(rawDepth) : undefined;
 const parsedQubitCount = rawQubitCount ? parseFilterString(rawQubitCount) : undefined;
@@ -72,7 +81,7 @@ const filters: CircuitFilters = {
 
 const hasFilters = hasActiveCircuitFilters(filters);
 const totalCount = countCircuitsForCode(code.id);
-const circuits = hasFilters ? filterCircuitsForCode(code.id, filters) : getCircuitsForCode(code.id);
+const circuits = hasFilters ? filterCircuitsForCode(code.id, filters, sort) : getCircuitsForCode(code.id, sort);
 const allCircuitTags = getCircuitTagsForCode(code.id);
 const circuitIds = circuits.map((c) => c.id);
 const bodiesMap = getBodiesForCircuits(circuitIds);
@@ -149,6 +158,7 @@ const countLabel = hasFilters
     selectedTags={selectedTags}
     currentUrl={Astro.url}
     codeSlug={codeSlug!}
+    sort={sort}
   />
 
   {circuits.length === 0 ? (
