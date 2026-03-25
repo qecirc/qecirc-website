@@ -87,10 +87,14 @@ def compute_code_data(
             "hz": canon_Hz.tolist(),
             "logical_x": Lx.tolist(),
             "logical_z": Lz.tolist(),
+            "is_css": params.is_css,
             "canonical_hash": c_hash,
             "tags": [{"name": t.name, "status": t.status} for t in tags],
         },
-        "qubit_permutation": db_qubit_perm if db_qubit_perm is not None else qubit_perm,
+        # Only pass qubit_permutation when the code already exists in DB
+        # (circuits need relabeling to match the stored canonical form).
+        # For new codes the canonical matrices are stored directly, no relabeling needed.
+        "qubit_permutation": db_qubit_perm,
     }
 
 

@@ -8,7 +8,9 @@
     "preview": "astro preview",
     "db:migrate": "node scripts/db/migrate.mjs",
     "db:seed": "node scripts/db/seed.mjs",
-    "db:reset": "node scripts/db/reset.mjs"
+    "db:reset": "node scripts/db/reset.mjs",
+    "generate": "python -m scripts.add_circuit.generate",
+    "insert": "python -m scripts.add_circuit.insert"
   },
   "dependencies": {
     "@astrojs/node": "^10.0.3",
