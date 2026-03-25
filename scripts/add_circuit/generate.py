@@ -103,7 +103,13 @@ def _load_matrix(arg):
     if Path(arg).exists():
         with open(arg) as f:
             return np.array(json.load(f), dtype=int)
-    return np.array(json.loads(arg), dtype=int)
+    try:
+        return np.array(json.loads(arg), dtype=int)
+    except json.JSONDecodeError:
+        raise ValueError(
+            f"'{arg}' is not a valid file path or JSON matrix. "
+            f"Provide either a path to a JSON file or an inline JSON array (e.g. '[[1,0],[0,1]]')."
+        )
 
 
 def _get_nth(lst, i, default):
