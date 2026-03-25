@@ -7,20 +7,21 @@
     "build": "astro build",
     "preview": "astro preview",
     "db:migrate": "node scripts/db/migrate.mjs",
-    "db:seed": "node scripts/db/seed.mjs",
+    "db:create": "node scripts/db/create_database.mjs",
     "db:reset": "node scripts/db/reset.mjs",
     "db:clear": "node scripts/db/clear.mjs",
     "db:clear:circuits": "node scripts/db/clear.mjs --circuits-only",
     "db:clear:tools": "node scripts/db/clear.mjs --tools-only",
     "generate": "python -m scripts.add_circuit.generate",
-    "insert": "python -m scripts.add_circuit.insert"
+    "export": "python -m scripts.add_circuit.export"
   },
   "dependencies": {
     "@astrojs/node": "^10.0.3",
+    "@tailwindcss/vite": "^4.1.3",
     "astro": "^6.0.8",
     "better-sqlite3": "^11.8.1",
-    "tailwindcss": "^4.1.3",
-    "@tailwindcss/vite": "^4.1.3"
+    "js-yaml": "^4.1.1",
+    "tailwindcss": "^4.1.3"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13"

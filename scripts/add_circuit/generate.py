@@ -33,7 +33,7 @@ def main():
     parser.add_argument("--code-name", default="", help="Code name")
     parser.add_argument("--zoo-url", default="", help="QEC Zoo URL")
     parser.add_argument("--d", type=int, default=None, help="Code distance (computed if omitted)")
-    parser.add_argument("--db", default="data/qecirc.db", help="Path to SQLite DB for dedup")
+    parser.add_argument("--data-dir", default="data_yaml", help="Path to data_yaml directory for dedup")
     # Circuit-level args (multiple allowed, positionally matched)
     parser.add_argument("--stim", nargs="+", required=True, help="STIM circuit file(s)")
     parser.add_argument("--circuit-name", nargs="+", default=[], help="Circuit name(s)")
@@ -48,11 +48,11 @@ def main():
     Hx = _load_matrix(args.hx)
     Hz = _load_matrix(args.hz)
 
-    # Compute code data (with DB dedup)
-    db_path = args.db if Path(args.db).exists() else None
+    # Compute code data (with YAML dedup)
+    data_dir = args.data_dir if Path(args.data_dir).exists() else None
     code_result = compute_code_data(
         Hx, Hz, d=args.d, code_name=args.code_name,
-        zoo_url=args.zoo_url, db_path=db_path,
+        zoo_url=args.zoo_url, data_dir=data_dir,
     )
 
     # Compute circuit data for each STIM file

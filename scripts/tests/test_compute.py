@@ -2,13 +2,12 @@
 Tests for compute.py — code-level computation.
 """
 
-import json
-import sqlite3
 import tempfile
 from pathlib import Path
 
 import numpy as np
 import pytest
+import yaml
 
 from scripts.add_circuit.compute import (
     _compute_logicals,
@@ -91,37 +90,26 @@ class TestComputeCodeData:
         result = compute_code_data(steane_H, steane_H, d=3, zoo_url="https://example.com")
         assert result["code"]["zoo_url"] == "https://example.com"
 
-    def test_db_dedup_existing(self, steane_H):
-        """When code exists in DB, status is 'existing' and permutation is returned."""
-        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-            db_path = f.name
-
-        conn = sqlite3.connect(db_path)
-        conn.execute("""
-            CREATE TABLE codes (
-                id INTEGER PRIMARY KEY, name TEXT, slug TEXT UNIQUE,
-                n INTEGER, k INTEGER, d INTEGER, zoo_url TEXT,
-                hx TEXT, hz TEXT, logical_x TEXT, logical_z TEXT,
-                canonical_hash TEXT, created_at TEXT DEFAULT (datetime('now'))
-            )
-        """)
+    def test_yaml_dedup_existing(self, steane_H):
+        """When code exists in data_yaml/codes/, status is 'existing' and permutation is returned."""
         from scripts.add_circuit.code_identify import canonical_hash
         c_hash = canonical_hash(steane_H, steane_H)
-        conn.execute(
-            "INSERT INTO codes (name, slug, n, k, d, hx, hz, logical_x, logical_z, canonical_hash) VALUES (?,?,?,?,?,?,?,?,?,?)",
-            ("Steane", "steane", 7, 1, 3,
-             json.dumps(steane_H.tolist()), json.dumps(steane_H.tolist()),
-             "[]", "[]", c_hash),
-        )
-        conn.commit()
-        conn.close()
 
-        result = compute_code_data(steane_H, steane_H, d=3, db_path=db_path)
-        assert result["code"]["status"] == "existing"
-        assert result["code"]["id"] == 1
-        assert result["qubit_permutation"] is not None
+        with tempfile.TemporaryDirectory() as tmpdir:
+            codes_dir = Path(tmpdir) / "codes"
+            codes_dir.mkdir()
+            code_yaml = {
+                "name": "Steane Code",
+                "n": 7, "k": 1, "d": 3,
+                "canonical_hash": c_hash,
+                "hx": steane_H.tolist(),
+                "hz": steane_H.tolist(),
+            }
+            (codes_dir / "steane-code.yaml").write_text(yaml.dump(code_yaml))
 
-        Path(db_path).unlink()
+            result = compute_code_data(steane_H, steane_H, d=3, data_dir=tmpdir)
+            assert result["code"]["status"] == "existing"
+            assert result["qubit_permutation"] is not None
 
 
 # ---------------------------------------------------------------------------

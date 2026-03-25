@@ -1,12 +1,13 @@
 # Adding Circuits
 
-Two-step workflow: **generate** a YAML payload, **review** it, then **insert** into the database.
+Three-step workflow: **generate** a YAML payload, **review** it, then **export** to `data_yaml/` source files.
+
+The SQLite database is a derived artifact — rebuild it with `npm run db:create` after exporting.
 
 ## Prerequisites
 
 ```bash
 uv sync                # install Python dependencies
-npm run db:migrate     # ensure DB schema is up to date
 ```
 
 ## What You Need
@@ -41,11 +42,11 @@ python -m scripts.add_circuit.generate \
 | `--code-name` | no | Human-readable code name |
 | `--circuit-name` | no | Circuit name(s), positionally matched to `--stim` |
 | `--source` | no | Provenance (DOI/URL) per circuit |
-| `--tool` | no | Tool slug per circuit (must exist in DB) |
+| `--tool` | no | Tool slug per circuit (must exist in `data_yaml/tools/`) |
 | `--description` | no | Brief description per circuit |
 | `--zoo-url` | no | QEC Zoo URL for the code |
 | `--d` | no | Code distance (computed automatically if omitted) |
-| `--db` | no | SQLite DB path (default: `data/qecirc.db`) |
+| `--data-dir` | no | Path to data_yaml directory (default: `data_yaml`) |
 | `-o` | no | Output path (default: `payload.yaml`) |
 
 Multiple circuits per code: pass multiple `--stim` files and match with multiple `--circuit-name`, `--source`, `--tool`, `--description` values.
@@ -60,25 +61,41 @@ Multiple circuits per code: pass multiple `--stim` files and match with multiple
 - Compact STIM, QASM, and Cirq format conversions
 - Crumble and Quirk visualization URLs
 - Suggested tags with status (`confirmed`/`suggested`)
-- DB dedup: if the code already exists, status is `existing` and circuits are relabeled to match the stored qubit ordering
+- YAML dedup: if the code already exists in `data_yaml/codes/`, status is `existing` and circuits are relabeled to match the stored qubit ordering
 
 ## Step 2: Review YAML
 
 Open the generated YAML and check:
 
-- **`code.status`**: `new` (will insert) or `existing` (code already in DB)
+- **`code.status`**: `new` (will export) or `existing` (code already in `data_yaml/`)
 - **`validation`** per circuit: should be `passed`
 - **`tags`**: remove unwanted suggestions, add missing tags
-- **`slug`** values: these become URL paths
+- **`slug`** values: these become URL paths and filenames
 - **`bodies`**: verify format conversions look correct
 
-## Step 3: Insert
+## Step 3: Export
 
 ```bash
-python -m scripts.add_circuit.insert payload.yaml
+# Preview what files will be created
+python -m scripts.add_circuit.export --dry-run payload.yaml
+
+# Export to data_yaml/
+python -m scripts.add_circuit.export payload.yaml
+
+# Rebuild the database
+npm run db:create
 ```
 
-This inserts the code (if new), circuits, circuit bodies, and tags into the database.
+This writes YAML + body files to `data_yaml/`. For new codes, a code YAML file is created. For each circuit, a `.yaml` metadata file and body files (`.stim`, `.qasm`, `.cirq`) are created.
+
+### File naming
+
+Files use the convention `<code-slug>--<circuit-slug>.<ext>`:
+```
+data_yaml/circuits/steane-code--standard-encoding.yaml
+data_yaml/circuits/steane-code--standard-encoding.stim
+data_yaml/circuits/steane-code--standard-encoding.qasm
+```
 
 ## Example: Steane Code [[7,1,3]]
 
@@ -118,39 +135,38 @@ python -m scripts.add_circuit.generate \
   -o steane_payload.yaml
 ```
 
-### Review and insert
+### Review and export
 
 ```bash
 # Review the generated YAML
 cat steane_payload.yaml
 
-# Insert into the database
-python -m scripts.add_circuit.insert steane_payload.yaml
+# Preview export
+python -m scripts.add_circuit.export --dry-run steane_payload.yaml
+
+# Export to data_yaml/
+python -m scripts.add_circuit.export steane_payload.yaml
+
+# Rebuild the database
+npm run db:create
 ```
 
 ## Database Management
 
-All clear commands require `--yes` to execute. Without it, they print what would be deleted and exit.
+The database is rebuilt from `data_yaml/` source files:
 
 ```bash
-npm run db:reset                    # Full reset: drop DB, re-run migrations (empty DB)
+npm run db:create                   # Build DB from data_yaml/ (deletes and recreates)
+npm run db:reset                    # Drop DB, re-run migrations (empty DB)
 npm run db:clear -- --yes           # Remove codes + circuits, keep tools
 npm run db:clear:circuits -- --yes  # Remove circuits only, keep codes + tools
 npm run db:clear:tools -- --yes     # Remove tools, keep codes + circuits
 npm run db:migrate                  # Apply pending migrations
 ```
 
-| Command | Codes | Circuits | Tools |
-|---------|-------|----------|-------|
-| `db:reset` | deleted | deleted | deleted |
-| `db:clear` | deleted | deleted | kept |
-| `db:clear:circuits` | kept | deleted | kept |
-| `db:clear:tools` | kept | kept | deleted |
-
-Orphaned tags (tags with no remaining taggings) are cleaned up automatically.
-
 ## Notes
 
-- **Tools** must exist in the database before you can reference them by slug. Add them via SQL or the seed script.
+- **Tools** must exist as YAML files in `data_yaml/tools/` before circuits can reference them.
 - **Distance** (`--d`) is computed automatically using `ldpc` if omitted, but providing it is faster and avoids timeout issues for large codes.
-- Running generate twice for the same code detects the existing entry and sets `status: existing`.
+- Running generate twice for the same code detects the existing entry in `data_yaml/codes/` and sets `status: existing`.
+- To edit existing data, modify the YAML files directly in `data_yaml/` and run `npm run db:create`.

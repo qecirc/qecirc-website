@@ -82,7 +82,7 @@ Circuits are submitted by opening a GitHub Issue using the provided template.
 A maintainer reviews the issue, then uses the ingestion pipeline to add the circuit.
 
 See **[docs/adding-circuits.md](docs/adding-circuits.md)** for the full workflow:
-`generate` (YAML) → review → `insert` (DB).
+`generate` (YAML) → review → `export` (YAML files) → `db:create` (rebuild DB).
 
 ---
 
@@ -115,14 +115,18 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 │   └── types/             # Shared TypeScript types
 ├── data/
 │   ├── migrations/        # SQL migration files (e.g. 001_initial.sql)
-│   └── qecirc.db          # SQLite database (gitignored, seeded in dev)
+│   └── qecirc.db          # SQLite database (gitignored, built from data_yaml/)
+├── data_yaml/             # Source of truth for all library data (git-tracked)
+│   ├── tools/             # One YAML per tool (e.g. mqt-qecc.yaml)
+│   ├── codes/             # One YAML per code (e.g. steane-code.yaml)
+│   └── circuits/          # YAML + body files per circuit (e.g. steane-code--standard-encoding.yaml/.stim)
 ├── .github/
 │   └── ISSUE_TEMPLATE/    # Circuit submission issue template
 ├── docs/
 │   └── circuit-format.md  # Extended STIM format spec (extensions beyond tsim only)
 ├── scripts/
 │   ├── add_circuit/       # Circuit ingestion modules (Python)
-│   ├── db/                # DB migration, seed, and reset scripts (Node)
+│   ├── db/                # DB creation, migration, and reset scripts (Node)
 │   └── tests/             # Python tests for ingestion scripts
 └── public/
 ```
@@ -171,12 +175,20 @@ npm run build                       # Production build
 npm run preview                     # Preview production build locally
 npm run lint                        # ESLint
 npm run test                        # Run test suite
+npm run db:create                   # Build database from data_yaml/ source files
 npm run db:migrate                  # Apply database migrations
-npm run db:seed                     # Seed database with example data
 npm run db:reset                    # Drop database and re-migrate (empty DB)
 npm run db:clear -- --yes           # Remove codes + circuits, keep tools
 npm run db:clear:circuits -- --yes  # Remove circuits only, keep codes + tools
 npm run db:clear:tools -- --yes     # Remove tools, keep codes + circuits
+```
+
+### Dev Setup
+
+```bash
+npm install                         # Install Node dependencies
+npm run db:create                   # Build database from YAML source files
+npm run dev                         # Start dev server
 ```
 
 ---

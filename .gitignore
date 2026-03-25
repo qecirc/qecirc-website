@@ -13,8 +13,13 @@ node_modules/
 dist/
 .astro/
 
-# Database (dev only)
+# Database (derived from data_yaml/, not committed)
 data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Generated payload files
+*_payload.yaml
 
 # OS
 .DS_Store

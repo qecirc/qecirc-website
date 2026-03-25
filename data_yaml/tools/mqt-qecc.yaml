@@ -1,0 +1,5 @@
+name: MQT QECC
+description: Tools for quantum error correcting codes, part of the Munich Quantum Toolkit.
+homepage_url: https://mqt.readthedocs.io/projects/qecc/en/latest/
+github_url: https://github.com/munich-quantum-toolkit/qecc
+tags: [Python, encoding, state-preparation]

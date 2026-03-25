@@ -1,13 +1,13 @@
 """
-Code-level computation: parameters, logicals, canonicalization, tags, DB dedup.
+Code-level computation: parameters, logicals, canonicalization, tags, YAML dedup.
 """
 
-import json
 import re
-import sqlite3
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
+import yaml
 
 from .code_identify import (
     canonical_form,
@@ -27,7 +27,7 @@ def compute_code_data(
     d: Optional[int] = None,
     code_name: str = "",
     zoo_url: str = "",
-    db_path: Optional[str] = None,
+    data_dir: Optional[str] = None,
 ) -> dict:
     """
     Compute all code-level data from Hx, Hz matrices.
@@ -64,19 +64,22 @@ def compute_code_data(
     # 5. Slug
     slug = slugify(code_name) if code_name else ""
 
-    # 6. DB dedup
+    # 6. YAML dedup
     code_status = "new"
-    code_id = None
-    db_qubit_perm = None
-    if db_path:
-        code_id, db_qubit_perm = _check_db_dedup(db_path, c_hash, Hx, Hz)
-        if code_id is not None:
+    existing_slug = None
+    yaml_qubit_perm = None
+    if data_dir:
+        existing_slug, yaml_qubit_perm = _check_yaml_dedup(data_dir, c_hash, Hx, Hz)
+        if existing_slug is not None:
             code_status = "existing"
+            # Use existing slug if no name was provided
+            if not slug:
+                slug = existing_slug
 
     return {
         "code": {
             "status": code_status,
-            "id": code_id,
+            "id": None,
             "name": code_name,
             "slug": slug,
             "n": params.n,
@@ -91,10 +94,10 @@ def compute_code_data(
             "canonical_hash": c_hash,
             "tags": [{"name": t.name, "status": t.status} for t in tags],
         },
-        # Only pass qubit_permutation when the code already exists in DB
+        # Only pass qubit_permutation when the code already exists in YAML
         # (circuits need relabeling to match the stored canonical form).
         # For new codes the canonical matrices are stored directly, no relabeling needed.
-        "qubit_permutation": db_qubit_perm,
+        "qubit_permutation": yaml_qubit_perm,
     }
 
 
@@ -154,20 +157,20 @@ def _is_self_dual(Hx, Hz):
     return np.array_equal(rref_x, rref_z)
 
 
-def _check_db_dedup(db_path, c_hash, Hx, Hz):
-    """Check if code exists in DB. Returns (code_id, qubit_permutation) or (None, None)."""
-    conn = sqlite3.connect(db_path)
-    row = conn.execute(
-        "SELECT id, hx, hz FROM codes WHERE canonical_hash = ?", (c_hash,)
-    ).fetchone()
-    conn.close()
-    if row is None:
+def _check_yaml_dedup(data_dir, c_hash, Hx, Hz):
+    """Check if code exists in data_yaml/codes/. Returns (slug, qubit_permutation) or (None, None)."""
+    codes_dir = Path(data_dir) / "codes"
+    if not codes_dir.exists():
         return None, None
-    code_id, hx_json, hz_json = row
-    ref_Hx = np.array(json.loads(hx_json))
-    ref_Hz = np.array(json.loads(hz_json))
-    perm = find_qubit_permutation(Hx, Hz, ref_Hx, ref_Hz)
-    return code_id, perm
+    for code_file in sorted(codes_dir.glob("*.yaml")):
+        data = yaml.safe_load(code_file.read_text())
+        if data.get("canonical_hash") == c_hash:
+            slug = code_file.stem
+            ref_Hx = np.array(data["hx"])
+            ref_Hz = np.array(data["hz"])
+            perm = find_qubit_permutation(Hx, Hz, ref_Hx, ref_Hz)
+            return slug, perm
+    return None, None
 
 
 def slugify(name: str) -> str:
