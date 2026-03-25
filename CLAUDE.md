@@ -79,10 +79,10 @@ for supported instructions. Any extensions beyond tsim must be documented in `do
 ## Submission Workflow
 
 Circuits are submitted by opening a GitHub Issue using the provided template.
-A maintainer reviews the issue, and if valid, manually adds the circuit to the data store
-and closes the issue.
+A maintainer reviews the issue, then uses the ingestion pipeline to add the circuit.
 
-There is **no automation** in the ingestion pipeline for now.
+See **[docs/adding-circuits.md](docs/adding-circuits.md)** for the full workflow:
+`generate` (YAML) → review → `insert` (DB).
 
 ---
 
