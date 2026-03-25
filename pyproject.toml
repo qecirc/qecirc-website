@@ -8,6 +8,8 @@ dependencies = [
     "stim",
     "ldpc",
     "mqt-qecc",
+    "pyyaml",
+    "stimcirq",
 ]
 
 [dependency-groups]

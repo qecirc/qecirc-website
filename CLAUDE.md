@@ -34,10 +34,11 @@ Circuits also have numeric **metrics** for filtering: `gate_count`, `depth`, `qu
 ```
 codes
   id, name, slug, n, k, d, zoo_url,
-  hx, hz, logical_x, logical_z, created_at
+  hx, hz, logical_x, logical_z, canonical_hash, created_at
   -- n, k, d: code parameters [[n,k,d]] for direct querying/sorting
   -- zoo_url: optional link to QEC Zoo
   -- hx, hz, logical_x, logical_z: JSON-encoded matrices (e.g. [[1,0],[0,1]])
+  -- canonical_hash: SHA256 of canonical form for dedup (indexed)
 
 tools
   id, name, slug, description, homepage_url, github_url, created_at

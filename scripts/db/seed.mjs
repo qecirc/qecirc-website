@@ -27,8 +27,8 @@ const steaneLx = [[1,1,1,1,1,1,1]];
 const steaneLz = [[1,1,1,1,1,1,1]];
 
 const insertCode = db.prepare(`
-  INSERT INTO codes (name, slug, n, k, d, zoo_url, hx, hz, logical_x, logical_z)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO codes (name, slug, n, k, d, zoo_url, hx, hz, logical_x, logical_z, canonical_hash)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const insertTool = db.prepare(`
@@ -87,6 +87,7 @@ db.transaction(() => {
     JSON.stringify(steaneH),  // Hx = Hz for the Steane code
     JSON.stringify(steaneLx),
     JSON.stringify(steaneLz),
+    "96e2839c10016a17c64d18ae3b43d6e90e93e1a0a3934c0f16b3277c02cd8dcf",
   );
 
   // Circuit (linked to MQT QECC)

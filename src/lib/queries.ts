@@ -12,6 +12,7 @@ export interface Code {
   hz: string | null;
   logical_x: string | null;
   logical_z: string | null;
+  canonical_hash: string | null;
 }
 
 export interface Circuit {
