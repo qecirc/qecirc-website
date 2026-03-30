@@ -2,5 +2,6 @@ dist/
 node_modules/
 data/
 .astro/
+.venv/
 uv.lock
 *.db
