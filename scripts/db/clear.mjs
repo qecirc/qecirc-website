@@ -2,7 +2,10 @@ import Database from "better-sqlite3";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const root = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
 const dbPath = path.join(root, "data", "qecirc.db");
 
 const args = process.argv.slice(2);
@@ -19,8 +22,12 @@ function count(table) {
 
 if (toolsOnly) {
   const nTools = count("tools");
-  const nTaggings = db.prepare("SELECT COUNT(*) as n FROM taggings WHERE taggable_type = 'tool'").get().n;
-  const nLinked = db.prepare("SELECT COUNT(*) as n FROM circuits WHERE tool_id IS NOT NULL").get().n;
+  const nTaggings = db
+    .prepare("SELECT COUNT(*) as n FROM taggings WHERE taggable_type = 'tool'")
+    .get().n;
+  const nLinked = db
+    .prepare("SELECT COUNT(*) as n FROM circuits WHERE tool_id IS NOT NULL")
+    .get().n;
 
   if (!confirmed) {
     console.log("Would delete:");
@@ -32,17 +39,27 @@ if (toolsOnly) {
   }
 
   db.transaction(() => {
-    db.prepare("UPDATE circuits SET tool_id = NULL WHERE tool_id IS NOT NULL").run();
+    db.prepare(
+      "UPDATE circuits SET tool_id = NULL WHERE tool_id IS NOT NULL",
+    ).run();
     db.prepare("DELETE FROM taggings WHERE taggable_type = 'tool'").run();
     db.prepare("DELETE FROM tools").run();
-    db.prepare("DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM taggings)").run();
+    db.prepare(
+      "DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM taggings)",
+    ).run();
   })();
 
-  console.log(`Cleared ${nTools} tool(s), ${nTaggings} tagging(s), unlinked ${nLinked} circuit(s).`);
+  console.log(
+    `Cleared ${nTools} tool(s), ${nTaggings} tagging(s), unlinked ${nLinked} circuit(s).`,
+  );
 } else if (circuitsOnly) {
   const nCircuits = count("circuits");
   const nBodies = count("circuit_bodies");
-  const nTaggings = db.prepare("SELECT COUNT(*) as n FROM taggings WHERE taggable_type = 'circuit'").get().n;
+  const nTaggings = db
+    .prepare(
+      "SELECT COUNT(*) as n FROM taggings WHERE taggable_type = 'circuit'",
+    )
+    .get().n;
 
   if (!confirmed) {
     console.log("Would delete:");
@@ -57,15 +74,23 @@ if (toolsOnly) {
   db.transaction(() => {
     db.prepare("DELETE FROM taggings WHERE taggable_type = 'circuit'").run();
     db.prepare("DELETE FROM circuits").run(); // cascades to circuit_bodies
-    db.prepare("DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM taggings)").run();
+    db.prepare(
+      "DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM taggings)",
+    ).run();
   })();
 
-  console.log(`Cleared ${nCircuits} circuit(s), ${nBodies} body/bodies, ${nTaggings} tagging(s).`);
+  console.log(
+    `Cleared ${nCircuits} circuit(s), ${nBodies} body/bodies, ${nTaggings} tagging(s).`,
+  );
 } else {
   const nCodes = count("codes");
   const nCircuits = count("circuits");
   const nBodies = count("circuit_bodies");
-  const nTaggings = db.prepare("SELECT COUNT(*) as n FROM taggings WHERE taggable_type IN ('code', 'circuit')").get().n;
+  const nTaggings = db
+    .prepare(
+      "SELECT COUNT(*) as n FROM taggings WHERE taggable_type IN ('code', 'circuit')",
+    )
+    .get().n;
 
   if (!confirmed) {
     console.log("Would delete:");
@@ -79,13 +104,19 @@ if (toolsOnly) {
   }
 
   db.transaction(() => {
-    db.prepare("DELETE FROM taggings WHERE taggable_type IN ('code', 'circuit')").run();
+    db.prepare(
+      "DELETE FROM taggings WHERE taggable_type IN ('code', 'circuit')",
+    ).run();
     db.prepare("DELETE FROM circuits").run(); // cascades to circuit_bodies
     db.prepare("DELETE FROM codes").run();
-    db.prepare("DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM taggings)").run();
+    db.prepare(
+      "DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM taggings)",
+    ).run();
   })();
 
-  console.log(`Cleared ${nCodes} code(s), ${nCircuits} circuit(s), ${nBodies} body/bodies, ${nTaggings} tagging(s).`);
+  console.log(
+    `Cleared ${nCodes} code(s), ${nCircuits} circuit(s), ${nBodies} body/bodies, ${nTaggings} tagging(s).`,
+  );
 }
 
 db.close();

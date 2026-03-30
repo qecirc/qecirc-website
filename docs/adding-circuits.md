@@ -36,25 +36,26 @@ python -m scripts.add_circuit.generate \
 ```
 
 This computes all derived data and writes directly to `data_yaml/`:
+
 - **Code YAML** (if new): `data_yaml/codes/<code-slug>.yaml`
 - **Circuit YAML**: `data_yaml/circuits/<code-slug>--<circuit-slug>.yaml`
 - **Body files**: `.stim`, `.qasm`, `.cirq` (same stem as the circuit YAML)
 
 ### Flags
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--hx` | yes | Hx matrix (JSON string or file path) |
-| `--hz` | yes | Hz matrix (JSON string or file path) |
-| `--stim` | yes | STIM circuit file(s), space-separated |
-| `--code-name` | no | Human-readable code name |
-| `--circuit-name` | no | Circuit name(s), positionally matched to `--stim` |
-| `--source` | no | Provenance (DOI/URL) per circuit |
-| `--tool` | no | Tool slug per circuit (must exist in `data_yaml/tools/`) |
-| `--description` | no | Brief description per circuit |
-| `--zoo-url` | no | QEC Zoo URL for the code |
-| `--d` | no | Code distance (computed automatically if omitted) |
-| `--data-dir` | no | Path to data_yaml directory (default: `data_yaml`) |
+| Flag             | Required | Description                                              |
+| ---------------- | -------- | -------------------------------------------------------- |
+| `--hx`           | yes      | Hx matrix (JSON string or file path)                     |
+| `--hz`           | yes      | Hz matrix (JSON string or file path)                     |
+| `--stim`         | yes      | STIM circuit file(s), space-separated                    |
+| `--code-name`    | no       | Human-readable code name                                 |
+| `--circuit-name` | no       | Circuit name(s), positionally matched to `--stim`        |
+| `--source`       | no       | Provenance (DOI/URL) per circuit                         |
+| `--tool`         | no       | Tool slug per circuit (must exist in `data_yaml/tools/`) |
+| `--description`  | no       | Brief description per circuit                            |
+| `--zoo-url`      | no       | QEC Zoo URL for the code                                 |
+| `--d`            | no       | Code distance (computed automatically if omitted)        |
+| `--data-dir`     | no       | Path to data_yaml directory (default: `data_yaml`)       |
 
 Multiple circuits per code: pass multiple `--stim` files and match with multiple `--circuit-name`, `--source`, `--tool`, `--description` values.
 
@@ -111,36 +112,36 @@ print(result.summary())
 
 ### Parameters
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `Hx` | yes | X-check matrix (numpy array) |
-| `Hz` | yes | Z-check matrix (numpy array) |
-| `circuit` | yes | STIM circuit (`stim.Circuit` or string) |
-| `circuit_name` | yes | Human-readable circuit name |
-| `source` | no | Provenance (DOI/URL) |
-| `code_name` | no | Code name (optional if code already exists in `data_yaml/`) |
-| `zoo_url` | no | QEC Zoo URL for the code |
-| `d` | no | Code distance (computed automatically if omitted) |
-| `tool` | no | Tool slug (must exist in `data_yaml/tools/`) |
-| `description` | no | Circuit description |
-| `data_dir` | no | Path to data_yaml directory (default: `"data_yaml"`) |
-| `dry_run` | no | If `True`, report what would be written without writing |
+| Parameter      | Required | Description                                                 |
+| -------------- | -------- | ----------------------------------------------------------- |
+| `Hx`           | yes      | X-check matrix (numpy array)                                |
+| `Hz`           | yes      | Z-check matrix (numpy array)                                |
+| `circuit`      | yes      | STIM circuit (`stim.Circuit` or string)                     |
+| `circuit_name` | yes      | Human-readable circuit name                                 |
+| `source`       | no       | Provenance (DOI/URL)                                        |
+| `code_name`    | no       | Code name (optional if code already exists in `data_yaml/`) |
+| `zoo_url`      | no       | QEC Zoo URL for the code                                    |
+| `d`            | no       | Code distance (computed automatically if omitted)           |
+| `tool`         | no       | Tool slug (must exist in `data_yaml/tools/`)                |
+| `description`  | no       | Circuit description                                         |
+| `data_dir`     | no       | Path to data_yaml directory (default: `"data_yaml"`)        |
+| `dry_run`      | no       | If `True`, report what would be written without writing     |
 
 ### Return value
 
 `add_circuit()` returns an `AddCircuitResult` dataclass:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `code_name` | `str` | Code name |
-| `code_slug` | `str` | Code slug |
-| `code_status` | `str` | `"new"` or `"existing"` |
-| `circuit_name` | `str` | Circuit name |
-| `circuit_slug` | `str` | Circuit slug |
-| `validation` | `str` | `"passed"`, `"skipped"`, or `"failed: ..."` |
-| `detected_functionality` | `str \| None` | e.g. `"encoding"`, `"syndrome-extraction"` |
-| `files_written` | `list[str]` | Paths of files written (or would-be-written if dry run) |
-| `dry_run` | `bool` | Whether this was a dry run |
+| Field                    | Type          | Description                                             |
+| ------------------------ | ------------- | ------------------------------------------------------- |
+| `code_name`              | `str`         | Code name                                               |
+| `code_slug`              | `str`         | Code slug                                               |
+| `code_status`            | `str`         | `"new"` or `"existing"`                                 |
+| `circuit_name`           | `str`         | Circuit name                                            |
+| `circuit_slug`           | `str`         | Circuit slug                                            |
+| `validation`             | `str`         | `"passed"`, `"skipped"`, or `"failed: ..."`             |
+| `detected_functionality` | `str \| None` | e.g. `"encoding"`, `"syndrome-extraction"`              |
+| `files_written`          | `list[str]`   | Paths of files written (or would-be-written if dry run) |
+| `dry_run`                | `bool`        | Whether this was a dry run                              |
 
 Call `result.summary()` for a human-readable string.
 
@@ -185,10 +186,10 @@ k: 1
 d: 3
 zoo_url: https://errorcorrectionzoo.org/c/steane
 canonical_hash: 96e2839c10016a17c64d18ae3b43d6e90e93e1a0a3934c0f16b3277c02cd8dcf
-hx: [[1,1,0,0,1,1,0],[1,0,1,0,1,0,1],[0,0,0,1,1,1,1]]
-hz: [[1,1,0,0,1,1,0],[1,0,1,0,1,0,1],[0,0,0,1,1,1,1]]
-logical_x: [[1,1,1,1,1,1,1]]
-logical_z: [[1,1,1,1,1,1,1]]
+hx: [[1, 1, 0, 0, 1, 1, 0], [1, 0, 1, 0, 1, 0, 1], [0, 0, 0, 1, 1, 1, 1]]
+hz: [[1, 1, 0, 0, 1, 1, 0], [1, 0, 1, 0, 1, 0, 1], [0, 0, 0, 1, 1, 1, 1]]
+logical_x: [[1, 1, 1, 1, 1, 1, 1]]
+logical_z: [[1, 1, 1, 1, 1, 1, 1]]
 tags: [CSS, stabilizer, color-code]
 ```
 

@@ -16,8 +16,8 @@ const { title } = Astro.props;
     <title>{title} - QECirc</title>
     <script is:inline>
       (function () {
-        var stored = localStorage.getItem("theme");
-        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const stored = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         if (stored === "dark" || (!stored && prefersDark)) {
           document.documentElement.classList.add("dark");
         }
@@ -97,18 +97,18 @@ const { title } = Astro.props;
     </footer>
     <script is:inline>
       function toggleTheme() {
-        var dark = document.documentElement.classList.toggle("dark");
+        const dark = document.documentElement.classList.toggle("dark");
         localStorage.setItem("theme", dark ? "dark" : "light");
       }
       document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
-      var mobileTheme = document.getElementById("theme-toggle-mobile");
+      const mobileTheme = document.getElementById("theme-toggle-mobile");
       if (mobileTheme) mobileTheme.addEventListener("click", toggleTheme);
 
-      var navToggle = document.getElementById("nav-toggle");
-      var navMenu = document.getElementById("nav-menu");
+      const navToggle = document.getElementById("nav-toggle");
+      const navMenu = document.getElementById("nav-menu");
       if (navToggle && navMenu) {
         navToggle.addEventListener("click", function () {
-          var isOpen = navMenu.style.maxHeight !== "0px";
+          const isOpen = navMenu.style.maxHeight !== "0px";
           if (isOpen) {
             navMenu.style.maxHeight = "0px";
             navToggle.setAttribute("aria-expanded", "false");
