@@ -1,0 +1,27 @@
+name: Railway PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: railway-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy or teardown Railway PR Preview
+        uses: bogdankharchenko/railway-pr-preview@191cdc8bc8ad1014beafaa52955a2cdc4cfddae6
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          source_environment_id: ${{ secrets.RAILWAY_SOURCE_ENV_ID }}
+          is_ephemeral: true
