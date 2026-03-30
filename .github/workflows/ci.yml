@@ -27,7 +27,8 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.13"
+      - run: uv lock --check
       - run: uv sync
       - run: uv run ruff check scripts/
       - run: uv run ruff format --check scripts/
-      - run: uv run pytest
+      - run: uv run pytest --cov=scripts/add_circuit --cov-fail-under=60

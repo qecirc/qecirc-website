@@ -6,8 +6,8 @@ requires-python = ">=3.13"
 dependencies = [
     "numpy",
     "stim",
-    "ldpc",
-    "mqt-qecc",
+    "ldpc==2.4.1",
+    "mqt-qecc==1.8.1",
     "pyyaml",
     "stimcirq",
 ]
@@ -15,6 +15,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest",
+    "pytest-cov",
     "ruff",
 ]
 
