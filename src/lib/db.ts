@@ -1,12 +1,7 @@
 import Database from "better-sqlite3";
-import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-const root = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../..",
-);
-const dbPath = path.join(root, "data", "qecirc.db");
+const dbPath = path.join(process.cwd(), "data", "qecirc.db");
 
 let _db: Database.Database | null = null;
 

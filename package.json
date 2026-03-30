@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/db/create_database.mjs && astro build",
     "preview": "astro preview",
     "db:migrate": "node scripts/db/migrate.mjs",
     "db:create": "node scripts/db/create_database.mjs",
@@ -24,5 +24,8 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13"
+  },
+  "engines": {
+    "node": ">=23.0.0"
   }
 }
