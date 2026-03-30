@@ -21,7 +21,7 @@ import numpy as np
 
 from .compute import compute_code_data
 from .compute_circuit import compute_circuit_data
-from .yaml_helpers import build_code_yaml, build_circuit_yaml, dump_yaml, write_file
+from .yaml_helpers import build_circuit_yaml, build_code_yaml, dump_yaml, write_file
 
 
 def main():
@@ -39,7 +39,9 @@ def main():
     parser.add_argument("--source", nargs="+", default=[], help="Source(s) (DOI/URL)")
     parser.add_argument("--tool", nargs="+", default=[], help="Tool slug(s)")
     parser.add_argument("--description", nargs="+", default=[], help="Circuit description(s)")
-    parser.add_argument("--dry-run", action="store_true", help="Print what would be written without writing")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Print what would be written without writing"
+    )
 
     args = parser.parse_args()
     data_dir = Path(args.data_dir)
@@ -50,8 +52,12 @@ def main():
 
     # Compute code data once (shared across all circuits)
     code_result = compute_code_data(
-        Hx, Hz, d=args.d, code_name=args.code_name,
-        zoo_url=args.zoo_url, data_dir=str(data_dir) if data_dir.exists() else None,
+        Hx,
+        Hz,
+        d=args.d,
+        code_name=args.code_name,
+        zoo_url=args.zoo_url,
+        data_dir=str(data_dir) if data_dir.exists() else None,
     )
 
     code = code_result["code"]
@@ -68,10 +74,12 @@ def main():
     files_to_write = []
 
     if code.get("status") == "new":
-        files_to_write.append((
-            data_dir / "codes" / f"{code_slug}.yaml",
-            dump_yaml(build_code_yaml(code)),
-        ))
+        files_to_write.append(
+            (
+                data_dir / "codes" / f"{code_slug}.yaml",
+                dump_yaml(build_code_yaml(code)),
+            )
+        )
 
     # Compute circuit data for each STIM file
     circuits = []
@@ -79,7 +87,8 @@ def main():
         circuit_text = Path(stim_path).read_text()
         circ_data = compute_circuit_data(
             circuit_text=circuit_text,
-            Hx=Hx, Hz=Hz,
+            Hx=Hx,
+            Hz=Hz,
             code_params=code_params,
             qubit_permutation=perm,
             circuit_name=_get_nth(args.circuit_name, i, ""),
@@ -92,10 +101,12 @@ def main():
         stem = f"{code_slug}--{circ_data['slug']}"
         circuits_dir = data_dir / "circuits"
 
-        files_to_write.append((
-            circuits_dir / f"{stem}.yaml",
-            dump_yaml(build_circuit_yaml(circ_data)),
-        ))
+        files_to_write.append(
+            (
+                circuits_dir / f"{stem}.yaml",
+                dump_yaml(build_circuit_yaml(circ_data)),
+            )
+        )
 
         for body in circ_data.get("bodies", []):
             if body.get("body"):
@@ -116,7 +127,7 @@ def main():
         func = c["detected_functionality"] or "unknown"
         print(f"  - {c['name']} ({func}) [{c['validation']}]")
     if not args.dry_run:
-        print(f"\nRun 'npm run db:create && npm run dev' to rebuild the database.")
+        print("\nRun 'npm run db:create && npm run dev' to rebuild the database.")
 
 
 def _load_matrix(arg):

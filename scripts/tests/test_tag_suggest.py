@@ -6,16 +6,16 @@ import pytest
 
 from scripts.add_circuit.models import CodeParams
 from scripts.add_circuit.tag_suggest import (
-    suggest_circuit_tags,
-    suggest_code_tags,
-    suggest_classification_tags,
     CircuitProperties,
+    suggest_circuit_tags,
+    suggest_classification_tags,
+    suggest_code_tags,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def params_422():
@@ -34,12 +34,15 @@ def params_513():
 
 @pytest.fixture
 def props_encoding():
-    return CircuitProperties(qubit_count=4, depth=3, gate_count=4, detected_functionality="encoding")
+    return CircuitProperties(
+        qubit_count=4, depth=3, gate_count=4, detected_functionality="encoding"
+    )
 
 
 # ---------------------------------------------------------------------------
 # suggest_code_tags
 # ---------------------------------------------------------------------------
+
 
 class TestSuggestCodeTags:
     def test_css_tag_present_for_css_code(self, params_422):
@@ -61,6 +64,7 @@ class TestSuggestCodeTags:
 # ---------------------------------------------------------------------------
 # suggest_classification_tags
 # ---------------------------------------------------------------------------
+
 
 class TestSuggestClassificationTags:
     def test_single_shot_flagged_without_repeat(self):
@@ -97,6 +101,7 @@ class TestSuggestClassificationTags:
 # ---------------------------------------------------------------------------
 # suggest_circuit_tags
 # ---------------------------------------------------------------------------
+
 
 class TestSuggestCircuitTags:
     def test_depth_tag_confirmed(self, params_422, props_encoding):

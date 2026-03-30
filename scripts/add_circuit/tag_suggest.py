@@ -31,7 +31,8 @@ def suggest_classification_tags(detected_functionality: str, circuit_text: str) 
         tags.append(TagEntry(name="fault-tolerant", status="suggested"))
 
     # No REPEAT blocks -> likely single-shot
-    if detected_functionality == "syndrome-extraction" and circuit_text.upper().count("REPEAT") == 0:
+    is_syndrome = detected_functionality == "syndrome-extraction"
+    if is_syndrome and circuit_text.upper().count("REPEAT") == 0:
         tags.append(TagEntry(name="single-shot", status="suggested"))
 
     return tags

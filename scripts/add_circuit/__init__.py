@@ -24,7 +24,7 @@ import stim
 
 from .compute import compute_code_data
 from .compute_circuit import compute_circuit_data
-from .yaml_helpers import build_code_yaml, build_circuit_yaml, dump_yaml, write_file
+from .yaml_helpers import build_circuit_yaml, build_code_yaml, dump_yaml, write_file
 
 
 @dataclass
@@ -44,7 +44,8 @@ class AddCircuitResult:
     def summary(self) -> str:
         lines = [
             f"Code: {self.code_name} [{self.code_status}]",
-            f"Circuit: {self.circuit_name} ({self.detected_functionality or 'unknown'}) [{self.validation}]",
+            f"Circuit: {self.circuit_name}"
+            f" ({self.detected_functionality or 'unknown'}) [{self.validation}]",
         ]
         if self.dry_run:
             lines.append(f"Dry run — {len(self.files_written)} file(s) would be written:")
@@ -103,8 +104,12 @@ def add_circuit(
 
     # Compute code data
     code_result = compute_code_data(
-        Hx, Hz, d=d, code_name=code_name,
-        zoo_url=zoo_url, data_dir=str(data_dir) if data_dir.exists() else None,
+        Hx,
+        Hz,
+        d=d,
+        code_name=code_name,
+        zoo_url=zoo_url,
+        data_dir=str(data_dir) if data_dir.exists() else None,
     )
 
     code = code_result["code"]
@@ -119,7 +124,8 @@ def add_circuit(
     # Compute circuit data
     circ_data = compute_circuit_data(
         circuit_text=circuit_text,
-        Hx=Hx, Hz=Hz,
+        Hx=Hx,
+        Hz=Hz,
         code_params=code_params,
         qubit_permutation=perm,
         circuit_name=circuit_name,
@@ -134,18 +140,22 @@ def add_circuit(
     files_to_write: list[tuple[Path, str]] = []
 
     if code.get("status") == "new":
-        files_to_write.append((
-            data_dir / "codes" / f"{code_slug}.yaml",
-            dump_yaml(build_code_yaml(code)),
-        ))
+        files_to_write.append(
+            (
+                data_dir / "codes" / f"{code_slug}.yaml",
+                dump_yaml(build_code_yaml(code)),
+            )
+        )
 
     stem = f"{code_slug}--{circ_slug}"
     circuits_dir = data_dir / "circuits"
 
-    files_to_write.append((
-        circuits_dir / f"{stem}.yaml",
-        dump_yaml(build_circuit_yaml(circ_data)),
-    ))
+    files_to_write.append(
+        (
+            circuits_dir / f"{stem}.yaml",
+            dump_yaml(build_circuit_yaml(circ_data)),
+        )
+    )
 
     for body in circ_data.get("bodies", []):
         if body.get("body"):

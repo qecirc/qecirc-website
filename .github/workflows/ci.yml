@@ -28,4 +28,6 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync
+      - run: uv run ruff check scripts/
+      - run: uv run ruff format --check scripts/
       - run: uv run pytest

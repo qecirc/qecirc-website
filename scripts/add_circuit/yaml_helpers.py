@@ -62,6 +62,7 @@ def build_circuit_yaml(circ):
 
 class _FlowList(list):
     """List that serializes as YAML flow style (inline)."""
+
     pass
 
 

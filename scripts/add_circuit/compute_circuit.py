@@ -135,7 +135,6 @@ def _validate_encoding(circ, Hx, Hz):
     Z and I (no X or Y components).
     """
     tableau = circ.to_tableau()
-    n = Hx.shape[1]
     num_qubits = len(tableau)
     inv = tableau.inverse()
 

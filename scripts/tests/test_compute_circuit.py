@@ -9,6 +9,7 @@ from scripts.add_circuit.compute_circuit import compute_circuit_data
 
 try:
     import mqt.qecc  # noqa: F401
+
     _mqt_available = True
 except (ImportError, ModuleNotFoundError):
     _mqt_available = False
@@ -30,11 +31,13 @@ TICK
 CX 6 3 4 5 0 1
 """
 
-STEANE_H = np.array([
-    [1, 0, 1, 0, 1, 0, 1],
-    [0, 1, 1, 0, 0, 1, 1],
-    [0, 0, 0, 1, 1, 1, 1],
-])
+STEANE_H = np.array(
+    [
+        [1, 0, 1, 0, 1, 0, 1],
+        [0, 1, 1, 0, 0, 1, 1],
+        [0, 0, 0, 1, 1, 1, 1],
+    ]
+)
 
 CODE_PARAMS = {"n": 7, "k": 1, "d": 3, "is_css": True}
 
@@ -43,10 +46,14 @@ CODE_PARAMS = {"n": 7, "k": 1, "d": 3, "is_css": True}
 # compute_circuit_data
 # ---------------------------------------------------------------------------
 
+
 class TestComputeCircuitData:
     def test_basic_output_structure(self):
         result = compute_circuit_data(
-            STEANE_STIM, STEANE_H, STEANE_H, CODE_PARAMS,
+            STEANE_STIM,
+            STEANE_H,
+            STEANE_H,
+            CODE_PARAMS,
             circuit_name="Standard Encoding",
         )
         assert result["name"] == "Standard Encoding"
@@ -91,7 +98,10 @@ class TestComputeCircuitData:
     def test_with_permutation_stores_original(self):
         perm = [0, 1, 2, 3, 4, 5, 6]  # identity permutation
         result = compute_circuit_data(
-            STEANE_STIM, STEANE_H, STEANE_H, CODE_PARAMS,
+            STEANE_STIM,
+            STEANE_H,
+            STEANE_H,
+            CODE_PARAMS,
             qubit_permutation=perm,
         )
         assert result["original_stim"] is not None
@@ -103,7 +113,10 @@ class TestComputeCircuitData:
 
     def test_metadata_fields(self):
         result = compute_circuit_data(
-            STEANE_STIM, STEANE_H, STEANE_H, CODE_PARAMS,
+            STEANE_STIM,
+            STEANE_H,
+            STEANE_H,
+            CODE_PARAMS,
             circuit_name="Test",
             source="doi:test",
             tool="mqt-qecc",
