@@ -5,7 +5,7 @@ interface Props {
   basePath?: string;
 }
 
-const { tags, baseUrl, basePath = "/codes" } = Astro.props;
+const { tags, baseUrl, basePath = "/" } = Astro.props;
 
 function tagUrl(tag: string): string {
   if (baseUrl) {

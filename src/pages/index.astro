@@ -1,19 +1,67 @@
 ---
+export const prerender = false;
+
 import Layout from "../components/Layout.astro";
+import CodeCard from "../components/CodeCard.astro";
+import CodeFilter from "../components/CodeFilter.astro";
+import { filterCodes, countAllCodes, parseFilterString, hasActiveFilters, getCodeTagsWithCount } from "../lib/queries";
+import type { CodeFilters } from "../lib/queries";
+
+const rawN = Astro.url.searchParams.get("n") ?? "";
+const rawK = Astro.url.searchParams.get("k") ?? "";
+const rawD = Astro.url.searchParams.get("d") ?? "";
+const selectedTags = Astro.url.searchParams.getAll("tag");
+
+const parsedN = parseFilterString(rawN);
+const parsedK = parseFilterString(rawK);
+const parsedD = parseFilterString(rawD);
+
+const errors = {
+  n: rawN.trim() !== "" && parsedN === null,
+  k: rawK.trim() !== "" && parsedK === null,
+  d: rawD.trim() !== "" && parsedD === null,
+};
+
+const filters: CodeFilters = {
+  n: parsedN ?? undefined,
+  k: parsedK ?? undefined,
+  d: parsedD ?? undefined,
+  tags: selectedTags.length > 0 ? selectedTags : undefined,
+};
+
+const VALID_FOCUS = new Set(["n", "k", "d", ""]);
+const focusRaw = Astro.url.searchParams.get("focus") ?? "";
+const focusField = VALID_FOCUS.has(focusRaw) ? focusRaw : "";
+
+const allTags = getCodeTagsWithCount();
+const active = hasActiveFilters(filters);
+const codes = filterCodes(filters);
+const totalCount = active ? countAllCodes() : codes.length;
 ---
 
-<Layout title="Home">
-  <div class="max-w-2xl">
-    <h1 class="text-3xl font-bold mb-4">QECirc</h1>
-    <p class="text-gray-600 dark:text-gray-400 mb-6">
-      A community-driven library for quantum error correction circuits.
-      Browse codes and their circuits, stored in extended STIM format.
-    </p>
-    <a
-      href="/codes"
-      class="inline-block rounded bg-gray-900 dark:bg-gray-100 px-4 py-2 text-sm text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
-    >
-      Browse Codes
-    </a>
-  </div>
+<Layout title="QECirc">
+  <h1 class="text-2xl font-bold mb-6">Codes</h1>
+
+  <CodeFilter
+    rawN={rawN} rawK={rawK} rawD={rawD}
+    errors={errors} hasFilters={active} focus={focusField}
+    allTags={allTags} selectedTags={selectedTags}
+    currentUrl={Astro.url}
+  />
+
+  <p class="text-sm text-gray-500 mb-4">
+    {active
+      ? `Showing ${codes.length} of ${totalCount} codes`
+      : `${totalCount} ${totalCount === 1 ? "code" : "codes"}`}
+  </p>
+
+  {codes.length === 0 ? (
+    <p class="text-gray-500">No codes match the current filters.</p>
+  ) : (
+    <div class="grid gap-4">
+      {codes.map((code) => (
+        <CodeCard code={code} baseUrl={Astro.url} />
+      ))}
+    </div>
+  )}
 </Layout>
