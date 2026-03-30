@@ -31,11 +31,11 @@ function tagToggleUrl(tagName: string): string {
     : [...selectedTags, tagName];
   for (const t of newTags) params.append("tag", t);
   const qs = params.toString();
-  return "/codes" + (qs ? "?" + qs : "");
+  return "/" + (qs ? "?" + qs : "");
 }
 ---
 
-<form id="code-filter" method="GET" action="/codes" class="mb-6 space-y-2">
+<form id="code-filter" method="GET" action="/" class="mb-6 space-y-2">
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex items-center">
       <span class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">n</span>
@@ -53,7 +53,7 @@ function tagToggleUrl(tagName: string): string {
       {anyError ? (
         <span id="filter-error" class="text-red-500">Invalid filter</span>
       ) : hasFilters ? (
-        <a href="/codes" class="text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 underline">Clear</a>
+        <a href="/" class="text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 underline">Clear</a>
       ) : (
         <span class="text-gray-400">e.g. 7, &gt;3, &lt;=10, !=5</span>
       )}
@@ -158,7 +158,7 @@ function tagToggleUrl(tagName: string): string {
     if (lastEditedField && VALID_FIELDS.includes(lastEditedField)) {
       params.set("focus", lastEditedField);
     }
-    const target = "/codes" + (params.size > 0 ? "?" + params.toString() : "");
+    const target = "/" + (params.size > 0 ? "?" + params.toString() : "");
     // Skip reload if URL would be the same (minus focus param)
     const currentParams = new URLSearchParams(window.location.search);
     currentParams.delete("focus");
