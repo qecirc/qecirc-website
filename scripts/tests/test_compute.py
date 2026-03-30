@@ -16,18 +16,20 @@ from scripts.add_circuit.compute import (
     slugify,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def steane_H():
-    return np.array([
-        [1, 0, 1, 0, 1, 0, 1],
-        [0, 1, 1, 0, 0, 1, 1],
-        [0, 0, 0, 1, 1, 1, 1],
-    ])
+    return np.array(
+        [
+            [1, 0, 1, 0, 1, 0, 1],
+            [0, 1, 1, 0, 0, 1, 1],
+            [0, 0, 0, 1, 1, 1, 1],
+        ]
+    )
 
 
 @pytest.fixture
@@ -40,6 +42,7 @@ def code_422():
 # ---------------------------------------------------------------------------
 # compute_code_data
 # ---------------------------------------------------------------------------
+
 
 class TestComputeCodeData:
     def test_steane_params(self, steane_H):
@@ -91,8 +94,9 @@ class TestComputeCodeData:
         assert result["code"]["zoo_url"] == "https://example.com"
 
     def test_yaml_dedup_existing(self, steane_H):
-        """When code exists in data_yaml/codes/, status is 'existing' and permutation is returned."""
+        """When code exists in data_yaml/codes/, status is 'existing'."""
         from scripts.add_circuit.code_identify import canonical_hash
+
         c_hash = canonical_hash(steane_H, steane_H)
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -100,7 +104,9 @@ class TestComputeCodeData:
             codes_dir.mkdir()
             code_yaml = {
                 "name": "Steane Code",
-                "n": 7, "k": 1, "d": 3,
+                "n": 7,
+                "k": 1,
+                "d": 3,
                 "canonical_hash": c_hash,
                 "hx": steane_H.tolist(),
                 "hz": steane_H.tolist(),
@@ -115,6 +121,7 @@ class TestComputeCodeData:
 # ---------------------------------------------------------------------------
 # _is_self_dual
 # ---------------------------------------------------------------------------
+
 
 class TestIsSelfDual:
     def test_steane_is_self_dual(self, steane_H):
@@ -135,6 +142,7 @@ class TestIsSelfDual:
 # _compute_logicals
 # ---------------------------------------------------------------------------
 
+
 class TestComputeLogicals:
     def test_steane_logicals_valid(self, steane_H):
         Lx, Lz = _compute_logicals(steane_H, steane_H, True, 3)
@@ -149,6 +157,7 @@ class TestComputeLogicals:
 # ---------------------------------------------------------------------------
 # slugify
 # ---------------------------------------------------------------------------
+
 
 class TestSlugify:
     def test_basic(self):

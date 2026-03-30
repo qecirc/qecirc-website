@@ -35,9 +35,9 @@ const formatted = lines
 <script>
   document.querySelectorAll(".copy-btn").forEach(function (btn) {
     btn.addEventListener("click", function () {
-      var code = (btn as HTMLElement).dataset.code || "";
+      const code = (btn as HTMLElement).dataset.code || "";
       navigator.clipboard.writeText(code);
-      var original = btn.textContent;
+      const original = btn.textContent;
       btn.textContent = "Copied!";
       setTimeout(function () { btn.textContent = original; }, 1500);
     });

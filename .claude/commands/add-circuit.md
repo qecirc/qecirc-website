@@ -86,19 +86,19 @@ Read existing YAML files in `data_yaml/codes/` and `data_yaml/circuits/` to see 
 
 ### Code tags
 
-| Category | Examples | Source |
-|----------|----------|--------|
-| Code type | `CSS`, `stabilizer` | Auto-detected by scripts |
-| Code family | `color-code`, `surface-code`, `toric-code`, `bicycle`, `LDPC`, `Reed-Muller` | Ask user or Zoo lookup |
-| Code properties | `self-dual`, `single-shot`, `transversal-gates` | `self-dual` auto-detected; others from user or Zoo |
+| Category        | Examples                                                                     | Source                                             |
+| --------------- | ---------------------------------------------------------------------------- | -------------------------------------------------- |
+| Code type       | `CSS`, `stabilizer`                                                          | Auto-detected by scripts                           |
+| Code family     | `color-code`, `surface-code`, `toric-code`, `bicycle`, `LDPC`, `Reed-Muller` | Ask user or Zoo lookup                             |
+| Code properties | `self-dual`, `single-shot`, `transversal-gates`                              | `self-dual` auto-detected; others from user or Zoo |
 
 ### Circuit tags
 
-| Category | Examples | Source |
-|----------|----------|--------|
-| Functionality | `encoding`, `state-preparation`, `syndrome-extraction` | Auto-detected; confirm with user |
-| Fault tolerance | `ft`, `non-ft` | **Must ask user** — do not guess |
-| Special properties | `gate-optimal`, `depth-optimal`, `local-connectivity`, `flag-based` | **Only if user claims it** |
+| Category           | Examples                                                            | Source                           |
+| ------------------ | ------------------------------------------------------------------- | -------------------------------- |
+| Functionality      | `encoding`, `state-preparation`, `syndrome-extraction`              | Auto-detected; confirm with user |
+| Fault tolerance    | `ft`, `non-ft`                                                      | **Must ask user** — do not guess |
+| Special properties | `gate-optimal`, `depth-optimal`, `local-connectivity`, `flag-based` | **Only if user claims it**       |
 
 ### Tag rules
 
@@ -109,6 +109,7 @@ Read existing YAML files in `data_yaml/codes/` and `data_yaml/circuits/` to see 
 ### Apply tags
 
 Edit the generated YAML files to add/update the `tags:` field in:
+
 - `data_yaml/codes/<slug>.yaml`
 - `data_yaml/circuits/<code-slug>--<circuit-slug>.yaml`
 
@@ -128,15 +129,15 @@ npm run db:create && npm run dev
 
 ## Error handling
 
-| Condition | Action |
-|---|---|
-| Source missing | Hard stop — ask the user to provide it |
-| Matrices have different column counts | Hard stop — report the mismatch |
-| Commutativity check fails | Hard stop — matrices don't define a valid stabilizer code |
-| Circuit validation fails | Stop — report details, suggest checking qubit ordering |
-| Distance computation times out | Continue with `d: null` — note it for the user |
-| Tool slug not in `data_yaml/tools/` | Ask user to confirm; note a new tool YAML may be needed |
-| Zoo URL not found | Continue without it — not required |
+| Condition                             | Action                                                    |
+| ------------------------------------- | --------------------------------------------------------- |
+| Source missing                        | Hard stop — ask the user to provide it                    |
+| Matrices have different column counts | Hard stop — report the mismatch                           |
+| Commutativity check fails             | Hard stop — matrices don't define a valid stabilizer code |
+| Circuit validation fails              | Stop — report details, suggest checking qubit ordering    |
+| Distance computation times out        | Continue with `d: null` — note it for the user            |
+| Tool slug not in `data_yaml/tools/`   | Ask user to confirm; note a new tool YAML may be needed   |
+| Zoo URL not found                     | Continue without it — not required                        |
 
 ---
 

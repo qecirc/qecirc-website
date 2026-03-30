@@ -12,10 +12,10 @@ import numpy as np
 
 from .models import CodeParams
 
-
 # ---------------------------------------------------------------------------
 # GF(2) linear algebra
 # ---------------------------------------------------------------------------
+
 
 def gf2_rref(M: np.ndarray) -> np.ndarray:
     """Reduced row echelon form over GF(2)."""
@@ -43,6 +43,7 @@ def gf2_rank(M: np.ndarray) -> int:
 # Code classification
 # ---------------------------------------------------------------------------
 
+
 def check_commutativity(Hx: np.ndarray, Hz: np.ndarray) -> bool:
     """Verify all stabilizer generators mutually commute: Hx*Hz^T + Hz*Hx^T = 0 mod 2."""
     return bool(np.all((Hx @ Hz.T + Hz @ Hx.T) % 2 == 0))
@@ -67,6 +68,7 @@ def extract_params(Hx: np.ndarray, Hz: np.ndarray) -> CodeParams:
 # ---------------------------------------------------------------------------
 # Canonicalization
 # ---------------------------------------------------------------------------
+
 
 def canonical_form(Hx: np.ndarray, Hz: np.ndarray) -> tuple[np.ndarray, np.ndarray, list[int]]:
     """
@@ -114,6 +116,7 @@ def canonical_hash(Hx: np.ndarray, Hz: np.ndarray) -> str:
 # ---------------------------------------------------------------------------
 # Qubit permutation
 # ---------------------------------------------------------------------------
+
 
 def find_qubit_permutation(
     Hx_new: np.ndarray,

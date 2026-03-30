@@ -51,7 +51,9 @@ export interface ToolFilters {
 export type TaggableType = "code" | "circuit" | "tool";
 
 export function formatCodeParams(code: Code): string {
-  return code.d != null ? `[[${code.n},${code.k},${code.d}]]` : `[[${code.n},${code.k}]]`;
+  return code.d != null
+    ? `[[${code.n},${code.k},${code.d}]]`
+    : `[[${code.n},${code.k}]]`;
 }
 
 export function getTagsFor(
@@ -72,17 +74,15 @@ export function getTagsFor(
 
 export function getAllCodes(): (Code & { tags: string[] })[] {
   const db = getDb();
-  const codes = db
-    .prepare("SELECT * FROM codes ORDER BY name")
-    .all() as Code[];
+  const codes = db.prepare("SELECT * FROM codes ORDER BY name").all() as Code[];
   return codes.map((c) => ({ ...c, tags: getTagsFor("code", c.id) }));
 }
 
 export function getCodeBySlug(slug: string): Code | undefined {
   const db = getDb();
-  return db
-    .prepare("SELECT * FROM codes WHERE slug = ?")
-    .get(slug) as Code | undefined;
+  return db.prepare("SELECT * FROM codes WHERE slug = ?").get(slug) as
+    | Code
+    | undefined;
 }
 
 type FilterOp = "=" | "!=" | ">" | ">=" | "<" | "<=";
@@ -114,7 +114,11 @@ export interface CircuitFilters {
   tags?: string[];
 }
 
-const VALID_SORT_FIELDS: readonly string[] = ["qubit_count", "depth", "gate_count"];
+const VALID_SORT_FIELDS: readonly string[] = [
+  "qubit_count",
+  "depth",
+  "gate_count",
+];
 
 function buildOrderBy(sort?: CircuitSort): string {
   if (!sort || !VALID_SORT_FIELDS.includes(sort.field)) {
@@ -170,17 +174,21 @@ export function parseFilterString(input: string): FilterCondition[] | null {
 }
 
 export function hasActiveFilters(filters: CodeFilters): boolean {
-  return (filters.n?.length ?? 0) > 0
-    || (filters.k?.length ?? 0) > 0
-    || (filters.d?.length ?? 0) > 0
-    || (filters.tags?.length ?? 0) > 0;
+  return (
+    (filters.n?.length ?? 0) > 0 ||
+    (filters.k?.length ?? 0) > 0 ||
+    (filters.d?.length ?? 0) > 0 ||
+    (filters.tags?.length ?? 0) > 0
+  );
 }
 
 export function hasActiveCircuitFilters(filters: CircuitFilters): boolean {
-  return (filters.gate_count?.length ?? 0) > 0
-    || (filters.depth?.length ?? 0) > 0
-    || (filters.qubit_count?.length ?? 0) > 0
-    || (filters.tags?.length ?? 0) > 0;
+  return (
+    (filters.gate_count?.length ?? 0) > 0 ||
+    (filters.depth?.length ?? 0) > 0 ||
+    (filters.qubit_count?.length ?? 0) > 0 ||
+    (filters.tags?.length ?? 0) > 0
+  );
 }
 
 function addConditions(
@@ -213,7 +221,9 @@ function addTagConditions(
   }
 }
 
-export function filterCodes(filters: CodeFilters): (Code & { tags: string[] })[] {
+export function filterCodes(
+  filters: CodeFilters,
+): (Code & { tags: string[] })[] {
   const db = getDb();
   const conditions: string[] = [];
   const params: (number | string)[] = [];
@@ -223,7 +233,8 @@ export function filterCodes(filters: CodeFilters): (Code & { tags: string[] })[]
   addConditions("d", filters.d, conditions, params);
   addTagConditions(filters.tags, "code", conditions, params);
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const where =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const codes = db
     .prepare(`SELECT * FROM codes c ${where} ORDER BY c.name`)
     .all(...params) as Code[];
@@ -232,7 +243,9 @@ export function filterCodes(filters: CodeFilters): (Code & { tags: string[] })[]
 
 export function countAllCodes(): number {
   const db = getDb();
-  const row = db.prepare("SELECT COUNT(*) as count FROM codes").get() as { count: number };
+  const row = db.prepare("SELECT COUNT(*) as count FROM codes").get() as {
+    count: number;
+  };
   return row.count;
 }
 
@@ -312,7 +325,9 @@ export function filterCircuitsForCode(
 
 const FORMAT_ORDER = ["stim", "qasm", "cirq"];
 
-export function getBodiesForCircuits(circuitIds: number[]): Map<number, CircuitBody[]> {
+export function getBodiesForCircuits(
+  circuitIds: number[],
+): Map<number, CircuitBody[]> {
   const db = getDb();
   const result = new Map<number, CircuitBody[]>();
   if (circuitIds.length === 0) return result;
@@ -332,7 +347,7 @@ export function getBodiesForCircuits(circuitIds: number[]): Map<number, CircuitB
   }
 
   // Sort each circuit's bodies by preferred format order
-  for (const [id, bodies] of result) {
+  for (const [, bodies] of result) {
     bodies.sort((a, b) => {
       const ai = FORMAT_ORDER.indexOf(a.format);
       const bi = FORMAT_ORDER.indexOf(b.format);
@@ -398,7 +413,8 @@ export function filterTools(filters: ToolFilters): ToolWithMeta[] {
     }
   }
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const where =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const tools = db
     .prepare(
       `SELECT c.* FROM tools c
@@ -434,7 +450,9 @@ export function searchTools(query: string): (Tool & { tags: string[] })[] {
 
 export function getToolById(id: number): Tool | undefined {
   const db = getDb();
-  return db.prepare("SELECT * FROM tools WHERE id = ?").get(id) as Tool | undefined;
+  return db.prepare("SELECT * FROM tools WHERE id = ?").get(id) as
+    | Tool
+    | undefined;
 }
 
 export function getToolsForCircuits(circuitIds: number[]): Map<number, Tool> {

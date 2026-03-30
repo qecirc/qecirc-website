@@ -4,7 +4,7 @@
 
 **QECirc** is a community-driven web library for quantum error correction (QEC) circuits.
 Users can browse and discover circuits, and contribute new ones by opening a GitHub Issue.
-Circuits are stored in an extended STIM format (see [tsim](https://github.com/QuEraComputing/tsim#supported-instructions)).
+Circuits are stored in an extended STIM format (see `docs/circuit-format.md`).
 
 ---
 
@@ -20,10 +20,10 @@ is represented as a tag, not a separate entity.
 
 Both levels support **tags** to aid discovery and filtering:
 
-| Level    | Example tags                                        |
-|----------|-----------------------------------------------------|
-| Code     | `CSS`, `topological`, `bosonic`                     |
-| Circuit  | `encoding`, `fault-tolerant`, `distance:3`          |
+| Level   | Example tags                               |
+| ------- | ------------------------------------------ |
+| Code    | `CSS`, `topological`, `bosonic`            |
+| Circuit | `encoding`, `fault-tolerant`, `distance:3` |
 
 Tags can be either **structured** (`key:value`, e.g. `distance:3`) or **free-form strings**.
 
@@ -71,8 +71,7 @@ taggings
 ## Circuit Format
 
 Circuits use an extended STIM format.
-See the [tsim instruction reference](https://github.com/QuEraComputing/tsim#supported-instructions)
-for supported instructions. Any extensions beyond tsim must be documented in `docs/circuit-format.md`.
+See `docs/circuit-format.md` for supported instructions and any extensions.
 
 ---
 
@@ -88,12 +87,12 @@ See **[docs/adding-circuits.md](docs/adding-circuits.md)** for the full workflow
 
 ## Tech Stack
 
-| Layer      | Choice                        | Rationale                                          |
-|------------|-------------------------------|----------------------------------------------------|
-| Framework  | Astro v6 (TypeScript)         | Static-first with SSR opt-in for dynamic pages      |
-| Database   | SQLite via `better-sqlite3`   | Zero external services, file-based, simple          |
-| Styling    | Tailwind CSS                  | Standard utility-first, minimal custom CSS          |
-| Hosting    | Self-hosted (agnostic)        | Avoid platform lock-in                              |
+| Layer     | Choice                      | Rationale                                      |
+| --------- | --------------------------- | ---------------------------------------------- |
+| Framework | Astro v6 (TypeScript)       | Static-first with SSR opt-in for dynamic pages |
+| Database  | SQLite via `better-sqlite3` | Zero external services, file-based, simple     |
+| Styling   | Tailwind CSS                | Standard utility-first, minimal custom CSS     |
+| Hosting   | Self-hosted (agnostic)      | Avoid platform lock-in                         |
 
 **Rendering strategy — Astro v6 (static default, SSR opt-in):**
 
@@ -141,16 +140,17 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 
 **Format:** `<type>(<scope>): <description>`
 
-| Type       | When to use                                      |
-|------------|--------------------------------------------------|
-| `feat`     | New user-facing feature                          |
-| `fix`      | Bug fix                                          |
-| `refactor` | Code change with no behaviour change             |
-| `chore`    | Deps, config, tooling                            |
-| `docs`     | Documentation only                               |
-| `test`     | Adding or updating tests                         |
+| Type       | When to use                          |
+| ---------- | ------------------------------------ |
+| `feat`     | New user-facing feature              |
+| `fix`      | Bug fix                              |
+| `refactor` | Code change with no behaviour change |
+| `chore`    | Deps, config, tooling                |
+| `docs`     | Documentation only                   |
+| `test`     | Adding or updating tests             |
 
 **Examples:**
+
 ```
 feat(browse): add tag filter to circuit listing
 fix(parser): handle missing QUBIT_COORDS in extended STIM
@@ -177,7 +177,11 @@ npm run dev                         # Start local development server
 npm run build                       # Production build
 npm run preview                     # Preview production build locally
 npm run lint                        # ESLint
-npm run test                        # Run test suite
+npm run format:check                # Check Prettier formatting
+npm run format                      # Auto-format with Prettier
+npm run validate:yaml               # Validate data_yaml/ schemas
+uv run ruff check scripts/          # Lint Python code
+uv run ruff format scripts/          # Format Python code
 npm run db:create                   # Build database from data_yaml/ (restart dev server after)
 npm run db:migrate                  # Apply database migrations
 npm run db:reset                    # Drop database and re-migrate (empty DB)

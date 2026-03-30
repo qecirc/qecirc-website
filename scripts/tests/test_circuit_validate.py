@@ -2,8 +2,6 @@
 Tests for circuit_validate.py.
 """
 
-import pytest
-
 from scripts.add_circuit.circuit_validate import (
     circuit_properties,
     classify_functionality,
@@ -75,6 +73,7 @@ REPEAT 5 {
 # classify_functionality
 # ---------------------------------------------------------------------------
 
+
 class TestClassifyFunctionality:
     def test_encoding_detected(self):
         assert classify_functionality(ENCODING_CIRCUIT) == "encoding"
@@ -100,6 +99,7 @@ class TestClassifyFunctionality:
 # ---------------------------------------------------------------------------
 # circuit_properties
 # ---------------------------------------------------------------------------
+
 
 class TestCircuitProperties:
     def test_qubit_count(self):

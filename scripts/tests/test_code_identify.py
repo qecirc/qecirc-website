@@ -25,6 +25,7 @@ from scripts.add_circuit.code_identify import (
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def code_422():
     Hx = np.array([[1, 1, 1, 1]])
@@ -34,29 +35,35 @@ def code_422():
 
 @pytest.fixture
 def code_713():
-    H = np.array([
-        [1, 0, 1, 0, 1, 0, 1],
-        [0, 1, 1, 0, 0, 1, 1],
-        [0, 0, 0, 1, 1, 1, 1],
-    ])
+    H = np.array(
+        [
+            [1, 0, 1, 0, 1, 0, 1],
+            [0, 1, 1, 0, 0, 1, 1],
+            [0, 0, 0, 1, 1, 1, 1],
+        ]
+    )
     return H.copy(), H.copy()
 
 
 @pytest.fixture
 def code_513():
     """[[5,1,3]] 5-qubit perfect code -- general stabilizer, not CSS."""
-    Hx = np.array([
-        [1, 0, 0, 1, 0],
-        [0, 1, 0, 0, 1],
-        [1, 0, 1, 0, 0],
-        [0, 1, 0, 1, 0],
-    ])
-    Hz = np.array([
-        [0, 1, 1, 0, 0],
-        [0, 0, 1, 1, 0],
-        [0, 0, 0, 1, 1],
-        [1, 0, 0, 0, 1],
-    ])
+    Hx = np.array(
+        [
+            [1, 0, 0, 1, 0],
+            [0, 1, 0, 0, 1],
+            [1, 0, 1, 0, 0],
+            [0, 1, 0, 1, 0],
+        ]
+    )
+    Hz = np.array(
+        [
+            [0, 1, 1, 0, 0],
+            [0, 0, 1, 1, 0],
+            [0, 0, 0, 1, 1],
+            [1, 0, 0, 0, 1],
+        ]
+    )
     return Hx, Hz
 
 
@@ -64,10 +71,11 @@ def code_513():
 # GF(2) linear algebra
 # ---------------------------------------------------------------------------
 
+
 class TestGf2Rref:
     def test_identity_stays_identity(self):
-        I = np.eye(3, dtype=int)
-        assert np.array_equal(gf2_rref(I), I)
+        eye = np.eye(3, dtype=int)
+        assert np.array_equal(gf2_rref(eye), eye)
 
     def test_zero_matrix(self):
         Z = np.zeros((3, 4), dtype=int)
@@ -110,6 +118,7 @@ class TestGf2Rank:
 # check_commutativity
 # ---------------------------------------------------------------------------
 
+
 class TestCheckCommutativity:
     def test_valid_css_422(self, code_422):
         assert check_commutativity(*code_422)
@@ -130,6 +139,7 @@ class TestCheckCommutativity:
 # is_css
 # ---------------------------------------------------------------------------
 
+
 class TestIsCss:
     def test_422_is_css(self, code_422):
         assert is_css(*code_422)
@@ -144,6 +154,7 @@ class TestIsCss:
 # ---------------------------------------------------------------------------
 # extract_params
 # ---------------------------------------------------------------------------
+
 
 class TestExtractParams:
     def test_422(self, code_422):
@@ -168,6 +179,7 @@ class TestExtractParams:
 # ---------------------------------------------------------------------------
 # canonical_form
 # ---------------------------------------------------------------------------
+
 
 class TestCanonicalForm:
     def test_returns_rref_matrices(self, code_713):
@@ -198,6 +210,7 @@ class TestCanonicalForm:
 # ---------------------------------------------------------------------------
 # canonical_hash
 # ---------------------------------------------------------------------------
+
 
 class TestCanonicalHash:
     def test_same_code_same_hash(self, code_422):
@@ -233,6 +246,7 @@ class TestCanonicalHash:
 # ---------------------------------------------------------------------------
 # find_qubit_permutation
 # ---------------------------------------------------------------------------
+
 
 class TestFindQubitPermutation:
     def test_identity_permutation(self, code_422):

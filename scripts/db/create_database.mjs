@@ -17,7 +17,10 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const root = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
 const dbPath = path.join(root, "data", "qecirc.db");
 const dataDir = path.join(root, "data_yaml");
 
@@ -69,7 +72,8 @@ function readYaml(filePath) {
 
 function listYamlFiles(dir) {
   if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir)
+  return fs
+    .readdirSync(dir)
     .filter((f) => f.endsWith(".yaml"))
     .sort();
 }
@@ -83,166 +87,190 @@ const codeSlugToId = new Map();
 const errors = [];
 
 try {
-db.transaction(() => {
-  // --- Tools ---
-  const toolsDir = path.join(dataDir, "tools");
-  for (const file of listYamlFiles(toolsDir)) {
-    const slug = file.replace(/\.yaml$/, "");
-    const data = readYaml(path.join(toolsDir, file));
+  db.transaction(() => {
+    // --- Tools ---
+    const toolsDir = path.join(dataDir, "tools");
+    for (const file of listYamlFiles(toolsDir)) {
+      const slug = file.replace(/\.yaml$/, "");
+      const data = readYaml(path.join(toolsDir, file));
 
-    if (!data.name) {
-      errors.push(`Tool ${file}: missing required field 'name'`);
-      continue;
-    }
-    if (toolSlugToId.has(slug)) {
-      errors.push(`Tool ${file}: duplicate slug '${slug}'`);
-      continue;
-    }
-
-    const { lastInsertRowid } = stmts.insertTool.run(
-      data.name, slug, data.description || "", data.homepage_url || null, data.github_url || null,
-    );
-    toolSlugToId.set(slug, Number(lastInsertRowid));
-
-    for (const tag of data.tags || []) {
-      addTag(tag, Number(lastInsertRowid), "tool");
-    }
-
-    console.log(`  Tool: ${data.name} (${slug})`);
-  }
-
-  // --- Codes ---
-  const codesDir = path.join(dataDir, "codes");
-  for (const file of listYamlFiles(codesDir)) {
-    const slug = file.replace(/\.yaml$/, "");
-    const data = readYaml(path.join(codesDir, file));
-
-    if (!data.name) {
-      errors.push(`Code ${file}: missing required field 'name'`);
-      continue;
-    }
-    if (data.n == null || data.k == null) {
-      errors.push(`Code ${file}: missing required fields 'n' and/or 'k'`);
-      continue;
-    }
-    if (codeSlugToId.has(slug)) {
-      errors.push(`Code ${file}: duplicate slug '${slug}'`);
-      continue;
-    }
-
-    const { lastInsertRowid } = stmts.insertCode.run(
-      data.name, slug, data.n, data.k, data.d || null,
-      data.zoo_url || null,
-      JSON.stringify(data.hx), JSON.stringify(data.hz),
-      JSON.stringify(data.logical_x), JSON.stringify(data.logical_z),
-      data.canonical_hash || null,
-    );
-    codeSlugToId.set(slug, Number(lastInsertRowid));
-
-    for (const tag of data.tags || []) {
-      addTag(tag, Number(lastInsertRowid), "code");
-    }
-
-    console.log(`  Code: ${data.name} (${slug})`);
-  }
-
-  // --- Circuits ---
-  const circuitsDir = path.join(dataDir, "circuits");
-  if (!fs.existsSync(circuitsDir)) return;
-
-  // Group files by stem
-  const circuitFiles = fs.readdirSync(circuitsDir).sort();
-  const circuitStems = new Map(); // stem -> { yaml: path, bodies: { ext: path } }
-
-  for (const file of circuitFiles) {
-    const ext = path.extname(file).slice(1); // remove leading dot
-    const stem = file.replace(/\.[^.]+$/, "");
-
-    if (!circuitStems.has(stem)) {
-      circuitStems.set(stem, { yaml: null, bodies: {} });
-    }
-    const entry = circuitStems.get(stem);
-
-    if (ext === "yaml") {
-      entry.yaml = path.join(circuitsDir, file);
-    } else if (BODY_EXTENSIONS.has(ext)) {
-      entry.bodies[ext] = path.join(circuitsDir, file);
-    }
-  }
-
-  for (const [stem, { yaml: yamlPath, bodies }] of circuitStems) {
-    if (!yamlPath) continue; // body file without yaml — skip
-
-    // Parse code-slug and circuit-slug from stem
-    const sepIdx = stem.indexOf("--");
-    if (sepIdx === -1) {
-      errors.push(`Circuit ${stem}: filename must use '<code-slug>--<circuit-slug>' format`);
-      continue;
-    }
-    const codeSlug = stem.slice(0, sepIdx);
-    const circuitSlug = stem.slice(sepIdx + 2);
-
-    if (!codeSlug || !circuitSlug) {
-      errors.push(`Circuit ${stem}: empty code or circuit slug`);
-      continue;
-    }
-
-    const codeId = codeSlugToId.get(codeSlug);
-    if (codeId == null) {
-      errors.push(`Circuit ${stem}: code '${codeSlug}' not found in data_yaml/codes/`);
-      continue;
-    }
-
-    const data = readYaml(yamlPath);
-
-    if (!data.name) {
-      errors.push(`Circuit ${stem}: missing required field 'name'`);
-      continue;
-    }
-    if (!data.source) {
-      errors.push(`Circuit ${stem}: missing required field 'source'`);
-      continue;
-    }
-
-    // Resolve tool
-    let toolId = null;
-    if (data.tool) {
-      toolId = toolSlugToId.get(data.tool) ?? null;
-      if (toolId == null) {
-        errors.push(`Circuit ${stem}: tool '${data.tool}' not found in data_yaml/tools/`);
+      if (!data.name) {
+        errors.push(`Tool ${file}: missing required field 'name'`);
         continue;
+      }
+      if (toolSlugToId.has(slug)) {
+        errors.push(`Tool ${file}: duplicate slug '${slug}'`);
+        continue;
+      }
+
+      const { lastInsertRowid } = stmts.insertTool.run(
+        data.name,
+        slug,
+        data.description || "",
+        data.homepage_url || null,
+        data.github_url || null,
+      );
+      toolSlugToId.set(slug, Number(lastInsertRowid));
+
+      for (const tag of data.tags || []) {
+        addTag(tag, Number(lastInsertRowid), "tool");
+      }
+
+      console.log(`  Tool: ${data.name} (${slug})`);
+    }
+
+    // --- Codes ---
+    const codesDir = path.join(dataDir, "codes");
+    for (const file of listYamlFiles(codesDir)) {
+      const slug = file.replace(/\.yaml$/, "");
+      const data = readYaml(path.join(codesDir, file));
+
+      if (!data.name) {
+        errors.push(`Code ${file}: missing required field 'name'`);
+        continue;
+      }
+      if (data.n == null || data.k == null) {
+        errors.push(`Code ${file}: missing required fields 'n' and/or 'k'`);
+        continue;
+      }
+      if (codeSlugToId.has(slug)) {
+        errors.push(`Code ${file}: duplicate slug '${slug}'`);
+        continue;
+      }
+
+      const { lastInsertRowid } = stmts.insertCode.run(
+        data.name,
+        slug,
+        data.n,
+        data.k,
+        data.d || null,
+        data.zoo_url || null,
+        JSON.stringify(data.hx),
+        JSON.stringify(data.hz),
+        JSON.stringify(data.logical_x),
+        JSON.stringify(data.logical_z),
+        data.canonical_hash || null,
+      );
+      codeSlugToId.set(slug, Number(lastInsertRowid));
+
+      for (const tag of data.tags || []) {
+        addTag(tag, Number(lastInsertRowid), "code");
+      }
+
+      console.log(`  Code: ${data.name} (${slug})`);
+    }
+
+    // --- Circuits ---
+    const circuitsDir = path.join(dataDir, "circuits");
+    if (!fs.existsSync(circuitsDir)) return;
+
+    // Group files by stem
+    const circuitFiles = fs.readdirSync(circuitsDir).sort();
+    const circuitStems = new Map(); // stem -> { yaml: path, bodies: { ext: path } }
+
+    for (const file of circuitFiles) {
+      const ext = path.extname(file).slice(1); // remove leading dot
+      const stem = file.replace(/\.[^.]+$/, "");
+
+      if (!circuitStems.has(stem)) {
+        circuitStems.set(stem, { yaml: null, bodies: {} });
+      }
+      const entry = circuitStems.get(stem);
+
+      if (ext === "yaml") {
+        entry.yaml = path.join(circuitsDir, file);
+      } else if (BODY_EXTENSIONS.has(ext)) {
+        entry.bodies[ext] = path.join(circuitsDir, file);
       }
     }
 
-    const { lastInsertRowid } = stmts.insertCircuit.run(
-      codeId, data.name, circuitSlug, data.description || "",
-      data.source || "",
-      data.gate_count ?? null, data.depth ?? null, data.qubit_count ?? null,
-      data.crumble_url || null, data.quirk_url || null,
-      toolId,
-    );
-    const circuitId = Number(lastInsertRowid);
+    for (const [stem, { yaml: yamlPath, bodies }] of circuitStems) {
+      if (!yamlPath) continue; // body file without yaml — skip
 
-    // Insert body files
-    for (const [ext, bodyPath] of Object.entries(bodies)) {
-      const body = fs.readFileSync(bodyPath, "utf-8");
-      stmts.insertBody.run(circuitId, ext, body);
+      // Parse code-slug and circuit-slug from stem
+      const sepIdx = stem.indexOf("--");
+      if (sepIdx === -1) {
+        errors.push(
+          `Circuit ${stem}: filename must use '<code-slug>--<circuit-slug>' format`,
+        );
+        continue;
+      }
+      const codeSlug = stem.slice(0, sepIdx);
+      const circuitSlug = stem.slice(sepIdx + 2);
+
+      if (!codeSlug || !circuitSlug) {
+        errors.push(`Circuit ${stem}: empty code or circuit slug`);
+        continue;
+      }
+
+      const codeId = codeSlugToId.get(codeSlug);
+      if (codeId == null) {
+        errors.push(
+          `Circuit ${stem}: code '${codeSlug}' not found in data_yaml/codes/`,
+        );
+        continue;
+      }
+
+      const data = readYaml(yamlPath);
+
+      if (!data.name) {
+        errors.push(`Circuit ${stem}: missing required field 'name'`);
+        continue;
+      }
+      if (!data.source) {
+        errors.push(`Circuit ${stem}: missing required field 'source'`);
+        continue;
+      }
+
+      // Resolve tool
+      let toolId = null;
+      if (data.tool) {
+        toolId = toolSlugToId.get(data.tool) ?? null;
+        if (toolId == null) {
+          errors.push(
+            `Circuit ${stem}: tool '${data.tool}' not found in data_yaml/tools/`,
+          );
+          continue;
+        }
+      }
+
+      const { lastInsertRowid } = stmts.insertCircuit.run(
+        codeId,
+        data.name,
+        circuitSlug,
+        data.description || "",
+        data.source || "",
+        data.gate_count ?? null,
+        data.depth ?? null,
+        data.qubit_count ?? null,
+        data.crumble_url || null,
+        data.quirk_url || null,
+        toolId,
+      );
+      const circuitId = Number(lastInsertRowid);
+
+      // Insert body files
+      for (const [ext, bodyPath] of Object.entries(bodies)) {
+        const body = fs.readFileSync(bodyPath, "utf-8");
+        stmts.insertBody.run(circuitId, ext, body);
+      }
+
+      // Tags
+      for (const tag of data.tags || []) {
+        addTag(tag, circuitId, "circuit");
+      }
+
+      const bodyFormats = Object.keys(bodies).join(", ") || "none";
+      console.log(
+        `  Circuit: ${data.name} (${codeSlug}/${circuitSlug}) [bodies: ${bodyFormats}]`,
+      );
     }
 
-    // Tags
-    for (const tag of data.tags || []) {
-      addTag(tag, circuitId, "circuit");
+    // Abort transaction if there were validation errors
+    if (errors.length > 0) {
+      throw new Error("validation_errors");
     }
-
-    const bodyFormats = Object.keys(bodies).join(", ") || "none";
-    console.log(`  Circuit: ${data.name} (${codeSlug}/${circuitSlug}) [bodies: ${bodyFormats}]`);
-  }
-
-  // Abort transaction if there were validation errors
-  if (errors.length > 0) {
-    throw new Error("validation_errors");
-  }
-})();
+  })();
 } catch (e) {
   if (e.message === "validation_errors") {
     console.error("\nValidation errors:");
