@@ -2,6 +2,7 @@
 name = "qecirc-website"
 version = "0.1.0"
 description = "QECirc — quantum error correction circuit library"
+license = "MIT"
 requires-python = ">=3.13"
 dependencies = [
     "numpy",

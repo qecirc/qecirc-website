@@ -160,6 +160,17 @@ chore(deps): update astro to v5.5.0
 
 ---
 
+## Licensing
+
+This project uses a dual-license model:
+
+| Scope | License | File |
+|-------|---------|------|
+| Code (`src/`, `scripts/`, config files) | MIT | `LICENSE` |
+| Data (`data_yaml/`) | CC BY-SA 4.0 | `LICENSE-DATA` |
+
+---
+
 ## Key Principles
 
 - **YAML is the source of truth** — all library data in `data_yaml/`, SQLite is derived
