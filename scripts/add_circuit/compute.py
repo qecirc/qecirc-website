@@ -139,7 +139,11 @@ def _compute_logical_mod2(m1, m2):
     m2_u8 = m2.astype(np.uint8)
     ker = mod2.nullspace(m1_u8)
     im = mod2.row_basis(m2_u8)
-    stacked = np.vstack([im, ker])
+    # Convert sparse matrices to dense int arrays to work around
+    # ldpc row_echelon bug with scipy sparse bool comparisons
+    def _to_dense(m):
+        return np.asarray(m.todense()) if hasattr(m, "todense") else np.asarray(m)
+    stacked = np.vstack([_to_dense(im), _to_dense(ker)]).astype(int)
     pivots = mod2.row_echelon(stacked.T)[3]
     offset = im.shape[0]
     indices = [i for i in range(offset, stacked.shape[0]) if i in pivots]
