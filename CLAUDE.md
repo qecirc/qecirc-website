@@ -4,7 +4,7 @@
 
 **QECirc** is a community-driven web library for quantum error correction (QEC) circuits.
 Users can browse and discover circuits, and contribute new ones by opening a GitHub Issue.
-Circuits are stored in an extended STIM format (see [tsim](https://github.com/QuEraComputing/tsim#supported-instructions)).
+Circuits are stored in an extended STIM format (see `docs/circuit-format.md`).
 
 ---
 
@@ -71,8 +71,7 @@ taggings
 ## Circuit Format
 
 Circuits use an extended STIM format.
-See the [tsim instruction reference](https://github.com/QuEraComputing/tsim#supported-instructions)
-for supported instructions. Any extensions beyond tsim must be documented in `docs/circuit-format.md`.
+See `docs/circuit-format.md` for supported instructions and any extensions.
 
 ---
 
