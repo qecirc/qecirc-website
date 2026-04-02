@@ -5,7 +5,7 @@ import Layout from "../components/Layout.astro";
 import CodeCard from "../components/CodeCard.astro";
 import CodeFilter from "../components/CodeFilter.astro";
 import { filterCodes, countAllCodes, hasActiveFilters, getTagsWithCount } from "../lib/queries";
-import type { CodeFilters } from "../lib/queries";
+import type { CodeFilters } from "../types";
 import { parseFilterParams } from "../lib/url";
 
 const { raw, parsed, errors, tags: selectedTags, focus: focusField } = parseFilterParams(Astro.url, ["n", "k", "d"] as const);

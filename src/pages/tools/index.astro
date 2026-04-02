@@ -9,7 +9,7 @@ import {
   getTagsWithCount,
   hasActiveFilters,
 } from "../../lib/queries";
-import type { ToolFilters } from "../../lib/queries";
+import type { ToolFilters } from "../../types";
 import { tagToggleUrl } from "../../lib/url";
 
 const selectedTags = Astro.url.searchParams.getAll("tag");

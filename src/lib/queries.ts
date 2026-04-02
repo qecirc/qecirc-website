@@ -17,24 +17,6 @@ import type {
   ToolWithMeta,
 } from "../types";
 
-export type {
-  Code,
-  Circuit,
-  CircuitBody,
-  CircuitFilters,
-  CircuitSort,
-  CircuitSortField,
-  CodeFilters,
-  FilterCondition,
-  FilterOp,
-  SortDir,
-  TaggableType,
-  TagWithCount,
-  Tool,
-  ToolFilters,
-  ToolWithMeta,
-};
-
 export function formatCodeParams(code: Code): string {
   return code.d != null
     ? `[[${code.n},${code.k},${code.d}]]`
@@ -210,13 +192,13 @@ function searchByType<T extends { id: number }>(
   const rows = db
     .prepare(
       `SELECT DISTINCT c.* FROM ${table} c
-       LEFT JOIN taggings tg ON tg.taggable_id = c.id AND tg.taggable_type = '${taggableType}'
+       LEFT JOIN taggings tg ON tg.taggable_id = c.id AND tg.taggable_type = ?
        LEFT JOIN tags t ON t.id = tg.tag_id
        WHERE c.name LIKE ? ESCAPE '\\' OR t.name LIKE ? ESCAPE '\\'
        ORDER BY c.name
        LIMIT ${limit}`,
     )
-    .all(pattern, pattern) as T[];
+    .all(taggableType, pattern, pattern) as T[];
   return withTags(rows, taggableType);
 }
 
