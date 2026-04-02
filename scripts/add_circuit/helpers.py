@@ -1,0 +1,110 @@
+"""
+Notebook-friendly helper functions for inspecting codes and circuits.
+"""
+
+from typing import Optional, Union
+
+import numpy as np
+import stim
+
+from .circuit_validate import circuit_properties
+from .code_identify import canonical_hash, extract_params
+from .compute import _check_yaml_dedup, _is_self_dual
+
+
+def check_code(Hx: np.ndarray, Hz: np.ndarray, d: Optional[int] = None) -> dict:
+    """Quick summary of a code from its check matrices.
+
+    Args:
+        Hx: X-check matrix.
+        Hz: Z-check matrix.
+        d: Code distance (optional).
+
+    Returns:
+        Dict with keys: n, k, d (if provided), is_css, is_self_dual, canonical_hash.
+    """
+    Hx = np.asarray(Hx, dtype=int)
+    Hz = np.asarray(Hz, dtype=int)
+
+    params = extract_params(Hx, Hz)
+    result = {
+        "n": params.n,
+        "k": params.k,
+        "is_css": params.is_css,
+        "is_self_dual": _is_self_dual(Hx, Hz),
+        "canonical_hash": canonical_hash(Hx, Hz),
+    }
+    if d is not None:
+        result["d"] = d
+    return result
+
+
+def find_existing_code(
+    Hx: np.ndarray, Hz: np.ndarray, data_dir: str = "data_yaml"
+) -> Optional[str]:
+    """Check if this code already exists in data_yaml/.
+
+    Args:
+        Hx: X-check matrix.
+        Hz: Z-check matrix.
+        data_dir: Path to data_yaml directory.
+
+    Returns:
+        The code slug if found, None otherwise.
+    """
+    Hx = np.asarray(Hx, dtype=int)
+    Hz = np.asarray(Hz, dtype=int)
+
+    c_hash = canonical_hash(Hx, Hz)
+    slug, _ = _check_yaml_dedup(data_dir, c_hash, Hx, Hz)
+    return slug
+
+
+def summarize_circuit(circuit: Union[stim.Circuit, str]) -> dict:
+    """Quick notebook-friendly circuit summary.
+
+    Args:
+        circuit: STIM circuit (stim.Circuit object or string).
+
+    Returns:
+        Dict with keys: qubit_count, gate_count, depth, crumble_url, quirk_url.
+    """
+    if isinstance(circuit, str):
+        circ = stim.Circuit(circuit)
+    else:
+        circ = circuit
+
+    props = circuit_properties(str(circ))
+    return {
+        "qubit_count": props.qubit_count,
+        "gate_count": props.gate_count,
+        "depth": props.depth,
+        "crumble_url": circ.to_crumble_url(),
+        "quirk_url": circ.to_quirk_url(),
+    }
+
+
+def preview_circuit(
+    Hx: np.ndarray,
+    Hz: np.ndarray,
+    circuit: Union[stim.Circuit, str],
+    circuit_name: str,
+    d: int,
+    **kwargs,
+):
+    """Dry-run preview of what add_circuit would generate.
+
+    Accepts the same arguments as add_circuit. Returns an AddCircuitResult
+    without writing any files.
+    """
+    from . import add_circuit
+
+    return add_circuit(
+        Hx=Hx,
+        Hz=Hz,
+        circuit=circuit,
+        circuit_name=circuit_name,
+        d=d,
+        dry_run=True,
+        **kwargs,
+    )

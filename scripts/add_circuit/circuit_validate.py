@@ -1,58 +1,23 @@
 """
-Circuit validation: parse a STIM circuit and classify its functionality.
+Circuit utilities: metrics extraction and validation functions.
 
-Uses stim.Circuit built-ins and stim.gate_data() for gate classification
-instead of hand-rolled text parsing.
+Uses stim.Circuit built-ins and stim.gate_data() for accurate metrics.
 """
 
 from pathlib import Path
-from typing import Optional
+from typing import Union
 
+import numpy as np
 import stim
 
 from .models import CircuitProperties
 
-# Gate classification sets derived from stim.gate_data()
+# Gate data for classification (computed once at module level)
 _ALL_GATES = stim.gate_data()
-_MEASURE_GATES = {name for name, gd in _ALL_GATES.items() if gd.produces_measurements}
-_RESET_GATES = {name for name, gd in _ALL_GATES.items() if gd.is_reset}
-_ENTANGLE_GATES = {
-    name
-    for name, gd in _ALL_GATES.items()
-    if gd.is_two_qubit_gate and gd.is_unitary and not gd.is_reset
-}
 
 
 def load_circuit(path: str | Path) -> str:
     return Path(path).read_text()
-
-
-def classify_functionality(circuit_text: str) -> Optional[str]:
-    """
-    Heuristic classification based on instruction types present.
-
-    Returns one of: "encoding", "syndrome-extraction", "state-preparation", or None.
-    """
-    if not circuit_text.strip():
-        return None
-    return _classify_circuit(stim.Circuit(circuit_text))
-
-
-def _classify_circuit(circ: stim.Circuit) -> Optional[str]:
-    """Classify a parsed stim.Circuit by its gate types."""
-    gate_names = {instr.name for instr in circ.flattened()}
-
-    has_measure = bool(gate_names & _MEASURE_GATES)
-    has_entangle = bool(gate_names & _ENTANGLE_GATES)
-    has_reset = bool(gate_names & _RESET_GATES)
-
-    if has_measure and has_entangle:
-        return "syndrome-extraction"
-    if has_entangle and not has_measure:
-        return "encoding"
-    if has_reset and not has_entangle and not has_measure:
-        return "state-preparation"
-    return None
 
 
 def _count_gates(instr: stim.CircuitInstruction) -> int:
@@ -92,7 +57,6 @@ def circuit_properties(circuit_text: str) -> CircuitProperties:
             qubit_count=0,
             depth=0,
             gate_count=0,
-            detected_functionality=None,
         )
 
     circ = stim.Circuit(circuit_text)
@@ -102,5 +66,86 @@ def circuit_properties(circuit_text: str) -> CircuitProperties:
         qubit_count=circ.num_qubits,
         depth=depth,
         gate_count=gate_count,
-        detected_functionality=_classify_circuit(circ),
     )
+
+
+# ---------------------------------------------------------------------------
+# Public validation functions
+# ---------------------------------------------------------------------------
+
+
+def _to_stim_circuit(circuit: Union[stim.Circuit, str]) -> stim.Circuit:
+    """Convert string to stim.Circuit if needed."""
+    if isinstance(circuit, stim.Circuit):
+        return circuit
+    return stim.Circuit(circuit)
+
+
+def validate_encoding(circuit: Union[stim.Circuit, str], Hx: np.ndarray, Hz: np.ndarray) -> str:
+    """Verify encoding circuit maps |0...0> to the code space.
+
+    An encoding circuit U should satisfy: for every stabilizer S of the code,
+    U^dag S U stabilizes |0...0> (only Z and I components, no X or Y).
+
+    Returns 'passed' or 'failed: <reason>'.
+    """
+    circ = _to_stim_circuit(circuit)
+    tableau = circ.to_tableau()
+    num_qubits = len(tableau)
+    inv = tableau.inverse()
+
+    for label, H, pauli_val in [("Z", Hz, 3), ("X", Hx, 1)]:
+        for row in H:
+            ps = stim.PauliString(num_qubits)
+            for i, v in enumerate(row):
+                if v:
+                    # stim Pauli encoding: 0=I, 1=X, 2=Y, 3=Z
+                    ps[i] = pauli_val
+            propagated = inv(ps)
+            for i in range(num_qubits):
+                if propagated[i] in (1, 2):  # X or Y -> doesn't stabilize |0>
+                    return f"failed: {label}-stabilizer does not stabilize input"
+
+    return "passed"
+
+
+def validate_state_prep(circuit: Union[stim.Circuit, str], Hx: np.ndarray, Hz: np.ndarray) -> str:
+    """Verify state-prep circuit creates correct stabilizer state.
+
+    Simulates the circuit on |0...0> and checks that all stabilizer
+    generators have expectation value +1.
+
+    Returns 'passed' or 'failed: <reason>'.
+    """
+    circ = _to_stim_circuit(circuit)
+    sim = stim.TableauSimulator()
+    sim.do_circuit(circ)
+    n = Hx.shape[1]
+
+    for row in Hz:
+        ps = stim.PauliString(n)
+        for i, v in enumerate(row):
+            if v:
+                ps[i] = 3  # Z
+        if sim.peek_observable_expectation(ps) != 1:
+            return "failed: Z-stabilizer not satisfied"
+
+    for row in Hx:
+        ps = stim.PauliString(n)
+        for i, v in enumerate(row):
+            if v:
+                ps[i] = 1  # X
+        if sim.peek_observable_expectation(ps) != 1:
+            return "failed: X-stabilizer not satisfied"
+
+    return "passed"
+
+
+def validate_syndrome_extraction(
+    circuit: Union[stim.Circuit, str], Hx: np.ndarray, Hz: np.ndarray
+) -> str:
+    """Verify syndrome extraction circuit.
+
+    Not yet implemented.
+    """
+    raise NotImplementedError("Syndrome extraction validation not yet implemented")

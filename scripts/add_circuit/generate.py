@@ -63,12 +63,6 @@ def main():
     code = code_result["code"]
     perm = code_result["qubit_permutation"]
     code_slug = code["slug"]
-    code_params = {
-        "n": code["n"],
-        "k": code["k"],
-        "d": code["d"],
-        "is_css": code["is_css"],
-    }
 
     # Collect all files to write
     files_to_write = []
@@ -87,9 +81,6 @@ def main():
         circuit_text = Path(stim_path).read_text()
         circ_data = compute_circuit_data(
             circuit_text=circuit_text,
-            Hx=Hx,
-            Hz=Hz,
-            code_params=code_params,
             qubit_permutation=perm,
             circuit_name=_get_nth(args.circuit_name, i, ""),
             source=_get_nth(args.source, i, ""),
@@ -124,8 +115,7 @@ def main():
     print(f"Code: {code['name']} [{code['status']}]")
     print(f"Circuits: {len(circuits)}")
     for c in circuits:
-        func = c["detected_functionality"] or "unknown"
-        print(f"  - {c['name']} ({func}) [{c['validation']}]")
+        print(f"  - {c['name']}")
     if not args.dry_run:
         print("\nRun 'npm run db:create && npm run dev' to rebuild the database.")
 

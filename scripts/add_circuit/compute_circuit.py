@@ -1,23 +1,17 @@
 """
-Circuit-level computation: compact stim, validation, links, format conversions, tags.
+Circuit-level computation: compact stim, links, format conversions.
 """
 
 from typing import Optional
 
-import numpy as np
 import stim
 
-from .circuit_validate import circuit_properties, classify_functionality
+from .circuit_validate import circuit_properties
 from .compute import slugify
-from .models import CodeParams, TagEntry
-from .tag_suggest import suggest_circuit_tags, suggest_classification_tags
 
 
 def compute_circuit_data(
     circuit_text: str,
-    Hx: np.ndarray,
-    Hz: np.ndarray,
-    code_params: dict,  # {n, k, d, is_css}
     qubit_permutation: Optional[list[int]] = None,
     circuit_name: str = "",
     source: str = "",
@@ -40,35 +34,19 @@ def compute_circuit_data(
     # 2. Compact STIM
     circ = _compact_circuit(circ)
 
-    # 3. Validation
-    functionality = classify_functionality(str(circ))
-    validation = _validate_circuit(circ, Hx, Hz, functionality)
-
-    # 4. Metrics
+    # 3. Metrics
     props = circuit_properties(str(circ))
 
-    # 5. Links
+    # 4. Links
     crumble_url = circ.to_crumble_url()
     quirk_url = circ.to_quirk_url()
 
-    # 6. Format conversions
+    # 5. Format conversions
     stim_body = str(circ)
     qasm_body = _to_qasm(circ)
     cirq_body = _to_cirq_str(circ)
 
-    # 7. Tags
-    cp = CodeParams(
-        n=code_params["n"],
-        k=code_params["k"],
-        is_css=code_params.get("is_css", False),
-        d=code_params.get("d"),
-    )
-    tags: list[TagEntry] = []
-    if functionality:
-        tags.extend(suggest_classification_tags(functionality, stim_body))
-    tags.extend(suggest_circuit_tags(props, cp))
-
-    # 8. Slug
+    # 6. Slug
     slug = slugify(circuit_name) if circuit_name else ""
 
     # Build bodies list, omitting empty conversions
@@ -87,12 +65,9 @@ def compute_circuit_data(
         "qubit_count": props.qubit_count,
         "depth": props.depth,
         "gate_count": props.gate_count,
-        "detected_functionality": functionality,
-        "validation": validation,
         "crumble_url": crumble_url,
         "quirk_url": quirk_url,
         "original_stim": original_stim,
-        "tags": [{"name": t.name, "status": t.status} for t in tags],
         "bodies": bodies,
     }
 
@@ -113,69 +88,6 @@ def _compact_circuit(circ):
         return compact_stim_circuit(circ)
     except Exception:
         return circ
-
-
-def _validate_circuit(circ, Hx, Hz, functionality):
-    """Validate circuit against code matrices. Returns 'passed', 'skipped', or 'failed: reason'."""
-    try:
-        if functionality == "encoding":
-            return _validate_encoding(circ, Hx, Hz)
-        elif functionality == "state-preparation":
-            return _validate_state_prep(circ, Hx, Hz)
-        return "skipped"
-    except Exception as e:
-        return f"failed: {e}"
-
-
-def _validate_encoding(circ, Hx, Hz):
-    """Verify encoding circuit by checking stabilizer propagation through the tableau.
-
-    An encoding circuit maps |0...0> to the code space. For every stabilizer S
-    of the code, U^dag S U must stabilize |0...0>, meaning it can only contain
-    Z and I (no X or Y components).
-    """
-    tableau = circ.to_tableau()
-    num_qubits = len(tableau)
-    inv = tableau.inverse()
-
-    for label, H, pauli_val in [("Z", Hz, 3), ("X", Hx, 1)]:
-        for row in H:
-            ps = stim.PauliString(num_qubits)
-            for i, v in enumerate(row):
-                if v:
-                    ps[i] = pauli_val
-            propagated = inv(ps)
-            for i in range(num_qubits):
-                # stim Pauli encoding: 0=I, 1=X, 2=Y, 3=Z
-                if propagated[i] in (1, 2):  # X or Y -> doesn't stabilize |0>
-                    return f"failed: {label}-stabilizer does not stabilize input"
-
-    return "passed"
-
-
-def _validate_state_prep(circ, Hx, Hz):
-    """Verify state-prep circuit creates correct stabilizers via simulation."""
-    sim = stim.TableauSimulator()
-    sim.do_circuit(circ)
-    n = Hx.shape[1]
-
-    for row in Hz:
-        ps = stim.PauliString(n)
-        for i, v in enumerate(row):
-            if v:
-                ps[i] = 3  # Z
-        if sim.peek_observable_expectation(ps) != 1:
-            return "failed: Z-stabilizer not satisfied"
-
-    for row in Hx:
-        ps = stim.PauliString(n)
-        for i, v in enumerate(row):
-            if v:
-                ps[i] = 1  # X
-        if sim.peek_observable_expectation(ps) != 1:
-            return "failed: X-stabilizer not satisfied"
-
-    return "passed"
 
 
 def _to_qasm(circ):

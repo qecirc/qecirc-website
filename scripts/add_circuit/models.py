@@ -15,7 +15,6 @@ class CircuitProperties:
     qubit_count: int
     depth: int
     gate_count: int
-    detected_functionality: Optional[str] = None
 
 
 @dataclass

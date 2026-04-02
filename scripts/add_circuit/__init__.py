@@ -2,14 +2,18 @@
 Public API for adding circuits to the QECirc library.
 
 Usage:
-    from scripts.add_circuit import add_circuit
+    from scripts.add_circuit import add_circuit, check_code, summarize_circuit
 
+    # Inspect your code
+    print(check_code(Hx, Hz, d=3))
+
+    # Inspect your circuit
+    print(summarize_circuit(stim_circuit))
+
+    # Add to library
     result = add_circuit(
-        Hx=Hx,
-        Hz=Hz,
-        circuit=stim_circuit,
-        circuit_name="Standard Encoding",
-        source="doi:10.xxxx/yyyy",
+        Hx=Hx, Hz=Hz, circuit=stim_circuit,
+        circuit_name="Standard Encoding", d=3,
         code_name="Steane Code",
     )
     print(result.summary())
@@ -17,13 +21,24 @@ Usage:
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
 import stim
 
+from .circuit_validate import (  # noqa: F401
+    validate_encoding,
+    validate_state_prep,
+    validate_syndrome_extraction,
+)
 from .compute import compute_code_data
 from .compute_circuit import compute_circuit_data
+from .helpers import (  # noqa: F401
+    check_code,
+    find_existing_code,
+    preview_circuit,
+    summarize_circuit,
+)
 from .yaml_helpers import build_circuit_yaml, build_code_yaml, dump_yaml, write_file
 
 
@@ -36,16 +51,13 @@ class AddCircuitResult:
     code_status: str  # "new" | "existing"
     circuit_name: str
     circuit_slug: str
-    validation: str  # "passed" | "skipped" | "failed: ..."
-    detected_functionality: Optional[str]
     files_written: list[str] = field(default_factory=list)
     dry_run: bool = False
 
     def summary(self) -> str:
         lines = [
             f"Code: {self.code_name} [{self.code_status}]",
-            f"Circuit: {self.circuit_name}"
-            f" ({self.detected_functionality or 'unknown'}) [{self.validation}]",
+            f"Circuit: {self.circuit_name}",
         ]
         if self.dry_run:
             lines.append(f"Dry run — {len(self.files_written)} file(s) would be written:")
@@ -114,19 +126,10 @@ def add_circuit(
 
     code = code_result["code"]
     perm = code_result["qubit_permutation"]
-    code_params = {
-        "n": code["n"],
-        "k": code["k"],
-        "d": code["d"],
-        "is_css": code["is_css"],
-    }
 
     # Compute circuit data
     circ_data = compute_circuit_data(
         circuit_text=circuit_text,
-        Hx=Hx,
-        Hz=Hz,
-        code_params=code_params,
         qubit_permutation=perm,
         circuit_name=circuit_name,
         source=source,
@@ -174,8 +177,6 @@ def add_circuit(
         code_status=code["status"],
         circuit_name=circ_data["name"],
         circuit_slug=circ_slug,
-        validation=circ_data["validation"],
-        detected_functionality=circ_data["detected_functionality"],
         files_written=written_paths,
         dry_run=dry_run,
     )
