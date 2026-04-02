@@ -80,8 +80,8 @@ See `docs/circuit-format.md` for supported instructions and any extensions.
 Circuits are submitted by opening a GitHub Issue using the provided template.
 A maintainer reviews the issue, then uses the ingestion pipeline to add the circuit.
 
-See **[docs/adding-circuits.md](docs/adding-circuits.md)** for the full workflow:
-`generate` (writes to `data_yaml/`) → review via `git diff` → `db:create` (rebuild DB).
+- **[docs/adding-circuits-agent.md](docs/adding-circuits-agent.md)** — agent-assisted workflow (`/add-circuit` command)
+- **[docs/adding-circuits.md](docs/adding-circuits.md)** — manual workflow (Python scripts + YAML editing)
 
 ---
 

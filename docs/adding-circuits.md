@@ -1,10 +1,8 @@
-# Adding Circuits
+# Adding Circuits (Manual)
 
-Two-step workflow: **generate** (writes YAML + body files to `data_yaml/`) → **rebuild** the database.
+How to add circuits to the QECirc library using the Python scripts directly, without any AI assistance.
 
-Review changes via `git diff` before rebuilding.
-
-There are two ways to generate: the **CLI** (for one-off additions) and the **Python API** (for programmatic use from your own code).
+For the agent-assisted workflow, see [adding-circuits-agent.md](adding-circuits-agent.md).
 
 ## Prerequisites
 
@@ -14,103 +12,86 @@ uv sync                # install Python dependencies
 
 ## What You Need
 
-- **Hx, Hz matrices** — as JSON (CLI) or numpy arrays (Python API)
-- **STIM circuit** — file path (CLI) or `stim.Circuit`/string (Python API)
-- **Metadata**: code name, circuit name(s), source (DOI/URL), tool slug, code distance
+- **Hx, Hz matrices** — as JSON files or numpy arrays
+- **STIM circuit** — file path or string
+- **Code distance `d`** — integer
+- **Source** — DOI, URL, or citation
 
-## Option A: CLI
+## Overview
 
-### Step 1: Generate
+1. Inspect your code and circuit with helper functions
+2. Generate YAML files with `add_circuit()` or the CLI
+3. Add tags manually to the generated YAML files
+4. Rebuild the database
 
-```bash
-python -m scripts.add_circuit.generate \
-  --hx path/to/hx.json \
-  --hz path/to/hz.json \
-  --stim circuit.stim \
-  --code-name "Code Name" \
-  --circuit-name "Circuit Name" \
-  --source "https://doi.org/..." \
-  --tool "tool-slug" \
-  --zoo-url "https://errorcorrectionzoo.org/c/..." \
-  --d 3
-```
+---
 
-This computes all derived data and writes directly to `data_yaml/`:
+## Step 1: Inspect
 
-- **Code YAML** (if new): `data_yaml/codes/<code-slug>.yaml`
-- **Circuit YAML**: `data_yaml/circuits/<code-slug>--<circuit-slug>.yaml`
-- **Body files**: `.stim`, `.qasm`, `.cirq` (same stem as the circuit YAML)
-
-### Flags
-
-| Flag             | Required | Description                                              |
-| ---------------- | -------- | -------------------------------------------------------- |
-| `--hx`           | yes      | Hx matrix (JSON string or file path)                     |
-| `--hz`           | yes      | Hz matrix (JSON string or file path)                     |
-| `--stim`         | yes      | STIM circuit file(s), space-separated                    |
-| `--code-name`    | no       | Human-readable code name                                 |
-| `--circuit-name` | no       | Circuit name(s), positionally matched to `--stim`        |
-| `--source`       | no       | Provenance (DOI/URL) per circuit                         |
-| `--tool`         | no       | Tool slug per circuit (must exist in `data_yaml/tools/`) |
-| `--description`  | no       | Brief description per circuit                            |
-| `--zoo-url`      | no       | QEC Zoo URL for the code                                 |
-| `--d`            | no       | Code distance (computed automatically if omitted)        |
-| `--data-dir`     | no       | Path to data_yaml directory (default: `data_yaml`)       |
-
-Multiple circuits per code: pass multiple `--stim` files and match with multiple `--circuit-name`, `--source`, `--tool`, `--description` values.
-
-### What it computes
-
-- Code parameters [[n,k,d]], CSS detection, self-dual detection
-- Canonical check matrices and hash (for dedup)
-- Logical operators (Lx, Lz)
-- Circuit metrics (gate count, depth, qubit count)
-- Encoding/state-prep validation against the code
-- Compact STIM, QASM, and Cirq format conversions
-- Crumble and Quirk visualization URLs
-- Suggested tags with status (`confirmed`/`suggested`)
-- Dedup: if the code already exists in `data_yaml/codes/`, status is `existing` and circuits are relabeled to match the stored qubit ordering
-
-### Step 2: Review and rebuild
-
-```bash
-# Review what was generated
-git diff
-
-# Rebuild the database and restart the server
-npm run db:create && npm run dev
-```
-
-## Option B: Python API
-
-For programmatic use — e.g. adding circuits from a script, notebook, or automated pipeline.
+### Check your code
 
 ```python
-import numpy as np
-import stim
-from scripts.add_circuit import add_circuit
+from scripts.add_circuit import check_code, find_existing_code
 
-Hx = np.array([[1,1,0,0,1,1,0],[1,0,1,0,1,0,1],[0,0,0,1,1,1,1]])
-Hz = np.array([[1,1,0,0,1,1,0],[1,0,1,0,1,0,1],[0,0,0,1,1,1,1]])
+# Quick summary
+print(check_code(Hx, Hz, d=3))
+# {'n': 7, 'k': 1, 'd': 3, 'is_css': True, 'is_self_dual': True, 'canonical_hash': '...'}
 
-circuit = stim.Circuit.from_file("circuit.stim")  # or a stim string
+# Check if it already exists in data_yaml/
+print(find_existing_code(Hx, Hz))
+# 'steane-code' or None
+```
 
-result = add_circuit(
-    Hx=Hx,
-    Hz=Hz,
-    circuit=circuit,
-    circuit_name="Standard Encoding",
-    source="https://doi.org/10.1098/rspa.1996.0136",
-    code_name="Steane Code",
-    zoo_url="https://errorcorrectionzoo.org/c/steane",
-    d=3,
-    tool="mqt-qecc",
+### Inspect your circuit
+
+```python
+from scripts.add_circuit import summarize_circuit
+
+print(summarize_circuit(circuit_text))
+# {'qubit_count': 7, 'gate_count': 12, 'depth': 8, 'crumble_url': '...', 'quirk_url': '...'}
+```
+
+### Validate (optional)
+
+```python
+from scripts.add_circuit import validate_encoding, validate_state_prep
+
+# For encoding circuits:
+print(validate_encoding(circuit, Hx, Hz))   # 'passed' or 'failed: ...'
+
+# For state-preparation circuits:
+print(validate_state_prep(circuit, Hx, Hz)) # 'passed' or 'failed: ...'
+```
+
+---
+
+## Step 2: Generate YAML files
+
+### Option A: Python API
+
+```python
+from scripts.add_circuit import add_circuit, preview_circuit
+
+# Preview first (dry run)
+result = preview_circuit(
+    Hx=Hx, Hz=Hz, circuit=circuit,
+    circuit_name="Standard Encoding", d=3,
+    code_name="Steane Code", source="https://doi.org/...",
+    tool="mqt-qecc", zoo_url="https://errorcorrectionzoo.org/c/steane",
 )
+print(result.summary())
 
+# Generate for real
+result = add_circuit(
+    Hx=Hx, Hz=Hz, circuit=circuit,
+    circuit_name="Standard Encoding", d=3,
+    code_name="Steane Code", source="https://doi.org/...",
+    tool="mqt-qecc", zoo_url="https://errorcorrectionzoo.org/c/steane",
+)
 print(result.summary())
 ```
 
-### Parameters
+#### Parameters
 
 | Parameter      | Required | Description                                                 |
 | -------------- | -------- | ----------------------------------------------------------- |
@@ -118,64 +99,100 @@ print(result.summary())
 | `Hz`           | yes      | Z-check matrix (numpy array)                                |
 | `circuit`      | yes      | STIM circuit (`stim.Circuit` or string)                     |
 | `circuit_name` | yes      | Human-readable circuit name                                 |
+| `d`            | yes      | Code distance                                               |
 | `source`       | no       | Provenance (DOI/URL)                                        |
 | `code_name`    | no       | Code name (optional if code already exists in `data_yaml/`) |
-| `zoo_url`      | no       | QEC Zoo URL for the code                                    |
-| `d`            | no       | Code distance (computed automatically if omitted)           |
+| `zoo_url`      | no       | QEC Zoo URL                                                 |
 | `tool`         | no       | Tool slug (must exist in `data_yaml/tools/`)                |
 | `description`  | no       | Circuit description                                         |
 | `data_dir`     | no       | Path to data_yaml directory (default: `"data_yaml"`)        |
-| `dry_run`      | no       | If `True`, report what would be written without writing     |
+| `dry_run`      | no       | If `True`, preview without writing                          |
 
-### Return value
+#### Return value
 
-`add_circuit()` returns an `AddCircuitResult` dataclass:
+| Field           | Type        | Description                          |
+| --------------- | ----------- | ------------------------------------ |
+| `code_name`     | `str`       | Code name                            |
+| `code_slug`     | `str`       | Code slug                            |
+| `code_status`   | `str`       | `"new"` or `"existing"`              |
+| `circuit_name`  | `str`       | Circuit name                         |
+| `circuit_slug`  | `str`       | Circuit slug                         |
+| `files_written` | `list[str]` | Paths of files written               |
+| `dry_run`       | `bool`      | Whether this was a dry run           |
 
-| Field                    | Type          | Description                                             |
-| ------------------------ | ------------- | ------------------------------------------------------- |
-| `code_name`              | `str`         | Code name                                               |
-| `code_slug`              | `str`         | Code slug                                               |
-| `code_status`            | `str`         | `"new"` or `"existing"`                                 |
-| `circuit_name`           | `str`         | Circuit name                                            |
-| `circuit_slug`           | `str`         | Circuit slug                                            |
-| `validation`             | `str`         | `"passed"`, `"skipped"`, or `"failed: ..."`             |
-| `detected_functionality` | `str \| None` | e.g. `"encoding"`, `"syndrome-extraction"`              |
-| `files_written`          | `list[str]`   | Paths of files written (or would-be-written if dry run) |
-| `dry_run`                | `bool`        | Whether this was a dry run                              |
-
-Call `result.summary()` for a human-readable string.
-
-### Dry run
-
-Preview what would be written without creating any files:
-
-```python
-result = add_circuit(..., dry_run=True)
-print(result.summary())
-```
-
-### After generating
-
-Review and rebuild, same as the CLI workflow:
+### Option B: CLI
 
 ```bash
-git diff
-npm run db:create && npm run dev
+python -m scripts.add_circuit.generate \
+  --hx path/to/hx.json \
+  --hz path/to/hz.json \
+  --stim circuit.stim \
+  --d 3 \
+  --code-name "Code Name" \
+  --circuit-name "Circuit Name" \
+  --source "https://doi.org/..." \
+  --tool "tool-slug" \
+  --zoo-url "https://errorcorrectionzoo.org/c/..."
 ```
 
-## File Formats
+Add `--dry-run` to preview without writing. Multiple circuits per code: pass multiple `--stim` files with matching `--circuit-name`, `--source`, `--tool` values.
 
-### Tool (`data_yaml/tools/<slug>.yaml`)
+---
 
-```yaml
-name: MQT QECC
-description: Tools for quantum error correcting codes, part of the Munich Quantum Toolkit.
-homepage_url: https://mqt.readthedocs.io/projects/qecc/en/latest/
-github_url: https://github.com/munich-quantum-toolkit/qecc
-tags: [Python, encoding, state-preparation]
+## Step 3: Add tags
+
+The pipeline only auto-assigns mathematically verified code tags (`CSS`, `self-dual`). All other tags must be added manually by editing the generated YAML files.
+
+### Code tags (`data_yaml/codes/<slug>.yaml`)
+
+Add a `tags:` list. Common code tags:
+
+| Category   | Examples                                                  |
+| ---------- | --------------------------------------------------------- |
+| Type       | `CSS`, `stabilizer`                                       |
+| Family     | `color-code`, `surface-code`, `toric-code`, `LDPC`        |
+| Properties | `self-dual`, `concatenated`                               |
+
+### Circuit tags (`data_yaml/circuits/<code-slug>--<circuit-slug>.yaml`)
+
+Add a `tags:` list. Common circuit tags:
+
+| Category        | Examples                                            |
+| --------------- | --------------------------------------------------- |
+| Functionality   | `encoding`, `state-preparation`, `syndrome-extraction` |
+| Fault tolerance | `ft`, `non-ft`                                      |
+| Properties      | `gate-optimal`, `depth-optimal`, `flag`       |
+
+Check existing tags with:
+
+```bash
+grep -h '^tags:' data_yaml/codes/*.yaml data_yaml/circuits/*.yaml
 ```
 
-The slug is derived from the filename. Tools must be added manually before circuits can reference them.
+Prefer reusing existing tags over inventing new ones.
+
+---
+
+## Step 4: Rebuild
+
+```bash
+git diff                          # Review changes
+npm run db:create && npm run dev  # Rebuild database and restart
+```
+
+---
+
+## What the pipeline computes
+
+- Code parameters [[n,k,d]], CSS detection, self-dual detection
+- Canonical check matrices and hash (for dedup)
+- Logical operators (Lx, Lz)
+- Circuit metrics (gate count, depth, qubit count)
+- Compact STIM, QASM, and Cirq format conversions
+- Crumble and Quirk visualization URLs
+- Dedup: if the code already exists, circuits are relabeled to match the stored qubit ordering
+
+## File formats
 
 ### Code (`data_yaml/codes/<slug>.yaml`)
 
@@ -185,7 +202,7 @@ n: 7
 k: 1
 d: 3
 zoo_url: https://errorcorrectionzoo.org/c/steane
-canonical_hash: 96e2839c10016a17c64d18ae3b43d6e90e93e1a0a3934c0f16b3277c02cd8dcf
+canonical_hash: d326fbcca125a5c717a7d4d1d0b4acc8da8e3b9d3ad123bfc705bc14d85f9ca4
 hx: [[1, 1, 0, 0, 1, 1, 0], [1, 0, 1, 0, 1, 0, 1], [0, 0, 0, 1, 1, 1, 1]]
 hz: [[1, 1, 0, 0, 1, 1, 0], [1, 0, 1, 0, 1, 0, 1], [0, 0, 0, 1, 1, 1, 1]]
 logical_x: [[1, 1, 1, 1, 1, 1, 1]]
@@ -193,86 +210,36 @@ logical_z: [[1, 1, 1, 1, 1, 1, 1]]
 tags: [CSS, stabilizer, color-code]
 ```
 
-The slug is derived from the filename. The `canonical_hash` is computed by the `generate` script and used for deduplication.
-
 ### Circuit (`data_yaml/circuits/<code-slug>--<circuit-slug>.yaml`)
 
 ```yaml
 name: Standard Encoding
 tool: mqt-qecc
-description: "Encodes 1 logical qubit into 7 physical qubits preparing the logical |0⟩ state."
 source: https://doi.org/10.1098/rspa.1996.0136
 gate_count: 12
 depth: 8
 qubit_count: 7
 crumble_url: "https://algassert.com/crumble#circuit=..."
-quirk_url: https://algassert.com/quirk
-tags: [encoding, state-preparation]
+quirk_url: "https://algassert.com/quirk#circuit=..."
+tags: [encoding]
 ```
 
-The circuit slug and code reference are derived from the filename (double dash `--` separator). Body files share the same stem with format-specific extensions (`.stim`, `.qasm`, `.cirq`).
+Body files (`.stim`, `.qasm`, `.cirq`) share the same stem as the circuit YAML.
 
-## Full Example: Steane Code [[7,1,3]]
+### Tool (`data_yaml/tools/<slug>.yaml`)
 
-Example input files are in `docs/examples/`.
-
-### CLI
-
-```bash
-python -m scripts.add_circuit.generate \
-  --hx docs/examples/steane_hx.json \
-  --hz docs/examples/steane_hz.json \
-  --stim docs/examples/steane_encoding.stim \
-  --code-name "Steane Code" \
-  --circuit-name "Standard Encoding" \
-  --source "https://doi.org/10.1098/rspa.1996.0136" \
-  --tool "mqt-qecc" \
-  --zoo-url "https://errorcorrectionzoo.org/c/steane" \
-  --d 3
-
-# Review and rebuild
-git diff
-npm run db:create && npm run dev
+```yaml
+name: MQT QECC
+description: Tools for quantum error correcting codes.
+homepage_url: https://mqt.readthedocs.io/projects/qecc/en/latest/
+github_url: https://github.com/munich-quantum-toolkit/qecc
+tags: [Python, encoding, state-preparation]
 ```
 
-### Python API
-
-```python
-import numpy as np
-from scripts.add_circuit import add_circuit
-
-Hx = np.array([[1,1,0,0,1,1,0],[1,0,1,0,1,0,1],[0,0,0,1,1,1,1]])
-Hz = np.array([[1,1,0,0,1,1,0],[1,0,1,0,1,0,1],[0,0,0,1,1,1,1]])
-
-circuit_text = open("docs/examples/steane_encoding.stim").read()
-
-result = add_circuit(
-    Hx=Hx,
-    Hz=Hz,
-    circuit=circuit_text,
-    circuit_name="Standard Encoding",
-    source="https://doi.org/10.1098/rspa.1996.0136",
-    code_name="Steane Code",
-    zoo_url="https://errorcorrectionzoo.org/c/steane",
-    d=3,
-    tool="mqt-qecc",
-)
-
-print(result.summary())
-# Code: Steane Code [new]
-# Circuit: Standard Encoding (encoding) [passed]
-# 5 file(s) written:
-#   data_yaml/codes/steane-code.yaml
-#   data_yaml/circuits/steane-code--standard-encoding.yaml
-#   data_yaml/circuits/steane-code--standard-encoding.stim
-#   data_yaml/circuits/steane-code--standard-encoding.qasm
-#   data_yaml/circuits/steane-code--standard-encoding.cirq
-```
+Tools must be added manually before circuits can reference them.
 
 ## Notes
 
 - **Restart the dev server** after `db:create` — the Astro process caches the DB connection.
-- **Tools** must exist as YAML files in `data_yaml/tools/` before circuits can reference them by slug.
-- **Distance** (`--d`) is computed automatically using `ldpc` if omitted, but providing it is faster and avoids timeout issues for large codes.
-- Running generate twice for the same code detects the existing entry and sets status to `existing`.
-- To edit existing data, modify the YAML files directly and run `npm run db:create && npm run dev`.
+- Running generate twice for the same code detects the existing entry via canonical hash.
+- To edit existing data, modify the YAML files directly and run `npm run db:create`.
