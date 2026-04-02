@@ -7,7 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "numpy",
     "stim",
-    "mqt-qecc",
+    "mqt-qecc @ git+https://github.com/munich-quantum-toolkit/qecc.git@encoding-circuits",
     "pyyaml",
     "stimcirq",
 ]

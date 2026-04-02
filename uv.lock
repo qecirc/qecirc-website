@@ -7,6 +7,15 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "absl-py"
+version = "2.4.0"
+source = { registry = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/simple" }
+sdist = { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/64/c7/8de93764ad66968d19329a7e0c147a2bb3c7054c554d4a119111b8f9440f/absl_py-2.4.0.tar.gz", hash = "sha256:8c6af82722b35cf71e0f4d1d47dcaebfff286e27110a99fc359349b247dfb5d4" }
+wheels = [
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/18/a6/907a406bb7d359e6a63f99c313846d9eec4f7e6f7437809e03aa00fa3074/absl_py-2.4.0-py3-none-any.whl", hash = "sha256:88476fd881ca8aab94ffa78b7b6c632a782ab3ba1cd19c9bd423abc4fb4cd28d" },
+]
+
+[[package]]
 name = "antlr4-python3-runtime"
 version = "4.13.2"
 source = { registry = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/simple" }
@@ -264,6 +273,15 @@ wheels = [
 ]
 
 [[package]]
+name = "immutabledict"
+version = "4.3.1"
+source = { registry = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/simple" }
+sdist = { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/1d/e6/718471048fea0366c3e3d1df3acfd914ca66d571cdffcf6d37bbcd725708/immutabledict-4.3.1.tar.gz", hash = "sha256:f844a669106cfdc73f47b1a9da003782fb17dc955a54c80972e0d93d1c63c514" }
+wheels = [
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/a3/ce/f9018bf69ae91b273b6391a095e7c93fa5e1617f25b6ba81ad4b20c9df10/immutabledict-4.3.1-py3-none-any.whl", hash = "sha256:c9facdc0ff30fdb8e35bd16532026cac472a549e182c94fa201b51b25e4bf7bf" },
+]
+
+[[package]]
 name = "iniconfig"
 version = "2.3.0"
 source = { registry = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/simple" }
@@ -440,37 +458,25 @@ wheels = [
 
 [[package]]
 name = "mqt-qecc"
-version = "1.8.1"
-source = { registry = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/simple" }
+version = "1.9.1.dev557+g4a21b1988"
+source = { git = "https://github.com/munich-quantum-toolkit/qecc.git?rev=encoding-circuits#4a21b198881947e51fbc1ac5d5c1e0b47b9e5cf9" }
 dependencies = [
     { name = "bposd" },
     { name = "ldpc" },
     { name = "multiprocess" },
-    { name = "numba", marker = "python_full_version >= '3.13' or sys_platform != 'darwin'" },
-    { name = "numpy", marker = "python_full_version >= '3.13' or sys_platform != 'darwin'" },
+    { name = "networkx" },
+    { name = "numba" },
+    { name = "numpy" },
+    { name = "ortools" },
+    { name = "protobuf" },
     { name = "pymatching" },
     { name = "qecsim" },
     { name = "qiskit", extra = ["qasm3-import"] },
-    { name = "qiskit-aer" },
+    { name = "scipy" },
+    { name = "sinter" },
     { name = "stim" },
+    { name = "tqdm" },
     { name = "z3-solver" },
-]
-sdist = { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/37/de/1cdc1badf4f5f04b71b2ca4039d69fdf97ab61735568fb320aaa6a7e5e94/mqt_qecc-1.8.1.tar.gz", hash = "sha256:95b58d7e4fa6c98ea9b1a0b9431a5957752835a86b75ddf53ec8223e9eb560ce" }
-wheels = [
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/74/6f/16d87930fa13989b4ebc7721fecd01eb61640ed408d071c0f10490a9cb77/mqt_qecc-1.8.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:61beebebaa100579e6313e7518c8dc9283ea39ce48631d670d5b1d17388d2205" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/73/37/9f582c002701f0b0ac71f38efb2ae8677a6e732b69a4926aec59e6784e21/mqt_qecc-1.8.1-cp313-cp313-macosx_11_0_x86_64.whl", hash = "sha256:38f9485437677cae9ebf3d53f7f3a0bb0a8e557bc2580ef1b4b7daf6f41c2373" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/b9/7b/abf05fb81d88a738a1cb8dede9711c08454bb19a518281d201ae7e6ce53c/mqt_qecc-1.8.1-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:5d27d1cc47dd83fb59dd81987cfba0e46399993f7dcd625939cb1e6debdb898f" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/7b/0b/edbadbcaadc104b2f67e4588b063fb2c87a05199cc1061a58bd2343043aa/mqt_qecc-1.8.1-cp313-cp313-manylinux_2_27_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:2dc974c5cb7b9598a933fa4488915912bfc8b59edfff721d14c5b0cce513814e" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/3a/cd/adb39302d745a50e8f8e4173c2b34a767b21229820cb1c2fb3871b239cef/mqt_qecc-1.8.1-cp313-cp313-manylinux_2_27_s390x.manylinux_2_28_s390x.whl", hash = "sha256:1ad0348ac8ab2e18951be78073e2c5a9e6693d0c0f21b5c1546a9d08fa9f8fab" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/11/d8/44af1bbe8ce8b86335b1378bb710f56db79a8d9aa067b08e4ce63749b5b2/mqt_qecc-1.8.1-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:bf7151f8152f9cb50a000ad8e42d9e6165bf19e1adeab54f66b1a11fd9567434" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/af/4c/769538aa4c1e19387d197590d51481a83ab23713ebe43db2a2ef7cc6f057/mqt_qecc-1.8.1-cp313-cp313-win_amd64.whl", hash = "sha256:ca98a97b21799857748d9c65a6b1f4fd8c9a2b141b4afca1a4e8ff375799215a" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/f2/e5/fd7b3ef8a093b01dbcdf02e247d5a6cded7818e1473d00d860d6d6f0e916/mqt_qecc-1.8.1-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:ee19a45cf78be4ebd091e98fc99cfddea5fa96dec074ea2cdf3d2137de667237" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/b8/85/10ada41ad0066cf7491a56f89991359bf397202aeeb0675b76ade72ddbca/mqt_qecc-1.8.1-cp313-cp313t-macosx_11_0_x86_64.whl", hash = "sha256:ae3846359ec3f4518d0c3b12ae98705b0d0c39ea559c24118848fdc1399dfd48" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/9a/20/df9aa493995d39d15f4f78f8bc9b1b71310ea53550febdc56afd5e936677/mqt_qecc-1.8.1-cp313-cp313t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:b994084ee335b23b8f8772edfcae678bc6eac7f7e2e03a1cbda34b1c8fcc21ff" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/39/d6/e202addec3078f91a5ceda3dda33b46802c17601c84a0b28d5fa2e7739c3/mqt_qecc-1.8.1-cp313-cp313t-manylinux_2_27_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:7448adb302b87ac451484be7b3189c5d57047887b8479d97442e92fdd4e70be4" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/5b/bf/f691d941352d31544e03b684c547587f6c0c8b687384f28df8e0a5cbff64/mqt_qecc-1.8.1-cp313-cp313t-manylinux_2_27_s390x.manylinux_2_28_s390x.whl", hash = "sha256:4ab2cc4e9442d9d33b17cadc2f95ba51cdb42c0877e102695efed4736198a87c" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/70/88/f0f5c6f2fe4166393c958c533461661170511f7243e1d0e5b793b9c38094/mqt_qecc-1.8.1-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3cae9606a479f98675b63f4b1e0ef4f18ef435a87baf9e21d58361044b549d3d" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/ed/40/5a2e848e90926603cb8de07047432e578ef74474469d6fae1af17c21951c/mqt_qecc-1.8.1-cp313-cp313t-win_amd64.whl", hash = "sha256:8ab44fd398144708d75fae45b98192ada489937640332ba2fe708f39560d16a1" },
 ]
 
 [[package]]
@@ -581,6 +587,32 @@ wheels = [
 [package.optional-dependencies]
 parser = [
     { name = "antlr4-python3-runtime" },
+]
+
+[[package]]
+name = "ortools"
+version = "9.14.6206"
+source = { registry = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/simple" }
+dependencies = [
+    { name = "absl-py" },
+    { name = "immutabledict" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "protobuf" },
+    { name = "typing-extensions" },
+]
+wheels = [
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/d8/9c/fe6d5ca549c2fb5ed3e8e1d928a11f4509c024c974e1f6e2d75d206bc226/ortools-9.14.6206-cp313-cp313-macosx_10_15_x86_64.whl", hash = "sha256:8d0df7eef8ba53ad235e29018389259bad2e667d9594b9c2a412ed6a5756bd4e" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/19/0f/0b9858e7d5b31dfb23a1fe945d3e9fd5d2feba893190e53f70374ac7e084/ortools-9.14.6206-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:57dfe10844ce8331634d4723040fe249263fd490407346efc314c0bc656849b5" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/6b/48/de4eff68cb4ea124c9d6edf68049d329a332aab36d011c2798ea1afb4c98/ortools-9.14.6206-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:5c0c2c00a6e5d5c462e76fdda7dbd40d0f9139f1df4211d34b36906696248020" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/c9/44/970f72cd5e537fc10e20582dadbdd2f8b2b3c802ac812105c40119572ea7/ortools-9.14.6206-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:38044cf39952d93cbcc02f6acdbe0a9bd3628fbf17f0d7eb0374060fa028c22e" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/a4/31/37e2eacc37e4448090f693d482316a67bf2b47f2aefae6d6236b4ed41924/ortools-9.14.6206-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:98564de773d709e1e49cb3c32f6917589c314f047786d88bd5f324c0eb7be96e" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/f1/8f/0b1bb2a3268114b95381d5a1146c293259d6e45c69e4e3f2d2cf52617796/ortools-9.14.6206-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:80528b0ac72dc3de00cbeef2ce028517a476450b5877b1cda1b8ecb9fa98505e" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/d9/ad/93c05084eec710c38bc952a19002aac31d4c26bb6f8fcbf1057ccc55254b/ortools-9.14.6206-cp313-cp313-win_amd64.whl", hash = "sha256:47b1b15dcb085d32c61621b790259193aefa9e4577abadf233d47fbe7d0b81ef" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/51/85/aeba0d90a3cee4a23ba74a4f2d4c27088923c8b77fa1b73a52ad34593be5/ortools-9.14.6206-cp313-cp313t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:d26a0f9ed97ef9d3384a9069923585f5f974c3fde555a41f4d6381fbe7840bc4" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/98/83/2954b6aa032b77f49a478e0d9682ae8176abfb4bd33d935f0260ecb1741b/ortools-9.14.6206-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d40d8141667d47405f296a9f687058c566d7816586e9a672b59e9fcec8493133" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/b9/9a/9e9866952841e9f4aadccb110c0012d6a76f01b8798432fac0971d60aac1/ortools-9.14.6206-cp313-cp313t-musllinux_1_2_aarch64.whl", hash = "sha256:aefea81ed81aa937873efc520381785ed65380e52917f492ab566f46bbb5660d" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/91/a5/97a86cdd52c961273981e9ab905a301b7f086593b597d8974c411decf61a/ortools-9.14.6206-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:f044bb277db3ab6a1b958728fe1cf14ca87c3800d67d7b321d876b48269340f6" },
 ]
 
 [[package]]
@@ -700,31 +732,17 @@ wheels = [
 ]
 
 [[package]]
-name = "psutil"
-version = "7.2.2"
+name = "protobuf"
+version = "6.31.1"
 source = { registry = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/simple" }
-sdist = { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/aa/c6/d1ddf4abb55e93cebc4f2ed8b5d6dbad109ecb8d63748dd2b20ab5e57ebe/psutil-7.2.2.tar.gz", hash = "sha256:0746f5f8d406af344fd547f1c8daa5f5c33dbc293bb8d6a16d80b4bb88f59372" }
+sdist = { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/52/f3/b9655a711b32c19720253f6f06326faf90580834e2e83f840472d752bc8b/protobuf-6.31.1.tar.gz", hash = "sha256:d8cac4c982f0b957a4dc73a80e2ea24fab08e679c0de9deb835f4a12d69aca9a" }
 wheels = [
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/51/08/510cbdb69c25a96f4ae523f733cdc963ae654904e8db864c07585ef99875/psutil-7.2.2-cp313-cp313t-macosx_10_13_x86_64.whl", hash = "sha256:2edccc433cbfa046b980b0df0171cd25bcaeb3a68fe9022db0979e7aa74a826b" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/d6/f5/97baea3fe7a5a9af7436301f85490905379b1c6f2dd51fe3ecf24b4c5fbf/psutil-7.2.2-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:e78c8603dcd9a04c7364f1a3e670cea95d51ee865e4efb3556a3a63adef958ea" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/37/d6/246513fbf9fa174af531f28412297dd05241d97a75911ac8febefa1a53c6/psutil-7.2.2-cp313-cp313t-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:1a571f2330c966c62aeda00dd24620425d4b0cc86881c89861fbc04549e5dc63" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/b8/b5/9182c9af3836cca61696dabe4fd1304e17bc56cb62f17439e1154f225dd3/psutil-7.2.2-cp313-cp313t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:917e891983ca3c1887b4ef36447b1e0873e70c933afc831c6b6da078ba474312" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/16/ba/0756dca669f5a9300d0cbcbfae9a4c30e446dfc7440ffe43ded5724bfd93/psutil-7.2.2-cp313-cp313t-win_amd64.whl", hash = "sha256:ab486563df44c17f5173621c7b198955bd6b613fb87c71c161f827d3fb149a9b" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/1c/61/8fa0e26f33623b49949346de05ec1ddaad02ed8ba64af45f40a147dbfa97/psutil-7.2.2-cp313-cp313t-win_arm64.whl", hash = "sha256:ae0aefdd8796a7737eccea863f80f81e468a1e4cf14d926bd9b6f5f2d5f90ca9" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/81/69/ef179ab5ca24f32acc1dac0c247fd6a13b501fd5534dbae0e05a1c48b66d/psutil-7.2.2-cp314-cp314t-macosx_10_15_x86_64.whl", hash = "sha256:eed63d3b4d62449571547b60578c5b2c4bcccc5387148db46e0c2313dad0ee00" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/7b/64/665248b557a236d3fa9efc378d60d95ef56dd0a490c2cd37dafc7660d4a9/psutil-7.2.2-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:7b6d09433a10592ce39b13d7be5a54fbac1d1228ed29abc880fb23df7cb694c9" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/d5/2e/e6782744700d6759ebce3043dcfa661fb61e2fb752b91cdeae9af12c2178/psutil-7.2.2-cp314-cp314t-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:1fa4ecf83bcdf6e6c8f4449aff98eefb5d0604bf88cb883d7da3d8d2d909546a" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/57/49/0a41cefd10cb7505cdc04dab3eacf24c0c2cb158a998b8c7b1d27ee2c1f5/psutil-7.2.2-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e452c464a02e7dc7822a05d25db4cde564444a67e58539a00f929c51eddda0cf" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/dd/2c/ff9bfb544f283ba5f83ba725a3c5fec6d6b10b8f27ac1dc641c473dc390d/psutil-7.2.2-cp314-cp314t-win_amd64.whl", hash = "sha256:c7663d4e37f13e884d13994247449e9f8f574bc4655d509c3b95e9ec9e2b9dc1" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/f2/fc/f8d9c31db14fcec13748d373e668bc3bed94d9077dbc17fb0eebc073233c/psutil-7.2.2-cp314-cp314t-win_arm64.whl", hash = "sha256:11fe5a4f613759764e79c65cf11ebdf26e33d6dd34336f8a337aa2996d71c841" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/e7/36/5ee6e05c9bd427237b11b3937ad82bb8ad2752d72c6969314590dd0c2f6e/psutil-7.2.2-cp36-abi3-macosx_10_9_x86_64.whl", hash = "sha256:ed0cace939114f62738d808fdcecd4c869222507e266e574799e9c0faa17d486" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/80/c4/f5af4c1ca8c1eeb2e92ccca14ce8effdeec651d5ab6053c589b074eda6e1/psutil-7.2.2-cp36-abi3-macosx_11_0_arm64.whl", hash = "sha256:1a7b04c10f32cc88ab39cbf606e117fd74721c831c98a27dc04578deb0c16979" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/b5/70/5d8df3b09e25bce090399cf48e452d25c935ab72dad19406c77f4e828045/psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:076a2d2f923fd4821644f5ba89f059523da90dc9014e85f8e45a5774ca5bc6f9" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/63/65/37648c0c158dc222aba51c089eb3bdfa238e621674dc42d48706e639204f/psutil-7.2.2-cp36-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:b0726cecd84f9474419d67252add4ac0cd9811b04d61123054b9fb6f57df6e9e" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/8e/13/125093eadae863ce03c6ffdbae9929430d116a246ef69866dad94da3bfbc/psutil-7.2.2-cp36-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:fd04ef36b4a6d599bbdb225dd1d3f51e00105f6d48a28f006da7f9822f2606d8" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/04/78/0acd37ca84ce3ddffaa92ef0f571e073faa6d8ff1f0559ab1272188ea2be/psutil-7.2.2-cp36-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:b58fabe35e80b264a4e3bb23e6b96f9e45a3df7fb7eed419ac0e5947c61e47cc" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/b4/90/e2159492b5426be0c1fef7acba807a03511f97c5f86b3caeda6ad92351a7/psutil-7.2.2-cp37-abi3-win_amd64.whl", hash = "sha256:eb7e81434c8d223ec4a219b5fc1c47d0417b12be7ea866e24fb5ad6e84b3d988" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/8c/c7/7bb2e321574b10df20cbde462a94e2b71d05f9bbda251ef27d104668306a/psutil-7.2.2-cp37-abi3-win_arm64.whl", hash = "sha256:8c233660f575a5a89e6d4cb65d9f938126312bca76d8fe087b947b3a1aaac9ee" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/f3/6f/6ab8e4bf962fd5570d3deaa2d5c38f0a363f57b4501047b5ebeb83ab1125/protobuf-6.31.1-cp310-abi3-win32.whl", hash = "sha256:7fa17d5a29c2e04b7d90e5e32388b8bfd0e7107cd8e616feef7ed3fa6bdab5c9" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/44/3a/b15c4347dd4bf3a1b0ee882f384623e2063bb5cf9fa9d57990a4f7df2fb6/protobuf-6.31.1-cp310-abi3-win_amd64.whl", hash = "sha256:426f59d2964864a1a366254fa703b8632dcec0790d8862d30034d8245e1cd447" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/6a/c9/b9689a2a250264a84e66c46d8862ba788ee7a641cdca39bccf64f59284b7/protobuf-6.31.1-cp39-abi3-macosx_10_9_universal2.whl", hash = "sha256:6f1227473dc43d44ed644425268eb7c2e488ae245d51c6866d19fe158e207402" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/76/a1/7a5a94032c83375e4fe7e7f56e3976ea6ac90c5e85fac8576409e25c39c3/protobuf-6.31.1-cp39-abi3-manylinux2014_aarch64.whl", hash = "sha256:a40fc12b84c154884d7d4c4ebd675d5b3b5283e155f324049ae396b95ddebc39" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/fa/b1/b59d405d64d31999244643d88c45c8241c58f17cc887e73bcb90602327f8/protobuf-6.31.1-cp39-abi3-manylinux2014_x86_64.whl", hash = "sha256:4ee898bf66f7a8b0bd21bce523814e6fbd8c6add948045ce958b73af7e8878c6" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/f7/af/ab3c51ab7507a7325e98ffe691d9495ee3d3aa5f589afad65ec920d39821/protobuf-6.31.1-py3-none-any.whl", hash = "sha256:720a6c7e6b77288b85063569baae8536671b39f15cc22037ec7045658d80489e" },
 ]
 
 [[package]]
@@ -871,7 +889,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "mqt-qecc" },
+    { name = "mqt-qecc", git = "https://github.com/munich-quantum-toolkit/qecc.git?rev=encoding-circuits" },
     { name = "numpy" },
     { name = "pyyaml" },
     { name = "stim" },
@@ -927,32 +945,6 @@ wheels = [
 [package.optional-dependencies]
 qasm3-import = [
     { name = "qiskit-qasm3-import" },
-]
-
-[[package]]
-name = "qiskit-aer"
-version = "0.17.2"
-source = { registry = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/simple" }
-dependencies = [
-    { name = "numpy" },
-    { name = "psutil" },
-    { name = "python-dateutil" },
-    { name = "qiskit" },
-    { name = "scipy" },
-]
-sdist = { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/07/6c/6b8b35f67159401580665c59ae64d676bef9e85aac4d2a50831cbe32f652/qiskit_aer-0.17.2.tar.gz", hash = "sha256:134eef8e509311955a15be543d2ba368f988f3583a2bc1f548af3196da820eb4" }
-wheels = [
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/1e/96/0b7f3f7ee5cfc9dde495a2e324e53432abbfccb95a62cafa09e4fc07706d/qiskit_aer-0.17.2-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:a8ac09544489e34cb60bc0e615bc5ae725de581c9a6bf5cd17b57f2a7baf9f16" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/d7/08/4adfd24bd337d1b1b45a0fd85a2d0f1b9b386dfc9db8135fe5abbad3a0fc/qiskit_aer-0.17.2-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:4c1bf5072bc54250009751350aaaed06bef15ada7ab43e6ce2c934831f6ee6ea" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/93/3a/6068244629b8f04ce48fa4dddb8d0874f28e91611d90571e69d9417f22ba/qiskit_aer-0.17.2-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bd9d3c5e6c5d09cb0a821bf5077a14e7f5f8db5c3d700023be92ce6a05923309" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/d1/68/27ddd833d700bc9f9adede6e281146c0229acce895e64dcd32f1b62c90e9/qiskit_aer-0.17.2-cp313-cp313-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:46820fb38bf85f8c6f8aaa350dd90d01b0be10d16f5f1ef4188882b3a0531f38" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/1c/ca/a1cd95daf75d09d2dc1744cde95d5d18fed61a0e4922788fb916a7cd8152/qiskit_aer-0.17.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2749e6027f67e1f6b9d328d2dda2d4bf926aebd3653edc62e94c45d8237294d8" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/d6/69/e2f979e2fca054b0092fc52c46da050298513b9b03531305bc3f340c7669/qiskit_aer-0.17.2-cp313-cp313-win32.whl", hash = "sha256:c3ffd40a64bfcf8a6d10cbfdca8734d49ec57502fd70dc63aae9ed3819249dd6" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/ae/91/195cb69d3af4359544939378879093764bd35d8abd7ac0de840bb5477d27/qiskit_aer-0.17.2-cp313-cp313-win_amd64.whl", hash = "sha256:b38c5dfdc6cb2bacac78a47b0df8247123051564007fdecedb8ffbd4256f0f09" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/2c/1b/b0516cd3d0e83ebe30e8d04d2a156dac883fd8ac4521deb12de582b2fc78/qiskit_aer-0.17.2-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:c282b9b65f2b011d740e76b0ab44201c70d8d48894ddc12e22442acbb81cc7eb" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/65/5b/c8bf7942ca12d50c4c8c9fde82f25ebcd6198b98f66c51616a9225d541bc/qiskit_aer-0.17.2-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:193de16895ee989a5259331d0f1b1dcad606d506e5e831683ff165e82851a7ac" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/ff/27/f7b518f0928792e454ca9018d712769abf96033902e41bb3b648ff14833b/qiskit_aer-0.17.2-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b84564d563fb06adb454f3528dcc343be327c30cbd5f9f40aec7efd21d241e55" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/f6/c1/59fe9c10e8d53533990ccf1bdf87ac74f77ced57d63a233f759df02bd361/qiskit_aer-0.17.2-cp314-cp314-win_amd64.whl", hash = "sha256:5d7b22dd945df4c69d57e966efb549cf9186055e5f32c649a91b7dd1eb133f07" },
 ]
 
 [[package]]
@@ -1179,13 +1171,15 @@ wheels = [
 
 [[package]]
 name = "z3-solver"
-version = "4.12.6.0"
+version = "4.16.0.0"
 source = { registry = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/simple" }
-sdist = { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/66/a8/fb9141e779cece45778c98feec75fe35337ac8d54836503b290af3b81207/z3-solver-4.12.6.0.tar.gz", hash = "sha256:9a0f30e9648ee2649adc301dbf91470bc1600f34112ffeaf1063f8a8075e1a48" }
+sdist = { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/93/3b/2b714c40ef2ecf6d8aa080056b9c24a77fe4ca2c83abd83e9c93d34212ac/z3_solver-4.16.0.0.tar.gz", hash = "sha256:263d9ad668966e832c2b246ba0389298a599637793da2dc01cc5e4ef4b0b6c78" }
 wheels = [
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/ce/0c/b0074b9384753e841c1a7252ef44ee5444221eff2d7cb88b8957bdc2e57e/z3_solver-4.12.6.0-py2.py3-none-macosx_11_0_arm64.whl", hash = "sha256:9347c9c4f966c97c807f73b1b4365d11dbb25e390b3908b1c3a6e3bceff62e6d" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/47/02/bd1a78832beb0eac459a189da64caafd1a34ecd2b4a74d32a4c9b9fafe9c/z3_solver-4.12.6.0-py2.py3-none-macosx_11_0_x86_64.whl", hash = "sha256:359d2af6dbcc017dadb99f286b39df101edf6ac9a45332ba15c0a2012ff46d45" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/24/99/ca3e00003887498be6c864603ad2cdb57396481d71774377934c9783a38a/z3_solver-4.12.6.0-py2.py3-none-manylinux2014_x86_64.whl", hash = "sha256:dca097b9a3026a63019eba65fe7ad120dcccec847cc33a7c0e548cfe324680fc" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/0d/bd/097d479948b71b37369a0dbd90f4dfb05a51c02c4737d904db25167260d6/z3_solver-4.12.6.0-py2.py3-none-win32.whl", hash = "sha256:d795fd1a25416f9164ba6be8750c66732d998c645234b6d7f1b801b7ba5f67d4" },
-    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/6b/28/b014879daffb5a588947ff1c3c0bc228c65bed6202c6a825250151d1a528/z3_solver-4.12.6.0-py2.py3-none-win_amd64.whl", hash = "sha256:95a3725f43ec8cf2d4e7733327cdf2b9ff9caa09e0511e2b1a059000f211f605" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/2d/5d/9b277a80333db6b85fedd0f5082e311efcbaec47f2c44c57d38953c2d4d9/z3_solver-4.16.0.0-py3-none-macosx_15_0_arm64.whl", hash = "sha256:cc52843cfdd3d3f2cd24bedc62e71c18af8c8b7b23fb05e639ab60b01b5f8f2f" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/1c/c4/fc99aa544930fb7bfcd88947c2788f318acaf1b9704a7a914445e204436a/z3_solver-4.16.0.0-py3-none-macosx_15_0_x86_64.whl", hash = "sha256:e292df40951523e4ecfbc8dee549d93dee00a3fe4ee4833270d19876b713e210" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/f6/e6/98741b086b6e01630a55db1fbda596949f738204aac14ef35e64a9526ccb/z3_solver-4.16.0.0-py3-none-manylinux_2_27_x86_64.whl", hash = "sha256:afae2551f795670f0522cfce82132d129c408a2694adff71eb01ba0f2ece44f9" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/e7/2e/295d467c7c796c01337bff790dbedc28cf279f9d365ed64aa9f8ca6b2ba1/z3_solver-4.16.0.0-py3-none-manylinux_2_38_aarch64.whl", hash = "sha256:358648c3b5ef82b9ec9a25711cf4fc498c7881f03a9f4a2ea6ffa9304ca65d94" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/34/df/29816ce4de24cca3acb007412f9c6fba603e55fcc27ce8c2aade0939057a/z3_solver-4.16.0.0-py3-none-win32.whl", hash = "sha256:cc64c4d41fbebe419fccddb044979c3d95b41214547db65eecdaa67fafef7fe0" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/86/20/cef4f4d70845df24572d005d19995f92b7f527eb2ffb63a3f5f938a0de2e/z3_solver-4.16.0.0-py3-none-win_amd64.whl", hash = "sha256:eb5df383cb6a3d6b7767dbdca348ac71f6f41e82f76c9ac42002a1f55e35f462" },
+    { url = "https://quera.jfrog.io/artifactory/api/pypi/quera-pypi-algo/packages/packages/e1/18/7dc1051093abfd6db56ce9addb63c624bfa31946ccb9cfc9be5e75237a26/z3_solver-4.16.0.0-py3-none-win_arm64.whl", hash = "sha256:28729eae2c89112e37697acce4d4517f5e44c6c54d36fed9cf914b06f380cbd6" },
 ]
