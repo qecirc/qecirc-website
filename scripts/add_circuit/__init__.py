@@ -63,10 +63,10 @@ def add_circuit(
     Hz: np.ndarray,
     circuit: Union[stim.Circuit, str],
     circuit_name: str,
+    d: int,
     source: str = "",
     code_name: str = "",
     zoo_url: str = "",
-    d: Optional[int] = None,
     tool: str = "",
     description: str = "",
     data_dir: Union[str, Path] = "data_yaml",
@@ -80,10 +80,10 @@ def add_circuit(
         Hz: Z-check matrix as a numpy array.
         circuit: STIM circuit (stim.Circuit object or string).
         circuit_name: Name for the circuit (e.g. "Standard Encoding").
+        d: Code distance.
         source: Provenance (DOI, URL, or citation).
         code_name: Name for the code. Optional if code already exists in data_yaml/.
         zoo_url: QEC Zoo URL for the code.
-        d: Code distance. Computed automatically if omitted.
         tool: Tool slug (e.g. "mqt-qecc").
         description: Circuit description.
         data_dir: Path to data_yaml directory.

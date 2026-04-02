@@ -31,7 +31,7 @@ def main():
     parser.add_argument("--hz", required=True, help="Hz matrix as JSON string or path to file")
     parser.add_argument("--code-name", default="", help="Code name")
     parser.add_argument("--zoo-url", default="", help="QEC Zoo URL")
-    parser.add_argument("--d", type=int, default=None, help="Code distance (computed if omitted)")
+    parser.add_argument("--d", type=int, required=True, help="Code distance")
     parser.add_argument("--data-dir", default="data_yaml", help="Path to data_yaml directory")
     # Circuit-level args (multiple allowed, positionally matched)
     parser.add_argument("--stim", nargs="+", required=True, help="STIM circuit file(s)")

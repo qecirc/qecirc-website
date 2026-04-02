@@ -13,7 +13,6 @@ import pytest
 from scripts.add_circuit.code_identify import (
     canonical_form,
     canonical_hash,
-    check_commutativity,
     extract_params,
     find_qubit_permutation,
     gf2_rank,
@@ -108,31 +107,11 @@ class TestGf2Rank:
         Hx, _ = code_713
         assert gf2_rank(Hx) == 3
 
-    def test_rank_513(self, code_513):
+    def test_rank_513_symplectic(self, code_513):
         Hx, Hz = code_513
-        combined = np.vstack([Hx, Hz])
-        assert gf2_rank(combined) == 4
-
-
-# ---------------------------------------------------------------------------
-# check_commutativity
-# ---------------------------------------------------------------------------
-
-
-class TestCheckCommutativity:
-    def test_valid_css_422(self, code_422):
-        assert check_commutativity(*code_422)
-
-    def test_valid_css_713(self, code_713):
-        assert check_commutativity(*code_713)
-
-    def test_valid_general_513(self, code_513):
-        assert check_commutativity(*code_513)
-
-    def test_non_commuting_rejected(self):
-        Hx = np.array([[1, 0], [0, 0]])
-        Hz = np.array([[0, 0], [1, 0]])
-        assert not check_commutativity(Hx, Hz)
+        # Non-CSS: symplectic matrix [Hx | Hz] has rank 4 (4 independent generators)
+        symplectic = np.hstack([Hx, Hz])
+        assert gf2_rank(symplectic) == 4
 
 
 # ---------------------------------------------------------------------------

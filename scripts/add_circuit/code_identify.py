@@ -44,24 +44,25 @@ def gf2_rank(M: np.ndarray) -> int:
 # ---------------------------------------------------------------------------
 
 
-def check_commutativity(Hx: np.ndarray, Hz: np.ndarray) -> bool:
-    """Verify all stabilizer generators mutually commute: Hx*Hz^T + Hz*Hx^T = 0 mod 2."""
-    return bool(np.all((Hx @ Hz.T + Hz @ Hx.T) % 2 == 0))
-
-
 def is_css(Hx: np.ndarray, Hz: np.ndarray) -> bool:
     """CSS codes satisfy Hx*Hz^T = 0 mod 2 (X and Z generators commute independently)."""
     return bool(np.all((Hx @ Hz.T) % 2 == 0))
 
 
 def extract_params(Hx: np.ndarray, Hz: np.ndarray) -> CodeParams:
-    """Extract (n, k) and detect CSS vs general stabilizer."""
+    """Extract (n, k) and detect CSS vs general stabilizer.
+
+    For CSS codes, Hx and Hz are independent X/Z generator sets:
+        k = n - rank(Hx) - rank(Hz)
+    For non-CSS codes, row i of Hx/Hz are the X/Z parts of generator i:
+        k = n - rank([Hx | Hz])  (symplectic matrix)
+    """
     n = Hx.shape[1]
     css = is_css(Hx, Hz)
     if css:
         k = n - gf2_rank(Hx) - gf2_rank(Hz)
     else:
-        k = n - gf2_rank(np.vstack([Hx, Hz]))
+        k = n - gf2_rank(np.hstack([Hx, Hz]))
     return CodeParams(n=n, k=k, is_css=css)
 
 
@@ -107,10 +108,14 @@ def canonical_hash(Hx: np.ndarray, Hz: np.ndarray) -> str:
     """
     Stable hash for code identity. Invariant under row operations and column
     (qubit) permutations, so equivalent codes always produce the same hash.
+
+    Includes Hx/Hz row counts in the hash input to avoid collisions between
+    codes with different generator splits but same concatenated bytes.
     """
     canon_Hx, canon_Hz, _ = canonical_form(Hx, Hz)
+    prefix = f"{canon_Hx.shape[0]}:{canon_Hz.shape[0]}:".encode()
     combined = np.hstack([canon_Hx, canon_Hz])
-    return hashlib.sha256(combined.tobytes()).hexdigest()
+    return hashlib.sha256(prefix + combined.tobytes()).hexdigest()
 
 
 # ---------------------------------------------------------------------------

@@ -3,7 +3,7 @@ n: 12
 k: 2
 d: 4
 zoo_url: https://errorcorrectionzoo.org/c/carbon
-canonical_hash: 919fd115203eb1d410805ba09f299aeb650a8096c7531e4d6ed1b63536d8c41d
+canonical_hash: c7d3c7e37d4f60efb3c3d2f91bedd1151fe1d6781983ed80cdd77d5c48941fb7
 hx:
   - [1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0]
   - [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]

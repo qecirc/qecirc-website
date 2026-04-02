@@ -146,6 +146,7 @@ def _validate_encoding(circ, Hx, Hz):
                     ps[i] = pauli_val
             propagated = inv(ps)
             for i in range(num_qubits):
+                # stim Pauli encoding: 0=I, 1=X, 2=Y, 3=Z
                 if propagated[i] in (1, 2):  # X or Y -> doesn't stabilize |0>
                     return f"failed: {label}-stabilizer does not stabilize input"
 

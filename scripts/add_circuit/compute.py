@@ -24,7 +24,7 @@ from .tag_suggest import suggest_code_tags
 def compute_code_data(
     Hx: np.ndarray,
     Hz: np.ndarray,
-    d: Optional[int] = None,
+    d: int,
     code_name: str = "",
     zoo_url: str = "",
     data_dir: Optional[str] = None,
@@ -37,8 +37,6 @@ def compute_code_data(
     """
     # 1. Parameters
     params = extract_params(Hx, Hz)
-    if d is None:
-        d = _compute_distance(Hx, Hz, params.is_css)
 
     # 2. Canonicalization
     canon_Hx, canon_Hz, qubit_perm = canonical_form(Hx, Hz)
@@ -99,20 +97,6 @@ def compute_code_data(
         # For new codes the canonical matrices are stored directly, no relabeling needed.
         "qubit_permutation": yaml_qubit_perm,
     }
-
-
-def _compute_distance(Hx, Hz, code_is_css, timeout=2.0):
-    """Use ldpc to estimate code distance."""
-    from ldpc.code_util import compute_code_parameters
-
-    if code_is_css:
-        _, _, dx = compute_code_parameters(Hx, timeout_seconds=timeout)
-        _, _, dz = compute_code_parameters(Hz, timeout_seconds=timeout)
-        return min(dx, dz)
-    else:
-        H = np.vstack([Hx, Hz])
-        _, _, d = compute_code_parameters(H, timeout_seconds=timeout)
-        return d
 
 
 def _compute_logicals(Hx, Hz, code_is_css, d):

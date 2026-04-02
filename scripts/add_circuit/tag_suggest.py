@@ -4,6 +4,8 @@ Heuristic tag extraction from code parameters and circuit properties.
 Produces a list of TagEntry objects for the agent to review and refine.
 """
 
+import re
+
 from .models import CircuitProperties, CodeParams, TagEntry
 
 
@@ -24,16 +26,23 @@ def suggest_classification_tags(detected_functionality: str, circuit_text: str) 
     if detected_functionality:
         tags.append(TagEntry(name=detected_functionality, status="suggested"))
 
-    text_lower = circuit_text.lower()
+    # Strip comments for instruction-level checks (REPEAT detection)
+    non_comment_lines = [
+        line for line in circuit_text.splitlines() if not line.strip().startswith("#")
+    ]
+    text_no_comments = "\n".join(non_comment_lines)
 
-    # Flag qubits suggest fault-tolerant syndrome extraction
-    if detected_functionality == "syndrome-extraction" and "flag" in text_lower:
+    # Flag qubits suggest fault-tolerant syndrome extraction.
+    # "flag" typically appears in comments/annotations, so search full text.
+    if detected_functionality == "syndrome-extraction" and re.search(
+        r"\bflag\b", circuit_text, re.IGNORECASE
+    ):
         tags.append(TagEntry(name="fault-tolerant", status="suggested"))
 
-    # No REPEAT blocks -> likely single-shot
+    # No REPEAT blocks in actual instructions -> single round of measurement
     is_syndrome = detected_functionality == "syndrome-extraction"
-    if is_syndrome and circuit_text.upper().count("REPEAT") == 0:
-        tags.append(TagEntry(name="single-shot", status="suggested"))
+    if is_syndrome and "REPEAT" not in text_no_comments.upper():
+        tags.append(TagEntry(name="single-round", status="suggested"))
 
     return tags
 

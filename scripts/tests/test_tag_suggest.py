@@ -67,23 +67,31 @@ class TestSuggestCodeTags:
 
 
 class TestSuggestClassificationTags:
-    def test_single_shot_flagged_without_repeat(self):
+    def test_single_round_flagged_without_repeat(self):
         circuit = "H 4\nCNOT 4 0\nM 4\n"
         tags = suggest_classification_tags("syndrome-extraction", circuit)
         names = [t.name for t in tags]
-        assert "single-shot" in names
+        assert "single-round" in names
 
-    def test_no_single_shot_with_repeat(self):
+    def test_no_single_round_with_repeat(self):
         circuit = "REPEAT 10 {\nH 4\nCNOT 4 0\nM 4\n}\n"
         tags = suggest_classification_tags("syndrome-extraction", circuit)
         names = [t.name for t in tags]
-        assert "single-shot" not in names
+        assert "single-round" not in names
 
-    def test_fault_tolerant_flagged_with_flag_qubits(self):
+    def test_fault_tolerant_flagged_with_flag_in_comment(self):
+        # "flag" in a comment triggers the heuristic (common annotation pattern)
         circuit = "# flag qubit\nH 5\nCNOT 5 0\nM 5\n"
         tags = suggest_classification_tags("syndrome-extraction", circuit)
         names = [t.name for t in tags]
         assert "fault-tolerant" in names
+
+    def test_fault_tolerant_not_triggered_by_substring(self):
+        # "flagged" should not trigger (whole word match)
+        circuit = "# flagged for review\nH 5\nCNOT 5 0\nM 5\n"
+        tags = suggest_classification_tags("syndrome-extraction", circuit)
+        names = [t.name for t in tags]
+        assert "fault-tolerant" not in names
 
     def test_functionality_added_as_tag(self):
         circuit = "CNOT 0 1\n"
