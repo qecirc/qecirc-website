@@ -42,7 +42,7 @@ Before generating any files, use the helper functions to inspect the inputs and 
 ### 2a. Check the code
 
 ```python
-from scripts.add_circuit import check_code, find_existing_code
+from scripts.add_circuit import check_code, find_existing_code_full
 
 info = check_code(Hx, Hz, d=<distance>)
 # Returns: {n, k, d, is_css, is_self_dual, canonical_hash}
@@ -50,14 +50,16 @@ info = check_code(Hx, Hz, d=<distance>)
 
 Show the user: `[[n, k, d]]`, CSS status, self-dual status.
 
-Check if the code already exists:
+Check if the code already exists (with permutation info):
 
 ```python
-existing = find_existing_code(Hx, Hz)
-# Returns slug if found, None otherwise
+match = find_existing_code_full(Hx, Hz)
+# Returns ExistingCodeMatch(slug, qubit_permutation) or None
 ```
 
 If found, tell the user: "This code already exists as `<slug>`. The new circuit will be added to it."
+
+If `match.qubit_permutation` is not None, inform the user: "Your qubit ordering differs from the stored code. The circuit will be relabeled to match (permutation: `[...]`)." This is handled automatically by `add_circuit()` — validation still uses the user's original matrices (same source as the circuit).
 
 ### 2b. Inspect the circuit
 
@@ -206,6 +208,7 @@ npm run db:create && npm run dev
 | Distance missing                      | Hard stop — ask the user to provide it                    |
 | Matrices have different column counts | Hard stop — report the mismatch                           |
 | Circuit validation fails              | Stop — report details, suggest checking qubit ordering    |
+| Non-trivial qubit permutation         | Inform user, show permutation, proceed (relabeling is automatic) |
 | Tool slug not in `data_yaml/tools/`   | Ask user to confirm; note a new tool YAML may be needed   |
 | Zoo URL not found                     | Continue without it — not required                        |
 | Zoo page fetch fails                  | Continue — tag manually with user input                   |
@@ -223,4 +226,5 @@ npm run db:create && npm run dev
 - [ ] No optimality tags unless explicitly claimed by user or source
 - [ ] Zoo URL added if available
 - [ ] YAML files reviewed and confirmed by user
+- [ ] Qubit permutation reviewed if applicable
 - [ ] Database rebuilt successfully

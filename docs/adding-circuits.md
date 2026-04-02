@@ -63,6 +63,8 @@ print(validate_encoding(circuit, Hx, Hz))   # 'passed' or 'failed: ...'
 print(validate_state_prep(circuit, Hx, Hz)) # 'passed' or 'failed: ...'
 ```
 
+Validation uses your provided Hx/Hz (same source as the circuit). If the code already exists in the library with a different qubit ordering, `add_circuit()` handles the relabeling separately.
+
 ---
 
 ## Step 2: Generate YAML files
@@ -190,7 +192,8 @@ npm run db:create && npm run dev  # Rebuild database and restart
 - Circuit metrics (gate count, depth, qubit count)
 - Compact STIM, QASM, and Cirq format conversions
 - Crumble and Quirk visualization URLs
-- Dedup: if the code already exists, circuits are relabeled to match the stored qubit ordering
+- Dedup: if the code already exists, the pipeline detects qubit ordering differences and relabels the circuit to match. Check `AddCircuitResult.qubit_permutation` to see if relabeling was applied (`None` = no relabeling, `list` = permutation applied)
+- Use `find_existing_code_full()` to check for qubit permutations before generating files
 
 ## File formats
 

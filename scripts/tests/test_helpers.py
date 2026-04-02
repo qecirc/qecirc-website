@@ -10,8 +10,10 @@ import yaml
 
 from scripts.add_circuit.code_identify import canonical_hash
 from scripts.add_circuit.helpers import (
+    ExistingCodeMatch,
     check_code,
     find_existing_code,
+    find_existing_code_full,
     preview_circuit,
     summarize_circuit,
 )
@@ -95,6 +97,58 @@ class TestFindExistingCode:
             codes_dir = Path(tmpdir) / "codes"
             codes_dir.mkdir()
             assert find_existing_code(STEANE_H, STEANE_H, data_dir=tmpdir) is None
+
+
+# ---------------------------------------------------------------------------
+# find_existing_code_full
+# ---------------------------------------------------------------------------
+
+
+class TestFindExistingCodeFull:
+    def _make_code_dir(self, tmpdir, Hx, Hz):
+        """Helper: write a Steane code YAML into a temp data_yaml/codes/ dir."""
+        codes_dir = Path(tmpdir) / "codes"
+        codes_dir.mkdir()
+        c_hash = canonical_hash(Hx, Hz)
+        code_yaml = {
+            "name": "Steane Code",
+            "canonical_hash": c_hash,
+            "hx": Hx.tolist(),
+            "hz": Hz.tolist(),
+        }
+        (codes_dir / "steane-code.yaml").write_text(yaml.dump(code_yaml))
+
+    def test_returns_match_with_no_permutation(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            self._make_code_dir(tmpdir, STEANE_H, STEANE_H)
+            match = find_existing_code_full(STEANE_H, STEANE_H, data_dir=tmpdir)
+            assert match is not None
+            assert isinstance(match, ExistingCodeMatch)
+            assert match.slug == "steane-code"
+            assert match.qubit_permutation is None  # orderings match
+
+    def test_returns_match_with_permutation(self):
+        perm = [3, 1, 5, 0, 6, 2, 4]
+        Hx_perm = STEANE_H[:, perm]
+        Hz_perm = STEANE_H[:, perm]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            self._make_code_dir(tmpdir, STEANE_H, STEANE_H)
+            match = find_existing_code_full(Hx_perm, Hz_perm, data_dir=tmpdir)
+            assert match is not None
+            assert match.slug == "steane-code"
+            assert match.qubit_permutation is not None
+            # Applying the permutation to the queried matrices should recover stored matrices
+            from scripts.add_circuit.code_identify import gf2_rref
+
+            assert np.array_equal(
+                gf2_rref(Hx_perm[:, match.qubit_permutation]), gf2_rref(STEANE_H)
+            )
+
+    def test_returns_none_for_unknown(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            codes_dir = Path(tmpdir) / "codes"
+            codes_dir.mkdir()
+            assert find_existing_code_full(STEANE_H, STEANE_H, data_dir=tmpdir) is None
 
 
 # ---------------------------------------------------------------------------

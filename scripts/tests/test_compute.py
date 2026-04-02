@@ -115,7 +115,8 @@ class TestComputeCodeData:
 
             result = compute_code_data(steane_H, steane_H, d=3, data_dir=tmpdir)
             assert result["code"]["status"] == "existing"
-            assert result["qubit_permutation"] is not None
+            # Identity permutation is normalized to None (no relabeling needed)
+            assert result["qubit_permutation"] is None
 
 
 # ---------------------------------------------------------------------------

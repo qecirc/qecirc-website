@@ -27,6 +27,7 @@ Before writing any files, the agent:
 
 - Shows you the code parameters ([[n,k,d]], CSS, self-dual)
 - Checks if the code already exists in the library
+- Detects qubit ordering differences between your matrices and the stored code, and reports the permutation that will be applied to the circuit
 - Shows circuit metrics (qubit count, gate count, depth) and a Crumble link
 - Runs validation if you tell it the circuit type (encoding or state-prep)
 - Shows a dry-run preview of what files would be generated

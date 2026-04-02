@@ -34,8 +34,10 @@ from .circuit_validate import (  # noqa: F401
 from .compute import compute_code_data
 from .compute_circuit import compute_circuit_data
 from .helpers import (  # noqa: F401
+    ExistingCodeMatch,
     check_code,
     find_existing_code,
+    find_existing_code_full,
     preview_circuit,
     summarize_circuit,
 )
@@ -53,12 +55,15 @@ class AddCircuitResult:
     circuit_slug: str
     files_written: list[str] = field(default_factory=list)
     dry_run: bool = False
+    qubit_permutation: list[int] | None = None
 
     def summary(self) -> str:
         lines = [
             f"Code: {self.code_name} [{self.code_status}]",
             f"Circuit: {self.circuit_name}",
         ]
+        if self.qubit_permutation is not None:
+            lines.append(f"Qubit permutation applied: {self.qubit_permutation}")
         if self.dry_run:
             lines.append(f"Dry run — {len(self.files_written)} file(s) would be written:")
         else:
@@ -179,4 +184,5 @@ def add_circuit(
         circuit_slug=circ_slug,
         files_written=written_paths,
         dry_run=dry_run,
+        qubit_permutation=perm,
     )

@@ -2,6 +2,7 @@
 Notebook-friendly helper functions for inspecting codes and circuits.
 """
 
+from dataclasses import dataclass
 from typing import Optional, Union
 
 import numpy as np
@@ -10,6 +11,23 @@ import stim
 from .circuit_validate import circuit_properties
 from .code_identify import canonical_hash, extract_params
 from .compute import _check_yaml_dedup, _is_self_dual
+
+
+@dataclass
+class ExistingCodeMatch:
+    """Result of matching a code against the existing library.
+
+    Attributes:
+        slug: Code slug in the library (e.g. 'steane-code').
+        qubit_permutation: Column-reindexing array such that
+            ``Hx_user[:, perm]`` is row-equivalent to the stored Hx
+            (and likewise for Hz). None when orderings already match.
+            When not None, ``add_circuit()`` relabels the circuit
+            to align with the stored qubit ordering.
+    """
+
+    slug: str
+    qubit_permutation: list[int] | None
 
 
 def check_code(Hx: np.ndarray, Hz: np.ndarray, d: Optional[int] = None) -> dict:
@@ -39,6 +57,31 @@ def check_code(Hx: np.ndarray, Hz: np.ndarray, d: Optional[int] = None) -> dict:
     return result
 
 
+def find_existing_code_full(
+    Hx: np.ndarray, Hz: np.ndarray, data_dir: str = "data_yaml"
+) -> Optional[ExistingCodeMatch]:
+    """Check if this code already exists in data_yaml/, with permutation info.
+
+    Args:
+        Hx: X-check matrix.
+        Hz: Z-check matrix.
+        data_dir: Path to data_yaml directory.
+
+    Returns:
+        ExistingCodeMatch with slug and qubit_permutation, or None if not found.
+        qubit_permutation is None when orderings match, or a list when the
+        circuit will need relabeling to match the stored code.
+    """
+    Hx = np.asarray(Hx, dtype=int)
+    Hz = np.asarray(Hz, dtype=int)
+
+    c_hash = canonical_hash(Hx, Hz)
+    slug, perm = _check_yaml_dedup(data_dir, c_hash, Hx, Hz)
+    if slug is None:
+        return None
+    return ExistingCodeMatch(slug=slug, qubit_permutation=perm)
+
+
 def find_existing_code(
     Hx: np.ndarray, Hz: np.ndarray, data_dir: str = "data_yaml"
 ) -> Optional[str]:
@@ -52,12 +95,8 @@ def find_existing_code(
     Returns:
         The code slug if found, None otherwise.
     """
-    Hx = np.asarray(Hx, dtype=int)
-    Hz = np.asarray(Hz, dtype=int)
-
-    c_hash = canonical_hash(Hx, Hz)
-    slug, _ = _check_yaml_dedup(data_dir, c_hash, Hx, Hz)
-    return slug
+    match = find_existing_code_full(Hx, Hz, data_dir)
+    return match.slug if match else None
 
 
 def summarize_circuit(circuit: Union[stim.Circuit, str]) -> dict:

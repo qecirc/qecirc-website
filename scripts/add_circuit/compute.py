@@ -159,6 +159,15 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz):
             ref_Hx = np.array(data["hx"])
             ref_Hz = np.array(data["hz"])
             perm = find_qubit_permutation(Hx, Hz, ref_Hx, ref_Hz)
+            if perm is None:
+                raise ValueError(
+                    f"Code '{slug}' has matching canonical hash but no valid qubit "
+                    f"permutation could be found. This indicates a hash collision or "
+                    f"a bug in canonical_form."
+                )
+            # Normalize identity permutation to None (no relabeling needed)
+            if perm == list(range(len(perm))):
+                perm = None
             return slug, perm
     return None, None
 
