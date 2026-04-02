@@ -17,15 +17,18 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import numpy as np
-import yaml
+# Ensure project root is on sys.path so `scripts.add_circuit` is importable
+_PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
 
-# Support running both as `uv run python scripts/validate_circuits.py` (from project root)
-# and as `python validate_circuits.py` (from scripts/ directory)
-try:
-    from scripts.add_circuit.circuit_validate import validate_encoding, validate_state_prep
-except ModuleNotFoundError:
-    from add_circuit.circuit_validate import validate_encoding, validate_state_prep
+import numpy as np  # noqa: E402
+import yaml  # noqa: E402
+
+from scripts.add_circuit.circuit_validate import (  # noqa: E402
+    validate_encoding,
+    validate_state_prep,
+)
 
 
 @dataclass
