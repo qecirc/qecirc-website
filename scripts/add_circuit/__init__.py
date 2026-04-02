@@ -27,6 +27,7 @@ import numpy as np
 import stim
 
 from .circuit_validate import (  # noqa: F401
+    extract_code,
     validate_encoding,
     validate_state_prep,
     validate_syndrome_extraction,
@@ -41,6 +42,7 @@ from .helpers import (  # noqa: F401
     preview_circuit,
     summarize_circuit,
 )
+from .models import ExtractedCode  # noqa: F401
 from .yaml_helpers import build_circuit_yaml, build_code_yaml, dump_yaml, write_file
 
 

@@ -3,9 +3,11 @@ Tests for circuit_validate.py.
 """
 
 import numpy as np
+import pytest
 
 from scripts.add_circuit.circuit_validate import (
     circuit_properties,
+    extract_code,
     validate_encoding,
     validate_state_prep,
 )
@@ -168,3 +170,66 @@ class TestValidateStatePrep:
         result = validate_state_prep("", Hx, Hz)
         # Empty circuit has no instructions, so TableauSimulator stays at |0>
         assert result == "passed"
+
+
+# ---------------------------------------------------------------------------
+# extract_code
+# ---------------------------------------------------------------------------
+
+STEANE_STATE_PREP = """\
+H 0 3 5
+CX 3 1 5 4 0 2 4 3 1 0 1 6 2 4 4 6
+"""
+
+
+class TestExtractCode:
+    def test_encoding_steane(self):
+        result = extract_code(STEANE_STIM, circuit_type="encoding", k=1)
+        assert result.n == 7
+        assert result.k == 1
+        assert result.is_css is True
+        # Should have 3 X-stabilizer generators and 3 Z-stabilizer generators
+        from scripts.add_circuit.code_identify import gf2_rank, is_css
+
+        assert result.Hx.shape == (3, 7)
+        assert result.Hz.shape == (3, 7)
+        assert gf2_rank(result.Hx) == 3
+        assert gf2_rank(result.Hz) == 3
+        assert is_css(result.Hx, result.Hz)
+
+    def test_state_prep_steane(self):
+        result = extract_code(STEANE_STATE_PREP, circuit_type="state_prep", k=1)
+        assert result.n == 7
+        assert result.k == 1
+        assert result.is_css is True
+        assert result.Hx.shape[0] == 3  # rank(Hx) = 3
+        assert result.Hz.shape[0] == 3  # rank(Hz) = 3
+
+    def test_round_trip_encoding(self):
+        """Extract code from circuit, then validate the circuit against extracted matrices."""
+        result = extract_code(STEANE_STIM, circuit_type="encoding", k=1)
+        assert validate_encoding(STEANE_STIM, result.Hx, result.Hz) == "passed"
+
+    def test_round_trip_state_prep(self):
+        """Extract code from state-prep circuit, then validate against extracted matrices."""
+        result = extract_code(STEANE_STATE_PREP, circuit_type="state_prep", k=1)
+        assert validate_state_prep(STEANE_STATE_PREP, result.Hx, result.Hz) == "passed"
+
+    def test_trivial_k0(self):
+        """k=0 encoding: all qubits are ancilla, all Z stabilizers."""
+        # 2-qubit identity circuit (no gates) with k=0
+        result = extract_code("I 0\nI 1", circuit_type="encoding", k=0)
+        assert result.n == 2
+        assert result.k == 0
+        assert result.is_css is True
+        # Z on each qubit → Hz = identity, Hx = empty
+        assert result.Hz.shape == (2, 2)
+        assert result.Hx.shape[0] == 0
+
+    def test_invalid_circuit_type(self):
+        with pytest.raises(ValueError, match="Unknown circuit_type"):
+            extract_code(STEANE_STIM, circuit_type="invalid", k=1)
+
+    def test_encoding_wrong_k(self):
+        with pytest.raises(ValueError, match="k=.*must satisfy"):
+            extract_code(STEANE_STIM, circuit_type="encoding", k=8)

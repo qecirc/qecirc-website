@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
 
+import numpy as np
+
 
 @dataclass
 class CodeParams:
@@ -8,6 +10,17 @@ class CodeParams:
     k: int
     is_css: bool
     d: Optional[int] = None
+
+
+@dataclass
+class ExtractedCode:
+    """Code check matrices extracted from a circuit via Pauli propagation."""
+
+    Hx: np.ndarray  # X-check matrix (RREF, zero rows stripped)
+    Hz: np.ndarray  # Z-check matrix (RREF, zero rows stripped)
+    n: int
+    k: int
+    is_css: bool
 
 
 @dataclass
