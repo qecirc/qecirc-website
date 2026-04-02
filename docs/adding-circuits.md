@@ -65,6 +65,24 @@ print(validate_state_prep(circuit, Hx, Hz)) # 'passed' or 'failed: ...'
 
 Validation uses your provided Hx/Hz (same source as the circuit). If the code already exists in the library with a different qubit ordering, `add_circuit()` handles the relabeling separately.
 
+### Extract code from circuit (optional)
+
+If you have a circuit but no check matrices, you can derive Hx/Hz directly:
+
+```python
+from scripts.add_circuit import extract_code
+
+# For encoding circuits (first k qubits are data, rest ancilla):
+result = extract_code(circuit, circuit_type="encoding", k=1)
+
+# For state-preparation circuits:
+result = extract_code(circuit, circuit_type="state_prep", k=1)
+
+print(result.Hx, result.Hz, result.n, result.k, result.is_css)
+```
+
+Encoding extraction is exact. State-prep extraction derives Hx cleanly; Hz uses a RREF heuristic that may include logical Z for k >= 1. Prefer encoding circuits for guaranteed results.
+
 ---
 
 ## Step 2: Generate YAML files
@@ -189,6 +207,7 @@ npm run db:create && npm run dev  # Rebuild database and restart
 - Code parameters [[n,k,d]], CSS detection, self-dual detection
 - Canonical check matrices and hash (for dedup)
 - Logical operators (Lx, Lz)
+- Code extraction from circuits via Pauli propagation (`extract_code`)
 - Circuit metrics (gate count, depth, qubit count)
 - Compact STIM, QASM, and Cirq format conversions
 - Crumble and Quirk visualization URLs

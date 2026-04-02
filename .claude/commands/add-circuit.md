@@ -72,7 +72,25 @@ summary = summarize_circuit(circuit_text)
 
 Show the user the metrics and the Crumble link for visual inspection.
 
-### 2c. Validate (optional, based on circuit type)
+### 2c. Extract code from circuit (optional)
+
+If the user has a circuit but no check matrices, extract them:
+
+```python
+from scripts.add_circuit import extract_code
+
+# For encoding circuits (first k qubits are data):
+result = extract_code(circuit_text, circuit_type="encoding", k=<k>)
+
+# For state-preparation circuits:
+result = extract_code(circuit_text, circuit_type="state_prep", k=<k>)
+
+# result.Hx, result.Hz, result.n, result.k, result.is_css
+```
+
+Encoding extraction is exact. State-prep Hz uses a heuristic for k >= 1 — prefer encoding circuits when available.
+
+### 2d. Validate (optional, based on circuit type)
 
 If the user says what the circuit does, run the appropriate validation:
 

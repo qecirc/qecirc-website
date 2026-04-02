@@ -29,6 +29,7 @@ Before writing any files, the agent:
 - Checks if the code already exists in the library
 - Detects qubit ordering differences between your matrices and the stored code, and reports the permutation that will be applied to the circuit
 - Shows circuit metrics (qubit count, gate count, depth) and a Crumble link
+- Can extract Hx/Hz directly from the circuit via Pauli propagation (`extract_code`) if matrices aren't provided
 - Runs validation if you tell it the circuit type (encoding or state-prep)
 - Shows a dry-run preview of what files would be generated
 
