@@ -1,4 +1,6 @@
 ---
+import { tagToggleUrl } from "../lib/url";
+
 interface Props {
   tags: string[];
   baseUrl?: URL;
@@ -9,13 +11,7 @@ const { tags, baseUrl, basePath = "/" } = Astro.props;
 
 function tagUrl(tag: string): string {
   if (baseUrl) {
-    const params = new URLSearchParams(baseUrl.search);
-    params.delete("focus");
-    if (!params.getAll("tag").includes(tag)) {
-      params.append("tag", tag);
-    }
-    const qs = params.toString();
-    return basePath + (qs ? "?" + qs : "");
+    return tagToggleUrl(baseUrl.search, baseUrl.searchParams.getAll("tag"), tag, basePath);
   }
   return basePath + "?tag=" + encodeURIComponent(tag);
 }

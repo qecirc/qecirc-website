@@ -1,5 +1,6 @@
 ---
 import type { Circuit, CircuitBody, Tool } from "../lib/queries";
+import { tagToggleUrl } from "../lib/url";
 import CodeBlock from "./CodeBlock.astro";
 
 interface Props {
@@ -12,20 +13,10 @@ interface Props {
 
 const { circuit, bodies, tool, codeSlug, currentUrl } = Astro.props;
 
-function tagToggleUrl(tagName: string): string {
-  const params = new URLSearchParams(currentUrl.search);
-  params.delete("focus");
-  const existing = params.getAll("tag");
-  params.delete("tag");
-  const newTags = existing.includes(tagName)
-    ? existing.filter((t) => t !== tagName)
-    : [...existing, tagName];
-  for (const t of newTags) params.append("tag", t);
-  const qs = params.toString();
-  return `/codes/${codeSlug}` + (qs ? "?" + qs : "");
-}
-
-const selectedTags = new Set(currentUrl.searchParams.getAll("tag"));
+const existingTags = currentUrl.searchParams.getAll("tag");
+const basePath = `/codes/${codeSlug}`;
+const tagUrl = (tag: string) => tagToggleUrl(currentUrl.search, existingTags, tag, basePath);
+const selectedTags = new Set(existingTags);
 const hasMultipleFormats = bodies.length > 1;
 ---
 
@@ -71,7 +62,7 @@ const hasMultipleFormats = bodies.length > 1;
     <div class="flex flex-wrap gap-1 ml-auto">
       {circuit.tags.map((tag) => (
         <a
-          href={tagToggleUrl(tag)}
+          href={tagUrl(tag)}
           class:list={[
             "circuit-tag inline-block rounded px-1.5 py-0.5 text-xs transition-colors",
             selectedTags.has(tag)

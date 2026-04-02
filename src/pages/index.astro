@@ -4,36 +4,18 @@ export const prerender = false;
 import Layout from "../components/Layout.astro";
 import CodeCard from "../components/CodeCard.astro";
 import CodeFilter from "../components/CodeFilter.astro";
-import { filterCodes, countAllCodes, parseFilterString, hasActiveFilters, getCodeTagsWithCount } from "../lib/queries";
+import { filterCodes, countAllCodes, hasActiveFilters, getTagsWithCount } from "../lib/queries";
 import type { CodeFilters } from "../lib/queries";
+import { parseFilterParams } from "../lib/url";
 
-const rawN = Astro.url.searchParams.get("n") ?? "";
-const rawK = Astro.url.searchParams.get("k") ?? "";
-const rawD = Astro.url.searchParams.get("d") ?? "";
-const selectedTags = Astro.url.searchParams.getAll("tag");
-
-const parsedN = parseFilterString(rawN);
-const parsedK = parseFilterString(rawK);
-const parsedD = parseFilterString(rawD);
-
-const errors = {
-  n: rawN.trim() !== "" && parsedN === null,
-  k: rawK.trim() !== "" && parsedK === null,
-  d: rawD.trim() !== "" && parsedD === null,
-};
+const { raw, parsed, errors, tags: selectedTags, focus: focusField } = parseFilterParams(Astro.url, ["n", "k", "d"] as const);
 
 const filters: CodeFilters = {
-  n: parsedN ?? undefined,
-  k: parsedK ?? undefined,
-  d: parsedD ?? undefined,
+  ...parsed,
   tags: selectedTags.length > 0 ? selectedTags : undefined,
 };
 
-const VALID_FOCUS = new Set(["n", "k", "d", ""]);
-const focusRaw = Astro.url.searchParams.get("focus") ?? "";
-const focusField = VALID_FOCUS.has(focusRaw) ? focusRaw : "";
-
-const allTags = getCodeTagsWithCount();
+const allTags = getTagsWithCount("code");
 const active = hasActiveFilters(filters);
 const codes = filterCodes(filters);
 const totalCount = active ? countAllCodes() : codes.length;
@@ -43,7 +25,7 @@ const totalCount = active ? countAllCodes() : codes.length;
   <h1 class="text-2xl font-bold mb-6">Codes</h1>
 
   <CodeFilter
-    rawN={rawN} rawK={rawK} rawD={rawD}
+    rawN={raw.n} rawK={raw.k} rawD={raw.d}
     errors={errors} hasFilters={active} focus={focusField}
     allTags={allTags} selectedTags={selectedTags}
     currentUrl={Astro.url}

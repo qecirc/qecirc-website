@@ -6,10 +6,11 @@ import ToolCard from "../../components/ToolCard.astro";
 import {
   getAllTools,
   filterTools,
-  getToolTagsWithCount,
-  hasActiveToolFilters,
+  getTagsWithCount,
+  hasActiveFilters,
 } from "../../lib/queries";
 import type { ToolFilters } from "../../lib/queries";
+import { tagToggleUrl } from "../../lib/url";
 
 const selectedTags = Astro.url.searchParams.getAll("tag");
 
@@ -17,21 +18,12 @@ const filters: ToolFilters = {
   tags: selectedTags.length > 0 ? selectedTags : undefined,
 };
 
-const hasFilters = hasActiveToolFilters(filters);
+const hasFilters = hasActiveFilters(filters);
 const tools = hasFilters ? filterTools(filters) : getAllTools();
-const allTags = getToolTagsWithCount();
+const allTags = getTagsWithCount("tool");
 const selectedSet = new Set(selectedTags);
 
-function tagToggleUrl(tagName: string): string {
-  const params = new URLSearchParams(Astro.url.search);
-  params.delete("tag");
-  const newTags = selectedSet.has(tagName)
-    ? selectedTags.filter((t) => t !== tagName)
-    : [...selectedTags, tagName];
-  for (const t of newTags) params.append("tag", t);
-  const qs = params.toString();
-  return "/tools" + (qs ? "?" + qs : "");
-}
+const tagUrl = (tag: string) => tagToggleUrl(Astro.url.search, selectedTags, tag, "/tools");
 ---
 
 <Layout title="Tools">
@@ -43,7 +35,7 @@ function tagToggleUrl(tagName: string): string {
         const isSelected = selectedSet.has(tag.name);
         return (
           <a
-            href={tagToggleUrl(tag.name)}
+            href={tagUrl(tag.name)}
             class:list={[
               "inline-block rounded px-2 py-0.5 text-xs transition-colors",
               isSelected

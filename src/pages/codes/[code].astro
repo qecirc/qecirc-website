@@ -10,8 +10,7 @@ import {
   getCodeBySlug,
   getTagsFor,
   formatCodeParams,
-  parseFilterString,
-  hasActiveCircuitFilters,
+  hasActiveFilters,
   filterCircuitsForCode,
   getCircuitsForCode,
   countCircuitsForCode,
@@ -20,6 +19,7 @@ import {
   getToolsForCircuits,
 } from "../../lib/queries";
 import type { CircuitFilters, CircuitSort, CircuitSortField, SortDir } from "../../lib/queries";
+import { parseFilterParams } from "../../lib/url";
 
 const { code: codeSlug } = Astro.params;
 const code = getCodeBySlug(codeSlug!);
@@ -43,14 +43,7 @@ const logicalZ = safeParseMatrix(code.logical_z);
 const hasMatrices = hx || hz || logicalX || logicalZ;
 
 // Parse circuit filter params
-const rawGateCount = Astro.url.searchParams.get("gate_count") ?? "";
-const rawDepth = Astro.url.searchParams.get("depth") ?? "";
-const rawQubitCount = Astro.url.searchParams.get("qubit_count") ?? "";
-const selectedTags = Astro.url.searchParams.getAll("tag");
-
-const VALID_FOCUS = new Set(["gate_count", "depth", "qubit_count", ""]);
-const rawFocus = Astro.url.searchParams.get("focus") ?? "";
-const focus = VALID_FOCUS.has(rawFocus) ? rawFocus : "";
+const { raw, parsed, errors, tags: selectedTags, focus } = parseFilterParams(Astro.url, ["gate_count", "depth", "qubit_count"] as const);
 
 // Parse sort params
 const VALID_SORT_FIELDS = new Set<CircuitSortField>(["qubit_count", "depth", "gate_count"]);
@@ -61,24 +54,12 @@ const sort: CircuitSort = VALID_SORT_FIELDS.has(rawSort as CircuitSortField)
   ? { field: rawSort as CircuitSortField, dir: VALID_SORT_DIRS.has(rawSortDir as SortDir) ? rawSortDir as SortDir : "desc" }
   : { field: "gate_count", dir: "desc" };
 
-const parsedGateCount = rawGateCount ? parseFilterString(rawGateCount) : undefined;
-const parsedDepth = rawDepth ? parseFilterString(rawDepth) : undefined;
-const parsedQubitCount = rawQubitCount ? parseFilterString(rawQubitCount) : undefined;
-
-const errors = {
-  gate_count: rawGateCount !== "" && parsedGateCount === null,
-  depth: rawDepth !== "" && parsedDepth === null,
-  qubit_count: rawQubitCount !== "" && parsedQubitCount === null,
-};
-
 const filters: CircuitFilters = {
-  gate_count: parsedGateCount ?? undefined,
-  depth: parsedDepth ?? undefined,
-  qubit_count: parsedQubitCount ?? undefined,
+  ...parsed,
   tags: selectedTags.length > 0 ? selectedTags : undefined,
 };
 
-const hasFilters = hasActiveCircuitFilters(filters);
+const hasFilters = hasActiveFilters(filters);
 const totalCount = countCircuitsForCode(code.id);
 const circuits = hasFilters ? filterCircuitsForCode(code.id, filters, sort) : getCircuitsForCode(code.id, sort);
 const allCircuitTags = getCircuitTagsForCode(code.id);
@@ -141,9 +122,9 @@ const countLabel = hasFilters
   </div>
 
   <CircuitFilter
-    rawGateCount={rawGateCount}
-    rawDepth={rawDepth}
-    rawQubitCount={rawQubitCount}
+    rawGateCount={raw.gate_count}
+    rawDepth={raw.depth}
+    rawQubitCount={raw.qubit_count}
     errors={errors}
     hasFilters={hasFilters}
     focus={focus}

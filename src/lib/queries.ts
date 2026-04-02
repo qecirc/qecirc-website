@@ -1,54 +1,39 @@
 import { getDb } from "./db";
+import type {
+  Code,
+  Circuit,
+  CircuitBody,
+  CircuitFilters,
+  CircuitSort,
+  CircuitSortField,
+  CodeFilters,
+  FilterCondition,
+  FilterOp,
+  SortDir,
+  TaggableType,
+  TagWithCount,
+  Tool,
+  ToolFilters,
+  ToolWithMeta,
+} from "../types";
 
-export interface Code {
-  id: number;
-  name: string;
-  slug: string;
-  n: number;
-  k: number;
-  d: number | null;
-  zoo_url: string | null;
-  hx: string | null;
-  hz: string | null;
-  logical_x: string | null;
-  logical_z: string | null;
-  canonical_hash: string | null;
-}
-
-export interface Circuit {
-  id: number;
-  code_id: number;
-  name: string;
-  slug: string;
-  description: string | null;
-  source: string;
-  gate_count: number | null;
-  depth: number | null;
-  qubit_count: number | null;
-  crumble_url: string | null;
-  quirk_url: string | null;
-  tool_id: number | null;
-}
-
-export interface CircuitBody {
-  format: string;
-  body: string;
-}
-
-export interface Tool {
-  id: number;
-  name: string;
-  slug: string;
-  description: string | null;
-  homepage_url: string | null;
-  github_url: string | null;
-}
-
-export interface ToolFilters {
-  tags?: string[];
-}
-
-export type TaggableType = "code" | "circuit" | "tool";
+export type {
+  Code,
+  Circuit,
+  CircuitBody,
+  CircuitFilters,
+  CircuitSort,
+  CircuitSortField,
+  CodeFilters,
+  FilterCondition,
+  FilterOp,
+  SortDir,
+  TaggableType,
+  TagWithCount,
+  Tool,
+  ToolFilters,
+  ToolWithMeta,
+};
 
 export function formatCodeParams(code: Code): string {
   return code.d != null
@@ -72,10 +57,20 @@ export function getTagsFor(
   return rows.map((r) => r.name);
 }
 
+function withTags<T extends { id: number }>(
+  items: T[],
+  taggableType: TaggableType,
+): (T & { tags: string[] })[] {
+  return items.map((item) => ({
+    ...item,
+    tags: getTagsFor(taggableType, item.id),
+  }));
+}
+
 export function getAllCodes(): (Code & { tags: string[] })[] {
   const db = getDb();
   const codes = db.prepare("SELECT * FROM codes ORDER BY name").all() as Code[];
-  return codes.map((c) => ({ ...c, tags: getTagsFor("code", c.id) }));
+  return withTags(codes, "code");
 }
 
 export function getCodeBySlug(slug: string): Code | undefined {
@@ -83,35 +78,6 @@ export function getCodeBySlug(slug: string): Code | undefined {
   return db.prepare("SELECT * FROM codes WHERE slug = ?").get(slug) as
     | Code
     | undefined;
-}
-
-type FilterOp = "=" | "!=" | ">" | ">=" | "<" | "<=";
-
-export interface FilterCondition {
-  op: FilterOp;
-  value: number;
-}
-
-export interface CodeFilters {
-  n?: FilterCondition[];
-  k?: FilterCondition[];
-  d?: FilterCondition[];
-  tags?: string[];
-}
-
-export type CircuitSortField = "qubit_count" | "depth" | "gate_count";
-export type SortDir = "asc" | "desc";
-
-export interface CircuitSort {
-  field: CircuitSortField;
-  dir: SortDir;
-}
-
-export interface CircuitFilters {
-  gate_count?: FilterCondition[];
-  depth?: FilterCondition[];
-  qubit_count?: FilterCondition[];
-  tags?: string[];
 }
 
 const VALID_SORT_FIELDS: readonly string[] = [
@@ -129,21 +95,16 @@ function buildOrderBy(sort?: CircuitSort): string {
   return `ORDER BY CASE WHEN c.${sort.field} IS NULL THEN 1 ELSE 0 END, c.${sort.field} ${dir}, c.name`;
 }
 
-export interface TagWithCount {
-  name: string;
-  count: number;
-}
-
-export function getCodeTagsWithCount(): TagWithCount[] {
+export function getTagsWithCount(taggableType: TaggableType): TagWithCount[] {
   const db = getDb();
   return db
     .prepare(
       `SELECT t.name, COUNT(*) as count FROM tags t
        JOIN taggings tg ON t.id = tg.tag_id
-       WHERE tg.taggable_type = 'code'
+       WHERE tg.taggable_type = ?
        GROUP BY t.name ORDER BY t.name`,
     )
-    .all() as TagWithCount[];
+    .all(taggableType) as TagWithCount[];
 }
 
 const VALID_OPS: FilterOp[] = ["=", "!=", ">=", ">", "<=", "<"];
@@ -173,22 +134,10 @@ export function parseFilterString(input: string): FilterCondition[] | null {
   return conditions.length > 0 ? conditions : null;
 }
 
-export function hasActiveFilters(filters: CodeFilters): boolean {
-  return (
-    (filters.n?.length ?? 0) > 0 ||
-    (filters.k?.length ?? 0) > 0 ||
-    (filters.d?.length ?? 0) > 0 ||
-    (filters.tags?.length ?? 0) > 0
-  );
-}
-
-export function hasActiveCircuitFilters(filters: CircuitFilters): boolean {
-  return (
-    (filters.gate_count?.length ?? 0) > 0 ||
-    (filters.depth?.length ?? 0) > 0 ||
-    (filters.qubit_count?.length ?? 0) > 0 ||
-    (filters.tags?.length ?? 0) > 0
-  );
+export function hasActiveFilters(
+  filters: CodeFilters | CircuitFilters | ToolFilters,
+): boolean {
+  return Object.values(filters).some((v) => Array.isArray(v) && v.length > 0);
 }
 
 function addConditions(
@@ -238,7 +187,7 @@ export function filterCodes(
   const codes = db
     .prepare(`SELECT * FROM codes c ${where} ORDER BY c.name`)
     .all(...params) as Code[];
-  return codes.map((c) => ({ ...c, tags: getTagsFor("code", c.id) }));
+  return withTags(codes, "code");
 }
 
 export function countAllCodes(): number {
@@ -249,21 +198,30 @@ export function countAllCodes(): number {
   return row.count;
 }
 
-export function searchCodes(query: string): (Code & { tags: string[] })[] {
+function searchByType<T extends { id: number }>(
+  table: string,
+  taggableType: TaggableType,
+  query: string,
+  limit: number,
+): (T & { tags: string[] })[] {
   const db = getDb();
   const escaped = query.replace(/[%_\\]/g, "\\$&");
   const pattern = `%${escaped}%`;
-  const codes = db
+  const rows = db
     .prepare(
-      `SELECT DISTINCT c.* FROM codes c
-       LEFT JOIN taggings tg ON tg.taggable_id = c.id AND tg.taggable_type = 'code'
+      `SELECT DISTINCT c.* FROM ${table} c
+       LEFT JOIN taggings tg ON tg.taggable_id = c.id AND tg.taggable_type = '${taggableType}'
        LEFT JOIN tags t ON t.id = tg.tag_id
        WHERE c.name LIKE ? ESCAPE '\\' OR t.name LIKE ? ESCAPE '\\'
        ORDER BY c.name
-       LIMIT 20`,
+       LIMIT ${limit}`,
     )
-    .all(pattern, pattern) as Code[];
-  return codes.map((c) => ({ ...c, tags: getTagsFor("code", c.id) }));
+    .all(pattern, pattern) as T[];
+  return withTags(rows, taggableType);
+}
+
+export function searchCodes(query: string): (Code & { tags: string[] })[] {
+  return searchByType<Code>("codes", "code", query, 20);
 }
 
 // --- Circuit queries ---
@@ -277,7 +235,7 @@ export function getCircuitsForCode(
   const rows = db
     .prepare(`SELECT * FROM circuits c WHERE c.code_id = ? ${orderBy}`)
     .all(codeId) as Circuit[];
-  return rows.map((c) => ({ ...c, tags: getTagsFor("circuit", c.id) }));
+  return withTags(rows, "circuit");
 }
 
 export function countCircuitsForCode(codeId: number): number {
@@ -320,7 +278,7 @@ export function filterCircuitsForCode(
   const circuits = db
     .prepare(`SELECT * FROM circuits c ${where} ${orderBy}`)
     .all(...params) as Circuit[];
-  return circuits.map((c) => ({ ...c, tags: getTagsFor("circuit", c.id) }));
+  return withTags(circuits, "circuit");
 }
 
 const FORMAT_ORDER = ["stim", "qasm", "cirq"];
@@ -360,8 +318,6 @@ export function getBodiesForCircuits(
 
 // --- Tool queries ---
 
-type ToolWithMeta = Tool & { tags: string[]; circuit_count: number };
-
 function enrichTools(tools: Tool[]): ToolWithMeta[] {
   const db = getDb();
   return tools.map((t) => {
@@ -386,32 +342,12 @@ export function getAllTools(): ToolWithMeta[] {
   return enrichTools(tools);
 }
 
-export function getToolTagsWithCount(): TagWithCount[] {
-  const db = getDb();
-  return db
-    .prepare(
-      `SELECT t.name, COUNT(*) as count FROM tags t
-       JOIN taggings tg ON t.id = tg.tag_id
-       WHERE tg.taggable_type = 'tool'
-       GROUP BY t.name ORDER BY t.name`,
-    )
-    .all() as TagWithCount[];
-}
-
 export function filterTools(filters: ToolFilters): ToolWithMeta[] {
   const db = getDb();
   const conditions: string[] = [];
   const params: (number | string)[] = [];
 
-  if (filters.tags) {
-    for (const tag of filters.tags) {
-      conditions.push(
-        `EXISTS (SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
-         WHERE tg.taggable_id = c.id AND tg.taggable_type = ? AND t.name = ?)`,
-      );
-      params.push("tool", tag);
-    }
-  }
+  addTagConditions(filters.tags, "tool", conditions, params);
 
   const where =
     conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -427,25 +363,8 @@ export function filterTools(filters: ToolFilters): ToolWithMeta[] {
   return enrichTools(tools);
 }
 
-export function hasActiveToolFilters(filters: ToolFilters): boolean {
-  return (filters.tags?.length ?? 0) > 0;
-}
-
 export function searchTools(query: string): (Tool & { tags: string[] })[] {
-  const db = getDb();
-  const escaped = query.replace(/[%_\\]/g, "\\$&");
-  const pattern = `%${escaped}%`;
-  const tools = db
-    .prepare(
-      `SELECT DISTINCT c.* FROM tools c
-       LEFT JOIN taggings tg ON tg.taggable_id = c.id AND tg.taggable_type = 'tool'
-       LEFT JOIN tags t ON t.id = tg.tag_id
-       WHERE c.name LIKE ? ESCAPE '\\' OR t.name LIKE ? ESCAPE '\\'
-       ORDER BY c.name
-       LIMIT 10`,
-    )
-    .all(pattern, pattern) as Tool[];
-  return tools.map((t) => ({ ...t, tags: getTagsFor("tool", t.id) }));
+  return searchByType<Tool>("tools", "tool", query, 10);
 }
 
 export function getToolById(id: number): Tool | undefined {

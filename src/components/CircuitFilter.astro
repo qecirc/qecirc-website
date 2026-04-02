@@ -1,5 +1,6 @@
 ---
 import type { TagWithCount, CircuitSort, CircuitSortField } from "../lib/queries";
+import { tagToggleUrl } from "../lib/url";
 
 interface Props {
   rawGateCount: string;
@@ -57,23 +58,14 @@ function sortToggleUrl(field: CircuitSortField): string {
   return basePath + (qs ? "?" + qs : "");
 }
 
-function tagToggleUrl(tagName: string): string {
-  const params = new URLSearchParams(currentUrl.search);
-  params.delete("tag");
-  params.delete("focus");
-  const newTags = selectedSet.has(tagName)
-    ? selectedTags.filter((t) => t !== tagName)
-    : [...selectedTags, tagName];
-  for (const t of newTags) params.append("tag", t);
-  const qs = params.toString();
-  return basePath + (qs ? "?" + qs : "");
-}
+const tagUrl = (tag: string) => tagToggleUrl(currentUrl.search, selectedTags, tag, basePath);
 const gateSort = labelInfo("gate_count");
 const depthSort = labelInfo("depth");
 const qubitSort = labelInfo("qubit_count");
 ---
 
-<form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2">
+<form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2"
+  data-filter-fields="gate_count,depth,qubit_count" data-filter-focus={focus} data-base-path={basePath} data-preserve-sort>
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
       <a href={sortToggleUrl("gate_count")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${gateSort.cls}`}>Gates{gateSort.arrow}</a>
@@ -87,15 +79,15 @@ const qubitSort = labelInfo("qubit_count");
       <a href={sortToggleUrl("qubit_count")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${qubitSort.cls}`}>Qubits{qubitSort.arrow}</a>
       <input type="text" name="qubit_count" value={rawQubitCount} class={inputClass(errors.qubit_count)} placeholder="7" data-filter />
     </div>
-    <div class="ml-auto text-xs" id="circuit-filter-status">
+    <div class="ml-auto text-xs" data-filter-status>
       {anyError ? (
-        <span id="circuit-filter-error" class="text-red-500">Invalid filter</span>
+        <span data-filter-error class="text-red-500">Invalid filter</span>
       ) : hasFilters ? (
         <a href={basePath} class="text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 underline">Clear</a>
       ) : (
         <span class="text-gray-400">e.g. 7, &gt;3, &lt;=10, !=5</span>
       )}
-      {!anyError && <span id="circuit-filter-error" class="text-red-500 hidden">Invalid filter</span>}
+      {!anyError && <span data-filter-error class="text-red-500 hidden">Invalid filter</span>}
     </div>
   </div>
 
@@ -103,10 +95,9 @@ const qubitSort = labelInfo("qubit_count");
     <div class="flex flex-wrap gap-1.5">
       {allTags.map((tag) => {
         const isSelected = selectedSet.has(tag.name);
-        const href = tagToggleUrl(tag.name);
         return (
           <a
-            href={href}
+            href={tagUrl(tag.name)}
             class:list={[
               "inline-block rounded px-2 py-0.5 text-xs transition-colors",
               isSelected
@@ -122,107 +113,8 @@ const qubitSort = labelInfo("qubit_count");
   )}
 </form>
 
-<script define:vars={{ focus, codeSlug }}>
-  const VALID_FIELDS = ["gate_count", "depth", "qubit_count"];
-  const form = document.getElementById("circuit-filter");
-  const errorSpan = document.getElementById("circuit-filter-error");
-  const statusDiv = document.getElementById("circuit-filter-status");
-  const inputs = form.querySelectorAll("input[data-filter]");
-  let debounceTimer;
-  let lastEditedField = "";
-
-  // Restore focus after page reload, then strip focus param from visible URL
-  if (focus && VALID_FIELDS.includes(focus)) {
-    const target = form.querySelector('input[name="' + focus + '"]');
-    if (target) {
-      target.focus();
-      const val = target.value;
-      target.setSelectionRange(val.length, val.length);
-    }
-    const url = new URL(window.location.href);
-    url.searchParams.delete("focus");
-    history.replaceState(null, "", url.toString());
-  }
-
-  function isValidFilter(value) {
-    const trimmed = value.trim();
-    if (trimmed === "") return true;
-    const parts = trimmed.split(",");
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i].trim();
-      if (part === "") continue;
-      if (!/^(!=|>=|<=|>|<|=)?\s*\d+$/.test(part)) return false;
-    }
-    return true;
-  }
-
-  function validateAndUpdate() {
-    let hasError = false;
-    inputs.forEach(function (input) {
-      const invalid = !isValidFilter(input.value);
-      if (invalid) hasError = true;
-      if (invalid) {
-        input.classList.add("ring-1", "ring-red-300");
-      } else {
-        input.classList.remove("ring-1", "ring-red-300");
-      }
-    });
-    if (hasError) {
-      errorSpan.classList.remove("hidden");
-      Array.from(statusDiv.children).forEach(function (el) {
-        if (el !== errorSpan) el.classList.add("hidden");
-      });
-    } else {
-      errorSpan.classList.add("hidden");
-      Array.from(statusDiv.children).forEach(function (el) {
-        if (el !== errorSpan) el.classList.remove("hidden");
-      });
-    }
-    return !hasError;
-  }
-
-  function submitFilters() {
-    if (!validateAndUpdate()) return;
-    const params = new URLSearchParams();
-    const data = new FormData(form);
-    data.forEach(function (value, key) {
-      if (typeof value === "string" && value.trim() !== "") {
-        params.set(key, value.trim());
-      }
-    });
-    // Preserve tag and sort params from current URL
-    const urlParams = new URLSearchParams(window.location.search);
-    urlParams.getAll("tag").forEach(function (t) { params.append("tag", t); });
-    const sortField = urlParams.get("sort");
-    const sortDir = urlParams.get("sort_dir");
-    if (sortField) { params.set("sort", sortField); }
-    if (sortDir) { params.set("sort_dir", sortDir); }
-    if (lastEditedField && VALID_FIELDS.includes(lastEditedField)) {
-      params.set("focus", lastEditedField);
-    }
-    const basePath = "/codes/" + codeSlug;
-    const target = basePath + (params.size > 0 ? "?" + params.toString() : "");
-    // Skip reload if URL would be the same (minus focus param)
-    const currentParams = new URLSearchParams(window.location.search);
-    currentParams.delete("focus");
-    const newCheck = new URLSearchParams(params);
-    newCheck.delete("focus");
-    if (newCheck.toString() === currentParams.toString()) return;
-    window.location.href = target;
-  }
-
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    clearTimeout(debounceTimer);
-    submitFilters();
-  });
-
-  form.addEventListener("input", function (e) {
-    clearTimeout(debounceTimer);
-    if (e.target && e.target.name && VALID_FIELDS.includes(e.target.name)) {
-      lastEditedField = e.target.name;
-    }
-    validateAndUpdate();
-    debounceTimer = setTimeout(submitFilters, 800);
-  });
+<script>
+  import { initFilterForm } from "../lib/filter-client";
+  const form = document.getElementById("circuit-filter") as HTMLFormElement;
+  if (form) initFilterForm(form);
 </script>
