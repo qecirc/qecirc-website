@@ -17,7 +17,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "validate:yaml": "node scripts/validate-yaml.mjs"
+    "validate:yaml": "node scripts/validate-yaml.mjs",
+    "validate:circuits": "uv run python scripts/validate_circuits.py"
   },
   "dependencies": {
     "@astrojs/node": "^10.0.3",
