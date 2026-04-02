@@ -14,7 +14,10 @@ from .code_identify import (
     canonical_hash,
     extract_params,
     find_qubit_permutation,
+    gf2_nullspace,
+    gf2_row_basis,
     gf2_rref,
+    gf2_rref_pivots,
     is_css,
 )
 from .models import CodeParams, TagEntry
@@ -100,7 +103,7 @@ def compute_code_data(
 
 
 def _compute_logicals(Hx, Hz, code_is_css, d):
-    """Compute logical operators. Try MQT QECC first, fall back to ldpc.mod2."""
+    """Compute logical operators. Try MQT QECC first, fall back to pure-numpy GF(2)."""
     if code_is_css:
         try:
             from mqt.qecc.codes import CSSCode
@@ -109,30 +112,27 @@ def _compute_logicals(Hx, Hz, code_is_css, d):
             return np.array(code.Lx), np.array(code.Lz)
         except Exception:
             pass
-    # Fallback: ldpc.mod2
+    # Fallback: pure-numpy GF(2) linear algebra
     Lx = _compute_logical_mod2(Hz, Hx)
     Lz = _compute_logical_mod2(Hx, Hz)
     return Lx, Lz
 
 
 def _compute_logical_mod2(m1, m2):
-    """Logical operators in ker(m1) not in rowspace(m2). Uses ldpc.mod2."""
-    from ldpc import mod2
+    """Logical operators in ker(m1) not in rowspace(m2). Pure numpy over GF(2)."""
+    ker = gf2_nullspace(m1.astype(int))
+    im = gf2_row_basis(m2.astype(int))
 
-    m1_u8 = m1.astype(np.uint8)
-    m2_u8 = m2.astype(np.uint8)
-    ker = mod2.nullspace(m1_u8)
-    im = mod2.row_basis(m2_u8)
+    if ker.shape[0] == 0:
+        return np.empty((0, m1.shape[1]), dtype=int)
 
-    # Convert sparse matrices to dense int arrays to work around
-    # ldpc row_echelon bug with scipy sparse bool comparisons
-    def _to_dense(m):
-        return np.asarray(m.todense()) if hasattr(m, "todense") else np.asarray(m)
-
-    stacked = np.vstack([_to_dense(im), _to_dense(ker)]).astype(int)
-    pivots = mod2.row_echelon(stacked.T)[3]
+    # Stack [im; ker] and find which ker rows are linearly independent from im
+    # by doing RREF on the transpose and checking pivot row indices.
+    stacked = np.vstack([im, ker]).astype(int)
+    _R, pivots = gf2_rref_pivots(stacked.T)
+    pivot_set = set(pivots)
     offset = im.shape[0]
-    indices = [i for i in range(offset, stacked.shape[0]) if i in pivots]
+    indices = [i for i in range(offset, stacked.shape[0]) if i in pivot_set]
     return stacked[indices]
 
 

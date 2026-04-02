@@ -15,8 +15,11 @@ from scripts.add_circuit.code_identify import (
     canonical_hash,
     extract_params,
     find_qubit_permutation,
+    gf2_nullspace,
     gf2_rank,
+    gf2_row_basis,
     gf2_rref,
+    gf2_rref_pivots,
     is_css,
 )
 
@@ -112,6 +115,64 @@ class TestGf2Rank:
         # Non-CSS: symplectic matrix [Hx | Hz] has rank 4 (4 independent generators)
         symplectic = np.hstack([Hx, Hz])
         assert gf2_rank(symplectic) == 4
+
+
+class TestGf2RrefPivots:
+    def test_identity_pivots(self):
+        R, pivots = gf2_rref_pivots(np.eye(3, dtype=int))
+        assert pivots == [0, 1, 2]
+        assert np.array_equal(R, np.eye(3, dtype=int))
+
+    def test_rank_deficient(self):
+        M = np.array([[1, 1, 0], [1, 1, 0], [0, 0, 1]])
+        R, pivots = gf2_rref_pivots(M)
+        assert pivots == [0, 2]
+        assert np.all(R[2] == 0)
+
+    def test_steane(self, code_713):
+        Hx, _ = code_713
+        _, pivots = gf2_rref_pivots(Hx)
+        assert len(pivots) == 3
+
+
+class TestGf2Nullspace:
+    def test_identity_has_empty_kernel(self):
+        ns = gf2_nullspace(np.eye(3, dtype=int))
+        assert ns.shape == (0, 3)
+
+    def test_kernel_orthogonal(self, code_713):
+        Hx, _ = code_713
+        ns = gf2_nullspace(Hx)
+        assert ns.shape[0] == 7 - 3  # n - rank
+        assert np.all(Hx @ ns.T % 2 == 0)
+
+    def test_kernel_dimension(self, code_422):
+        Hx, _ = code_422
+        ns = gf2_nullspace(Hx)
+        assert ns.shape[0] == 4 - 1  # n - rank
+        assert np.all(Hx @ ns.T % 2 == 0)
+
+    def test_zero_row_matrix(self):
+        M = np.zeros((2, 3), dtype=int)
+        ns = gf2_nullspace(M)
+        assert ns.shape == (3, 3)
+        assert np.all(M @ ns.T % 2 == 0)
+
+
+class TestGf2RowBasis:
+    def test_identity(self):
+        rb = gf2_row_basis(np.eye(3, dtype=int))
+        assert rb.shape == (3, 3)
+
+    def test_removes_dependent_rows(self):
+        M = np.array([[1, 0, 1], [1, 0, 1], [0, 1, 0]])
+        rb = gf2_row_basis(M)
+        assert rb.shape[0] == 2
+
+    def test_steane(self, code_713):
+        Hx, _ = code_713
+        rb = gf2_row_basis(Hx)
+        assert rb.shape[0] == 3
 
 
 # ---------------------------------------------------------------------------

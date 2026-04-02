@@ -73,7 +73,7 @@ class TestComputeCircuitData:
         assert result["original_stim"] is None
 
     @pytest.mark.skipif(
-        not _mqt_available, reason="mqt-qecc broken with current ldpc (missing ldpc.osd)"
+        not _mqt_available, reason="mqt-qecc not available"
     )
     def test_with_permutation_stores_original(self):
         perm = [0, 1, 2, 3, 4, 5, 6]  # identity permutation

@@ -1,7 +1,7 @@
 """
 Code identification: canonicalization, DB lookup, and qubit permutation finding.
 
-Heavy computation (ldpc.mod2, mqt_qecc) is isolated to functions that can be
+Heavy computation (mqt_qecc) is isolated to functions that can be
 replaced or mocked independently.
 """
 
@@ -17,11 +17,12 @@ from .models import CodeParams
 # ---------------------------------------------------------------------------
 
 
-def gf2_rref(M: np.ndarray) -> np.ndarray:
-    """Reduced row echelon form over GF(2)."""
+def gf2_rref_pivots(M: np.ndarray) -> tuple[np.ndarray, list[int]]:
+    """Reduced row echelon form over GF(2), also returning pivot column indices."""
     M = M.copy().astype(int) % 2
     rows, cols = M.shape
     pivot_row = 0
+    pivots: list[int] = []
     for col in range(cols):
         pivot = next((r for r in range(pivot_row, rows) if M[r, col]), None)
         if pivot is None:
@@ -30,13 +31,44 @@ def gf2_rref(M: np.ndarray) -> np.ndarray:
         for row in range(rows):
             if row != pivot_row and M[row, col]:
                 M[row] = (M[row] + M[pivot_row]) % 2
+        pivots.append(col)
         pivot_row += 1
-    return M
+    return M, pivots
+
+
+def gf2_rref(M: np.ndarray) -> np.ndarray:
+    """Reduced row echelon form over GF(2)."""
+    return gf2_rref_pivots(M)[0]
 
 
 def gf2_rank(M: np.ndarray) -> int:
     """Rank of a matrix over GF(2)."""
-    return int(np.any(gf2_rref(M), axis=1).sum())
+    _, pivots = gf2_rref_pivots(M)
+    return len(pivots)
+
+
+def gf2_nullspace(M: np.ndarray) -> np.ndarray:
+    """Basis for the kernel of M over GF(2). Returns a k-by-n matrix."""
+    M = np.atleast_2d(M).astype(int) % 2
+    _rows, n = M.shape
+    R, pivots = gf2_rref_pivots(M)
+    pivot_set = set(pivots)
+    free_cols = [c for c in range(n) if c not in pivot_set]
+    if not free_cols:
+        return np.empty((0, n), dtype=int)
+    pivot_to_row = {col: i for i, col in enumerate(pivots)}
+    basis = np.zeros((len(free_cols), n), dtype=int)
+    for idx, f in enumerate(free_cols):
+        basis[idx, f] = 1
+        for pc in pivots:
+            basis[idx, pc] = R[pivot_to_row[pc], f]
+    return basis % 2
+
+
+def gf2_row_basis(M: np.ndarray) -> np.ndarray:
+    """Basis for the row space of M over GF(2). Returns non-zero rows of RREF."""
+    R = gf2_rref(M)
+    return R[np.any(R, axis=1)]
 
 
 # ---------------------------------------------------------------------------
