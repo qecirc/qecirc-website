@@ -40,6 +40,19 @@ const hasMultipleFormats = bodies.length > 1;
     </svg>
 
     <span class="font-medium text-sm">{circuit.name}</span>
+    <button
+      class="circuit-permalink text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 shrink-0"
+      aria-label="Copy link to circuit"
+      title="Copy link"
+      data-slug={circuit.slug}
+    >
+      <svg class="permalink-icon w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+      </svg>
+      <svg class="permalink-check w-3.5 h-3.5 hidden text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+    </button>
 
     <span class="inline-flex gap-1.5 text-xs shrink-0">
       {circuit.gate_count != null && (
@@ -166,8 +179,8 @@ const hasMultipleFormats = bodies.length > 1;
       (btn as HTMLElement).dataset.initialized = "1";
 
       btn.addEventListener("click", function (e) {
-        // Don't toggle when clicking a tag link
         if ((e.target as HTMLElement).closest(".circuit-tag")) return;
+        if ((e.target as HTMLElement).closest(".circuit-permalink")) return;
         const slug = (btn as HTMLElement).dataset.slug!;
         const row = btn.closest("[id]") as HTMLElement;
         const detail = row.querySelector(".circuit-detail") as HTMLElement;
@@ -250,8 +263,35 @@ const hasMultipleFormats = bodies.length > 1;
     }
   }
 
+  function initPermalinks() {
+    document.querySelectorAll<HTMLButtonElement>(".circuit-permalink").forEach(function (btn) {
+      if (btn.dataset.initialized) return;
+      btn.dataset.initialized = "1";
+
+      btn.addEventListener("click", async function () {
+        const slug = btn.dataset.slug;
+        const url = location.origin + location.pathname + "#" + slug;
+        try {
+          await navigator.clipboard.writeText(url);
+        } catch {
+          return;
+        }
+        const icon = btn.querySelector(".permalink-icon") as HTMLElement;
+        const check = btn.querySelector(".permalink-check") as HTMLElement;
+        icon.classList.add("hidden");
+        check.classList.remove("hidden");
+        clearTimeout(Number(btn.dataset.timer));
+        btn.dataset.timer = String(setTimeout(function () {
+          icon.classList.remove("hidden");
+          check.classList.add("hidden");
+        }, 1500));
+      });
+    });
+  }
+
   initCircuitRows();
   initFormatSwitchers();
+  initPermalinks();
   expandFromHash();
   window.addEventListener("hashchange", expandFromHash);
 </script>
