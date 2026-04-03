@@ -4,11 +4,12 @@
 <div id="search-bar" class="relative">
   <input
     type="text"
-    class="search-input w-48 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm placeholder-gray-400 focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none"
+    class="search-input w-48 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 pr-8 text-sm placeholder-gray-400 focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none"
     placeholder="Search..."
     aria-label="Search codes, circuits, and tools"
     autocomplete="off"
   />
+  <kbd class="search-hint pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] text-gray-400 dark:text-gray-500 font-sans">/</kbd>
   <ul class="search-results absolute right-0 top-full mt-1 w-96 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg hidden z-50 max-h-80 overflow-y-auto">
   </ul>
 </div>
@@ -105,6 +106,7 @@
   }
 
   input.addEventListener("input", function () {
+    updateHint();
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(function () {
       doSearch(input.value.trim());
@@ -137,4 +139,26 @@
       hide();
     }
   });
+
+  const hint = container.querySelector(".search-hint") as HTMLElement;
+
+  function updateHint() {
+    hint.classList.toggle("hidden", input === document.activeElement || input.value.length > 0);
+  }
+
+  input.addEventListener("focus", updateHint);
+  input.addEventListener("blur", updateHint);
+
+  if (!(window as any).__searchShortcutBound) {
+    (window as any).__searchShortcutBound = true;
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "/") return;
+      const active = document.activeElement;
+      if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement || (active instanceof HTMLElement && active.isContentEditable)) return;
+      e.preventDefault();
+      const allInputs = document.querySelectorAll<HTMLInputElement>(".search-input");
+      const visible = Array.from(allInputs).find(function (inp) { return inp.offsetParent !== null; });
+      if (visible) visible.focus();
+    });
+  }
 </script>
