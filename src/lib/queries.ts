@@ -171,9 +171,7 @@ function addTagConditions(
   }
 }
 
-export function filterCodes(
-  filters: CodeFilters,
-): CodeWithMeta[] {
+export function filterCodes(filters: CodeFilters): CodeWithMeta[] {
   const db = getDb();
   const conditions: string[] = [];
   const params: (number | string)[] = [];

@@ -149,8 +149,9 @@
   input.addEventListener("focus", updateHint);
   input.addEventListener("blur", updateHint);
 
-  if (!(window as any).__searchShortcutBound) {
-    (window as any).__searchShortcutBound = true;
+  const w = window as unknown as Record<string, boolean>;
+  if (!w.__searchShortcutBound) {
+    w.__searchShortcutBound = true;
     document.addEventListener("keydown", function (e) {
       if (e.key !== "/") return;
       const active = document.activeElement;
