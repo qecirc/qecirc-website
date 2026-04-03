@@ -1,7 +1,12 @@
 export const prerender = false;
 
 import type { APIRoute } from "astro";
-import { searchCodes, searchTools, formatCodeParams } from "../../lib/queries";
+import {
+  searchCodes,
+  searchTools,
+  searchCircuits,
+  formatCodeParams,
+} from "../../lib/queries";
 
 export const GET: APIRoute = ({ url }) => {
   const q = url.searchParams.get("q")?.trim() ?? "";
@@ -21,6 +26,21 @@ export const GET: APIRoute = ({ url }) => {
     href: `/codes/${c.slug}`,
   }));
 
+  const circuits = searchCircuits(q).map((ci) => ({
+    type: "circuit" as const,
+    name: ci.name,
+    slug: ci.slug,
+    params: [
+      ci.qubit_count != null ? `${ci.qubit_count}q` : null,
+      ci.depth != null ? `d=${ci.depth}` : null,
+    ]
+      .filter(Boolean)
+      .join(", "),
+    tags: ci.tags,
+    href: `/codes/${ci.code_slug}#${ci.slug}`,
+    subtitle: ci.code_name,
+  }));
+
   const tools = searchTools(q).map((t) => ({
     type: "tool" as const,
     name: t.name,
@@ -30,7 +50,7 @@ export const GET: APIRoute = ({ url }) => {
     href: `/tools`,
   }));
 
-  return new Response(JSON.stringify([...codes, ...tools]), {
+  return new Response(JSON.stringify([...codes, ...circuits, ...tools]), {
     headers: { "Content-Type": "application/json" },
   });
 };

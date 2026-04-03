@@ -6,10 +6,10 @@
     type="text"
     class="search-input w-48 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm placeholder-gray-400 focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none"
     placeholder="Search..."
-    aria-label="Search codes and tools"
+    aria-label="Search codes, circuits, and tools"
     autocomplete="off"
   />
-  <ul class="search-results absolute right-0 top-full mt-1 w-72 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg hidden z-50 max-h-80 overflow-y-auto">
+  <ul class="search-results absolute right-0 top-full mt-1 w-96 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg hidden z-50 max-h-80 overflow-y-auto">
   </ul>
 </div>
 
@@ -52,7 +52,7 @@
     }
 
     const res = await fetch("/api/search?q=" + encodeURIComponent(query));
-    const results: { type: string; name: string; slug: string; params: string; tags: string[]; href: string }[] = await res.json();
+    const results: { type: string; name: string; slug: string; params: string; tags: string[]; href: string; subtitle?: string }[] = await res.json();
 
     resultsList.innerHTML = "";
     activeIndex = -1;
@@ -72,11 +72,6 @@
       const topRow = document.createElement("div");
       topRow.className = "flex items-baseline gap-1.5";
 
-      const typeSpan = document.createElement("span");
-      typeSpan.className = "text-xs text-gray-400 dark:text-gray-500 uppercase";
-      typeSpan.textContent = item.type;
-      topRow.appendChild(typeSpan);
-
       const nameSpan = document.createElement("span");
       nameSpan.className = "font-medium";
       nameSpan.textContent = item.name;
@@ -91,17 +86,13 @@
 
       li.appendChild(topRow);
 
-      if (item.tags.length > 0) {
-        const tagsDiv = document.createElement("div");
-        tagsDiv.className = "flex flex-wrap gap-1 mt-0.5";
-        item.tags.forEach(function (tag) {
-          const tagSpan = document.createElement("span");
-          tagSpan.className = "inline-block rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0 text-xs text-gray-500 dark:text-gray-400";
-          tagSpan.textContent = tag;
-          tagsDiv.appendChild(tagSpan);
-        });
-        li.appendChild(tagsDiv);
-      }
+      const meta: string[] = [];
+      meta.push(item.type);
+      if (item.subtitle) meta.push(item.subtitle);
+      const metaDiv = document.createElement("div");
+      metaDiv.className = "text-xs text-gray-400 dark:text-gray-500";
+      metaDiv.textContent = meta.join(" · ");
+      li.appendChild(metaDiv);
 
       li.addEventListener("click", function () {
         navigateTo(item.href);

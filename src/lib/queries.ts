@@ -181,25 +181,42 @@ export function countAllCodes(): number {
   return row.count;
 }
 
+function tokenize(query: string): string[] {
+  return query
+    .trim()
+    .split(/\s+/)
+    .filter((t) => t.length > 0)
+    .map((t) => `%${t.replace(/[%_\\]/g, "\\$&")}%`);
+}
+
 function searchByType<T extends { id: number }>(
   table: string,
   taggableType: TaggableType,
   query: string,
   limit: number,
 ): (T & { tags: string[] })[] {
+  const patterns = tokenize(query);
+  if (patterns.length === 0) return [];
+
   const db = getDb();
-  const escaped = query.replace(/[%_\\]/g, "\\$&");
-  const pattern = `%${escaped}%`;
+  const tokenClauses = patterns.map(
+    () =>
+      `(c.name LIKE ? ESCAPE '\\' OR EXISTS (
+        SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+        WHERE tg.taggable_id = c.id AND tg.taggable_type = ? AND t.name LIKE ? ESCAPE '\\'
+      ))`,
+  );
+  const params: string[] = [];
+  for (const p of patterns) params.push(p, taggableType, p);
+
   const rows = db
     .prepare(
-      `SELECT DISTINCT c.* FROM ${table} c
-       LEFT JOIN taggings tg ON tg.taggable_id = c.id AND tg.taggable_type = ?
-       LEFT JOIN tags t ON t.id = tg.tag_id
-       WHERE c.name LIKE ? ESCAPE '\\' OR t.name LIKE ? ESCAPE '\\'
+      `SELECT c.* FROM ${table} c
+       WHERE ${tokenClauses.join(" AND ")}
        ORDER BY c.name
        LIMIT ${limit}`,
     )
-    .all(taggableType, pattern, pattern) as T[];
+    .all(...params) as T[];
   return withTags(rows, taggableType);
 }
 
@@ -252,7 +269,12 @@ export function filterCircuitsForCode(
   const params: (number | string)[] = [codeId];
 
   addConditions("gate_count", filters.gate_count, conditions, params);
-  addConditions("two_qubit_gate_count", filters.two_qubit_gate_count, conditions, params);
+  addConditions(
+    "two_qubit_gate_count",
+    filters.two_qubit_gate_count,
+    conditions,
+    params,
+  );
   addConditions("depth", filters.depth, conditions, params);
   addConditions("qubit_count", filters.qubit_count, conditions, params);
   addTagConditions(filters.tags, "circuit", conditions, params);
@@ -349,6 +371,44 @@ export function filterTools(filters: ToolFilters): ToolWithMeta[] {
 
 export function searchTools(query: string): (Tool & { tags: string[] })[] {
   return searchByType<Tool>("tools", "tool", query, 10);
+}
+
+export function searchCircuits(
+  query: string,
+): (Circuit & { tags: string[]; code_slug: string; code_name: string })[] {
+  const patterns = tokenize(query);
+  if (patterns.length === 0) return [];
+
+  const db = getDb();
+  const tokenClauses = patterns.map(
+    () =>
+      `(ci.name LIKE ? ESCAPE '\\' OR co.name LIKE ? ESCAPE '\\'
+        OR EXISTS (
+          SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+          WHERE tg.taggable_id = ci.id AND tg.taggable_type = 'circuit' AND t.name LIKE ? ESCAPE '\\'
+        )
+        OR EXISTS (
+          SELECT 1 FROM tools tl WHERE tl.id = ci.tool_id AND tl.name LIKE ? ESCAPE '\\'
+        ))`,
+  );
+  const params: string[] = [];
+  for (const p of patterns) params.push(p, p, p, p);
+
+  const rows = db
+    .prepare(
+      `SELECT ci.*, co.slug AS code_slug, co.name AS code_name
+       FROM circuits ci
+       JOIN codes co ON co.id = ci.code_id
+       WHERE ${tokenClauses.join(" AND ")}
+       ORDER BY ci.name
+       LIMIT 10`,
+    )
+    .all(...params) as (Circuit & { code_slug: string; code_name: string })[];
+
+  return rows.map((row) => ({
+    ...row,
+    tags: getTagsFor("circuit", row.id),
+  }));
 }
 
 export function getToolById(id: number): Tool | undefined {
