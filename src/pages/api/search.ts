@@ -32,7 +32,7 @@ export const GET: APIRoute = ({ url }) => {
     slug: ci.slug,
     params: [
       ci.qubit_count != null ? `${ci.qubit_count}q` : null,
-      ci.depth != null ? `d=${ci.depth}` : null,
+      ci.depth != null ? `${ci.depth}d` : null,
     ]
       .filter(Boolean)
       .join(", "),
