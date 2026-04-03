@@ -32,6 +32,7 @@ const SCHEMAS = {
       tool: "string",
       description: "string",
       gate_count: "number",
+      two_qubit_gate_count: "number",
       depth: "number",
       qubit_count: "number",
       crumble_url: "string",

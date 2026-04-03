@@ -161,6 +161,7 @@ class TestSummarizeCircuit:
         result = summarize_circuit(STEANE_STIM)
         assert result["qubit_count"] == 7
         assert result["gate_count"] > 0
+        assert result["two_qubit_gate_count"] > 0
         assert result["depth"] > 0
         assert "crumble" in result["crumble_url"]
         assert "quirk" in result["quirk_url"]

@@ -43,10 +43,10 @@ const logicalZ = safeParseMatrix(code.logical_z);
 const hasMatrices = hx || hz || logicalX || logicalZ;
 
 // Parse circuit filter params
-const { raw, parsed, errors, tags: selectedTags, focus } = parseFilterParams(Astro.url, ["gate_count", "depth", "qubit_count"] as const);
+const { raw, parsed, errors, tags: selectedTags, focus } = parseFilterParams(Astro.url, ["gate_count", "two_qubit_gate_count", "depth", "qubit_count"] as const);
 
 // Parse sort params
-const VALID_SORT_FIELDS = new Set<CircuitSortField>(["qubit_count", "depth", "gate_count"]);
+const VALID_SORT_FIELDS = new Set<CircuitSortField>(["qubit_count", "depth", "gate_count", "two_qubit_gate_count"]);
 const VALID_SORT_DIRS = new Set<SortDir>(["asc", "desc"]);
 const rawSort = Astro.url.searchParams.get("sort") ?? "";
 const rawSortDir = Astro.url.searchParams.get("sort_dir") ?? "";
@@ -123,6 +123,7 @@ const countLabel = hasFilters
 
   <CircuitFilter
     rawGateCount={raw.gate_count}
+    rawTwoQubitGateCount={raw.two_qubit_gate_count}
     rawDepth={raw.depth}
     rawQubitCount={raw.qubit_count}
     errors={errors}

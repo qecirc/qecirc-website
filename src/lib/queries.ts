@@ -66,6 +66,7 @@ const VALID_SORT_FIELDS: readonly string[] = [
   "qubit_count",
   "depth",
   "gate_count",
+  "two_qubit_gate_count",
 ];
 
 function buildOrderBy(sort?: CircuitSort): string {
@@ -251,6 +252,7 @@ export function filterCircuitsForCode(
   const params: (number | string)[] = [codeId];
 
   addConditions("gate_count", filters.gate_count, conditions, params);
+  addConditions("two_qubit_gate_count", filters.two_qubit_gate_count, conditions, params);
   addConditions("depth", filters.depth, conditions, params);
   addConditions("qubit_count", filters.qubit_count, conditions, params);
   addTagConditions(filters.tags, "circuit", conditions, params);

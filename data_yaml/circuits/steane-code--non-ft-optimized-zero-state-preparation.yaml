@@ -1,7 +1,8 @@
 name: Non-FT Optimized Zero State Preparation
 source: https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.6.020330
 gate_count: 11
-depth: 0
+two_qubit_gate_count: 8
+depth: 5
 qubit_count: 7
 crumble_url: https://algassert.com/crumble#circuit=H_0_3_5;CX_3_1_5_4_0_2_4_3_1_0_1_6_2_4_4_6_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H",1,1,"H",1,"H"],[1,"X",1,"•"],[1,1,1,1,"X","•"],["•",1,"X"],[1,1,1,"X","•"],["X","•"],[1,"•",1,1,1,1,"X"],[1,1,"•",1,"X"],[1,1,1,1,"•",1,"X"]]}

@@ -45,6 +45,7 @@ class TestComputeCircuitData:
         assert result["name"] == "Standard Encoding"
         assert result["slug"] == "standard-encoding"
         assert result["qubit_count"] == 7
+        assert result["two_qubit_gate_count"] == 9
 
     def test_bodies_has_stim(self):
         result = compute_circuit_data(STEANE_STIM)

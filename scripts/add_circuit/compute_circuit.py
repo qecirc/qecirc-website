@@ -65,6 +65,7 @@ def compute_circuit_data(
         "qubit_count": props.qubit_count,
         "depth": props.depth,
         "gate_count": props.gate_count,
+        "two_qubit_gate_count": props.two_qubit_gate_count,
         "crumble_url": crumble_url,
         "quirk_url": quirk_url,
         "original_stim": original_stim,

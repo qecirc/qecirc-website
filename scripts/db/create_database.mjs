@@ -48,8 +48,8 @@ const stmts = {
     INSERT INTO codes (name, slug, n, k, d, zoo_url, hx, hz, logical_x, logical_z, canonical_hash)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertCircuit: db.prepare(`
-    INSERT INTO circuits (code_id, name, slug, description, source, gate_count, depth, qubit_count, crumble_url, quirk_url, tool_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+    INSERT INTO circuits (code_id, name, slug, description, source, gate_count, two_qubit_gate_count, depth, qubit_count, crumble_url, quirk_url, tool_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertBody: db.prepare(`
     INSERT INTO circuit_bodies (circuit_id, format, body)
     VALUES (?, ?, ?)`),
@@ -241,6 +241,7 @@ try {
         data.description || "",
         data.source || "",
         data.gate_count ?? null,
+        data.two_qubit_gate_count ?? null,
         data.depth ?? null,
         data.qubit_count ?? null,
         data.crumble_url || null,

@@ -48,7 +48,7 @@ print(find_existing_code(Hx, Hz))
 from scripts.add_circuit import summarize_circuit
 
 print(summarize_circuit(circuit_text))
-# {'qubit_count': 7, 'gate_count': 12, 'depth': 8, 'crumble_url': '...', 'quirk_url': '...'}
+# {'qubit_count': 7, 'gate_count': 12, 'two_qubit_gate_count': 9, 'depth': 8, 'crumble_url': '...', 'quirk_url': '...'}
 ```
 
 ### Validate (optional)
@@ -239,7 +239,8 @@ name: Standard Encoding
 tool: mqt-qecc
 source: https://doi.org/10.1098/rspa.1996.0136
 gate_count: 12
-depth: 8
+two_qubit_gate_count: 9
+depth: 5
 qubit_count: 7
 crumble_url: "https://algassert.com/crumble#circuit=..."
 quirk_url: "https://algassert.com/quirk#circuit=..."

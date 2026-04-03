@@ -30,26 +30,84 @@ def _count_gates(instr: stim.CircuitInstruction) -> int:
     return len(instr.target_groups())
 
 
-def _compute_depth_and_gates(circ: stim.Circuit, repeat_multiplier: int = 1) -> tuple[int, int]:
-    """Recursively compute depth (TICK count) and gate count, respecting REPEAT blocks."""
+def _compute_depth_layered(circ: stim.Circuit, repeat_multiplier: int = 1) -> int:
+    """Compute depth by greedy layering when TICKs are absent.
+
+    Assigns each gate to the earliest layer where none of its qubits are busy.
+    """
     depth = 0
-    gate_count = 0
+    # qubit_index -> layer that qubit is next free
+    qubit_layer: dict[int, int] = {}
 
     for item in circ:
         if isinstance(item, stim.CircuitRepeatBlock):
-            inner_depth, inner_gates = _compute_depth_and_gates(
+            inner_depth = _compute_depth_layered(
+                item.body_copy(), repeat_multiplier * item.repeat_count
+            )
+            depth += inner_depth
+        else:
+            name = item.name
+            if name not in _ALL_GATES or not _ALL_GATES[name].is_unitary:
+                continue
+            for group in item.target_groups():
+                qubits = [t.value for t in group if t.is_qubit_target]
+                if not qubits:
+                    continue
+                earliest = max((qubit_layer.get(q, 0) for q in qubits), default=0)
+                layer = earliest + 1
+                for q in qubits:
+                    qubit_layer[q] = layer
+                if layer > depth:
+                    depth = layer
+
+    return depth * repeat_multiplier
+
+
+def _has_ticks(circ: stim.Circuit) -> bool:
+    """Check whether a circuit (or any nested REPEAT block) contains TICK instructions."""
+    for item in circ:
+        if isinstance(item, stim.CircuitRepeatBlock):
+            if _has_ticks(item.body_copy()):
+                return True
+        elif item.name == "TICK":
+            return True
+    return False
+
+
+def _compute_depth_and_gates(
+    circ: stim.Circuit, repeat_multiplier: int = 1
+) -> tuple[int, int, int]:
+    """Recursively compute depth, gate count, and 2Q gate count, respecting REPEAT blocks.
+
+    If the circuit contains TICKs (at any nesting level), depth is the TICK count.
+    Otherwise, depth is computed by greedy gate layering.
+    """
+    depth = 0
+    gate_count = 0
+    two_qubit_gate_count = 0
+
+    for item in circ:
+        if isinstance(item, stim.CircuitRepeatBlock):
+            inner_depth, inner_gates, inner_2q = _compute_depth_and_gates(
                 item.body_copy(), repeat_multiplier * item.repeat_count
             )
             depth += inner_depth
             gate_count += inner_gates
+            two_qubit_gate_count += inner_2q
         else:
             name = item.name
             if name == "TICK":
                 depth += repeat_multiplier
             elif name in _ALL_GATES and _ALL_GATES[name].is_unitary:
-                gate_count += _count_gates(item) * repeat_multiplier
+                n_apps = _count_gates(item) * repeat_multiplier
+                gate_count += n_apps
+                if _ALL_GATES[name].is_two_qubit_gate:
+                    two_qubit_gate_count += n_apps
 
-    return depth, gate_count
+    if not _has_ticks(circ):
+        depth = _compute_depth_layered(circ, repeat_multiplier)
+
+    return depth, gate_count, two_qubit_gate_count
 
 
 def circuit_properties(circuit_text: str) -> CircuitProperties:
@@ -59,15 +117,17 @@ def circuit_properties(circuit_text: str) -> CircuitProperties:
             qubit_count=0,
             depth=0,
             gate_count=0,
+            two_qubit_gate_count=0,
         )
 
     circ = stim.Circuit(circuit_text)
-    depth, gate_count = _compute_depth_and_gates(circ)
+    depth, gate_count, two_qubit_gate_count = _compute_depth_and_gates(circ)
 
     return CircuitProperties(
         qubit_count=circ.num_qubits,
         depth=depth,
         gate_count=gate_count,
+        two_qubit_gate_count=two_qubit_gate_count,
     )
 
 

@@ -96,20 +96,37 @@ class TestCircuitProperties:
         props = circuit_properties(CIRCUIT_WITH_TICKS)
         assert props.depth == 2
 
+    def test_depth_no_ticks(self):
+        props = circuit_properties(ENCODING_CIRCUIT)
+        # No TICKs → layered depth: H(q0) layer 1, CNOT(q0,q1) layer 2,
+        # CNOT(q0,q2) layer 3, CNOT(q0,q3) layer 4
+        assert props.depth == 4
+
     def test_gate_count(self):
         props = circuit_properties(ENCODING_CIRCUIT)
         # H + 3 x CNOT = 4 gates (QUBIT_COORDS excluded)
         assert props.gate_count == 4
 
+    def test_two_qubit_gate_count(self):
+        props = circuit_properties(ENCODING_CIRCUIT)
+        # 3 x CNOT (H is single-qubit, not counted)
+        assert props.two_qubit_gate_count == 3
+
     def test_empty_circuit(self):
         props = circuit_properties(EMPTY_CIRCUIT)
         assert props.qubit_count == 0
         assert props.gate_count == 0
+        assert props.two_qubit_gate_count == 0
 
     def test_repeat_gate_count(self):
         props = circuit_properties(CIRCUIT_WITH_REPEAT)
         # H(1) + 10*(CNOT + CNOT) + H(1) = 22
         assert props.gate_count == 22
+
+    def test_repeat_two_qubit_gate_count(self):
+        props = circuit_properties(CIRCUIT_WITH_REPEAT)
+        # 10*(CNOT + CNOT) = 20
+        assert props.two_qubit_gate_count == 20
 
     def test_repeat_depth(self):
         props = circuit_properties(CIRCUIT_WITH_REPEAT)
@@ -125,6 +142,11 @@ class TestCircuitProperties:
         props = circuit_properties(CIRCUIT_NESTED_REPEAT)
         # 5*(H) + 5*3*(CNOT) = 20
         assert props.gate_count == 20
+
+    def test_nested_repeat_two_qubit_gate_count(self):
+        props = circuit_properties(CIRCUIT_NESTED_REPEAT)
+        # 5*3*(CNOT) = 15
+        assert props.two_qubit_gate_count == 15
 
     def test_nested_repeat_depth(self):
         props = circuit_properties(CIRCUIT_NESTED_REPEAT)

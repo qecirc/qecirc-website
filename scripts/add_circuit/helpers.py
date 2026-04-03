@@ -106,7 +106,8 @@ def summarize_circuit(circuit: Union[stim.Circuit, str]) -> dict:
         circuit: STIM circuit (stim.Circuit object or string).
 
     Returns:
-        Dict with keys: qubit_count, gate_count, depth, crumble_url, quirk_url.
+        Dict with keys: qubit_count, gate_count, two_qubit_gate_count, depth,
+        crumble_url, quirk_url.
     """
     if isinstance(circuit, str):
         circ = stim.Circuit(circuit)
@@ -117,6 +118,7 @@ def summarize_circuit(circuit: Union[stim.Circuit, str]) -> dict:
     return {
         "qubit_count": props.qubit_count,
         "gate_count": props.gate_count,
+        "two_qubit_gate_count": props.two_qubit_gate_count,
         "depth": props.depth,
         "crumble_url": circ.to_crumble_url(),
         "quirk_url": circ.to_quirk_url(),

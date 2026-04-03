@@ -28,6 +28,7 @@ class CircuitProperties:
     qubit_count: int
     depth: int
     gate_count: int
+    two_qubit_gate_count: int
 
 
 @dataclass

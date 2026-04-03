@@ -4,9 +4,10 @@ import { tagToggleUrl } from "../lib/url";
 
 interface Props {
   rawGateCount: string;
+  rawTwoQubitGateCount: string;
   rawDepth: string;
   rawQubitCount: string;
-  errors: { gate_count: boolean; depth: boolean; qubit_count: boolean };
+  errors: { gate_count: boolean; two_qubit_gate_count: boolean; depth: boolean; qubit_count: boolean };
   hasFilters: boolean;
   focus: string;
   allTags: TagWithCount[];
@@ -16,8 +17,8 @@ interface Props {
   sort: CircuitSort;
 }
 
-const { rawGateCount, rawDepth, rawQubitCount, errors, hasFilters, focus, allTags, selectedTags, currentUrl, codeSlug, sort } = Astro.props;
-const anyError = errors.gate_count || errors.depth || errors.qubit_count;
+const { rawGateCount, rawTwoQubitGateCount, rawDepth, rawQubitCount, errors, hasFilters, focus, allTags, selectedTags, currentUrl, codeSlug, sort } = Astro.props;
+const anyError = errors.gate_count || errors.two_qubit_gate_count || errors.depth || errors.qubit_count;
 const selectedSet = new Set(selectedTags);
 const basePath = `/codes/${codeSlug}`;
 
@@ -28,6 +29,7 @@ function inputClass(hasError: boolean): string {
 
 const sortLabels: { field: CircuitSortField; label: string; activeClass: string }[] = [
   { field: "gate_count", label: "Gates", activeClass: "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700" },
+  { field: "two_qubit_gate_count", label: "2Q Gates", activeClass: "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700" },
   { field: "depth", label: "Depth", activeClass: "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700" },
   { field: "qubit_count", label: "Qubits", activeClass: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700" },
 ];
@@ -60,16 +62,21 @@ function sortToggleUrl(field: CircuitSortField): string {
 
 const tagUrl = (tag: string) => tagToggleUrl(currentUrl.search, selectedTags, tag, basePath);
 const gateSort = labelInfo("gate_count");
+const twoQubitGateSort = labelInfo("two_qubit_gate_count");
 const depthSort = labelInfo("depth");
 const qubitSort = labelInfo("qubit_count");
 ---
 
 <form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2"
-  data-filter-fields="gate_count,depth,qubit_count" data-filter-focus={focus} data-base-path={basePath} data-preserve-sort>
+  data-filter-fields="gate_count,two_qubit_gate_count,depth,qubit_count" data-filter-focus={focus} data-base-path={basePath} data-preserve-sort>
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
       <a href={sortToggleUrl("gate_count")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${gateSort.cls}`}>Gates{gateSort.arrow}</a>
       <input type="text" name="gate_count" value={rawGateCount} class={inputClass(errors.gate_count)} placeholder=">10" data-filter />
+    </div>
+    <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
+      <a href={sortToggleUrl("two_qubit_gate_count")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${twoQubitGateSort.cls}`}>2Q Gates{twoQubitGateSort.arrow}</a>
+      <input type="text" name="two_qubit_gate_count" value={rawTwoQubitGateCount} class={inputClass(errors.two_qubit_gate_count)} placeholder=">5" data-filter />
     </div>
     <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
       <a href={sortToggleUrl("depth")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${depthSort.cls}`}>Depth{depthSort.arrow}</a>

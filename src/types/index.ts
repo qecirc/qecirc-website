@@ -21,6 +21,7 @@ export interface Circuit {
   description: string | null;
   source: string;
   gate_count: number | null;
+  two_qubit_gate_count: number | null;
   depth: number | null;
   qubit_count: number | null;
   crumble_url: string | null;
@@ -62,7 +63,7 @@ export interface CodeFilters {
   tags?: string[];
 }
 
-export type CircuitSortField = "qubit_count" | "depth" | "gate_count";
+export type CircuitSortField = "qubit_count" | "depth" | "gate_count" | "two_qubit_gate_count";
 export type SortDir = "asc" | "desc";
 
 export interface CircuitSort {
@@ -72,6 +73,7 @@ export interface CircuitSort {
 
 export interface CircuitFilters {
   gate_count?: FilterCondition[];
+  two_qubit_gate_count?: FilterCondition[];
   depth?: FilterCondition[];
   qubit_count?: FilterCondition[];
   tags?: string[];

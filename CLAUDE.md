@@ -46,10 +46,10 @@ tools
 
 circuits
   id, code_id → codes, name, slug, description, source,
-  gate_count, depth, qubit_count,
+  gate_count, two_qubit_gate_count, depth, qubit_count,
   crumble_url, quirk_url, tool_id → tools, created_at
   -- source: provenance (DOI, URL, or citation)
-  -- gate_count, depth, qubit_count: numeric metrics for filtering
+  -- gate_count, two_qubit_gate_count, depth, qubit_count: numeric metrics for filtering
   -- crumble_url, quirk_url: optional external visualization links
   -- tool_id: optional link to tool used to create the circuit
 
