@@ -67,7 +67,7 @@ const depthSort = labelInfo("depth");
 const qubitSort = labelInfo("qubit_count");
 ---
 
-<form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2"
+<form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2 sm:sticky sm:top-0 sm:z-10 bg-white dark:bg-gray-950 sm:border-b sm:border-gray-200 sm:dark:border-gray-800 sm:pb-4 sm:-mb-2"
   data-filter-fields="gate_count,two_qubit_gate_count,depth,qubit_count" data-filter-focus={focus} data-base-path={basePath} data-preserve-sort>
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
