@@ -89,10 +89,8 @@ const qubitSort = labelInfo("qubit_count");
     <div class="ml-auto text-xs" data-filter-status>
       {anyError ? (
         <span data-filter-error class="text-red-500">Invalid filter</span>
-      ) : hasFilters ? (
+      ) : hasFilters && (
         <a href={basePath} class="text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 underline">Clear</a>
-      ) : (
-        <span class="text-gray-400">e.g. 7, &gt;3, &lt;=10, !=5</span>
       )}
       {!anyError && <span data-filter-error class="text-red-500 hidden">Invalid filter</span>}
     </div>
