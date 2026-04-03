@@ -84,4 +84,5 @@ export interface TagWithCount {
   count: number;
 }
 
+export type CodeWithMeta = Code & { tags: string[]; circuit_count: number };
 export type ToolWithMeta = Tool & { tags: string[]; circuit_count: number };

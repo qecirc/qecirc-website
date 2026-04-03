@@ -1,6 +1,7 @@
 import { getDb } from "./db";
 import type {
   Code,
+  CodeWithMeta,
   Circuit,
   CircuitBody,
   CircuitFilters,
@@ -49,10 +50,27 @@ function withTags<T extends { id: number }>(
   }));
 }
 
-export function getAllCodes(): (Code & { tags: string[] })[] {
+function withCircuitCounts<T extends { id: number }>(
+  items: T[],
+  fkColumn: "code_id" | "tool_id",
+): (T & { circuit_count: number })[] {
+  if (items.length === 0) return [];
+  const db = getDb();
+  const placeholders = items.map(() => "?").join(",");
+  const rows = db
+    .prepare(
+      `SELECT ${fkColumn} AS fk, COUNT(*) AS count FROM circuits
+       WHERE ${fkColumn} IN (${placeholders}) GROUP BY ${fkColumn}`,
+    )
+    .all(items.map((i) => i.id)) as { fk: number; count: number }[];
+  const counts = new Map(rows.map((r) => [r.fk, r.count]));
+  return items.map((i) => ({ ...i, circuit_count: counts.get(i.id) ?? 0 }));
+}
+
+export function getAllCodes(): CodeWithMeta[] {
   const db = getDb();
   const codes = db.prepare("SELECT * FROM codes ORDER BY name").all() as Code[];
-  return withTags(codes, "code");
+  return withCircuitCounts(withTags(codes, "code"), "code_id");
 }
 
 export function getCodeBySlug(slug: string): Code | undefined {
@@ -155,7 +173,7 @@ function addTagConditions(
 
 export function filterCodes(
   filters: CodeFilters,
-): (Code & { tags: string[] })[] {
+): CodeWithMeta[] {
   const db = getDb();
   const conditions: string[] = [];
   const params: (number | string)[] = [];
@@ -170,7 +188,7 @@ export function filterCodes(
   const codes = db
     .prepare(`SELECT * FROM codes c ${where} ORDER BY c.name`)
     .all(...params) as Code[];
-  return withTags(codes, "code");
+  return withCircuitCounts(withTags(codes, "code"), "code_id");
 }
 
 export function countAllCodes(): number {
@@ -325,14 +343,7 @@ export function getBodiesForCircuits(
 // --- Tool queries ---
 
 function enrichTools(tools: Tool[]): ToolWithMeta[] {
-  const db = getDb();
-  return tools.map((t) => {
-    const tags = getTagsFor("tool", t.id);
-    const row = db
-      .prepare("SELECT COUNT(*) as count FROM circuits WHERE tool_id = ?")
-      .get(t.id) as { count: number };
-    return { ...t, tags, circuit_count: row.count };
-  });
+  return withCircuitCounts(withTags(tools, "tool"), "tool_id");
 }
 
 export function getAllTools(): ToolWithMeta[] {
