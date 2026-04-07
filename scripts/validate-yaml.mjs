@@ -175,6 +175,16 @@ for (const [dir, schema] of Object.entries(SCHEMAS)) {
           `${relPath}: no body file found (expected ${BODY_EXTENSIONS.join(", ")})`,
         );
       }
+
+      // Check tool reference
+      if (data && data.tool) {
+        const toolFile = path.join(DATA_DIR, "tools", data.tool + ".yaml");
+        if (!fs.existsSync(toolFile)) {
+          allErrors.push(
+            `${relPath}: tool '${data.tool}' not found in data_yaml/tools/`,
+          );
+        }
+      }
     }
   }
 }

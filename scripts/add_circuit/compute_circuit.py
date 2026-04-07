@@ -2,6 +2,7 @@
 Circuit-level computation: compact stim, links, format conversions.
 """
 
+import warnings
 from typing import Optional
 
 import stim
@@ -87,7 +88,8 @@ def _compact_circuit(circ):
         from mqt.qecc.circuit_synthesis.circuit_utils import compact_stim_circuit
 
         return compact_stim_circuit(circ)
-    except Exception:
+    except Exception as e:
+        warnings.warn(f"STIM compaction failed, using original: {e}")
         return circ
 
 
@@ -95,7 +97,8 @@ def _to_qasm(circ):
     """Convert stim circuit to OpenQASM 2.0 string."""
     try:
         return circ.to_qasm(open_qasm_version=2, skip_dets_and_obs=True)
-    except Exception:
+    except Exception as e:
+        warnings.warn(f"QASM conversion failed: {e}")
         return ""
 
 
@@ -106,5 +109,6 @@ def _to_cirq_str(circ):
 
         cirq_circ = stim_circuit_to_cirq_circuit(circ)
         return str(cirq_circ)
-    except Exception:
+    except Exception as e:
+        warnings.warn(f"Cirq conversion failed: {e}")
         return ""
