@@ -162,6 +162,7 @@ Build the tag vocabulary dynamically by reading the YAML files — do not rely o
 ### 4b. Auto-tags (already applied by the pipeline)
 
 The pipeline auto-detects and adds to the **code** YAML:
+
 - `CSS` — if Hx·Hz^T = 0 mod 2
 - `self-dual` — if rowspace(Hx) = rowspace(Hz)
 
@@ -220,16 +221,16 @@ npm run db:create && npm run dev
 
 ## Error handling
 
-| Condition                             | Action                                                    |
-| ------------------------------------- | --------------------------------------------------------- |
-| Source missing                        | Hard stop — ask the user to provide it                    |
-| Distance missing                      | Hard stop — ask the user to provide it                    |
-| Matrices have different column counts | Hard stop — report the mismatch                           |
-| Circuit validation fails              | Stop — report details, suggest checking qubit ordering    |
+| Condition                             | Action                                                           |
+| ------------------------------------- | ---------------------------------------------------------------- |
+| Source missing                        | Hard stop — ask the user to provide it                           |
+| Distance missing                      | Hard stop — ask the user to provide it                           |
+| Matrices have different column counts | Hard stop — report the mismatch                                  |
+| Circuit validation fails              | Stop — report details, suggest checking qubit ordering           |
 | Non-trivial qubit permutation         | Inform user, show permutation, proceed (relabeling is automatic) |
-| Tool slug not in `data_yaml/tools/`   | Ask user to confirm; note a new tool YAML may be needed   |
-| Zoo URL not found                     | Continue without it — not required                        |
-| Zoo page fetch fails                  | Continue — tag manually with user input                   |
+| Tool slug not in `data_yaml/tools/`   | Ask user to confirm; note a new tool YAML may be needed          |
+| Zoo URL not found                     | Continue without it — not required                               |
+| Zoo page fetch fails                  | Continue — tag manually with user input                          |
 
 ---
 
@@ -239,6 +240,7 @@ npm run db:create && npm run dev
 - [ ] Code distance provided and correct
 - [ ] Code name matches canonical name (Zoo or literature)
 - [ ] Circuit name is descriptive (not "Circuit 1")
+- [ ] `qec_id` auto-assigned (unique, not reused from a removed circuit)
 - [ ] Code tags: `CSS`/`stabilizer` + family if known from Zoo
 - [ ] Circuit tags: functionality + fault-tolerance status
 - [ ] No optimality tags unless explicitly claimed by user or source

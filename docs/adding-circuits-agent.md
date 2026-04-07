@@ -37,7 +37,7 @@ You confirm before anything is written.
 
 ### Phase 3: Generate YAML files
 
-The agent calls the Python API to write the code YAML, circuit YAML, and body files (`.stim`, `.qasm`, `.cirq`) to `data_yaml/`.
+The agent calls the Python API to write the code YAML, circuit YAML, and body files (`.stim`, `.qasm`, `.cirq`) to `data_yaml/`. Each circuit is automatically assigned a unique `qec_id` (displayed as `#N` in the UI). This ID is permanent and must never be reused.
 
 ### Phase 4: Zoo lookup and tagging
 
@@ -54,26 +54,26 @@ The agent shows you the final YAML files. You can request edits. Once you approv
 
 ## What you need to provide
 
-| Input           | Required | Notes                                                |
-| --------------- | -------- | ---------------------------------------------------- |
-| Hx matrix       | yes      | Text, JSON, numpy-style, or file path                |
-| Hz matrix       | yes      | Must have same number of columns as Hx               |
-| STIM circuit    | yes      | Text, file path, or stim string                      |
-| Code distance   | yes      | Integer                                              |
-| Source          | yes      | DOI, URL, or citation — provenance is required       |
-| Code name       | no       | Agent will ask; can look up Zoo if you don't know    |
-| Zoo URL         | no       | Agent can search errorcorrectionzoo.org              |
-| Circuit name    | no       | Agent will ask for a descriptive name                |
-| Tool            | no       | e.g. `mqt-qecc`, `cliffordopt`, `flag-at-origin`    |
-| Description     | no       | One-sentence description                             |
+| Input         | Required | Notes                                             |
+| ------------- | -------- | ------------------------------------------------- |
+| Hx matrix     | yes      | Text, JSON, numpy-style, or file path             |
+| Hz matrix     | yes      | Must have same number of columns as Hx            |
+| STIM circuit  | yes      | Text, file path, or stim string                   |
+| Code distance | yes      | Integer                                           |
+| Source        | yes      | DOI, URL, or citation — provenance is required    |
+| Code name     | no       | Agent will ask; can look up Zoo if you don't know |
+| Zoo URL       | no       | Agent can search errorcorrectionzoo.org           |
+| Circuit name  | no       | Agent will ask for a descriptive name             |
+| Tool          | no       | e.g. `mqt-qecc`, `cliffordopt`, `flag-at-origin`  |
+| Description   | no       | One-sentence description                          |
 
 ## Tag vocabulary
 
 The agent only uses tags that already exist in the library. Current tags:
 
-| Level   | Tags                                                                                   |
-| ------- | -------------------------------------------------------------------------------------- |
-| Code    | `CSS`, `stabilizer`, `self-dual`, `color-code`, `concatenated`                         |
-| Circuit | `encoding`, `state-preparation`, `syndrome-extraction`, `ft`, `non-ft`, `flag`   |
+| Level   | Tags                                                                           |
+| ------- | ------------------------------------------------------------------------------ |
+| Code    | `CSS`, `stabilizer`, `self-dual`, `color-code`, `concatenated`                 |
+| Circuit | `encoding`, `state-preparation`, `syndrome-extraction`, `ft`, `non-ft`, `flag` |
 
 If the Zoo or user suggests a tag not in this list, the agent will ask before adding it.

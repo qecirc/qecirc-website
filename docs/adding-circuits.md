@@ -130,15 +130,16 @@ print(result.summary())
 
 #### Return value
 
-| Field           | Type        | Description                          |
-| --------------- | ----------- | ------------------------------------ |
-| `code_name`     | `str`       | Code name                            |
-| `code_slug`     | `str`       | Code slug                            |
-| `code_status`   | `str`       | `"new"` or `"existing"`              |
-| `circuit_name`  | `str`       | Circuit name                         |
-| `circuit_slug`  | `str`       | Circuit slug                         |
-| `files_written` | `list[str]` | Paths of files written               |
-| `dry_run`       | `bool`      | Whether this was a dry run           |
+| Field           | Type        | Description                           |
+| --------------- | ----------- | ------------------------------------- |
+| `code_name`     | `str`       | Code name                             |
+| `code_slug`     | `str`       | Code slug                             |
+| `code_status`   | `str`       | `"new"` or `"existing"`               |
+| `circuit_name`  | `str`       | Circuit name                          |
+| `circuit_slug`  | `str`       | Circuit slug                          |
+| `qec_id`        | `int`       | Assigned circuit ID (displayed as #N) |
+| `files_written` | `list[str]` | Paths of files written                |
+| `dry_run`       | `bool`      | Whether this was a dry run            |
 
 ### Option B: CLI
 
@@ -167,21 +168,21 @@ The pipeline only auto-assigns mathematically verified code tags (`CSS`, `self-d
 
 Add a `tags:` list. Common code tags:
 
-| Category   | Examples                                                  |
-| ---------- | --------------------------------------------------------- |
-| Type       | `CSS`, `stabilizer`                                       |
-| Family     | `color-code`, `surface-code`, `toric-code`, `LDPC`        |
-| Properties | `self-dual`, `concatenated`                               |
+| Category   | Examples                                           |
+| ---------- | -------------------------------------------------- |
+| Type       | `CSS`, `stabilizer`                                |
+| Family     | `color-code`, `surface-code`, `toric-code`, `LDPC` |
+| Properties | `self-dual`, `concatenated`                        |
 
 ### Circuit tags (`data_yaml/circuits/<code-slug>--<circuit-slug>.yaml`)
 
 Add a `tags:` list. Common circuit tags:
 
-| Category        | Examples                                            |
-| --------------- | --------------------------------------------------- |
+| Category        | Examples                                               |
+| --------------- | ------------------------------------------------------ |
 | Functionality   | `encoding`, `state-preparation`, `syndrome-extraction` |
-| Fault tolerance | `ft`, `non-ft`                                      |
-| Properties      | `gate-optimal`, `depth-optimal`, `flag`       |
+| Fault tolerance | `ft`, `non-ft`                                         |
+| Properties      | `gate-optimal`, `depth-optimal`, `flag`                |
 
 Check existing tags with:
 
@@ -211,6 +212,7 @@ npm run db:create && npm run dev  # Rebuild database and restart
 - Circuit metrics (gate count, depth, qubit count)
 - Compact STIM, QASM, and Cirq format conversions
 - Crumble and Quirk visualization URLs
+- **Circuit ID (`qec_id`)**: auto-assigned as `max(existing IDs) + 1` — permanent, never reused
 - Dedup: if the code already exists, the pipeline detects qubit ordering differences and relabels the circuit to match. Check `AddCircuitResult.qubit_permutation` to see if relabeling was applied (`None` = no relabeling, `list` = permutation applied)
 - Use `find_existing_code_full()` to check for qubit permutations before generating files
 
@@ -235,6 +237,7 @@ tags: [CSS, stabilizer, color-code]
 ### Circuit (`data_yaml/circuits/<code-slug>--<circuit-slug>.yaml`)
 
 ```yaml
+qec_id: 1
 name: Standard Encoding
 tool: mqt-qecc
 source: https://doi.org/10.1098/rspa.1996.0136
@@ -246,6 +249,8 @@ crumble_url: "https://algassert.com/crumble#circuit=..."
 quirk_url: "https://algassert.com/quirk#circuit=..."
 tags: [encoding]
 ```
+
+The `qec_id` is a **permanent, globally unique** integer identifier for the circuit (displayed as `#1` in the UI). It is auto-assigned by the generation pipeline (`max(existing IDs) + 1`). Once assigned, a `qec_id` must **never be reused or reassigned**, even if a circuit is removed.
 
 Body files (`.stim`, `.qasm`, `.cirq`) share the same stem as the circuit YAML.
 
