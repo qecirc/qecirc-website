@@ -1,0 +1,27 @@
+name: Data Correction
+description: Flag incorrect data in an existing circuit or code.
+labels: [data-correction]
+body:
+  - type: input
+    id: entry
+    attributes:
+      label: Which circuit or code?
+      description: Name, #ID, or URL of the affected entry.
+      placeholder: "Steane Code #1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: whats-wrong
+    attributes:
+      label: What's wrong?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested-correction
+    attributes:
+      label: Suggested correction
+      description: What should it be instead?
+    validations:
+      required: false

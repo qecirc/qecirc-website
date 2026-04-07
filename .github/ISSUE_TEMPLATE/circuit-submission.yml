@@ -1,0 +1,54 @@
+name: Circuit Submission
+description: Submit a new quantum error correction circuit. One issue per circuit.
+labels: [circuit-submission]
+body:
+  - type: textarea
+    id: stim-circuit
+    attributes:
+      label: STIM circuit
+      description: Paste the circuit in [STIM format](https://github.com/quantumlib/Stim).
+      placeholder: |
+        H 0 1 2
+        CX 0 3 1 4 2 5
+        M 3 4 5
+      render: stim
+    validations:
+      required: true
+
+  - type: input
+    id: distance
+    attributes:
+      label: Code distance
+      placeholder: "3"
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: DOI, URL, or citation for the circuit's origin.
+      placeholder: "https://doi.org/10.1098/rspa.1996.0136"
+    validations:
+      required: true
+
+  - type: textarea
+    id: check-matrices
+    attributes:
+      label: Check matrices (Hx, Hz)
+      description: Optional for encoding circuits — these can be derived automatically.
+      placeholder: |
+        Hx: [[1,1,0,0,1,1,0], [1,0,1,0,1,0,1], [0,0,0,1,1,1,1]]
+        Hz: [[1,1,0,0,1,1,0], [1,0,1,0,1,0,1], [0,0,0,1,1,1,1]]
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional info
+      description: Any other context that helps us add this circuit.
+      placeholder: |
+        Code name, QEC Zoo URL, tool used, circuit name, description, etc.
+    validations:
+      required: false
