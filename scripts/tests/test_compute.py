@@ -93,6 +93,67 @@ class TestComputeCodeData:
         result = compute_code_data(steane_H, steane_H, d=3, zoo_url="https://example.com")
         assert result["code"]["zoo_url"] == "https://example.com"
 
+    def test_new_code_returns_nontrivial_permutation(self):
+        """New code with non-identity canonical perm returns qubit_permutation."""
+        # Non-CSS [[5,1,3]] code — columns are distinguishable, so shuffling
+        # produces a non-identity canonical permutation.
+        Hx = np.array([
+            [1, 0, 0, 1, 0],
+            [0, 1, 0, 0, 1],
+            [1, 0, 1, 0, 0],
+            [0, 1, 0, 1, 0],
+        ])
+        Hz = np.array([
+            [0, 1, 1, 0, 0],
+            [0, 0, 1, 1, 0],
+            [0, 0, 0, 1, 1],
+            [1, 0, 0, 0, 1],
+        ])
+        # Shuffle columns
+        col_order = [4, 2, 0, 3, 1]
+        Hx_shuffled = Hx[:, col_order]
+        Hz_shuffled = Hz[:, col_order]
+
+        result_orig = compute_code_data(Hx, Hz, d=3)
+        result_shuf = compute_code_data(Hx_shuffled, Hz_shuffled, d=3)
+
+        # Same canonical hash regardless of column order
+        assert result_orig["code"]["canonical_hash"] == result_shuf["code"]["canonical_hash"]
+        # At least one of them should have a non-trivial permutation
+        assert (
+            result_orig["qubit_permutation"] is not None
+            or result_shuf["qubit_permutation"] is not None
+        )
+
+    def test_logicals_consistent_with_canonical_hx_hz(self):
+        """Logicals must satisfy Hz @ Lx.T = 0 and Hx @ Lz.T = 0 mod 2."""
+        # Non-CSS [[5,1,3]] code
+        Hx = np.array([
+            [1, 0, 0, 1, 0],
+            [0, 1, 0, 0, 1],
+            [1, 0, 1, 0, 0],
+            [0, 1, 0, 1, 0],
+        ])
+        Hz = np.array([
+            [0, 1, 1, 0, 0],
+            [0, 0, 1, 1, 0],
+            [0, 0, 0, 1, 1],
+            [1, 0, 0, 0, 1],
+        ])
+        result = compute_code_data(Hx, Hz, d=3)
+        code = result["code"]
+        canon_Hx = np.array(code["hx"])
+        canon_Hz = np.array(code["hz"])
+        Lx = np.array(code["logical_x"])
+        Lz = np.array(code["logical_z"])
+        # Lx in ker(Hz): Hz @ Lx.T = 0 mod 2
+        assert np.all(canon_Hz @ Lx.T % 2 == 0)
+        # Lz in ker(Hx): Hx @ Lz.T = 0 mod 2
+        assert np.all(canon_Hx @ Lz.T % 2 == 0)
+        # Symplectic inner product: Lx @ Lz.T = I_k mod 2
+        k = Lx.shape[0]
+        assert np.array_equal(Lx @ Lz.T % 2, np.eye(k, dtype=int))
+
     def test_yaml_dedup_existing(self, steane_H):
         """When code exists in data_yaml/codes/, status is 'existing'."""
         from scripts.add_circuit.code_identify import canonical_hash

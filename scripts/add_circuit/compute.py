@@ -36,7 +36,8 @@ def compute_code_data(
     Compute all code-level data from Hx, Hz matrices.
 
     Returns a dict with keys "code" (matching YAML code section) and
-    "qubit_permutation" (mapping to canonical form, or None for new codes).
+    "qubit_permutation" (mapping user qubits to canonical form, or None
+    when the permutation is identity).
     """
     # 1. Parameters
     params = extract_params(Hx, Hz)
@@ -45,8 +46,8 @@ def compute_code_data(
     canon_Hx, canon_Hz, qubit_perm = canonical_form(Hx, Hz)
     c_hash = canonical_hash(Hx, Hz)
 
-    # 3. Logical operators
-    Lx, Lz = _compute_logicals(Hx, Hz, params.is_css, d)
+    # 3. Logical operators (use canonical matrices so logicals match stored Hx/Hz)
+    Lx, Lz = _compute_logicals(canon_Hx, canon_Hz, params.is_css, d)
 
     # 4. Tags
     params_with_d = CodeParams(n=params.n, k=params.k, is_css=params.is_css, d=d)
@@ -77,6 +78,18 @@ def compute_code_data(
             if not slug:
                 slug = existing_slug
 
+    # For existing codes, use the yaml dedup permutation (maps user qubits to
+    # the stored canonical form). For new codes, use the canonical_form
+    # permutation (maps user qubits to the new canonical form). In both cases
+    # the circuit must be relabeled to match the stored Hx/Hz.
+    if code_status == "existing":
+        final_perm = yaml_qubit_perm  # already normalized to None for identity
+    else:
+        final_perm = qubit_perm
+        # Normalize identity permutation to None (no relabeling needed)
+        if final_perm == list(range(len(final_perm))):
+            final_perm = None
+
     return {
         "code": {
             "status": code_status,
@@ -95,10 +108,7 @@ def compute_code_data(
             "canonical_hash": c_hash,
             "tags": [{"name": t.name, "status": t.status} for t in tags],
         },
-        # Only pass qubit_permutation when the code already exists in YAML
-        # (circuits need relabeling to match the stored canonical form).
-        # For new codes the canonical matrices are stored directly, no relabeling needed.
-        "qubit_permutation": yaml_qubit_perm,
+        "qubit_permutation": final_perm,
     }
 
 
