@@ -1,4 +1,11 @@
-import type { CircuitFilters, CircuitSort, CircuitSortField, FilterCondition, SortDir } from "../types";
+import type {
+  CircuitFilters,
+  CircuitSort,
+  CircuitSortField,
+  FilterCondition,
+  SortDir,
+} from "../types";
+import { CIRCUIT_SORT_FIELDS } from "./constants";
 import { parseFilterString } from "./queries";
 
 /**
@@ -37,18 +44,33 @@ export function parseFilterParams<F extends string>(
   return { raw, parsed, errors, tags, focus };
 }
 
-const CIRCUIT_FILTER_FIELDS = ["gate_count", "two_qubit_gate_count", "depth", "qubit_count"] as const;
-const VALID_SORT_FIELDS = new Set<CircuitSortField>(["qubit_count", "depth", "gate_count", "two_qubit_gate_count"]);
+const CIRCUIT_FILTER_FIELDS = [
+  "gate_count",
+  "two_qubit_gate_count",
+  "depth",
+  "qubit_count",
+] as const;
 const VALID_SORT_DIRS = new Set<SortDir>(["asc", "desc"]);
 
 /** Parse circuit filters and sort params from a URL. */
-export function parseCircuitParams(url: URL): { filters: CircuitFilters; sort: CircuitSort } & ReturnType<typeof parseFilterParams<(typeof CIRCUIT_FILTER_FIELDS)[number]>> {
+export function parseCircuitParams(
+  url: URL,
+): { filters: CircuitFilters; sort: CircuitSort } & ReturnType<
+  typeof parseFilterParams<(typeof CIRCUIT_FILTER_FIELDS)[number]>
+> {
   const result = parseFilterParams(url, CIRCUIT_FILTER_FIELDS);
 
   const rawSort = url.searchParams.get("sort") ?? "";
   const rawSortDir = url.searchParams.get("sort_dir") ?? "";
-  const sort: CircuitSort = VALID_SORT_FIELDS.has(rawSort as CircuitSortField)
-    ? { field: rawSort as CircuitSortField, dir: VALID_SORT_DIRS.has(rawSortDir as SortDir) ? rawSortDir as SortDir : "desc" }
+  const sort: CircuitSort = CIRCUIT_SORT_FIELDS.includes(
+    rawSort as CircuitSortField,
+  )
+    ? {
+        field: rawSort as CircuitSortField,
+        dir: VALID_SORT_DIRS.has(rawSortDir as SortDir)
+          ? (rawSortDir as SortDir)
+          : "desc",
+      }
     : { field: "gate_count", dir: "desc" };
 
   const filters: CircuitFilters = {

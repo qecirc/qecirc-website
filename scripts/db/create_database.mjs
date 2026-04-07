@@ -24,15 +24,8 @@ const root = path.resolve(
 const dbPath = path.join(root, "data", "qecirc.db");
 const dataDir = path.join(root, "data_yaml");
 
-// --- 1. Delete existing DB ---
-for (const suffix of ["", "-wal", "-shm"]) {
-  const file = dbPath + suffix;
-  if (fs.existsSync(file)) fs.unlinkSync(file);
-}
-console.log("Database removed.");
-
-// --- 2. Run migrations ---
-execSync("node scripts/db/migrate.mjs", { cwd: root, stdio: "inherit" });
+// --- 1. Reset DB (delete + migrate) ---
+execSync("node scripts/db/reset.mjs", { cwd: root, stdio: "inherit" });
 
 // --- 3. Read YAML files ---
 const db = new Database(dbPath);

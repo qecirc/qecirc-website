@@ -1,28 +1,59 @@
 ---
+import type { TagWithCount } from "../types";
 import { tagToggleUrl } from "../lib/url";
 
 interface Props {
-  tags: string[];
+  tags: string[] | TagWithCount[];
   baseUrl?: URL;
   basePath?: string;
+  selectedTags?: string[];
+  showCount?: boolean;
+  class?: string;
 }
 
-const { tags, baseUrl, basePath = "/" } = Astro.props;
+const { tags, baseUrl, basePath = "/", selectedTags, showCount = false, class: className } = Astro.props;
+const selectedSet = selectedTags ? new Set(selectedTags) : null;
+const currentSearch = baseUrl?.search ?? "";
+const currentTags = baseUrl?.searchParams.getAll("tag") ?? [];
 
 function tagUrl(tag: string): string {
   if (baseUrl) {
-    return tagToggleUrl(baseUrl.search, baseUrl.searchParams.getAll("tag"), tag, basePath);
+    return tagToggleUrl(currentSearch, selectedTags ?? currentTags, tag, basePath);
   }
   return basePath + "?tag=" + encodeURIComponent(tag);
+}
+
+function tagName(tag: string | TagWithCount): string {
+  return typeof tag === "string" ? tag : tag.name;
+}
+
+function tagCount(tag: string | TagWithCount): number | undefined {
+  return typeof tag === "string" ? undefined : tag.count;
 }
 ---
 
 {tags.length > 0 && (
-  <div class="flex flex-wrap gap-1.5">
-    {tags.map((tag) => (
-      <a href={tagUrl(tag)} class="inline-block rounded bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-        {tag}
-      </a>
-    ))}
+  <div class:list={["flex flex-wrap gap-1.5", className]}>
+    {tags.map((tag) => {
+      const name = tagName(tag);
+      const count = tagCount(tag);
+      const isSelected = selectedSet?.has(name) ?? false;
+      return (
+        <a
+          href={tagUrl(name)}
+          class:list={[
+            "inline-block rounded px-2 py-0.5 text-xs transition-colors",
+            selectedSet
+              ? isSelected
+                ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700",
+          ]}
+        >
+          {name}{showCount && count != null ? ` (${count})` : ""}
+        </a>
+      );
+    })}
+    <slot />
   </div>
 )}

@@ -6,17 +6,16 @@ import type {
   CircuitBody,
   CircuitFilters,
   CircuitSort,
-  CircuitSortField,
   CodeFilters,
   FilterCondition,
   FilterOp,
-  SortDir,
   TaggableType,
   TagWithCount,
   Tool,
   ToolFilters,
   ToolWithMeta,
 } from "../types";
+import { CIRCUIT_SORT_FIELDS, FILTER_PART_REGEX } from "./constants";
 
 export function formatCircuitId(qecId: number): string {
   return `#${qecId}`;
@@ -84,15 +83,8 @@ export function getCodeBySlug(slug: string): Code | undefined {
     | undefined;
 }
 
-const VALID_SORT_FIELDS: readonly string[] = [
-  "qubit_count",
-  "depth",
-  "gate_count",
-  "two_qubit_gate_count",
-];
-
 function buildOrderBy(sort?: CircuitSort): string {
-  if (!sort || !VALID_SORT_FIELDS.includes(sort.field)) {
+  if (!sort || !CIRCUIT_SORT_FIELDS.includes(sort.field)) {
     return "ORDER BY c.name";
   }
   const dir = sort.dir === "asc" ? "ASC" : "DESC";
@@ -126,7 +118,7 @@ export function parseFilterString(input: string): FilterCondition[] | null {
     const trimmed = part.trim();
     if (!trimmed) continue;
 
-    const match = trimmed.match(/^(!=|>=|<=|>|<|=)?\s*(\d+)$/);
+    const match = trimmed.match(FILTER_PART_REGEX);
     if (!match) return null;
 
     const op = (match[1] || "=") as FilterOp;
@@ -201,12 +193,15 @@ export function countAllCodes(): number {
   return row.count;
 }
 
-function tokenize(query: string): string[] {
+function rawTokenize(query: string): string[] {
   return query
     .trim()
     .split(/\s+/)
-    .filter((t) => t.length > 0)
-    .map((t) => `%${t.replace(/[%_\\]/g, "\\$&")}%`);
+    .filter((t) => t.length > 0);
+}
+
+function tokenize(query: string): string[] {
+  return rawTokenize(query).map((t) => `%${t.replace(/[%_\\]/g, "\\$&")}%`);
 }
 
 function searchByType<T extends { id: number }>(
@@ -307,6 +302,21 @@ export function filterCircuitsForCode(
   return withTags(circuits, "circuit");
 }
 
+export function getCircuitsWithBodies(
+  codeId: number,
+  filters: CircuitFilters,
+  sort?: CircuitSort,
+): {
+  circuits: (Circuit & { tags: string[] })[];
+  bodiesMap: Map<number, CircuitBody[]>;
+} {
+  const circuits = hasActiveFilters(filters)
+    ? filterCircuitsForCode(codeId, filters, sort)
+    : getCircuitsForCode(codeId, sort);
+  const bodiesMap = getBodiesForCircuits(circuits.map((c) => c.id));
+  return { circuits, bodiesMap };
+}
+
 const FORMAT_ORDER = ["stim", "qasm", "cirq"];
 
 export function getBodiesForCircuits(
@@ -389,10 +399,7 @@ export function searchTools(query: string): (Tool & { tags: string[] })[] {
 export function searchCircuits(
   query: string,
 ): (Circuit & { tags: string[]; code_slug: string; code_name: string })[] {
-  const rawTokens = query
-    .trim()
-    .split(/\s+/)
-    .filter((t) => t.length > 0);
+  const rawTokens = rawTokenize(query);
   if (rawTokens.length === 0) return [];
 
   const db = getDb();

@@ -5,16 +5,18 @@
 
 import { deflateRawSync } from "node:zlib";
 
+// Standard CRC-32 lookup table (computed once at module load)
+const CRC32_TABLE = new Uint32Array(256);
+for (let i = 0; i < 256; i++) {
+  let c = i;
+  for (let j = 0; j < 8; j++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  CRC32_TABLE[i] = c;
+}
+
 function crc32(buf: Buffer): number {
-  // Standard CRC-32 lookup table
-  const table = new Uint32Array(256);
-  for (let i = 0; i < 256; i++) {
-    let c = i;
-    for (let j = 0; j < 8; j++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    table[i] = c;
-  }
   let crc = 0xffffffff;
-  for (let i = 0; i < buf.length; i++) crc = table[(crc ^ buf[i]) & 0xff] ^ (crc >>> 8);
+  for (let i = 0; i < buf.length; i++)
+    crc = CRC32_TABLE[(crc ^ buf[i]) & 0xff] ^ (crc >>> 8);
   return (crc ^ 0xffffffff) >>> 0;
 }
 

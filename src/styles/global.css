@@ -2,6 +2,10 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+.prose-link {
+  @apply underline text-gray-900 dark:text-gray-100 hover:text-gray-600 dark:hover:text-gray-300;
+}
+
 :root {
   --circuit-grid: 1rem 1.5rem 1.5rem 1.5rem 1.5rem 1.5rem 0.5rem 1fr auto;
 }

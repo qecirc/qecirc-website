@@ -1,3 +1,5 @@
+import { FILTER_PART_REGEX } from "./constants";
+
 /**
  * Shared client-side logic for CodeFilter and CircuitFilter components.
  * Config is read from data-* attributes on the form element.
@@ -42,7 +44,7 @@ export function initFilterForm(form: HTMLFormElement): void {
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i].trim();
       if (part === "") continue;
-      if (!/^(!=|>=|<=|>|<|=)?\s*\d+$/.test(part)) return false;
+      if (!FILTER_PART_REGEX.test(part)) return false;
     }
     return true;
   }

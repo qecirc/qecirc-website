@@ -1,13 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from "astro";
-import {
-  getCodeBySlug,
-  filterCircuitsForCode,
-  getCircuitsForCode,
-  getBodiesForCircuits,
-  hasActiveFilters,
-} from "../../lib/queries";
+import { getCodeBySlug, getCircuitsWithBodies } from "../../lib/queries";
 import { parseCircuitParams } from "../../lib/url";
 import { buildStimFilename } from "../../lib/filename";
 import { createZip } from "../../lib/zip";
@@ -24,17 +18,11 @@ export const GET: APIRoute = ({ url }) => {
   }
 
   const { filters, sort } = parseCircuitParams(url);
-
-  const circuits = hasActiveFilters(filters)
-    ? filterCircuitsForCode(code.id, filters, sort)
-    : getCircuitsForCode(code.id, sort);
+  const { circuits, bodiesMap } = getCircuitsWithBodies(code.id, filters, sort);
 
   if (circuits.length === 0) {
     return new Response("No circuits found", { status: 404 });
   }
-
-  const circuitIds = circuits.map((c) => c.id);
-  const bodiesMap = getBodiesForCircuits(circuitIds);
 
   // Collect stim entries
   const entries: { name: string; body: string }[] = [];

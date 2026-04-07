@@ -1,6 +1,6 @@
 ---
 import type { TagWithCount, CircuitSort, CircuitSortField } from "../types";
-import { tagToggleUrl } from "../lib/url";
+import TagList from "./TagList.astro";
 
 interface Props {
   rawGateCount: string;
@@ -19,7 +19,6 @@ interface Props {
 
 const { rawGateCount, rawTwoQubitGateCount, rawDepth, rawQubitCount, errors, hasFilters, focus, allTags, selectedTags, currentUrl, codeSlug, sort } = Astro.props;
 const anyError = errors.gate_count || errors.two_qubit_gate_count || errors.depth || errors.qubit_count;
-const selectedSet = new Set(selectedTags);
 const basePath = `/codes/${codeSlug}`;
 
 function inputClass(hasError: boolean): string {
@@ -60,7 +59,6 @@ function sortToggleUrl(field: CircuitSortField): string {
   return basePath + (qs ? "?" + qs : "");
 }
 
-const tagUrl = (tag: string) => tagToggleUrl(currentUrl.search, selectedTags, tag, basePath);
 const gateSort = labelInfo("gate_count");
 const twoQubitGateSort = labelInfo("two_qubit_gate_count");
 const depthSort = labelInfo("depth");
@@ -96,26 +94,7 @@ const qubitSort = labelInfo("qubit_count");
     </div>
   </div>
 
-  {allTags.length > 0 && (
-    <div class="flex flex-wrap gap-1.5">
-      {allTags.map((tag) => {
-        const isSelected = selectedSet.has(tag.name);
-        return (
-          <a
-            href={tagUrl(tag.name)}
-            class:list={[
-              "inline-block rounded px-2 py-0.5 text-xs transition-colors",
-              isSelected
-                ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700",
-            ]}
-          >
-            {tag.name} ({tag.count})
-          </a>
-        );
-      })}
-    </div>
-  )}
+  <TagList tags={allTags} selectedTags={selectedTags} showCount baseUrl={currentUrl} basePath={basePath} />
 </form>
 
 <script>

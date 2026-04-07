@@ -1,6 +1,6 @@
 ---
 import type { TagWithCount } from "../types";
-import { tagToggleUrl } from "../lib/url";
+import TagList from "./TagList.astro";
 
 interface Props {
   rawN: string;
@@ -16,14 +16,11 @@ interface Props {
 
 const { rawN, rawK, rawD, errors, hasFilters, focus, allTags, selectedTags, currentUrl } = Astro.props;
 const anyError = errors.n || errors.k || errors.d;
-const selectedSet = new Set(selectedTags);
-
 function inputClass(hasError: boolean): string {
   const base = "w-24 rounded-r border border-l-0 px-2 py-1 text-sm focus:outline-none border-gray-200 dark:border-gray-700 dark:bg-gray-900 focus:border-gray-400 dark:focus:border-gray-500";
   return hasError ? `${base} ring-1 ring-red-300` : base;
 }
 
-const tagUrl = (tag: string) => tagToggleUrl(currentUrl.search, selectedTags, tag, "/");
 ---
 
 <form id="code-filter" method="GET" action="/" class="mb-6 space-y-2"
@@ -51,26 +48,7 @@ const tagUrl = (tag: string) => tagToggleUrl(currentUrl.search, selectedTags, ta
     </div>
   </div>
 
-  {allTags.length > 0 && (
-    <div class="flex flex-wrap gap-1.5">
-      {allTags.map((tag) => {
-        const isSelected = selectedSet.has(tag.name);
-        return (
-          <a
-            href={tagUrl(tag.name)}
-            class:list={[
-              "inline-block rounded px-2 py-0.5 text-xs transition-colors",
-              isSelected
-                ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700",
-            ]}
-          >
-            {tag.name} ({tag.count})
-          </a>
-        );
-      })}
-    </div>
-  )}
+  <TagList tags={allTags} selectedTags={selectedTags} showCount baseUrl={currentUrl} basePath="/" />
 </form>
 
 <script>

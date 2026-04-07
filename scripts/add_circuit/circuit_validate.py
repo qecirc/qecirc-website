@@ -5,7 +5,6 @@ Uses stim.Circuit built-ins and stim.gate_data() for accurate metrics.
 """
 
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Union
 
 import numpy as np
@@ -16,10 +15,6 @@ from .models import CircuitProperties, ExtractedCode
 
 # Gate data for classification (computed once at module level)
 _ALL_GATES = stim.gate_data()
-
-
-def load_circuit(path: str | Path) -> str:
-    return Path(path).read_text()
 
 
 def _count_gates(instr: stim.CircuitInstruction) -> int:
