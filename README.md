@@ -2,7 +2,7 @@
 
 A community-driven library for quantum error correction circuits.
 
-**Browse the library at [qecirc.com](https://qecirc.com)**
+**Browse the library at [qecirc.com](https://qecirc.com)** | [About](https://qecirc.com/about)
 
 ## Quick Start
 
