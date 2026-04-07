@@ -142,10 +142,25 @@ const countLabel = hasFilters
       <a href={`/codes/${codeSlug}`} class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
     </div>
   ) : (
-    <div class="space-y-2">
-      {circuits.map((circuit) => (
-        <CircuitRow circuit={circuit} bodies={bodiesMap.get(circuit.id) ?? []} tool={toolsMap.get(circuit.id)} codeSlug={codeSlug!} currentUrl={Astro.url} />
-      ))}
+    <div>
+      <div
+        class="sticky top-0 z-10 bg-white dark:bg-gray-950 grid items-center gap-x-1.5 px-4 py-1.5 text-xs font-medium"
+        style="grid-template-columns: var(--circuit-grid);"
+      >
+        <span></span>
+        <span></span>
+        <span class="text-right text-amber-700 dark:text-amber-300" title="Gate count">G</span>
+        <span class="text-right text-purple-700 dark:text-purple-300" title="Two-qubit gate count">2Q</span>
+        <span class="text-right text-green-700 dark:text-green-300" title="Circuit depth">D</span>
+        <span class="text-right text-blue-700 dark:text-blue-300" title="Qubit count">Q</span>
+        <span></span>
+        <span class="text-gray-500 dark:text-gray-400">Name</span>
+      </div>
+      <div class="space-y-2">
+        {circuits.map((circuit) => (
+          <CircuitRow circuit={circuit} bodies={bodiesMap.get(circuit.id) ?? []} tool={toolsMap.get(circuit.id)} codeSlug={codeSlug!} currentUrl={Astro.url} />
+        ))}
+      </div>
     </div>
   )}
 </Layout>
