@@ -1,6 +1,7 @@
 ---
 import type { Circuit, CircuitBody, Tool } from "../types";
 import { tagToggleUrl } from "../lib/url";
+import { formatCircuitId } from "../lib/queries";
 import CodeBlock from "./CodeBlock.astro";
 
 interface Props {
@@ -18,14 +19,16 @@ const basePath = `/codes/${codeSlug}`;
 const tagUrl = (tag: string) => tagToggleUrl(currentUrl.search, existingTags, tag, basePath);
 const selectedTags = new Set(existingTags);
 const hasMultipleFormats = bodies.length > 1;
+const displayId = formatCircuitId(circuit.qec_id);
+const anchorId = String(circuit.qec_id);
 ---
 
-<div id={circuit.slug} class="rounded border border-gray-200 dark:border-gray-800">
+<div id={anchorId} class="rounded border border-gray-200 dark:border-gray-800">
   <div
     class="circuit-toggle w-full text-left px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-1 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
     role="button"
     tabindex="0"
-    data-slug={circuit.slug}
+    data-qec-id={anchorId}
     aria-expanded="false"
   >
     <svg
@@ -39,20 +42,19 @@ const hasMultipleFormats = bodies.length > 1;
       <path d="M9 5l7 7-7 7" />
     </svg>
 
-    <span class="font-medium text-sm">{circuit.name}</span>
     <button
-      class="circuit-permalink text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 shrink-0"
+      class="circuit-permalink text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 font-mono text-xs shrink-0 cursor-pointer"
       aria-label="Copy link to circuit"
       title="Copy link"
-      data-slug={circuit.slug}
+      data-qec-id={anchorId}
     >
-      <svg class="permalink-icon w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-      </svg>
+      <span class="permalink-label">{displayId}</span>
       <svg class="permalink-check w-3.5 h-3.5 hidden text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M20 6L9 17l-5-5" />
       </svg>
     </button>
+
+    <span class="font-medium text-sm">{circuit.name}</span>
 
     <span class="inline-flex gap-1.5 text-xs shrink-0">
       {circuit.gate_count != null && (
@@ -101,6 +103,19 @@ const hasMultipleFormats = bodies.length > 1;
       )}
 
       <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+        <div>
+          <span class="text-gray-500 dark:text-gray-400">ID:</span>{" "}
+          <button
+            class="circuit-id-copy font-mono text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+            title="Copy circuit ID"
+            data-qec-id={anchorId}
+          >
+            <span class="id-label">{displayId}</span>
+            <svg class="id-check w-3.5 h-3.5 hidden text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          </button>
+        </div>
         <div>
           <span class="text-gray-500 dark:text-gray-400">Source:</span>{" "}
           {circuit.source.startsWith("http") ? (
@@ -181,7 +196,8 @@ const hasMultipleFormats = bodies.length > 1;
       btn.addEventListener("click", function (e) {
         if ((e.target as HTMLElement).closest(".circuit-tag")) return;
         if ((e.target as HTMLElement).closest(".circuit-permalink")) return;
-        const slug = (btn as HTMLElement).dataset.slug!;
+        if ((e.target as HTMLElement).closest(".circuit-id-copy")) return;
+        const qecId = (btn as HTMLElement).dataset.qecId!;
         const row = btn.closest("[id]") as HTMLElement;
         const detail = row.querySelector(".circuit-detail") as HTMLElement;
         const chevron = btn.querySelector(".chevron") as HTMLElement;
@@ -191,7 +207,7 @@ const hasMultipleFormats = bodies.length > 1;
           detail.style.maxHeight = "0px";
           chevron.classList.remove("rotate-90");
           btn.setAttribute("aria-expanded", "false");
-          if (location.hash === "#" + slug) {
+          if (location.hash === "#" + qecId) {
             history.replaceState(null, "", location.pathname + location.search);
           }
         } else {
@@ -209,7 +225,7 @@ const hasMultipleFormats = bodies.length > 1;
           detail.style.maxHeight = detail.scrollHeight + "px";
           chevron.classList.add("rotate-90");
           btn.setAttribute("aria-expanded", "true");
-          history.replaceState(null, "", "#" + slug);
+          history.replaceState(null, "", "#" + qecId);
         }
       });
     });
@@ -263,28 +279,49 @@ const hasMultipleFormats = bodies.length > 1;
     }
   }
 
+  function showCopyCheck(btn: HTMLElement, labelSel: string, checkSel: string) {
+    const label = btn.querySelector(labelSel) as HTMLElement;
+    const check = btn.querySelector(checkSel) as HTMLElement;
+    label.classList.add("hidden");
+    check.classList.remove("hidden");
+    clearTimeout(Number(btn.dataset.timer));
+    btn.dataset.timer = String(setTimeout(function () {
+      label.classList.remove("hidden");
+      check.classList.add("hidden");
+    }, 1500));
+  }
+
   function initPermalinks() {
     document.querySelectorAll<HTMLButtonElement>(".circuit-permalink").forEach(function (btn) {
       if (btn.dataset.initialized) return;
       btn.dataset.initialized = "1";
 
       btn.addEventListener("click", async function () {
-        const slug = btn.dataset.slug;
-        const url = location.origin + location.pathname + "#" + slug;
+        const qecId = btn.dataset.qecId;
+        const url = location.origin + location.pathname + "#" + qecId;
         try {
           await navigator.clipboard.writeText(url);
         } catch {
           return;
         }
-        const icon = btn.querySelector(".permalink-icon") as HTMLElement;
-        const check = btn.querySelector(".permalink-check") as HTMLElement;
-        icon.classList.add("hidden");
-        check.classList.remove("hidden");
-        clearTimeout(Number(btn.dataset.timer));
-        btn.dataset.timer = String(setTimeout(function () {
-          icon.classList.remove("hidden");
-          check.classList.add("hidden");
-        }, 1500));
+        showCopyCheck(btn, ".permalink-label", ".permalink-check");
+      });
+    });
+  }
+
+  function initIdCopy() {
+    document.querySelectorAll<HTMLButtonElement>(".circuit-id-copy").forEach(function (btn) {
+      if (btn.dataset.initialized) return;
+      btn.dataset.initialized = "1";
+
+      btn.addEventListener("click", async function () {
+        const qecId = btn.dataset.qecId;
+        try {
+          await navigator.clipboard.writeText("#" + qecId);
+        } catch {
+          return;
+        }
+        showCopyCheck(btn, ".id-label", ".id-check");
       });
     });
   }
@@ -292,6 +329,7 @@ const hasMultipleFormats = bodies.length > 1;
   initCircuitRows();
   initFormatSwitchers();
   initPermalinks();
+  initIdCopy();
   expandFromHash();
   window.addEventListener("hashchange", expandFromHash);
 </script>

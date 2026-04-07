@@ -32,7 +32,10 @@ def build_code_yaml(code):
 
 def build_circuit_yaml(circ):
     """Build clean circuit YAML dict from computed circuit data."""
-    data = {"name": circ["name"]}
+    data = {}
+    if circ.get("qec_id") is not None:
+        data["qec_id"] = circ["qec_id"]
+    data["name"] = circ["name"]
 
     if circ.get("tool"):
         data["tool"] = circ["tool"]

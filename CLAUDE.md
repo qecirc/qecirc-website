@@ -45,9 +45,10 @@ tools
   -- software tools used to create circuits
 
 circuits
-  id, code_id → codes, name, slug, description, source,
+  id, qec_id, code_id → codes, name, slug, description, source,
   gate_count, two_qubit_gate_count, depth, qubit_count,
   crumble_url, quirk_url, tool_id → tools, created_at
+  -- qec_id: permanent globally unique circuit identifier (displayed as #N, never reused)
   -- source: provenance (DOI, URL, or citation)
   -- gate_count, two_qubit_gate_count, depth, qubit_count: numeric metrics for filtering
   -- crumble_url, quirk_url: optional external visualization links
@@ -164,10 +165,10 @@ chore(deps): update astro to v5.5.0
 
 This project uses a dual-license model:
 
-| Scope | License | File |
-|-------|---------|------|
-| Code (`src/`, `scripts/`, config files) | MIT | `LICENSE` |
-| Data (`data_yaml/`) | CC BY-SA 4.0 | `LICENSE-DATA` |
+| Scope                                   | License      | File           |
+| --------------------------------------- | ------------ | -------------- |
+| Code (`src/`, `scripts/`, config files) | MIT          | `LICENSE`      |
+| Data (`data_yaml/`)                     | CC BY-SA 4.0 | `LICENSE-DATA` |
 
 ---
 

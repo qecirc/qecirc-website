@@ -6,6 +6,7 @@ import {
   searchTools,
   searchCircuits,
   formatCodeParams,
+  formatCircuitId,
 } from "../../lib/queries";
 
 export const GET: APIRoute = ({ url }) => {
@@ -30,6 +31,7 @@ export const GET: APIRoute = ({ url }) => {
     type: "circuit" as const,
     name: ci.name,
     slug: ci.slug,
+    qec_id: formatCircuitId(ci.qec_id),
     params: [
       ci.qubit_count != null ? `${ci.qubit_count}q` : null,
       ci.depth != null ? `${ci.depth}d` : null,
@@ -37,7 +39,7 @@ export const GET: APIRoute = ({ url }) => {
       .filter(Boolean)
       .join(", "),
     tags: ci.tags,
-    href: `/codes/${ci.code_slug}#${ci.slug}`,
+    href: `/codes/${ci.code_slug}#${ci.qec_id}`,
     subtitle: ci.code_name,
   }));
 

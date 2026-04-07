@@ -1,3 +1,4 @@
+qec_id: 2
 name: Non-FT Optimized Zero State Preparation
 source: https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.6.020330
 gate_count: 11

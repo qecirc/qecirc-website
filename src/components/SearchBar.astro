@@ -53,7 +53,7 @@
     }
 
     const res = await fetch("/api/search?q=" + encodeURIComponent(query));
-    const results: { type: string; name: string; slug: string; params: string; tags: string[]; href: string; subtitle?: string }[] = await res.json();
+    const results: { type: string; name: string; slug: string; qec_id?: string; params: string; tags: string[]; href: string; subtitle?: string }[] = await res.json();
 
     resultsList.innerHTML = "";
     activeIndex = -1;
@@ -89,6 +89,7 @@
 
       const meta: string[] = [];
       meta.push(item.type);
+      if (item.qec_id) meta.push(item.qec_id);
       if (item.subtitle) meta.push(item.subtitle);
       const metaDiv = document.createElement("div");
       metaDiv.className = "text-xs text-gray-400 dark:text-gray-500";

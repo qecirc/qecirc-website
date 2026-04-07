@@ -48,8 +48,8 @@ const stmts = {
     INSERT INTO codes (name, slug, n, k, d, zoo_url, hx, hz, logical_x, logical_z, canonical_hash)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertCircuit: db.prepare(`
-    INSERT INTO circuits (code_id, name, slug, description, source, gate_count, two_qubit_gate_count, depth, qubit_count, crumble_url, quirk_url, tool_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+    INSERT INTO circuits (qec_id, code_id, name, slug, description, source, gate_count, two_qubit_gate_count, depth, qubit_count, crumble_url, quirk_url, tool_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertBody: db.prepare(`
     INSERT INTO circuit_bodies (circuit_id, format, body)
     VALUES (?, ?, ?)`),
@@ -221,6 +221,16 @@ try {
         errors.push(`Circuit ${stem}: missing required field 'source'`);
         continue;
       }
+      if (
+        data.qec_id == null ||
+        !Number.isInteger(data.qec_id) ||
+        data.qec_id < 1
+      ) {
+        errors.push(
+          `Circuit ${stem}: missing or invalid 'qec_id' (must be a positive integer)`,
+        );
+        continue;
+      }
 
       // Resolve tool
       let toolId = null;
@@ -235,6 +245,7 @@ try {
       }
 
       const { lastInsertRowid } = stmts.insertCircuit.run(
+        data.qec_id,
         codeId,
         data.name,
         circuitSlug,

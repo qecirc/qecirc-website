@@ -27,7 +27,7 @@ const SCHEMAS = {
     },
   },
   circuits: {
-    required: { name: "string", source: "string" },
+    required: { qec_id: "number", name: "string", source: "string" },
     optional: {
       tool: "string",
       description: "string",
@@ -139,6 +139,17 @@ for (const [dir, schema] of Object.entries(SCHEMAS)) {
     if (dir === "circuits") {
       const base = file.replace(/\.yaml$/, "");
 
+      // qec_id must be a positive integer
+      if (
+        data &&
+        typeof data.qec_id === "number" &&
+        (!Number.isInteger(data.qec_id) || data.qec_id < 1)
+      ) {
+        allErrors.push(
+          `${relPath}: qec_id must be a positive integer, got ${data.qec_id}`,
+        );
+      }
+
       // Check filename convention: <code-slug>--<circuit-slug>
       const sep = base.indexOf("--");
       if (sep === -1) {
@@ -163,6 +174,33 @@ for (const [dir, schema] of Object.entries(SCHEMAS)) {
         allErrors.push(
           `${relPath}: no body file found (expected ${BODY_EXTENSIONS.join(", ")})`,
         );
+      }
+    }
+  }
+}
+
+// --- Cross-file uniqueness check for circuit qec_id ---
+{
+  const circuitsDir = path.join(DATA_DIR, "circuits");
+  if (fs.existsSync(circuitsDir)) {
+    const seen = new Map(); // qec_id -> filename
+    for (const file of fs
+      .readdirSync(circuitsDir)
+      .filter((f) => f.endsWith(".yaml"))) {
+      let data;
+      try {
+        data = yaml.load(fs.readFileSync(path.join(circuitsDir, file), "utf8"));
+      } catch {
+        continue; // parse error already reported above
+      }
+      if (data && typeof data.qec_id === "number") {
+        if (seen.has(data.qec_id)) {
+          allErrors.push(
+            `circuits/${file}: duplicate qec_id ${data.qec_id} (also in ${seen.get(data.qec_id)})`,
+          );
+        } else {
+          seen.set(data.qec_id, file);
+        }
       }
     }
   }

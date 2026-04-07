@@ -18,6 +18,10 @@ import type {
   ToolWithMeta,
 } from "../types";
 
+export function formatCircuitId(qecId: number): string {
+  return `#${qecId}`;
+}
+
 export function formatCodeParams(code: Code): string {
   return code.d != null
     ? `[[${code.n},${code.k},${code.d}]]`
@@ -385,23 +389,47 @@ export function searchTools(query: string): (Tool & { tags: string[] })[] {
 export function searchCircuits(
   query: string,
 ): (Circuit & { tags: string[]; code_slug: string; code_name: string })[] {
-  const patterns = tokenize(query);
-  if (patterns.length === 0) return [];
+  const rawTokens = query
+    .trim()
+    .split(/\s+/)
+    .filter((t) => t.length > 0);
+  if (rawTokens.length === 0) return [];
 
   const db = getDb();
-  const tokenClauses = patterns.map(
-    () =>
-      `(ci.name LIKE ? ESCAPE '\\' OR co.name LIKE ? ESCAPE '\\'
-        OR EXISTS (
-          SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
-          WHERE tg.taggable_id = ci.id AND tg.taggable_type = 'circuit' AND t.name LIKE ? ESCAPE '\\'
-        )
-        OR EXISTS (
-          SELECT 1 FROM tools tl WHERE tl.id = ci.tool_id AND tl.name LIKE ? ESCAPE '\\'
-        ))`,
-  );
-  const params: string[] = [];
-  for (const p of patterns) params.push(p, p, p, p);
+  const tokenClauses: string[] = [];
+  const params: (string | number)[] = [];
+
+  for (const raw of rawTokens) {
+    const p = `%${raw.replace(/[%_\\]/g, "\\$&")}%`;
+    const stripped = raw.replace(/^#/, "");
+    const asInt = /^\d+$/.test(stripped) ? parseInt(stripped, 10) : null;
+
+    if (asInt !== null) {
+      tokenClauses.push(
+        `(ci.qec_id = ? OR ci.name LIKE ? ESCAPE '\\' OR co.name LIKE ? ESCAPE '\\'
+          OR EXISTS (
+            SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+            WHERE tg.taggable_id = ci.id AND tg.taggable_type = 'circuit' AND t.name LIKE ? ESCAPE '\\'
+          )
+          OR EXISTS (
+            SELECT 1 FROM tools tl WHERE tl.id = ci.tool_id AND tl.name LIKE ? ESCAPE '\\'
+          ))`,
+      );
+      params.push(asInt, p, p, p, p);
+    } else {
+      tokenClauses.push(
+        `(ci.name LIKE ? ESCAPE '\\' OR co.name LIKE ? ESCAPE '\\'
+          OR EXISTS (
+            SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+            WHERE tg.taggable_id = ci.id AND tg.taggable_type = 'circuit' AND t.name LIKE ? ESCAPE '\\'
+          )
+          OR EXISTS (
+            SELECT 1 FROM tools tl WHERE tl.id = ci.tool_id AND tl.name LIKE ? ESCAPE '\\'
+          ))`,
+      );
+      params.push(p, p, p, p);
+    }
+  }
 
   const rows = db
     .prepare(

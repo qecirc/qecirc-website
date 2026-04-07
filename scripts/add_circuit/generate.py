@@ -18,10 +18,23 @@ import json
 from pathlib import Path
 
 import numpy as np
+import yaml
 
 from .compute import compute_code_data
 from .compute_circuit import compute_circuit_data
 from .yaml_helpers import build_circuit_yaml, build_code_yaml, dump_yaml, write_file
+
+
+def _next_qec_id(data_dir: Path) -> int:
+    """Return the next available qec_id by scanning existing circuit YAMLs."""
+    circuits_dir = data_dir / "circuits"
+    max_id = 0
+    if circuits_dir.exists():
+        for f in circuits_dir.glob("*.yaml"):
+            data = yaml.safe_load(f.read_text())
+            if data and isinstance(data.get("qec_id"), int):
+                max_id = max(max_id, data["qec_id"])
+    return max_id + 1
 
 
 def main():
@@ -76,6 +89,7 @@ def main():
         )
 
     # Compute circuit data for each STIM file
+    next_id = _next_qec_id(data_dir)
     circuits = []
     for i, stim_path in enumerate(args.stim):
         circuit_text = Path(stim_path).read_text()
@@ -87,6 +101,8 @@ def main():
             tool=_get_nth(args.tool, i, ""),
             description=_get_nth(args.description, i, ""),
         )
+        circ_data["qec_id"] = next_id
+        next_id += 1
         circuits.append(circ_data)
 
         stem = f"{code_slug}--{circ_data['slug']}"

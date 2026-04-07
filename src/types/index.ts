@@ -15,6 +15,7 @@ export interface Code {
 
 export interface Circuit {
   id: number;
+  qec_id: number;
   code_id: number;
   name: string;
   slug: string;
