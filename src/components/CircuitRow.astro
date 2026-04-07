@@ -2,6 +2,7 @@
 import type { Circuit, CircuitBody, Tool } from "../types";
 import { tagToggleUrl } from "../lib/url";
 import { formatCircuitId } from "../lib/queries";
+import { buildStimFilename } from "../lib/filename";
 import CodeBlock from "./CodeBlock.astro";
 
 interface Props {
@@ -21,6 +22,15 @@ const selectedTags = new Set(existingTags);
 const hasMultipleFormats = bodies.length > 1;
 const displayId = formatCircuitId(circuit.qec_id);
 const anchorId = String(circuit.qec_id);
+
+const stimFilename = buildStimFilename({
+  codeSlug: codeSlug,
+  circuitSlug: circuit.slug,
+  gateCount: circuit.gate_count,
+  twoQubitGateCount: circuit.two_qubit_gate_count,
+  depth: circuit.depth,
+  qubitCount: circuit.qubit_count,
+});
 ---
 
 <div id={anchorId} class="rounded border border-gray-200 dark:border-gray-800 overflow-x-auto">
@@ -182,12 +192,12 @@ const anchorId = String(circuit.qec_id);
           </div>
           {bodies.map((b, i) => (
             <div class="format-body" data-format={b.format} style={i === 0 ? "" : "display:none"}>
-              <CodeBlock code={b.body} label={`${b.format.toUpperCase()} Circuit`} />
+              <CodeBlock code={b.body} label={`${b.format.toUpperCase()} Circuit`} downloadName={b.format === "stim" ? stimFilename : undefined} />
             </div>
           ))}
         </div>
       ) : bodies.length === 1 ? (
-        <CodeBlock code={bodies[0].body} label={`${bodies[0].format.toUpperCase()} Circuit`} />
+        <CodeBlock code={bodies[0].body} label={`${bodies[0].format.toUpperCase()} Circuit`} downloadName={bodies[0].format === "stim" ? stimFilename : undefined} />
       ) : (
         <p class="text-sm text-gray-400">No circuit body available.</p>
       )}

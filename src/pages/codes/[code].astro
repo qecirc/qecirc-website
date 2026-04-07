@@ -18,8 +18,7 @@ import {
   getBodiesForCircuits,
   getToolsForCircuits,
 } from "../../lib/queries";
-import type { CircuitFilters, CircuitSort, CircuitSortField, SortDir } from "../../types";
-import { parseFilterParams } from "../../lib/url";
+import { parseCircuitParams } from "../../lib/url";
 
 const { code: codeSlug } = Astro.params;
 const code = getCodeBySlug(codeSlug!);
@@ -42,22 +41,8 @@ const logicalX = safeParseMatrix(code.logical_x);
 const logicalZ = safeParseMatrix(code.logical_z);
 const hasMatrices = hx || hz || logicalX || logicalZ;
 
-// Parse circuit filter params
-const { raw, parsed, errors, tags: selectedTags, focus } = parseFilterParams(Astro.url, ["gate_count", "two_qubit_gate_count", "depth", "qubit_count"] as const);
-
-// Parse sort params
-const VALID_SORT_FIELDS = new Set<CircuitSortField>(["qubit_count", "depth", "gate_count", "two_qubit_gate_count"]);
-const VALID_SORT_DIRS = new Set<SortDir>(["asc", "desc"]);
-const rawSort = Astro.url.searchParams.get("sort") ?? "";
-const rawSortDir = Astro.url.searchParams.get("sort_dir") ?? "";
-const sort: CircuitSort = VALID_SORT_FIELDS.has(rawSort as CircuitSortField)
-  ? { field: rawSort as CircuitSortField, dir: VALID_SORT_DIRS.has(rawSortDir as SortDir) ? rawSortDir as SortDir : "desc" }
-  : { field: "gate_count", dir: "desc" };
-
-const filters: CircuitFilters = {
-  ...parsed,
-  tags: selectedTags.length > 0 ? selectedTags : undefined,
-};
+// Parse circuit filter and sort params
+const { raw, errors, tags: selectedTags, focus, filters, sort } = parseCircuitParams(Astro.url);
 
 const hasFilters = hasActiveFilters(filters);
 const totalCount = countCircuitsForCode(code.id);
@@ -118,7 +103,22 @@ const countLabel = hasFilters
 
   <div class="flex items-baseline justify-between mb-2">
     <h2 class="text-lg font-semibold">Circuits</h2>
-    <span class="text-sm text-gray-500 dark:text-gray-400">{countLabel}</span>
+    <div class="flex items-center gap-3">
+      {circuits.length > 0 && (
+        <button
+          id="download-all-btn"
+          class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+          data-code-slug={codeSlug}
+          title="Download all visible circuits (.stim)"
+          aria-label="Download all visible circuits"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+          </svg>
+        </button>
+      )}
+      <span class="text-sm text-gray-500 dark:text-gray-400">{countLabel}</span>
+    </div>
   </div>
 
   <CircuitFilter
@@ -180,6 +180,32 @@ const countLabel = hasFilters
         detail.style.maxHeight = detail.scrollHeight + "px";
         chevron?.classList.add("rotate-90");
         toggle.setAttribute("aria-expanded", "true");
+      }
+    });
+  }
+
+  const downloadBtn = document.getElementById("download-all-btn");
+  if (downloadBtn) {
+    downloadBtn.addEventListener("click", async function () {
+      const slug = (downloadBtn as HTMLElement).dataset.codeSlug;
+      if (!slug) return;
+      const params = new URLSearchParams(window.location.search);
+      params.set("code", slug);
+      downloadBtn.classList.add("opacity-50", "pointer-events-none");
+      try {
+        const resp = await fetch(`/api/download?${params}`);
+        if (!resp.ok) return;
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        const disposition = resp.headers.get("Content-Disposition") ?? "";
+        const match = disposition.match(/filename="(.+)"/);
+        a.download = match ? match[1] : `${slug}_circuits.stim.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } finally {
+        downloadBtn.classList.remove("opacity-50", "pointer-events-none");
       }
     });
   }

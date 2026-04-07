@@ -2,9 +2,10 @@
 interface Props {
   code: string;
   label?: string;
+  downloadName?: string;
 }
 
-const { code, label } = Astro.props;
+const { code, label, downloadName } = Astro.props;
 const lines = code.trimEnd().split("\n");
 const lineCount = lines.length;
 const gutterWidth = String(lineCount).length;
@@ -21,13 +22,27 @@ const formatted = lines
 <div class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden">
   <div class="border-b border-gray-200 dark:border-gray-800 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
     <span>{label ?? ""}</span>
-    <button
-      class="copy-btn text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
-      data-code={code.trimEnd()}
-      aria-label="Copy to clipboard"
-    >
-      Copy
-    </button>
+    <div class="flex items-center gap-2">
+      {downloadName && (
+        <button
+          class="download-btn text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+          data-download-name={downloadName}
+          aria-label="Download file"
+          title="Download .stim"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+          </svg>
+        </button>
+      )}
+      <button
+        class="copy-btn text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+        data-code={code.trimEnd()}
+        aria-label="Copy to clipboard"
+      >
+        Copy
+      </button>
+    </div>
   </div>
   <pre class="overflow-x-auto p-4 text-sm leading-relaxed"><code set:text={formatted} /></pre>
 </div>
@@ -40,6 +55,22 @@ const formatted = lines
       const original = btn.textContent;
       btn.textContent = "Copied!";
       setTimeout(function () { btn.textContent = original; }, 1500);
+    });
+  });
+
+  document.querySelectorAll(".download-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const el = btn as HTMLElement;
+      const copyBtn = el.closest(".flex")?.querySelector(".copy-btn") as HTMLElement | null;
+      const body = copyBtn?.dataset.code || "";
+      const name = el.dataset.downloadName || "circuit.stim";
+      const blob = new Blob([body], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(url);
     });
   });
 </script>
