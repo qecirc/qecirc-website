@@ -53,7 +53,7 @@ const countLabel = hasFilters
   : `${totalCount} circuit${totalCount !== 1 ? "s" : ""}`;
 ---
 
-<Layout title={code.name}>
+<Layout title={code.name} description={`Circuits for ${code.name}${params ? ` ${params}` : ""}`}>
   <h1 class="text-2xl font-bold mb-2">
     {code.name} <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>
   </h1>

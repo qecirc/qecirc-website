@@ -23,7 +23,7 @@ const tools = hasFilters ? filterTools(filters) : getAllTools();
 const allTags = getTagsWithCount("tool");
 ---
 
-<Layout title="Tools">
+<Layout title="Tools" description="Software tools used to create QEC circuits">
   <h1 class="text-2xl font-bold mb-4">Tools</h1>
 
   <TagList tags={allTags} selectedTags={selectedTags} showCount baseUrl={Astro.url} basePath="/tools" class="mb-6">
