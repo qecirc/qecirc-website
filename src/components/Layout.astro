@@ -9,6 +9,8 @@ interface Props {
 
 const DEFAULT_DESCRIPTION = "QECirc — a community-driven library for quantum error correction circuits";
 const { title, description = DEFAULT_DESCRIPTION } = Astro.props;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const fullTitle = `${title} - QECirc`;
 
 const NAV_LINKS = [
   { href: "/tools", label: "Tools" },
@@ -27,7 +29,16 @@ const sunIconSvg = `<svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" f
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="description" content={description} />
-    <title>{title} - QECirc</title>
+    <link rel="canonical" href={canonicalUrl} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content="QECirc" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <title>{fullTitle}</title>
     <script is:inline>
       (function () {
         const stored = localStorage.getItem("theme");
