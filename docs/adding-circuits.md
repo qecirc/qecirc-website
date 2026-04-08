@@ -124,7 +124,7 @@ print(result.summary())
 | `code_name`    | no       | Code name (optional if code already exists in `data_yaml/`) |
 | `zoo_url`      | no       | QEC Zoo URL                                                 |
 | `tool`         | no       | Tool slug (must exist in `data_yaml/tools/`)                |
-| `description`  | no       | Circuit description                                         |
+| `notes`        | no       | Circuit notes                                               |
 | `data_dir`     | no       | Path to data_yaml directory (default: `"data_yaml"`)        |
 | `dry_run`      | no       | If `True`, preview without writing                          |
 

@@ -116,10 +116,6 @@ const stimFilename = buildStimFilename({
 
   <div class="circuit-detail overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;">
     <div class="border-t border-gray-200 dark:border-gray-800 px-4 py-4 space-y-3">
-      {circuit.description && (
-        <p class="text-sm text-gray-600 dark:text-gray-400">{circuit.description}</p>
-      )}
-
       <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
         <div>
           <span class="text-gray-500 dark:text-gray-400">ID:</span>{" "}
@@ -172,6 +168,18 @@ const stimFilename = buildStimFilename({
           </div>
         )}
       </div>
+
+      {circuit.notes && (
+        <div class="notes-wrapper">
+          <p class="notes-text text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line line-clamp-1">{circuit.notes}</p>
+          <button
+            class="notes-toggle text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer mt-0.5 hidden"
+            type="button"
+          >
+            Show more
+          </button>
+        </div>
+      )}
 
       {hasMultipleFormats ? (
         <div class="format-switcher">
@@ -244,6 +252,26 @@ const stimFilename = buildStimFilename({
           chevron.classList.add("rotate-90");
           btn.setAttribute("aria-expanded", "true");
           history.replaceState(null, "", "#" + qecId);
+
+          // Notes toggle: check overflow after first expand
+          const notesText = detail.querySelector(".notes-text") as HTMLElement;
+          const notesToggle = detail.querySelector(".notes-toggle") as HTMLButtonElement;
+          if (notesText && notesToggle && !notesToggle.dataset.initialized) {
+            notesToggle.dataset.initialized = "1";
+            requestAnimationFrame(function () {
+              if (notesText.scrollHeight > notesText.clientHeight) {
+                notesToggle.classList.remove("hidden");
+              }
+            });
+            notesToggle.addEventListener("click", function () {
+              const isClamped = notesText.classList.contains("line-clamp-1");
+              notesText.classList.toggle("line-clamp-1");
+              notesToggle.textContent = isClamped ? "Show less" : "Show more";
+              requestAnimationFrame(function () {
+                detail.style.maxHeight = detail.scrollHeight + "px";
+              });
+            });
+          }
         }
       });
     });

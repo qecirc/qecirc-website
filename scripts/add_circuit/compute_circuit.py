@@ -17,7 +17,7 @@ def compute_circuit_data(
     circuit_name: str = "",
     source: str = "",
     tool: str = "",
-    description: str = "",
+    notes: str = "",
 ) -> dict:
     """
     Compute all circuit-level data.
@@ -60,7 +60,7 @@ def compute_circuit_data(
     return {
         "name": circuit_name,
         "slug": slug,
-        "description": description or "",
+        "notes": notes or None,
         "source": source or "",
         "tool": tool or "",
         "qubit_count": props.qubit_count,

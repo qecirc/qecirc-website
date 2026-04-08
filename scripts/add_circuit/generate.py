@@ -51,7 +51,7 @@ def main():
     parser.add_argument("--circuit-name", nargs="+", default=[], help="Circuit name(s)")
     parser.add_argument("--source", nargs="+", default=[], help="Source(s) (DOI/URL)")
     parser.add_argument("--tool", nargs="+", default=[], help="Tool slug(s)")
-    parser.add_argument("--description", nargs="+", default=[], help="Circuit description(s)")
+    parser.add_argument("--notes", nargs="+", default=[], help="Circuit notes")
     parser.add_argument(
         "--dry-run", action="store_true", help="Print what would be written without writing"
     )
@@ -99,7 +99,7 @@ def main():
             circuit_name=_get_nth(args.circuit_name, i, ""),
             source=_get_nth(args.source, i, ""),
             tool=_get_nth(args.tool, i, ""),
-            description=_get_nth(args.description, i, ""),
+            notes=_get_nth(args.notes, i, ""),
         )
         circ_data["qec_id"] = next_id
         next_id += 1

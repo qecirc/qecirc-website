@@ -45,7 +45,7 @@ tools
   -- software tools used to create circuits
 
 circuits
-  id, qec_id, code_id → codes, name, slug, description, source,
+  id, qec_id, code_id → codes, name, slug, notes, source,
   gate_count, two_qubit_gate_count, depth, qubit_count,
   crumble_url, quirk_url, tool_id → tools, created_at
   -- qec_id: permanent globally unique circuit identifier (displayed as #N, never reused)

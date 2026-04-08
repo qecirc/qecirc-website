@@ -40,8 +40,8 @@ def build_circuit_yaml(circ):
     if circ.get("tool"):
         data["tool"] = circ["tool"]
 
-    if circ.get("description"):
-        data["description"] = circ["description"]
+    if circ.get("notes"):
+        data["notes"] = circ["notes"]
 
     if circ.get("source"):
         data["source"] = circ["source"]

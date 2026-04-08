@@ -30,7 +30,7 @@ const SCHEMAS = {
     required: { qec_id: "number", name: "string", source: "string" },
     optional: {
       tool: "string",
-      description: "string",
+      notes: "string",
       gate_count: "number",
       two_qubit_gate_count: "number",
       depth: "number",

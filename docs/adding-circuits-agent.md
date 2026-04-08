@@ -17,7 +17,7 @@ The agent follows a 5-phase workflow:
 The agent asks you for:
 
 - **Required**: Hx matrix, Hz matrix, STIM circuit, code distance, source (DOI/URL)
-- **Optional**: code name, Zoo URL, circuit name, tool, description
+- **Optional**: code name, Zoo URL, circuit name, tool, notes
 
 It will not proceed without the required inputs.
 
@@ -65,7 +65,7 @@ The agent shows you the final YAML files. You can request edits. Once you approv
 | Zoo URL       | no       | Agent can search errorcorrectionzoo.org           |
 | Circuit name  | no       | Agent will ask for a descriptive name             |
 | Tool          | no       | e.g. `mqt-qecc`, `cliffordopt`, `flag-at-origin`  |
-| Description   | no       | One-sentence description                          |
+| Notes         | no       | Optional notes about the circuit                  |
 
 ## Tag vocabulary
 

@@ -91,8 +91,8 @@ class TestComputeCircuitData:
             circuit_name="Test",
             source="doi:test",
             tool="mqt-qecc",
-            description="A test circuit",
+            notes="A test circuit",
         )
         assert result["source"] == "doi:test"
         assert result["tool"] == "mqt-qecc"
-        assert result["description"] == "A test circuit"
+        assert result["notes"] == "A test circuit"

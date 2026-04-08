@@ -87,7 +87,7 @@ def add_circuit(
     code_name: str = "",
     zoo_url: str = "",
     tool: str = "",
-    description: str = "",
+    notes: str = "",
     data_dir: Union[str, Path] = "data_yaml",
     dry_run: bool = False,
 ) -> AddCircuitResult:
@@ -104,7 +104,7 @@ def add_circuit(
         code_name: Name for the code. Optional if code already exists in data_yaml/.
         zoo_url: QEC Zoo URL for the code.
         tool: Tool slug (e.g. "mqt-qecc").
-        description: Circuit description.
+        notes: Circuit notes.
         data_dir: Path to data_yaml directory.
         dry_run: If True, report what would be written without writing.
 
@@ -141,7 +141,7 @@ def add_circuit(
         circuit_name=circuit_name,
         source=source,
         tool=tool,
-        description=description,
+        notes=notes,
     )
 
     # Collect files to write

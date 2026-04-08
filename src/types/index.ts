@@ -19,7 +19,7 @@ export interface Circuit {
   code_id: number;
   name: string;
   slug: string;
-  description: string | null;
+  notes: string | null;
   source: string;
   gate_count: number | null;
   two_qubit_gate_count: number | null;
