@@ -131,6 +131,8 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 │   ├── db/                # DB creation, migration, and reset scripts (Node)
 │   └── tests/             # Python tests for ingestion scripts
 └── public/
+    ├── favicon.svg            # SVG favicon (light/dark mode via prefers-color-scheme)
+    └── apple-touch-icon.png   # 180×180 PNG for iOS home screen
 ```
 
 ---
