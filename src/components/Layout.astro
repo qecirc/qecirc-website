@@ -53,6 +53,7 @@ const sunIconSvg = `<svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" f
     </script>
   </head>
   <body class="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-white dark:focus:bg-gray-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:rounded focus:shadow">Skip to main content</a>
     <header class="border-b border-gray-200 dark:border-gray-800">
       <nav class="mx-auto max-w-4xl px-4 py-4">
         <div class="flex items-center gap-6">
@@ -125,7 +126,7 @@ const sunIconSvg = `<svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" f
         </div>
       </nav>
     </header>
-    <main class="mx-auto max-w-4xl px-4 py-8">
+    <main id="main-content" class="mx-auto max-w-4xl px-4 py-8">
       <slot />
     </main>
     <footer class="border-t border-gray-200 dark:border-gray-800 mt-16">
