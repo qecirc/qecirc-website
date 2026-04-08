@@ -27,16 +27,16 @@ function inputClass(hasError: boolean): string {
   data-filter-fields="n,k,d" data-filter-focus={focus} data-base-path="/">
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex items-center">
-      <span class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">n</span>
-      <input type="text" name="n" value={rawN} class={inputClass(errors.n)} placeholder=">3,<10" data-filter />
+      <label for="filter-n" class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">n</label>
+      <input id="filter-n" type="text" name="n" value={rawN} class={inputClass(errors.n)} placeholder=">3,<10" data-filter />
     </div>
     <div class="flex items-center">
-      <span class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">k</span>
-      <input type="text" name="k" value={rawK} class={inputClass(errors.k)} placeholder=">=2" data-filter />
+      <label for="filter-k" class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">k</label>
+      <input id="filter-k" type="text" name="k" value={rawK} class={inputClass(errors.k)} placeholder=">=2" data-filter />
     </div>
     <div class="flex items-center">
-      <span class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">d</span>
-      <input type="text" name="d" value={rawD} class={inputClass(errors.d)} placeholder="!=5" data-filter />
+      <label for="filter-d" class="rounded-l border border-r-0 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-500 dark:text-gray-400">d</label>
+      <input id="filter-d" type="text" name="d" value={rawD} class={inputClass(errors.d)} placeholder="!=5" data-filter />
     </div>
     <div class="ml-auto text-xs" data-filter-status>
       {anyError ? (

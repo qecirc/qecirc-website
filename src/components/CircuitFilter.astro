@@ -70,19 +70,19 @@ const qubitSort = labelInfo("qubit_count");
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
       <a href={sortToggleUrl("gate_count")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${gateSort.cls}`}>Gates{gateSort.arrow}</a>
-      <input type="text" name="gate_count" value={rawGateCount} class={inputClass(errors.gate_count)} placeholder=">10" data-filter />
+      <input type="text" name="gate_count" value={rawGateCount} class={inputClass(errors.gate_count)} placeholder=">10" aria-label="Filter by gate count" data-filter />
     </div>
     <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
       <a href={sortToggleUrl("two_qubit_gate_count")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${twoQubitGateSort.cls}`}>2Q Gates{twoQubitGateSort.arrow}</a>
-      <input type="text" name="two_qubit_gate_count" value={rawTwoQubitGateCount} class={inputClass(errors.two_qubit_gate_count)} placeholder=">5" data-filter />
+      <input type="text" name="two_qubit_gate_count" value={rawTwoQubitGateCount} class={inputClass(errors.two_qubit_gate_count)} placeholder=">5" aria-label="Filter by two-qubit gate count" data-filter />
     </div>
     <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
       <a href={sortToggleUrl("depth")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${depthSort.cls}`}>Depth{depthSort.arrow}</a>
-      <input type="text" name="depth" value={rawDepth} class={inputClass(errors.depth)} placeholder="<=5" data-filter />
+      <input type="text" name="depth" value={rawDepth} class={inputClass(errors.depth)} placeholder="<=5" aria-label="Filter by depth" data-filter />
     </div>
     <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
       <a href={sortToggleUrl("qubit_count")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${qubitSort.cls}`}>Qubits{qubitSort.arrow}</a>
-      <input type="text" name="qubit_count" value={rawQubitCount} class={inputClass(errors.qubit_count)} placeholder="7" data-filter />
+      <input type="text" name="qubit_count" value={rawQubitCount} class={inputClass(errors.qubit_count)} placeholder="7" aria-label="Filter by qubit count" data-filter />
     </div>
     <div class="ml-auto text-xs" data-filter-status>
       {anyError ? (
