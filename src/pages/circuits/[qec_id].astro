@@ -167,13 +167,13 @@ const hasOriginalMatrices = origHx || origHz || origLx || origLz;
       </div>
       {bodies.map((b, i) => (
         <div class="format-body" data-format={b.format} style={i === 0 ? "" : "display:none"}>
-          <CodeBlock code={b.body} label={`${b.format.toUpperCase()} Circuit`} downloadName={b.format === "stim" ? stimFilename : undefined} />
+          <CodeBlock code={b.body} label={`${b.format.toUpperCase()} Circuit`} downloadName={b.format === "stim" ? stimFilename : undefined} source={circuit.source} />
         </div>
       ))}
     </div>
   ) : bodies.length === 1 ? (
     <div class="mb-6">
-      <CodeBlock code={bodies[0].body} label={`${bodies[0].format.toUpperCase()} Circuit`} downloadName={bodies[0].format === "stim" ? stimFilename : undefined} />
+      <CodeBlock code={bodies[0].body} label={`${bodies[0].format.toUpperCase()} Circuit`} downloadName={bodies[0].format === "stim" ? stimFilename : undefined} source={circuit.source} />
     </div>
   ) : (
     <p class="text-sm text-gray-400 mb-6">No circuit body available.</p>

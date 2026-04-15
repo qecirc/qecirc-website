@@ -200,6 +200,10 @@ const countLabel = hasFilters
         a.download = match ? match[1] : `${slug}_circuits.stim.zip`;
         a.click();
         URL.revokeObjectURL(url);
+        const w = window as Window & { showCiteToast?: (msg: string) => void };
+        if (typeof w.showCiteToast === "function") {
+          w.showCiteToast("Please cite the corresponding sources when using these circuits.");
+        }
       } finally {
         downloadBtn.classList.remove("opacity-50", "pointer-events-none");
       }
