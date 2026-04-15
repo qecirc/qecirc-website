@@ -59,6 +59,15 @@ def build_circuit_yaml(circ):
     return data
 
 
+def build_original_yaml(matrices):
+    """Build YAML dict for original (pre-canonicalization) matrices."""
+    data = {}
+    for field in ("hx", "hz", "logical_x", "logical_z"):
+        if matrices.get(field) is not None:
+            data[field] = matrices[field]
+    return data
+
+
 class _FlowList(list):
     """List that serializes as YAML flow style (inline)."""
 

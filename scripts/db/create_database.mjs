@@ -46,6 +46,9 @@ const stmts = {
   insertBody: db.prepare(`
     INSERT INTO circuit_bodies (circuit_id, format, body)
     VALUES (?, ?, ?)`),
+  insertOriginal: db.prepare(`
+    INSERT INTO circuit_originals (circuit_id, original_stim, original_hx, original_hz, original_logical_x, original_logical_z)
+    VALUES (?, ?, ?, ?, ?, ?)`),
   insertTag: db.prepare(`INSERT OR IGNORE INTO tags (name) VALUES (?)`),
   getTagId: db.prepare(`SELECT id FROM tags WHERE name = ?`),
   insertTagging: db.prepare(`
@@ -260,14 +263,33 @@ try {
         stmts.insertBody.run(circuitId, ext, body);
       }
 
+      // Original files (pre-canonicalization data)
+      const originalsDir = path.join(circuitsDir, "originals");
+      const origStimPath = path.join(originalsDir, `${stem}.original.stim`);
+      const origYamlPath = path.join(originalsDir, `${stem}.original.yaml`);
+      if (fs.existsSync(origStimPath) && fs.existsSync(origYamlPath)) {
+        const origStim = fs.readFileSync(origStimPath, "utf-8");
+        const origData = readYaml(origYamlPath);
+        stmts.insertOriginal.run(
+          circuitId,
+          origStim,
+          JSON.stringify(origData.hx),
+          JSON.stringify(origData.hz),
+          JSON.stringify(origData.logical_x),
+          JSON.stringify(origData.logical_z),
+        );
+      }
+
       // Tags
       for (const tag of data.tags || []) {
         addTag(tag, circuitId, "circuit");
       }
 
       const bodyFormats = Object.keys(bodies).join(", ") || "none";
+      const hasOriginals =
+        fs.existsSync(origStimPath) && fs.existsSync(origYamlPath);
       console.log(
-        `  Circuit: ${data.name} (${codeSlug}/${circuitSlug}) [bodies: ${bodyFormats}]`,
+        `  Circuit: ${data.name} (${codeSlug}/${circuitSlug}) [bodies: ${bodyFormats}]${hasOriginals ? " [originals]" : ""}`,
       );
     }
 

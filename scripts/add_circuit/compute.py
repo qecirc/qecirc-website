@@ -49,6 +49,9 @@ def compute_code_data(
     # 3. Logical operators (use canonical matrices so logicals match stored Hx/Hz)
     Lx, Lz = _compute_logicals(canon_Hx, canon_Hz, params.is_css, d)
 
+    # 3b. Original logical operators (from pre-canonicalization matrices)
+    orig_Lx, orig_Lz = _compute_logicals(Hx, Hz, params.is_css, d)
+
     # 4. Tags
     params_with_d = CodeParams(n=params.n, k=params.k, is_css=params.is_css, d=d)
     tags = suggest_code_tags(params_with_d)
@@ -109,6 +112,12 @@ def compute_code_data(
             "tags": [{"name": t.name, "status": t.status} for t in tags],
         },
         "qubit_permutation": final_perm,
+        "original_matrices": {
+            "hx": Hx.tolist(),
+            "hz": Hz.tolist(),
+            "logical_x": orig_Lx.tolist(),
+            "logical_z": orig_Lz.tolist(),
+        },
     }
 
 

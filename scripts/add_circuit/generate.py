@@ -22,7 +22,13 @@ import yaml
 
 from .compute import compute_code_data
 from .compute_circuit import compute_circuit_data
-from .yaml_helpers import build_circuit_yaml, build_code_yaml, dump_yaml, write_file
+from .yaml_helpers import (
+    build_circuit_yaml,
+    build_code_yaml,
+    build_original_yaml,
+    dump_yaml,
+    write_file,
+)
 
 
 def _next_qec_id(data_dir: Path) -> int:
@@ -75,6 +81,7 @@ def main():
 
     code = code_result["code"]
     perm = code_result["qubit_permutation"]
+    original_matrices = code_result["original_matrices"]
     code_slug = code["slug"]
 
     # Collect all files to write
@@ -118,6 +125,19 @@ def main():
         for body in circ_data.get("bodies", []):
             if body.get("body"):
                 files_to_write.append((circuits_dir / f"{stem}.{body['format']}", body["body"]))
+
+        # Original files (pre-canonicalization)
+        originals_dir = circuits_dir / "originals"
+        if circ_data.get("original_stim"):
+            files_to_write.append(
+                (originals_dir / f"{stem}.original.stim", circ_data["original_stim"])
+            )
+        files_to_write.append(
+            (
+                originals_dir / f"{stem}.original.yaml",
+                dump_yaml(build_original_yaml(original_matrices)),
+            )
+        )
 
     # Write or dry-run
     if args.dry_run:
