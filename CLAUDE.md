@@ -59,6 +59,13 @@ circuit_bodies
   -- format: circuit format identifier (e.g. 'stim', 'qasm', 'cirq')
   -- UNIQUE(circuit_id, format): one body per format per circuit
 
+circuit_originals
+  id, circuit_id → circuits (UNIQUE),
+  original_stim, original_hx, original_hz, original_logical_x, original_logical_z
+  -- pre-canonicalization data as submitted by contributors
+  -- matrix fields are JSON-encoded (same format as codes.hx/hz)
+  -- populated from data_yaml/circuits/originals/
+
 tags
   id, name                          -- e.g. "CSS", "distance:3", "encoding"
 
@@ -98,7 +105,7 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 **Rendering strategy — Astro v6 (static default, SSR opt-in):**
 
 - Static pages: landing page, 404 (pre-rendered at build time)
-- SSR pages (`prerender = false`): all `/codes/...` routes, `/api/search` (rendered on request, read from SQLite)
+- SSR pages (`prerender = false`): all `/codes/...` and `/circuits/...` routes, `/api/search` (rendered on request, read from SQLite)
 - Client-side JS (minimal): search bar (debounced fetch), CodeBlock copy button, filter input validation + auto-submit
 
 This keeps the site fast and simple while scaling comfortably to thousands of circuits.
@@ -120,6 +127,7 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 │   ├── tools/             # One YAML per tool (e.g. mqt-qecc.yaml)
 │   ├── codes/             # One YAML per code (e.g. steane-code.yaml)
 │   └── circuits/          # YAML + body files per circuit (e.g. steane-code--standard-encoding.yaml/.stim)
+│       └── originals/     # Original (pre-canonicalization) STIM and matrices per circuit
 ├── .github/
 │   └── ISSUE_TEMPLATE/    # Circuit submission issue template
 ├── docs/

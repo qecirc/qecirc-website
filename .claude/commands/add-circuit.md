@@ -139,7 +139,7 @@ result = add_circuit(
 print(result.summary())
 ```
 
-Report the files written.
+Report the files written. The output includes original submission files (`*.original.stim` and `*.original.yaml` in `data_yaml/circuits/originals/`) — these are automatically generated and preserve the pre-canonicalization STIM circuit and check matrices for verification purposes. No user action is needed for these.
 
 ---
 
