@@ -181,9 +181,7 @@ def add_circuit(
     # Original files (pre-canonicalization)
     originals_dir = circuits_dir / "originals"
     if circ_data.get("original_stim"):
-        files_to_write.append(
-            (originals_dir / f"{stem}.original.stim", circ_data["original_stim"])
-        )
+        files_to_write.append((originals_dir / f"{stem}.original.stim", circ_data["original_stim"]))
     files_to_write.append(
         (
             originals_dir / f"{stem}.original.yaml",

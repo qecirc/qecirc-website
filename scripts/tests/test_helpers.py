@@ -140,9 +140,7 @@ class TestFindExistingCodeFull:
             # Applying the permutation to the queried matrices should recover stored matrices
             from scripts.add_circuit.code_identify import gf2_rref
 
-            assert np.array_equal(
-                gf2_rref(Hx_perm[:, match.qubit_permutation]), gf2_rref(STEANE_H)
-            )
+            assert np.array_equal(gf2_rref(Hx_perm[:, match.qubit_permutation]), gf2_rref(STEANE_H))
 
     def test_returns_none_for_unknown(self):
         with tempfile.TemporaryDirectory() as tmpdir:

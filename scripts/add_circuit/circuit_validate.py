@@ -213,9 +213,7 @@ def validate_syndrome_extraction(
 # ---------------------------------------------------------------------------
 
 
-def _pauli_string_to_xz(
-    ps: stim.PauliString, n: int
-) -> tuple[np.ndarray, np.ndarray, int]:
+def _pauli_string_to_xz(ps: stim.PauliString, n: int) -> tuple[np.ndarray, np.ndarray, int]:
     """Convert a stim PauliString to binary X/Z vectors and sign.
 
     Returns (x_vec, z_vec, sign) where:

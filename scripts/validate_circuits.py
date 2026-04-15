@@ -86,9 +86,7 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
 
         # Check required code fields
         if "hx" not in code_data or "hz" not in code_data:
-            result.checks.append(
-                CheckResult("load_code", "error", "Code YAML missing hx/hz")
-            )
+            result.checks.append(CheckResult("load_code", "error", "Code YAML missing hx/hz"))
             results.append(result)
             continue
 
@@ -166,8 +164,10 @@ def print_results(results: list[CircuitResult]) -> None:
                 line += f" ({c.detail})"
             print(line)
 
-    print(f"\nSummary: {len(checked)} checked, {len(passed)} passed, "
-          f"{len(failed)} failed, {len(skipped)} skipped")
+    print(
+        f"\nSummary: {len(checked)} checked, {len(passed)} passed, "
+        f"{len(failed)} failed, {len(skipped)} skipped"
+    )
 
 
 def main():

@@ -74,9 +74,7 @@ class TestComputeCircuitData:
         assert isinstance(result["original_stim"], str)
         assert len(result["original_stim"]) > 0
 
-    @pytest.mark.skipif(
-        not _mqt_available, reason="mqt-qecc not available"
-    )
+    @pytest.mark.skipif(not _mqt_available, reason="mqt-qecc not available")
     def test_with_permutation_stores_original(self):
         perm = [0, 1, 2, 3, 4, 5, 6]  # identity permutation
         result = compute_circuit_data(
