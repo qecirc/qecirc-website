@@ -52,6 +52,8 @@ The agent enriches the generated YAML with tags:
 
 The agent shows you the final YAML files. You can request edits. Once you approve, it rebuilds the database with `npm run db:create`.
 
+The pipeline also preserves the original (pre-canonicalization) STIM circuit and check matrices in `data_yaml/circuits/originals/`. These are viewable on the circuit detail page under "Original submission".
+
 ## What you need to provide
 
 | Input         | Required | Notes                                             |

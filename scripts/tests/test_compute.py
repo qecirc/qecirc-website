@@ -97,18 +97,22 @@ class TestComputeCodeData:
         """New code with non-identity canonical perm returns qubit_permutation."""
         # Non-CSS [[5,1,3]] code — columns are distinguishable, so shuffling
         # produces a non-identity canonical permutation.
-        Hx = np.array([
-            [1, 0, 0, 1, 0],
-            [0, 1, 0, 0, 1],
-            [1, 0, 1, 0, 0],
-            [0, 1, 0, 1, 0],
-        ])
-        Hz = np.array([
-            [0, 1, 1, 0, 0],
-            [0, 0, 1, 1, 0],
-            [0, 0, 0, 1, 1],
-            [1, 0, 0, 0, 1],
-        ])
+        Hx = np.array(
+            [
+                [1, 0, 0, 1, 0],
+                [0, 1, 0, 0, 1],
+                [1, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0],
+            ]
+        )
+        Hz = np.array(
+            [
+                [0, 1, 1, 0, 0],
+                [0, 0, 1, 1, 0],
+                [0, 0, 0, 1, 1],
+                [1, 0, 0, 0, 1],
+            ]
+        )
         # Shuffle columns
         col_order = [4, 2, 0, 3, 1]
         Hx_shuffled = Hx[:, col_order]
@@ -125,21 +129,62 @@ class TestComputeCodeData:
             or result_shuf["qubit_permutation"] is not None
         )
 
+    def test_original_matrices_returned(self, steane_H):
+        result = compute_code_data(steane_H, steane_H, d=3)
+        om = result["original_matrices"]
+        assert "hx" in om
+        assert "hz" in om
+        assert "logical_x" in om
+        assert "logical_z" in om
+        # Original matrices should match input (steane is self-dual)
+        assert np.array_equal(om["hx"], steane_H.tolist())
+        assert np.array_equal(om["hz"], steane_H.tolist())
+
+    def test_original_logicals_from_pre_canonicalization(self):
+        """Original logicals are computed from input matrices, not canonical ones."""
+        Hx = np.array(
+            [
+                [1, 0, 0, 1, 0],
+                [0, 1, 0, 0, 1],
+                [1, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0],
+            ]
+        )
+        Hz = np.array(
+            [
+                [0, 1, 1, 0, 0],
+                [0, 0, 1, 1, 0],
+                [0, 0, 0, 1, 1],
+                [1, 0, 0, 0, 1],
+            ]
+        )
+        result = compute_code_data(Hx, Hz, d=3)
+        om = result["original_matrices"]
+        orig_Lx = np.array(om["logical_x"])
+        orig_Lz = np.array(om["logical_z"])
+        # Original logicals must be valid for the ORIGINAL matrices
+        assert np.all(Hz @ orig_Lx.T % 2 == 0)
+        assert np.all(Hx @ orig_Lz.T % 2 == 0)
+
     def test_logicals_consistent_with_canonical_hx_hz(self):
         """Logicals must satisfy Hz @ Lx.T = 0 and Hx @ Lz.T = 0 mod 2."""
         # Non-CSS [[5,1,3]] code
-        Hx = np.array([
-            [1, 0, 0, 1, 0],
-            [0, 1, 0, 0, 1],
-            [1, 0, 1, 0, 0],
-            [0, 1, 0, 1, 0],
-        ])
-        Hz = np.array([
-            [0, 1, 1, 0, 0],
-            [0, 0, 1, 1, 0],
-            [0, 0, 0, 1, 1],
-            [1, 0, 0, 0, 1],
-        ])
+        Hx = np.array(
+            [
+                [1, 0, 0, 1, 0],
+                [0, 1, 0, 0, 1],
+                [1, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0],
+            ]
+        )
+        Hz = np.array(
+            [
+                [0, 1, 1, 0, 0],
+                [0, 0, 1, 1, 0],
+                [0, 0, 0, 1, 1],
+                [1, 0, 0, 0, 1],
+            ]
+        )
         result = compute_code_data(Hx, Hz, d=3)
         code = result["code"]
         canon_Hx = np.array(code["hx"])

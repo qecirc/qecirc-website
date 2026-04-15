@@ -3,9 +3,10 @@ interface Props {
   code: string;
   label?: string;
   downloadName?: string;
+  source?: string;
 }
 
-const { code, label, downloadName } = Astro.props;
+const { code, label, downloadName, source } = Astro.props;
 const lines = code.trimEnd().split("\n");
 const lineCount = lines.length;
 const gutterWidth = String(lineCount).length;
@@ -19,7 +20,7 @@ const formatted = lines
   .join("\n");
 ---
 
-<div class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden" data-code-block>
+<div class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden" data-code-block data-source={source ?? ""}>
   <div class="border-b border-gray-200 dark:border-gray-800 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
     <span>{label ?? ""}</span>
     <div class="flex items-center gap-2">
@@ -51,6 +52,21 @@ const formatted = lines
   document.querySelectorAll<HTMLElement>("[data-code-block]:not([data-initialized])").forEach(function (block) {
     block.setAttribute("data-initialized", "");
 
+    const source = block.dataset.source || "";
+
+    function citeNotice() {
+      const w = window as Window & { showCiteToast?: (msg: string, url?: string) => void };
+      if (typeof w.showCiteToast === "function") {
+        if (source && source.startsWith("http")) {
+          w.showCiteToast("Please cite the source when using this circuit:", source);
+        } else if (source) {
+          w.showCiteToast("Please cite the source when using this circuit: " + source);
+        } else {
+          w.showCiteToast("Please check and cite the corresponding source when using this circuit.");
+        }
+      }
+    }
+
     block.querySelectorAll(".copy-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         const code = (btn as HTMLElement).dataset.code || "";
@@ -58,6 +74,7 @@ const formatted = lines
         const original = btn.textContent;
         btn.textContent = "Copied!";
         setTimeout(function () { btn.textContent = original; }, 1500);
+        citeNotice();
       });
     });
 
@@ -74,6 +91,7 @@ const formatted = lines
         a.download = name;
         a.click();
         URL.revokeObjectURL(url);
+        citeNotice();
       });
     });
   });

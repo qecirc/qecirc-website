@@ -69,13 +69,12 @@ class TestComputeCircuitData:
         result = compute_circuit_data(STEANE_STIM)
         assert result["quirk_url"].startswith("https://algassert.com/quirk")
 
-    def test_no_permutation_no_original(self):
+    def test_no_permutation_stores_original(self):
         result = compute_circuit_data(STEANE_STIM)
-        assert result["original_stim"] is None
+        assert isinstance(result["original_stim"], str)
+        assert len(result["original_stim"]) > 0
 
-    @pytest.mark.skipif(
-        not _mqt_available, reason="mqt-qecc not available"
-    )
+    @pytest.mark.skipif(not _mqt_available, reason="mqt-qecc not available")
     def test_with_permutation_stores_original(self):
         perm = [0, 1, 2, 3, 4, 5, 6]  # identity permutation
         result = compute_circuit_data(

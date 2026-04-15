@@ -35,6 +35,14 @@ export interface CircuitBody {
   body: string;
 }
 
+export interface CircuitOriginal {
+  original_stim: string;
+  original_hx: string;
+  original_hz: string;
+  original_logical_x: string;
+  original_logical_z: string;
+}
+
 export interface Tool {
   id: number;
   name: string;

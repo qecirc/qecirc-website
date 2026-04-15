@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import SearchBar from "./SearchBar.astro";
+import CiteToast from "./CiteToast.astro";
 
 interface Props {
   title: string;
@@ -162,5 +163,6 @@ const sunIconSvg = `<svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" f
         });
       }
     </script>
+    <CiteToast />
   </body>
 </html>

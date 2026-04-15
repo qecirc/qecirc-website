@@ -43,7 +43,13 @@ from .helpers import (  # noqa: F401
     summarize_circuit,
 )
 from .models import ExtractedCode  # noqa: F401
-from .yaml_helpers import build_circuit_yaml, build_code_yaml, dump_yaml, write_file
+from .yaml_helpers import (
+    build_circuit_yaml,
+    build_code_yaml,
+    build_original_yaml,
+    dump_yaml,
+    write_file,
+)
 
 
 @dataclass
@@ -133,6 +139,7 @@ def add_circuit(
 
     code = code_result["code"]
     perm = code_result["qubit_permutation"]
+    original_matrices = code_result["original_matrices"]
 
     # Compute circuit data
     circ_data = compute_circuit_data(
@@ -170,6 +177,17 @@ def add_circuit(
     for body in circ_data.get("bodies", []):
         if body.get("body"):
             files_to_write.append((circuits_dir / f"{stem}.{body['format']}", body["body"]))
+
+    # Original files (pre-canonicalization)
+    originals_dir = circuits_dir / "originals"
+    if circ_data.get("original_stim"):
+        files_to_write.append((originals_dir / f"{stem}.original.stim", circ_data["original_stim"]))
+    files_to_write.append(
+        (
+            originals_dir / f"{stem}.original.yaml",
+            dump_yaml(build_original_yaml(original_matrices)),
+        )
+    )
 
     # Write or dry-run
     written_paths: list[str] = []

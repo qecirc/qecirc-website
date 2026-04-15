@@ -213,6 +213,7 @@ npm run db:create && npm run dev  # Rebuild database and restart
 - Compact STIM, QASM, and Cirq format conversions
 - Crumble and Quirk visualization URLs
 - **Circuit ID (`qec_id`)**: auto-assigned as `max(existing IDs) + 1` — permanent, never reused
+- **Original submission data**: the pipeline always preserves the original (pre-canonicalization) STIM circuit and contributor-provided check matrices in `data_yaml/circuits/originals/`. These are displayed on the circuit detail page under "Original submission (before canonicalization)".
 - Dedup: if the code already exists, the pipeline detects qubit ordering differences and relabels the circuit to match. Check `AddCircuitResult.qubit_permutation` to see if relabeling was applied (`None` = no relabeling, `list` = permutation applied)
 - Use `find_existing_code_full()` to check for qubit permutations before generating files
 
@@ -253,6 +254,22 @@ tags: [encoding]
 The `qec_id` is a **permanent, globally unique** integer identifier for the circuit (displayed as `#1` in the UI). It is auto-assigned by the generation pipeline (`max(existing IDs) + 1`). Once assigned, a `qec_id` must **never be reused or reassigned**, even if a circuit is removed.
 
 Body files (`.stim`, `.qasm`, `.cirq`) share the same stem as the circuit YAML.
+
+### Original submission (`data_yaml/circuits/originals/`)
+
+For each circuit, the pipeline generates two files preserving the original (pre-canonicalization) data:
+
+- `<code-slug>--<circuit-slug>.original.stim` — the STIM circuit as submitted
+- `<code-slug>--<circuit-slug>.original.yaml` — the contributor-provided check matrices:
+
+```yaml
+hx: [[1, 0, 1, 0, 1, 0, 1], ...]
+hz: [[1, 0, 1, 0, 1, 0, 1], ...]
+logical_x: [[1, 1, 1, 1, 1, 1, 1]]
+logical_z: [[1, 1, 1, 1, 1, 1, 1]]
+```
+
+These files are loaded into the `circuit_originals` database table during `npm run db:create` and displayed on the circuit detail page (`/circuits/[qec_id]`).
 
 ### Tool (`data_yaml/tools/<slug>.yaml`)
 

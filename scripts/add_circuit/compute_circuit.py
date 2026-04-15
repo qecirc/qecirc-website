@@ -25,11 +25,10 @@ def compute_circuit_data(
     Returns a dict matching one entry in the YAML `circuits` list.
     """
     circ = stim.Circuit(circuit_text)
-    original_stim = None
+    original_stim = str(circ)
 
     # 1. Apply qubit permutation if code already exists in DB
     if qubit_permutation is not None:
-        original_stim = str(circ)
         circ = _relabel_qubits(circ, qubit_permutation)
 
     # 2. Compact STIM
