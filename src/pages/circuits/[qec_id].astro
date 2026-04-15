@@ -201,7 +201,7 @@ const hasOriginalMatrices = origHx || origHz || origLx || origLz;
       <div id="originals-detail" class="overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;">
         <div class="mt-3 space-y-4">
           {original?.original_stim && (
-            <CodeBlock code={original.original_stim} label="Original STIM Circuit" />
+            <CodeBlock code={original.original_stim} label="Original STIM Circuit" source={circuit.source} />
           )}
           {hasOriginalMatrices && (
             <div class="grid gap-x-6 gap-y-2 sm:grid-cols-2">
