@@ -12,6 +12,7 @@ import {
   formatCircuitId,
 } from "../../lib/queries";
 import { buildStimFilename } from "../../lib/filename";
+import { safeParseMatrix } from "../../lib/utils";
 
 const qecId = Number(Astro.params.qec_id);
 if (!Number.isInteger(qecId) || qecId < 1) {
@@ -40,11 +41,6 @@ const stimFilename = buildStimFilename({
   depth: circuit.depth,
   qubitCount: circuit.qubit_count,
 });
-
-function safeParseMatrix(json: string | null): number[][] | null {
-  if (!json) return null;
-  try { return JSON.parse(json); } catch { return null; }
-}
 
 const origHx = original ? safeParseMatrix(original.original_hx) : null;
 const origHz = original ? safeParseMatrix(original.original_hz) : null;

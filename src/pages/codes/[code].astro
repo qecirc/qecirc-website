@@ -17,6 +17,7 @@ import {
   getToolsForCircuits,
 } from "../../lib/queries";
 import { parseCircuitParams } from "../../lib/url";
+import { safeParseMatrix } from "../../lib/utils";
 
 const { code: codeSlug } = Astro.params;
 const code = getCodeBySlug(codeSlug!);
@@ -28,11 +29,6 @@ if (!code) {
 const tags = getTagsFor("code", code.id);
 const params = formatCodeParams(code);
 
-// Parse matrices from JSON (graceful fallback on malformed data)
-function safeParseMatrix(json: string | null): number[][] | null {
-  if (!json) return null;
-  try { return JSON.parse(json); } catch { return null; }
-}
 const hx = safeParseMatrix(code.hx);
 const hz = safeParseMatrix(code.hz);
 const logicalX = safeParseMatrix(code.logical_x);

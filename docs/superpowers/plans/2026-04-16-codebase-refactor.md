@@ -15,37 +15,40 @@
 ## File Map
 
 ### New files
-| File | Responsibility |
-|------|----------------|
-| `src/lib/utils.ts` | Shared utility functions (safeParseMatrix) |
-| `src/components/MetricBadge.astro` | Reusable metric badge (amber/purple/green/blue) |
-| `src/components/HeartIcon.astro` | Heart SVG component (outline/filled) |
-| `src/components/CollapsibleSection.astro` | Chevron toggle + max-height animated content |
-| `src/components/FormatSwitcher.astro` | Format tab switching with CodeBlock rendering |
-| `src/lib/toggle-client.ts` | Shared collapse/expand JS logic |
-| `src/lib/format-switcher-client.ts` | Shared format tab switching JS logic |
-| `src/lib/queries/index.ts` | Barrel re-export of all query modules |
-| `src/lib/queries/shared.ts` | Private query helpers (withTags, addConditions, etc.) |
-| `src/lib/queries/codes.ts` | Code-related queries |
-| `src/lib/queries/circuits.ts` | Circuit-related queries |
-| `src/lib/queries/tools.ts` | Tool-related queries |
-| `src/lib/queries/search.ts` | Search queries |
+
+| File                                      | Responsibility                                        |
+| ----------------------------------------- | ----------------------------------------------------- |
+| `src/lib/utils.ts`                        | Shared utility functions (safeParseMatrix)            |
+| `src/components/MetricBadge.astro`        | Reusable metric badge (amber/purple/green/blue)       |
+| `src/components/HeartIcon.astro`          | Heart SVG component (outline/filled)                  |
+| `src/components/CollapsibleSection.astro` | Chevron toggle + max-height animated content          |
+| `src/components/FormatSwitcher.astro`     | Format tab switching with CodeBlock rendering         |
+| `src/lib/toggle-client.ts`                | Shared collapse/expand JS logic                       |
+| `src/lib/format-switcher-client.ts`       | Shared format tab switching JS logic                  |
+| `src/lib/queries/index.ts`                | Barrel re-export of all query modules                 |
+| `src/lib/queries/shared.ts`               | Private query helpers (withTags, addConditions, etc.) |
+| `src/lib/queries/codes.ts`                | Code-related queries                                  |
+| `src/lib/queries/circuits.ts`             | Circuit-related queries                               |
+| `src/lib/queries/tools.ts`                | Tool-related queries                                  |
+| `src/lib/queries/search.ts`               | Search queries                                        |
 
 ### Modified files
-| File | Changes |
-|------|---------|
-| `src/components/CircuitRow.astro` | Use MetricBadge, HeartIcon, FormatSwitcher; slim script |
-| `src/components/CircuitFilter.astro` | Use HeartIcon |
-| `src/components/Layout.astro` | Use HeartIcon constant |
-| `src/pages/circuits/[qec_id].astro` | Use MetricBadge, HeartIcon, CollapsibleSection, FormatSwitcher; slim script |
-| `src/pages/codes/[code].astro` | Use CollapsibleSection; slim script |
-| `src/pages/favorites.astro` | Use exported badge color constants |
-| `src/components/SearchBar.astro` | Add aria-hidden to kbd hint |
-| `CLAUDE.md` | Update rendering strategy and repository structure |
+
+| File                                 | Changes                                                                     |
+| ------------------------------------ | --------------------------------------------------------------------------- |
+| `src/components/CircuitRow.astro`    | Use MetricBadge, HeartIcon, FormatSwitcher; slim script                     |
+| `src/components/CircuitFilter.astro` | Use HeartIcon                                                               |
+| `src/components/Layout.astro`        | Use HeartIcon constant                                                      |
+| `src/pages/circuits/[qec_id].astro`  | Use MetricBadge, HeartIcon, CollapsibleSection, FormatSwitcher; slim script |
+| `src/pages/codes/[code].astro`       | Use CollapsibleSection; slim script                                         |
+| `src/pages/favorites.astro`          | Use exported badge color constants                                          |
+| `src/components/SearchBar.astro`     | Add aria-hidden to kbd hint                                                 |
+| `CLAUDE.md`                          | Update rendering strategy and repository structure                          |
 
 ### Deleted files
-| File | Reason |
-|------|--------|
+
+| File                 | Reason                                   |
+| -------------------- | ---------------------------------------- |
 | `src/lib/queries.ts` | Replaced by `src/lib/queries/` directory |
 
 ---
@@ -53,6 +56,7 @@
 ## Task 1: Extract shared utilities and constants
 
 **Files:**
+
 - Create: `src/lib/utils.ts`
 - Modify: `src/pages/circuits/[qec_id].astro:44-47`
 - Modify: `src/pages/codes/[code].astro:32-35`
@@ -136,6 +140,7 @@ git commit -m "refactor: extract safeParseMatrix and shared constants"
 ## Task 2: Extract HeartIcon and MetricBadge components
 
 **Files:**
+
 - Create: `src/components/HeartIcon.astro`
 - Create: `src/components/MetricBadge.astro`
 - Modify: `src/components/CircuitRow.astro`
@@ -196,18 +201,21 @@ const colors = METRIC_COLORS[color];
 - [ ] **Step 3: Update `src/components/CircuitRow.astro` to use HeartIcon and MetricBadge**
 
 Add imports at top of frontmatter:
+
 ```typescript
 import HeartIcon from "./HeartIcon.astro";
 import MetricBadge from "./MetricBadge.astro";
 ```
 
 Replace the heart button SVGs (lines 74-79) with:
+
 ```astro
 <HeartIcon class="fav-outline w-3.5 h-3.5" />
 <HeartIcon filled class="fav-filled w-3.5 h-3.5 hidden" />
 ```
 
 Replace the four metric badge spans (lines 82-108) with:
+
 ```astro
 <span class="text-xs text-center">
   <MetricBadge value={circuit.gate_count} color="amber" title="Gate count" />
@@ -226,18 +234,21 @@ Replace the four metric badge spans (lines 82-108) with:
 - [ ] **Step 4: Update `src/pages/circuits/[qec_id].astro` to use HeartIcon and MetricBadge**
 
 Add imports:
+
 ```typescript
 import HeartIcon from "../../components/HeartIcon.astro";
 import MetricBadge from "../../components/MetricBadge.astro";
 ```
 
 Replace the heart button SVGs (lines 77-82) with:
+
 ```astro
 <HeartIcon class="fav-outline w-5 h-5" />
 <HeartIcon filled class="fav-filled w-5 h-5 hidden" />
 ```
 
 Replace the four metric badge spans (lines 87-106) with:
+
 ```astro
 <div class="flex flex-wrap gap-2 mb-4">
   <MetricBadge value={circuit.gate_count} color="amber" label="G:" title="Gate count" />
@@ -250,11 +261,13 @@ Replace the four metric badge spans (lines 87-106) with:
 - [ ] **Step 5: Update `src/components/CircuitFilter.astro` to use HeartIcon**
 
 Add import:
+
 ```typescript
 import HeartIcon from "./HeartIcon.astro";
 ```
 
 Replace the inline heart SVG in the favorites toggle button (lines 93-95) with:
+
 ```astro
 <HeartIcon class="w-3 h-3 inline -mt-0.5" />
 ```
@@ -262,6 +275,7 @@ Replace the inline heart SVG in the favorites toggle button (lines 93-95) with:
 - [ ] **Step 6: Update `src/components/Layout.astro` to use HEART_PATH constant**
 
 Replace the `heartIconSvg` string template (line 23) with:
+
 ```typescript
 import { HEART_PATH } from "../lib/constants";
 
@@ -287,6 +301,7 @@ git commit -m "refactor: extract HeartIcon and MetricBadge components"
 ## Task 3: Extract CollapsibleSection and FormatSwitcher components
 
 **Files:**
+
 - Create: `src/components/CollapsibleSection.astro`
 - Create: `src/components/FormatSwitcher.astro`
 - Create: `src/lib/toggle-client.ts`
@@ -328,7 +343,9 @@ const ACTIVE_CLASS =
 const INACTIVE_CLASS =
   "format-tab px-3 py-1 text-xs rounded cursor-pointer transition-colors bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700";
 
-export function initFormatSwitchers(root: HTMLElement | Document = document): void {
+export function initFormatSwitchers(
+  root: HTMLElement | Document = document,
+): void {
   root.querySelectorAll(".format-switcher").forEach(function (switcher) {
     const tabs = switcher.querySelectorAll(".format-tab");
     const bodies = switcher.querySelectorAll(".format-body");
@@ -339,7 +356,9 @@ export function initFormatSwitchers(root: HTMLElement | Document = document): vo
 
         tabs.forEach(function (t) {
           (t as HTMLElement).className =
-            (t as HTMLElement).dataset.format === format ? ACTIVE_CLASS : INACTIVE_CLASS;
+            (t as HTMLElement).dataset.format === format
+              ? ACTIVE_CLASS
+              : INACTIVE_CLASS;
         });
 
         bodies.forEach(function (b) {
@@ -476,6 +495,7 @@ const hasMultipleFormats = bodies.length > 1;
 - [ ] **Step 5: Update `src/pages/codes/[code].astro` to use CollapsibleSection**
 
 Replace the matrices toggle section (lines 70-98) with:
+
 ```astro
 import CollapsibleSection from "../../components/CollapsibleSection.astro";
 ```
@@ -500,12 +520,14 @@ Remove the matrices toggle JS from the script block (lines 165-182).
 - [ ] **Step 6: Update `src/pages/circuits/[qec_id].astro` to use CollapsibleSection and FormatSwitcher**
 
 Add imports:
+
 ```typescript
 import CollapsibleSection from "../../components/CollapsibleSection.astro";
 import FormatSwitcher from "../../components/FormatSwitcher.astro";
 ```
 
 Replace the format switcher section (lines 165-194) with:
+
 ```astro
 <h2 class="text-lg font-semibold mb-2">Circuit</h2>
 <div class="mb-6">
@@ -514,6 +536,7 @@ Replace the format switcher section (lines 165-194) with:
 ```
 
 Replace the originals toggle section (lines 196-231) with:
+
 ```astro
 {original && (
   <div class="border-t border-gray-200 dark:border-gray-800 pt-4">
@@ -541,11 +564,13 @@ Remove the originals toggle JS and format switcher JS from the script block (lin
 - [ ] **Step 7: Update `src/components/CircuitRow.astro` to use FormatSwitcher and extracted JS**
 
 Add import:
+
 ```typescript
 import FormatSwitcher from "./FormatSwitcher.astro";
 ```
 
 Replace the format switcher markup (lines 203-225) with:
+
 ```astro
 <FormatSwitcher bodies={bodies} stimFilename={stimFilename} source={circuit.source} />
 ```
@@ -569,6 +594,7 @@ git commit -m "refactor: extract CollapsibleSection and FormatSwitcher component
 ## Task 4: Split queries.ts into domain modules
 
 **Files:**
+
 - Create: `src/lib/queries/shared.ts`
 - Create: `src/lib/queries/codes.ts`
 - Create: `src/lib/queries/circuits.ts`
@@ -582,6 +608,7 @@ This task requires reading the full queries.ts file and splitting it. The barrel
 - [ ] **Step 1: Create `src/lib/queries/shared.ts`**
 
 Move these from `queries.ts`:
+
 - `getTagsFor` (lines 31-45)
 - `withTags` (lines 47-55)
 - `withCircuitCounts` (lines 57-72)
@@ -610,6 +637,7 @@ import { CIRCUIT_SORT_FIELDS, FILTER_PART_REGEX } from "../constants";
 - [ ] **Step 2: Create `src/lib/queries/codes.ts`**
 
 Move these from `queries.ts`:
+
 - `formatCodeParams` (lines 25-29)
 - `getAllCodes` (lines 74-78)
 - `getCodeBySlug` (lines 80-85)
@@ -619,13 +647,20 @@ Move these from `queries.ts`:
 ```typescript
 import { getDb } from "../db";
 import type { Code, CodeFilters, CodeWithMeta } from "../../types";
-import { withTags, withCircuitCounts, addConditions, addTagConditions, getTagsWithCount } from "./shared";
+import {
+  withTags,
+  withCircuitCounts,
+  addConditions,
+  addTagConditions,
+  getTagsWithCount,
+} from "./shared";
 // ... move function bodies here
 ```
 
 - [ ] **Step 3: Create `src/lib/queries/circuits.ts`**
 
 Move these from `queries.ts`:
+
 - `formatCircuitId` (lines 21-23)
 - `getCircuitsForCode` (lines 245-255)
 - `countCircuitsForCode` (lines 257-263)
@@ -640,14 +675,27 @@ Move these from `queries.ts`:
 
 ```typescript
 import { getDb } from "../db";
-import type { Circuit, CircuitBody, CircuitFilters, CircuitOriginal, CircuitSort } from "../../types";
-import { withTags, addConditions, addTagConditions, buildOrderBy, getTagsWithCount } from "./shared";
+import type {
+  Circuit,
+  CircuitBody,
+  CircuitFilters,
+  CircuitOriginal,
+  CircuitSort,
+} from "../../types";
+import {
+  withTags,
+  addConditions,
+  addTagConditions,
+  buildOrderBy,
+  getTagsWithCount,
+} from "./shared";
 // ... move function bodies here
 ```
 
 - [ ] **Step 4: Create `src/lib/queries/tools.ts`**
 
 Move these from `queries.ts`:
+
 - `enrichTools` private function (lines 414-416)
 - `getAllTools` (lines 418-429)
 - `getToolBySlug` — note: check if this exists. The grep showed `getToolById` at line 515.
@@ -658,13 +706,20 @@ Move these from `queries.ts`:
 ```typescript
 import { getDb } from "../db";
 import type { Tool, ToolFilters, ToolWithMeta } from "../../types";
-import { withTags, withCircuitCounts, addConditions, addTagConditions, getTagsWithCount } from "./shared";
+import {
+  withTags,
+  withCircuitCounts,
+  addConditions,
+  addTagConditions,
+  getTagsWithCount,
+} from "./shared";
 // ... move function bodies here
 ```
 
 - [ ] **Step 5: Create `src/lib/queries/search.ts`**
 
 Move these from `queries.ts`:
+
 - `rawTokenize` (lines 197-202)
 - `tokenize` (lines 204-206)
 - `searchByType` (lines 208-237)
@@ -682,8 +737,19 @@ import { withTags } from "./shared";
 - [ ] **Step 6: Create `src/lib/queries/index.ts`**
 
 ```typescript
-export { getTagsFor, parseFilterString, hasActiveFilters, getTagsWithCount } from "./shared";
-export { formatCodeParams, getAllCodes, getCodeBySlug, filterCodes, countAllCodes } from "./codes";
+export {
+  getTagsFor,
+  parseFilterString,
+  hasActiveFilters,
+  getTagsWithCount,
+} from "./shared";
+export {
+  formatCodeParams,
+  getAllCodes,
+  getCodeBySlug,
+  filterCodes,
+  countAllCodes,
+} from "./codes";
 export {
   formatCircuitId,
   getCircuitsForCode,
@@ -696,7 +762,12 @@ export {
   getCircuitsByQecIds,
   getOriginalForCircuit,
 } from "./circuits";
-export { getAllTools, getToolById, filterTools, getToolsForCircuits } from "./tools";
+export {
+  getAllTools,
+  getToolById,
+  filterTools,
+  getToolsForCircuits,
+} from "./tools";
 export { searchCodes, searchCircuits, searchTools } from "./search";
 ```
 
@@ -723,6 +794,7 @@ git commit -m "refactor: split queries.ts into domain modules"
 ## Task 5: Accessibility pass
 
 **Files:**
+
 - Modify: `src/components/SearchBar.astro`
 - Modify: `src/pages/favorites.astro`
 
@@ -759,6 +831,7 @@ git commit -m "fix(a11y): add missing aria attributes to search hint and import 
 ## Task 6: Update documentation
 
 **Files:**
+
 - Modify: `CLAUDE.md`
 
 - [ ] **Step 1: Update rendering strategy in CLAUDE.md**
@@ -766,11 +839,13 @@ git commit -m "fix(a11y): add missing aria attributes to search hint and import 
 Find the "Rendering strategy" section (around line 107) and update the client-side JS bullet:
 
 Replace:
+
 ```
 - Client-side JS (minimal): search bar (debounced fetch), CodeBlock copy button, filter input validation + auto-submit
 ```
 
 With:
+
 ```
 - Client-side JS: search bar (debounced fetch), circuit row expand/collapse, format switching, favorites (toggle/filter/export/import), CodeBlock copy/download, filter input validation + auto-submit
 ```
@@ -780,11 +855,13 @@ With:
 In the repository structure section, update the `lib/` entry to show the queries directory:
 
 Replace:
+
 ```
 │   ├── lib/               # DB client, STIM parser, helpers
 ```
 
 With:
+
 ```
 │   ├── lib/               # DB client, STIM parser, helpers
 │   │   └── queries/       # Domain-specific DB query modules
