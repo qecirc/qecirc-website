@@ -65,6 +65,20 @@ const stimFilename = buildStimFilename({
       </svg>
     </button>
 
+    <button
+      class="circuit-fav text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-400 cursor-pointer shrink-0"
+      data-qec-id={anchorId}
+      aria-label="Toggle favorite"
+      title="Toggle favorite"
+    >
+      <svg class="fav-outline w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+      </svg>
+      <svg class="fav-filled w-3.5 h-3.5 hidden" fill="currentColor" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+      </svg>
+    </button>
+
     <span class="text-xs text-center">
       {circuit.gate_count != null && (
         <span class="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded" title="Gate count">
@@ -229,6 +243,7 @@ const stimFilename = buildStimFilename({
         if ((e.target as HTMLElement).closest(".circuit-permalink")) return;
         if ((e.target as HTMLElement).closest(".circuit-id-copy")) return;
         if ((e.target as HTMLElement).closest(".circuit-detail-link")) return;
+        if ((e.target as HTMLElement).closest(".circuit-fav")) return;
         const qecId = (btn as HTMLElement).dataset.qecId!;
         const row = btn.closest("[id]") as HTMLElement;
         const detail = row.querySelector(".circuit-detail") as HTMLElement;
@@ -378,10 +393,42 @@ const stimFilename = buildStimFilename({
     });
   }
 
+  function initFavorites() {
+    import("../lib/favorites-client").then(function ({ getFavorites, toggleFavorite }) {
+      const favSet = new Set(getFavorites());
+      document.querySelectorAll<HTMLButtonElement>(".circuit-fav").forEach(function (btn) {
+        if (btn.dataset.favInit) return;
+        btn.dataset.favInit = "1";
+
+        const qecId = Number(btn.dataset.qecId);
+        const outline = btn.querySelector(".fav-outline") as HTMLElement;
+        const filled = btn.querySelector(".fav-filled") as HTMLElement;
+
+        function setFavState(isFav: boolean) {
+          outline.classList.toggle("hidden", isFav);
+          filled.classList.toggle("hidden", !isFav);
+          btn.classList.toggle("text-red-400", isFav);
+          btn.classList.toggle("dark:text-red-400", isFav);
+          btn.classList.toggle("text-gray-300", !isFav);
+          btn.classList.toggle("dark:text-gray-600", !isFav);
+        }
+
+        if (favSet.has(qecId)) {
+          setFavState(true);
+        }
+
+        btn.addEventListener("click", function () {
+          setFavState(toggleFavorite(qecId));
+        });
+      });
+    });
+  }
+
   initCircuitRows();
   initFormatSwitchers();
   initPermalinks();
   initIdCopy();
+  initFavorites();
   expandFromHash();
   window.addEventListener("hashchange", expandFromHash);
 </script>

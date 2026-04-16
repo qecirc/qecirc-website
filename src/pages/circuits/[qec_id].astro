@@ -67,6 +67,20 @@ const hasOriginalMatrices = origHx || origHz || origLx || origLz;
   <div class="flex flex-wrap items-baseline gap-3 mb-4">
     <h1 class="text-2xl font-bold">{circuit.name}</h1>
     <span class="font-mono text-gray-400 dark:text-gray-500 text-lg">{displayId}</span>
+    <button
+      id="detail-fav"
+      class="circuit-fav-detail text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-400 cursor-pointer self-center"
+      data-qec-id={String(circuit.qec_id)}
+      aria-label="Toggle favorite"
+      title="Toggle favorite"
+    >
+      <svg class="fav-outline w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+      </svg>
+      <svg class="fav-filled w-5 h-5 hidden" fill="currentColor" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+      </svg>
+    </button>
   </div>
 
   <div class="flex flex-wrap gap-2 mb-4">
@@ -234,6 +248,31 @@ const hasOriginalMatrices = origHx || origHz || origLx || origLz;
         chevron?.classList.add("rotate-90");
         toggle.setAttribute("aria-expanded", "true");
       }
+    });
+  }
+
+  // Favorite toggle
+  const favBtn = document.getElementById("detail-fav") as HTMLButtonElement;
+  if (favBtn) {
+    import("../../lib/favorites-client").then(function ({ isFavorite, toggleFavorite }) {
+      const qecId = Number(favBtn.dataset.qecId);
+      const outline = favBtn.querySelector(".fav-outline") as HTMLElement;
+      const filled = favBtn.querySelector(".fav-filled") as HTMLElement;
+
+      function setFavState(isFav: boolean) {
+        outline.classList.toggle("hidden", isFav);
+        filled.classList.toggle("hidden", !isFav);
+        favBtn.classList.toggle("text-red-400", isFav);
+        favBtn.classList.toggle("dark:text-red-400", isFav);
+        favBtn.classList.toggle("text-gray-300", !isFav);
+        favBtn.classList.toggle("dark:text-gray-600", !isFav);
+      }
+
+      setFavState(isFavorite(qecId));
+
+      favBtn.addEventListener("click", function () {
+        setFavState(toggleFavorite(qecId));
+      });
     });
   }
 

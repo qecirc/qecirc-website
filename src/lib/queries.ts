@@ -372,6 +372,29 @@ export function getCircuitByQecId(
   return { ...enriched, code_slug: row.code_slug, code_name: row.code_name };
 }
 
+export function getCircuitsByQecIds(
+  qecIds: number[],
+): (Circuit & { tags: string[]; code_slug: string; code_name: string })[] {
+  if (qecIds.length === 0) return [];
+  const capped = qecIds.slice(0, 200);
+  const db = getDb();
+  const placeholders = capped.map(() => "?").join(",");
+  const rows = db
+    .prepare(
+      `SELECT c.*, co.slug AS code_slug, co.name AS code_name
+       FROM circuits c
+       JOIN codes co ON co.id = c.code_id
+       WHERE c.qec_id IN (${placeholders})
+       ORDER BY co.name, c.name`,
+    )
+    .all(...capped) as (Circuit & { code_slug: string; code_name: string })[];
+  return withTags(rows, "circuit") as (Circuit & {
+    tags: string[];
+    code_slug: string;
+    code_name: string;
+  })[];
+}
+
 export function getOriginalForCircuit(
   circuitId: number,
 ): CircuitOriginal | null {

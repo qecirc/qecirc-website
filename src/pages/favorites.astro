@@ -1,0 +1,289 @@
+---
+export const prerender = true;
+
+import Layout from "../components/Layout.astro";
+---
+
+<Layout title="Favorites" description="Your favorited quantum error correction circuits">
+  <div class="flex items-baseline justify-between mb-6">
+    <h1 class="text-2xl font-bold">Favorites</h1>
+    <button
+      id="download-all-favs"
+      class="hidden text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+      title="Download all favorite circuits (.stim)"
+      aria-label="Download all favorite circuits"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+      </svg>
+    </button>
+  </div>
+
+  <div id="fav-loading" class="text-center py-8">
+    <p class="text-gray-500 dark:text-gray-400">Loading favorites...</p>
+  </div>
+
+  <div id="fav-empty" class="text-center py-8 hidden">
+    <p class="text-gray-500 dark:text-gray-400 mb-2">No favorites yet.</p>
+    <p class="text-sm text-gray-400 dark:text-gray-500">Browse circuits and click the heart icon to save them here.</p>
+  </div>
+
+  <div id="fav-content" class="hidden space-y-6"></div>
+
+  <div id="fav-actions" class="border-t border-gray-200 dark:border-gray-800 mt-8 pt-4 flex items-center gap-4">
+    <button
+      id="export-favs"
+      class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 underline cursor-pointer"
+    >
+      Export list
+    </button>
+    <button
+      id="import-favs"
+      class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 underline cursor-pointer"
+    >
+      Import list
+    </button>
+    <input id="import-file" type="file" accept=".json" class="hidden" />
+  </div>
+</Layout>
+
+<script>
+  import { getFavorites, toggleFavorite, exportFavorites, importFavorites } from "../lib/favorites-client";
+
+  interface FavCircuit {
+    qec_id: number;
+    name: string;
+    slug: string;
+    code_name: string;
+    code_slug: string;
+    gate_count: number | null;
+    two_qubit_gate_count: number | null;
+    depth: number | null;
+    qubit_count: number | null;
+    tags: string[];
+  }
+
+  const loading = document.getElementById("fav-loading")!;
+  const empty = document.getElementById("fav-empty")!;
+  const content = document.getElementById("fav-content")!;
+  const downloadBtn = document.getElementById("download-all-favs")!;
+
+  const favIds = getFavorites();
+
+  if (favIds.length === 0) {
+    loading.classList.add("hidden");
+    empty.classList.remove("hidden");
+  } else {
+    fetch(`/api/circuits?ids=${favIds.join(",")}`)
+      .then((r) => r.json())
+      .then((circuits: FavCircuit[]) => {
+        loading.classList.add("hidden");
+
+        if (circuits.length === 0) {
+          empty.classList.remove("hidden");
+          return;
+        }
+
+        // Group by code
+        const grouped = new Map<string, FavCircuit[]>();
+        for (const c of circuits) {
+          const key = c.code_slug;
+          if (!grouped.has(key)) grouped.set(key, []);
+          grouped.get(key)!.push(c);
+        }
+
+        // Render groups
+        for (const [codeSlug, codeCircuits] of grouped) {
+          const codeName = codeCircuits[0].code_name;
+          const section = document.createElement("div");
+
+          const heading = document.createElement("h2");
+          heading.className = "text-lg font-semibold mb-2";
+          const headingLink = document.createElement("a");
+          headingLink.href = `/codes/${codeSlug}`;
+          headingLink.className = "hover:underline";
+          headingLink.textContent = codeName;
+          heading.appendChild(headingLink);
+          section.appendChild(heading);
+
+          const list = document.createElement("div");
+          list.className = "space-y-2";
+
+          for (const circuit of codeCircuits) {
+            const row = document.createElement("div");
+            row.className = "rounded border border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3 flex-wrap";
+            row.dataset.qecId = String(circuit.qec_id);
+
+            // Unfavorite button
+            const unfavBtn = document.createElement("button");
+            unfavBtn.className = "text-red-400 hover:text-red-500 cursor-pointer shrink-0";
+            unfavBtn.title = "Remove from favorites";
+            unfavBtn.setAttribute("aria-label", "Remove from favorites");
+            unfavBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="currentColor" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" /></svg>`;
+            unfavBtn.addEventListener("click", function () {
+              toggleFavorite(circuit.qec_id);
+              row.remove();
+              // Remove section if empty
+              if (list.children.length === 0) {
+                section.remove();
+              }
+              // Show empty state if all removed
+              if (content.children.length === 0) {
+                content.classList.add("hidden");
+                downloadBtn.classList.add("hidden");
+                empty.classList.remove("hidden");
+              }
+            });
+            row.appendChild(unfavBtn);
+
+            // ID
+            const idSpan = document.createElement("span");
+            idSpan.className = "font-mono text-xs text-gray-400 dark:text-gray-500 shrink-0";
+            idSpan.textContent = `#${circuit.qec_id}`;
+            row.appendChild(idSpan);
+
+            // Metrics
+            const metrics = [
+              { val: circuit.gate_count, cls: "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300", title: "Gate count" },
+              { val: circuit.two_qubit_gate_count, cls: "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300", title: "2Q gates" },
+              { val: circuit.depth, cls: "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300", title: "Depth" },
+              { val: circuit.qubit_count, cls: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300", title: "Qubits" },
+            ];
+            for (const m of metrics) {
+              if (m.val != null) {
+                const badge = document.createElement("span");
+                badge.className = `text-xs ${m.cls} px-1.5 py-0.5 rounded`;
+                badge.title = m.title;
+                badge.textContent = String(m.val);
+                row.appendChild(badge);
+              }
+            }
+
+            // Name link
+            const link = document.createElement("a");
+            link.href = `/circuits/${circuit.qec_id}`;
+            link.className = "font-medium text-sm hover:underline inline-flex items-center gap-1";
+            link.textContent = circuit.name;
+            const arrow = document.createElement("svg");
+            arrow.setAttribute("class", "w-3 h-3 shrink-0 text-gray-400");
+            arrow.setAttribute("fill", "none");
+            arrow.setAttribute("stroke", "currentColor");
+            arrow.setAttribute("stroke-width", "2");
+            arrow.setAttribute("viewBox", "0 0 24 24");
+            arrow.innerHTML = `<path d="M9 5l7 7-7 7" />`;
+            link.appendChild(arrow);
+            row.appendChild(link);
+
+            // Tags
+            if (circuit.tags.length > 0) {
+              const tagWrap = document.createElement("div");
+              tagWrap.className = "flex flex-wrap gap-1 ml-auto";
+              for (const tag of circuit.tags) {
+                const tagEl = document.createElement("span");
+                tagEl.className = "inline-block rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 text-xs";
+                tagEl.textContent = tag;
+                tagWrap.appendChild(tagEl);
+              }
+              row.appendChild(tagWrap);
+            }
+
+            list.appendChild(row);
+          }
+
+          section.appendChild(list);
+          content.appendChild(section);
+        }
+
+        content.classList.remove("hidden");
+        downloadBtn.classList.remove("hidden");
+      })
+      .catch(() => {
+        loading.classList.add("hidden");
+        empty.classList.remove("hidden");
+      });
+  }
+
+  // Download all favorites
+  downloadBtn.addEventListener("click", async function () {
+    const ids = getFavorites();
+    if (ids.length === 0) return;
+
+    downloadBtn.classList.add("opacity-50", "pointer-events-none");
+    try {
+      const resp = await fetch(`/api/download?ids=${ids.join(",")}`);
+      if (!resp.ok) return;
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const disposition = resp.headers.get("Content-Disposition") ?? "";
+      const match = disposition.match(/filename="(.+)"/);
+      a.download = match ? match[1] : "qecirc_favorites.stim.zip";
+      a.click();
+      URL.revokeObjectURL(url);
+      const w = window as Window & { showCiteToast?: (msg: string, url?: string) => void };
+      if (typeof w.showCiteToast === "function") {
+        w.showCiteToast("Please cite the corresponding sources when using these circuits.");
+      }
+    } finally {
+      downloadBtn.classList.remove("opacity-50", "pointer-events-none");
+    }
+  });
+
+  // Export favorites list
+  const exportBtn = document.getElementById("export-favs")!;
+  exportBtn.addEventListener("click", function () {
+    const json = exportFavorites();
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "qecirc-favorites.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Import favorites list
+  const importBtn = document.getElementById("import-favs")!;
+  const importFile = document.getElementById("import-file") as HTMLInputElement;
+
+  importBtn.addEventListener("click", function () {
+    importFile.click();
+  });
+
+  importFile.addEventListener("change", function () {
+    const file = importFile.files?.[0];
+    if (!file) return;
+    const toast = (window as Window & { showCiteToast?: (msg: string) => void }).showCiteToast;
+
+    // Reject before reading into memory
+    if (file.size > 100_000) {
+      if (toast) toast("File too large. Maximum size is 100 KB.");
+      importFile.value = "";
+      return;
+    }
+    if (!file.name.endsWith(".json")) {
+      if (toast) toast("Please select a .json file.");
+      importFile.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function () {
+      try {
+        const added = importFavorites(reader.result as string);
+        if (added > 0) {
+          if (toast) toast(`Imported ${added} new favorite${added !== 1 ? "s" : ""}.`);
+          location.reload();
+        } else {
+          if (toast) toast("All circuits in this list are already in your favorites.");
+        }
+      } catch {
+        if (toast) toast("Invalid file format. Expected a QECirc favorites JSON file.");
+      }
+      // Reset so the same file can be re-imported
+      importFile.value = "";
+    };
+    reader.readAsText(file);
+  });
+</script>
