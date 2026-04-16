@@ -1,0 +1,57 @@
+---
+import type { CircuitBody } from "../types";
+import CodeBlock from "./CodeBlock.astro";
+
+interface Props {
+  bodies: CircuitBody[];
+  stimFilename?: string;
+  source?: string;
+}
+
+const { bodies, stimFilename, source } = Astro.props;
+const hasMultipleFormats = bodies.length > 1;
+---
+
+{hasMultipleFormats ? (
+  <div class="format-switcher">
+    <div class="flex gap-1 mb-2">
+      {bodies.map((b, i) => (
+        <button
+          class:list={[
+            "format-tab px-3 py-1 text-xs rounded cursor-pointer transition-colors",
+            i === 0
+              ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+          ]}
+          data-format={b.format}
+        >
+          {b.format.toUpperCase()}
+        </button>
+      ))}
+    </div>
+    {bodies.map((b, i) => (
+      <div class="format-body" data-format={b.format} style={i === 0 ? "" : "display:none"}>
+        <CodeBlock
+          code={b.body}
+          label={`${b.format.toUpperCase()} Circuit`}
+          downloadName={b.format === "stim" ? stimFilename : undefined}
+          source={source}
+        />
+      </div>
+    ))}
+  </div>
+) : bodies.length === 1 ? (
+  <CodeBlock
+    code={bodies[0].body}
+    label={`${bodies[0].format.toUpperCase()} Circuit`}
+    downloadName={bodies[0].format === "stim" ? stimFilename : undefined}
+    source={source}
+  />
+) : (
+  <p class="text-sm text-gray-400">No circuit body available.</p>
+)}
+
+<script>
+  import { initFormatSwitchers } from "../lib/format-switcher-client";
+  initFormatSwitchers();
+</script>

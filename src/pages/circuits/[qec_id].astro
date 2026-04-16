@@ -4,6 +4,8 @@ export const prerender = false;
 import Layout from "../../components/Layout.astro";
 import CodeBlock from "../../components/CodeBlock.astro";
 import MatrixDisplay from "../../components/MatrixDisplay.astro";
+import CollapsibleSection from "../../components/CollapsibleSection.astro";
+import FormatSwitcher from "../../components/FormatSwitcher.astro";
 import HeartIcon from "../../components/HeartIcon.astro";
 import MetricBadge from "../../components/MetricBadge.astro";
 import {
@@ -33,7 +35,6 @@ const tool = toolsMap.get(circuit.id);
 const original = getOriginalForCircuit(circuit.id);
 
 const displayId = formatCircuitId(circuit.qec_id);
-const hasMultipleFormats = bodies.length > 1;
 
 const stimFilename = buildStimFilename({
   codeSlug: circuit.code_slug,
@@ -139,59 +140,14 @@ const hasOriginalMatrices = origHx || origHz || origLx || origLz;
   )}
 
   <h2 class="text-lg font-semibold mb-2">Circuit</h2>
-
-  {hasMultipleFormats ? (
-    <div class="format-switcher mb-6">
-      <div class="flex gap-1 mb-2">
-        {bodies.map((b, i) => (
-          <button
-            class:list={[
-              "format-tab px-3 py-1 text-xs rounded cursor-pointer transition-colors",
-              i === 0
-                ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
-            ]}
-            data-format={b.format}
-          >
-            {b.format.toUpperCase()}
-          </button>
-        ))}
-      </div>
-      {bodies.map((b, i) => (
-        <div class="format-body" data-format={b.format} style={i === 0 ? "" : "display:none"}>
-          <CodeBlock code={b.body} label={`${b.format.toUpperCase()} Circuit`} downloadName={b.format === "stim" ? stimFilename : undefined} source={circuit.source} />
-        </div>
-      ))}
-    </div>
-  ) : bodies.length === 1 ? (
-    <div class="mb-6">
-      <CodeBlock code={bodies[0].body} label={`${bodies[0].format.toUpperCase()} Circuit`} downloadName={bodies[0].format === "stim" ? stimFilename : undefined} source={circuit.source} />
-    </div>
-  ) : (
-    <p class="text-sm text-gray-400 mb-6">No circuit body available.</p>
-  )}
+  <div class="mb-6">
+    <FormatSwitcher bodies={bodies} stimFilename={stimFilename} source={circuit.source} />
+  </div>
 
   {original && (
     <div class="border-t border-gray-200 dark:border-gray-800 pt-4">
-      <button
-        id="originals-toggle"
-        class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
-        aria-expanded="false"
-      >
-        <svg
-          class="originals-chevron w-3.5 h-3.5 shrink-0 transition-transform duration-200"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path d="M9 5l7 7-7 7" />
-        </svg>
-        Original submission (before canonicalization)
-      </button>
-      <div id="originals-detail" class="overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;">
-        <div class="mt-3 space-y-4">
+      <CollapsibleSection id="originals" label="Original submission (before canonicalization)">
+        <div class="space-y-4">
           {original?.original_stim && (
             <CodeBlock code={original.original_stim} label="Original STIM Circuit" source={circuit.source} />
           )}
@@ -204,31 +160,12 @@ const hasOriginalMatrices = origHx || origHz || origLx || origLz;
             </div>
           )}
         </div>
-      </div>
+      </CollapsibleSection>
     </div>
   )}
 </Layout>
 
 <script>
-  // Originals toggle
-  const toggle = document.getElementById("originals-toggle");
-  const detail = document.getElementById("originals-detail");
-  if (toggle && detail) {
-    const chevron = toggle.querySelector(".originals-chevron");
-    toggle.addEventListener("click", function () {
-      const isOpen = detail.style.maxHeight !== "0px";
-      if (isOpen) {
-        detail.style.maxHeight = "0px";
-        chevron?.classList.remove("rotate-90");
-        toggle.setAttribute("aria-expanded", "false");
-      } else {
-        detail.style.maxHeight = detail.scrollHeight + "px";
-        chevron?.classList.add("rotate-90");
-        toggle.setAttribute("aria-expanded", "true");
-      }
-    });
-  }
-
   // Favorite toggle
   const favBtn = document.getElementById("detail-fav") as HTMLButtonElement;
   if (favBtn) {
@@ -253,26 +190,4 @@ const hasOriginalMatrices = origHx || origHz || origLx || origLz;
       });
     });
   }
-
-  // Format switcher
-  document.querySelectorAll(".format-switcher").forEach(function (switcher) {
-    const tabs = switcher.querySelectorAll(".format-tab");
-    const bodies = switcher.querySelectorAll(".format-body");
-
-    tabs.forEach(function (tab) {
-      tab.addEventListener("click", function () {
-        const format = (tab as HTMLElement).dataset.format;
-        tabs.forEach(function (t) {
-          if ((t as HTMLElement).dataset.format === format) {
-            t.className = "format-tab px-3 py-1 text-xs rounded cursor-pointer transition-colors bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900";
-          } else {
-            t.className = "format-tab px-3 py-1 text-xs rounded cursor-pointer transition-colors bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700";
-          }
-        });
-        bodies.forEach(function (b) {
-          (b as HTMLElement).style.display = (b as HTMLElement).dataset.format === format ? "" : "none";
-        });
-      });
-    });
-  });
 </script>

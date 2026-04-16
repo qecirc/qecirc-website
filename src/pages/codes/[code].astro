@@ -6,6 +6,7 @@ import TagList from "../../components/TagList.astro";
 import CircuitFilter from "../../components/CircuitFilter.astro";
 import CircuitRow from "../../components/CircuitRow.astro";
 import MatrixDisplay from "../../components/MatrixDisplay.astro";
+import CollapsibleSection from "../../components/CollapsibleSection.astro";
 import {
   getCodeBySlug,
   getTagsFor,
@@ -65,31 +66,14 @@ const countLabel = hasFilters
 
   {hasMatrices && (
     <div class="mb-6">
-      <button
-        id="matrices-toggle"
-        class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
-        aria-expanded="false"
-      >
-        <svg
-          class="matrices-chevron w-3.5 h-3.5 shrink-0 transition-transform duration-200"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path d="M9 5l7 7-7 7" />
-        </svg>
-        Check Matrices & Logical Operators
-      </button>
-      <div id="matrices-detail" class="overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;">
-        <div class="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+      <CollapsibleSection id="matrices" label="Check Matrices & Logical Operators">
+        <div class="grid gap-x-6 gap-y-2 sm:grid-cols-2">
           {hx && <MatrixDisplay label="Hx (X-checks)" matrix={hx} />}
           {hz && <MatrixDisplay label="Hz (Z-checks)" matrix={hz} />}
           {logicalX && <MatrixDisplay label="Logical X" matrix={logicalX} />}
           {logicalZ && <MatrixDisplay label="Logical Z" matrix={logicalZ} />}
         </div>
-      </div>
+      </CollapsibleSection>
     </div>
   )}
 
@@ -159,24 +143,6 @@ const countLabel = hasFilters
 </Layout>
 
 <script>
-  const toggle = document.getElementById("matrices-toggle");
-  const detail = document.getElementById("matrices-detail");
-  if (toggle && detail) {
-    const chevron = toggle.querySelector(".matrices-chevron");
-    toggle.addEventListener("click", function () {
-      const isOpen = detail.style.maxHeight !== "0px";
-      if (isOpen) {
-        detail.style.maxHeight = "0px";
-        chevron?.classList.remove("rotate-90");
-        toggle.setAttribute("aria-expanded", "false");
-      } else {
-        detail.style.maxHeight = detail.scrollHeight + "px";
-        chevron?.classList.add("rotate-90");
-        toggle.setAttribute("aria-expanded", "true");
-      }
-    });
-  }
-
   const downloadBtn = document.getElementById("download-all-btn");
   if (downloadBtn) {
     downloadBtn.addEventListener("click", async function () {
