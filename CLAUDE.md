@@ -106,7 +106,7 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 
 - Static pages: landing page, 404 (pre-rendered at build time)
 - SSR pages (`prerender = false`): all `/codes/...` and `/circuits/...` routes, `/api/search` (rendered on request, read from SQLite)
-- Client-side JS (minimal): search bar (debounced fetch), CodeBlock copy button, filter input validation + auto-submit
+- Client-side JS: search bar (debounced fetch), circuit row expand/collapse, format switching, favorites (toggle/filter/export/import), CodeBlock copy/download, filter input validation + auto-submit
 
 This keeps the site fast and simple while scaling comfortably to thousands of circuits.
 
@@ -119,6 +119,7 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 │   ├── pages/             # Astro pages (routes)
 │   ├── components/        # Reusable Astro/UI components
 │   ├── lib/               # DB client, STIM parser, helpers
+│   │   └── queries/       # Domain-specific DB query modules
 │   └── types/             # Shared TypeScript types
 ├── data/
 │   ├── migrations/        # SQL migration files (e.g. 001_initial.sql)
