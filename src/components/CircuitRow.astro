@@ -4,6 +4,8 @@ import { tagToggleUrl } from "../lib/url";
 import { formatCircuitId } from "../lib/queries";
 import { buildStimFilename } from "../lib/filename";
 import CodeBlock from "./CodeBlock.astro";
+import HeartIcon from "./HeartIcon.astro";
+import MetricBadge from "./MetricBadge.astro";
 
 interface Props {
   circuit: Circuit & { tags: string[] };
@@ -71,41 +73,21 @@ const stimFilename = buildStimFilename({
       aria-label="Toggle favorite"
       title="Toggle favorite"
     >
-      <svg class="fav-outline w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-      </svg>
-      <svg class="fav-filled w-3.5 h-3.5 hidden" fill="currentColor" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-      </svg>
+      <HeartIcon class="fav-outline w-3.5 h-3.5" />
+      <HeartIcon filled class="fav-filled w-3.5 h-3.5 hidden" />
     </button>
 
     <span class="text-xs text-center">
-      {circuit.gate_count != null && (
-        <span class="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded" title="Gate count">
-          {circuit.gate_count}
-        </span>
-      )}
+      <MetricBadge value={circuit.gate_count} color="amber" title="Gate count" />
     </span>
     <span class="text-xs text-center">
-      {circuit.two_qubit_gate_count != null && (
-        <span class="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded" title="Two-qubit gate count">
-          {circuit.two_qubit_gate_count}
-        </span>
-      )}
+      <MetricBadge value={circuit.two_qubit_gate_count} color="purple" title="Two-qubit gate count" />
     </span>
     <span class="text-xs text-center">
-      {circuit.depth != null && (
-        <span class="bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-1.5 py-0.5 rounded" title="Circuit depth">
-          {circuit.depth}
-        </span>
-      )}
+      <MetricBadge value={circuit.depth} color="green" title="Circuit depth" />
     </span>
     <span class="text-xs text-center">
-      {circuit.qubit_count != null && (
-        <span class="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded" title="Qubit count">
-          {circuit.qubit_count}
-        </span>
-      )}
+      <MetricBadge value={circuit.qubit_count} color="blue" title="Qubit count" />
     </span>
 
     <span></span>

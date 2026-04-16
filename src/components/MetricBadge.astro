@@ -1,0 +1,21 @@
+---
+import { METRIC_COLORS } from "../lib/constants";
+
+interface Props {
+  value: number | null;
+  color: keyof typeof METRIC_COLORS;
+  label?: string;
+  title: string;
+}
+
+const { value, color, label, title } = Astro.props;
+const colors = METRIC_COLORS[color];
+---
+
+{
+  value != null && (
+    <span class={`text-xs ${colors.bg} ${colors.text} px-1.5 py-0.5 rounded`} title={title}>
+      {label ? `${label} ${value}` : value}
+    </span>
+  )
+}

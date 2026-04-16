@@ -4,6 +4,8 @@ export const prerender = false;
 import Layout from "../../components/Layout.astro";
 import CodeBlock from "../../components/CodeBlock.astro";
 import MatrixDisplay from "../../components/MatrixDisplay.astro";
+import HeartIcon from "../../components/HeartIcon.astro";
+import MetricBadge from "../../components/MetricBadge.astro";
 import {
   getCircuitByQecId,
   getOriginalForCircuit,
@@ -70,36 +72,16 @@ const hasOriginalMatrices = origHx || origHz || origLx || origLz;
       aria-label="Toggle favorite"
       title="Toggle favorite"
     >
-      <svg class="fav-outline w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-      </svg>
-      <svg class="fav-filled w-5 h-5 hidden" fill="currentColor" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-      </svg>
+      <HeartIcon class="fav-outline w-5 h-5" />
+      <HeartIcon filled class="fav-filled w-5 h-5 hidden" />
     </button>
   </div>
 
   <div class="flex flex-wrap gap-2 mb-4">
-    {circuit.gate_count != null && (
-      <span class="text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded" title="Gate count">
-        G: {circuit.gate_count}
-      </span>
-    )}
-    {circuit.two_qubit_gate_count != null && (
-      <span class="text-xs bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded" title="Two-qubit gate count">
-        2Q: {circuit.two_qubit_gate_count}
-      </span>
-    )}
-    {circuit.depth != null && (
-      <span class="text-xs bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded" title="Circuit depth">
-        D: {circuit.depth}
-      </span>
-    )}
-    {circuit.qubit_count != null && (
-      <span class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded" title="Qubit count">
-        Q: {circuit.qubit_count}
-      </span>
-    )}
+    <MetricBadge value={circuit.gate_count} color="amber" label="G:" title="Gate count" />
+    <MetricBadge value={circuit.two_qubit_gate_count} color="purple" label="2Q:" title="Two-qubit gate count" />
+    <MetricBadge value={circuit.depth} color="green" label="D:" title="Circuit depth" />
+    <MetricBadge value={circuit.qubit_count} color="blue" label="Q:" title="Qubit count" />
   </div>
 
   <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm mb-4">

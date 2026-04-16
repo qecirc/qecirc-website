@@ -1,0 +1,21 @@
+---
+import { HEART_PATH } from "../lib/constants";
+
+interface Props {
+  filled?: boolean;
+  class?: string;
+}
+
+const { filled = false, class: className = "w-3.5 h-3.5" } = Astro.props;
+---
+
+<svg
+  class={className}
+  fill={filled ? "currentColor" : "none"}
+  stroke="currentColor"
+  stroke-width="2"
+  viewBox="0 0 24 24"
+  aria-hidden="true"
+>
+  <path d={HEART_PATH} />
+</svg>
