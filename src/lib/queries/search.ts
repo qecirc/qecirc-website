@@ -1,6 +1,6 @@
 import { getDb } from "../db";
 import type { Code, Circuit, Tool } from "../../types";
-import { getTagsFor, withTags } from "./shared";
+import { withTags } from "./shared";
 
 function rawTokenize(query: string): string[] {
   return query
@@ -101,10 +101,11 @@ export function searchCircuits(
     )
     .all(...params) as (Circuit & { code_slug: string; code_name: string })[];
 
-  return rows.map((row) => ({
-    ...row,
-    tags: getTagsFor("circuit", row.id),
-  }));
+  return withTags(rows, "circuit") as (Circuit & {
+    tags: string[];
+    code_slug: string;
+    code_name: string;
+  })[];
 }
 
 export function searchTools(query: string): (Tool & { tags: string[] })[] {

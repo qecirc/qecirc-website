@@ -31,9 +31,31 @@ export function withTags<T extends { id: number }>(
   items: T[],
   taggableType: TaggableType,
 ): (T & { tags: string[] })[] {
+  if (items.length === 0) return [];
+  const db = getDb();
+  const placeholders = items.map(() => "?").join(",");
+  const rows = db
+    .prepare(
+      `SELECT tg.taggable_id, t.name FROM tags t
+       JOIN taggings tg ON t.id = tg.tag_id
+       WHERE tg.taggable_type = ? AND tg.taggable_id IN (${placeholders})
+       ORDER BY t.name`,
+    )
+    .all(taggableType, ...items.map((i) => i.id)) as {
+    taggable_id: number;
+    name: string;
+  }[];
+
+  const tagMap = new Map<number, string[]>();
+  for (const row of rows) {
+    const list = tagMap.get(row.taggable_id) ?? [];
+    list.push(row.name);
+    tagMap.set(row.taggable_id, list);
+  }
+
   return items.map((item) => ({
     ...item,
-    tags: getTagsFor(taggableType, item.id),
+    tags: tagMap.get(item.id) ?? [],
   }));
 }
 
