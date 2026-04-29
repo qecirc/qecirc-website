@@ -74,14 +74,14 @@ class TestComputeCodeDataHNonCss:
         assert np.array_equal(om["h"], H.tolist())
         assert np.array(om["logical"]).shape == (2, 10)
 
-    def test_canonical_hash_stable_across_qubit_relabel(self):
-        """Same code submitted with permuted qubits hashes the same."""
+    def test_canonical_hash_is_deterministic(self):
+        """canonical_hash_h is deterministic for a given input. It is NOT
+        invariant under qubit permutations — non-CSS dedup matches only on
+        exact canonical form. (See plan task 4 for permuted-submission handling.)"""
         Hx, Hz = _five_qubit_matrices()
-        H1 = np.hstack([Hx, Hz])
-        col_order = [3, 1, 4, 0, 2]
-        H2 = np.hstack([Hx[:, col_order], Hz[:, col_order]])
-        r1 = compute_code_data_h(H1, n=5, d=3)
-        r2 = compute_code_data_h(H2, n=5, d=3)
+        H = np.hstack([Hx, Hz])
+        r1 = compute_code_data_h(H, n=5, d=3)
+        r2 = compute_code_data_h(H, n=5, d=3)
         assert r1["code"]["canonical_hash"] == r2["code"]["canonical_hash"]
 
 

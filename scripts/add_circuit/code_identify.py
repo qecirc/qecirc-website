@@ -277,28 +277,21 @@ def canonical_form_h(H: np.ndarray, n: int) -> tuple[np.ndarray, list[int]]:
 
 
 def canonical_hash_h(H: np.ndarray, n: int) -> str:
-    """Stable hash for non-CSS codes given by a single symplectic H matrix.
+    """Stable hash for any stabilizer code given by a single symplectic H matrix.
 
-    Computed by hashing the canonical forms of the X-half and Z-half row
-    spaces independently (via :func:`canonical_form` on the two halves).
-    This is invariant under qubit permutations — sufficient for dedup —
-    but is lossy (it forgets the row pairing between X and Z parts) so
-    different non-CSS codes can in principle collide. Acceptable for
-    phase-1 dedup; collisions are flagged as duplicates and require manual
-    review.
+    Hashes the output of :func:`canonical_form_h`, which preserves the row
+    pairing between X and Z parts (unlike halves-canonicalization) and works
+    when X-half and Z-half row spaces have different ranks.
 
     Prefixed with ``sym:<n>:`` so it cannot collide with the CSS hash format
-    (which prefixes ``<m_x>:<m_z>:``).
+    (``<m_x>:<m_z>:``).
     """
     H = np.asarray(H, dtype=int) % 2
     if H.shape[1] != 2 * n:
         raise ValueError(f"Expected H with 2n={2 * n} columns, got {H.shape[1]}")
-    Hx_part = H[:, :n]
-    Hz_part = H[:, n:]
-    canon_Hx, canon_Hz, _ = canonical_form(Hx_part, Hz_part)
-    prefix = f"sym:{n}:{canon_Hx.shape[0]}:{canon_Hz.shape[0]}:".encode()
-    combined = np.hstack([canon_Hx, canon_Hz])
-    return hashlib.sha256(prefix + combined.tobytes()).hexdigest()
+    canon, _ = canonical_form_h(H, n)
+    prefix = f"sym:{n}:{canon.shape[0]}:".encode()
+    return hashlib.sha256(prefix + canon.tobytes()).hexdigest()
 
 
 # ---------------------------------------------------------------------------

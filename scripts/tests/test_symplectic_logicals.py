@@ -115,12 +115,13 @@ class TestSplitHToCss:
 
 
 class TestCanonicalHashH:
-    def test_invariant_under_qubit_permutation(self):
-        """Same code submitted with different qubit orderings hashes the same."""
+    def test_hash_is_deterministic_per_input(self):
+        """canonical_hash_h is a function of H (deterministic), but is NOT
+        invariant under qubit permutations of the input — non-CSS dedup matches
+        only on exact canonical form. (See plan task 4 for permuted-submission
+        handling.)"""
         H = _five_qubit_H()
-        col_order = [4, 2, 0, 3, 1]
-        H_perm = np.hstack([H[:, col_order], H[:, [5 + p for p in col_order]]])
-        assert canonical_hash_h(H, n=5) == canonical_hash_h(H_perm, n=5)
+        assert canonical_hash_h(H, n=5) == canonical_hash_h(H, n=5)
 
     def test_distinct_codes_distinct_hashes(self):
         h_5q = canonical_hash_h(_five_qubit_H(), n=5)
@@ -132,6 +133,18 @@ class TestCanonicalHashH:
         H2[0, 5] ^= 1  # flip one bit → different code
         h_2 = canonical_hash_h(H2, n=5)
         assert h_5q != h_2
+
+    def test_does_not_crash_on_uneven_xz_ranks(self):
+        # X-half rank 2, Z-half rank 1 → old halves-hash crashed.
+        H = np.array([[1, 1, 0, 0], [1, 0, 0, 1]])
+        h = canonical_hash_h(H, n=2)  # must not raise
+        assert isinstance(h, str) and len(h) == 64
+
+    def test_no_collision_between_distinct_rowspaces(self):
+        # (X⊗Z, Z⊗X) vs (Y, Y) — both valid stabilizer codes, distinct rowspaces.
+        H_a = np.array([[1, 0, 0, 1], [0, 1, 1, 0]])
+        H_b = np.array([[1, 0, 1, 0], [0, 1, 0, 1]])
+        assert canonical_hash_h(H_a, n=2) != canonical_hash_h(H_b, n=2)
 
 
 class TestCanonicalFormH:

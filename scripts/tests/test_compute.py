@@ -94,10 +94,10 @@ class TestComputeCodeData:
         result = compute_code_data(steane_H, steane_H, d=3, zoo_url="https://example.com")
         assert result["code"]["zoo_url"] == "https://example.com"
 
-    def test_new_code_returns_nontrivial_permutation(self):
-        """New code with non-identity canonical perm returns qubit_permutation."""
-        # Non-CSS [[5,1,3]] code — columns are distinguishable, so shuffling
-        # produces a non-identity canonical permutation. Submitted via H.
+    def test_non_css_hash_is_deterministic(self):
+        """compute_code_data_h returns a deterministic canonical_hash for a
+        non-CSS code. canonical_hash_h is NOT invariant under qubit permutations
+        of the input (see plan task 4 for permuted-submission handling)."""
         Hx = np.array(
             [
                 [1, 0, 0, 1, 0],
@@ -115,19 +115,12 @@ class TestComputeCodeData:
             ]
         )
         H = np.hstack([Hx, Hz])
-        col_order = [4, 2, 0, 3, 1]
-        H_shuffled = np.hstack([Hx[:, col_order], Hz[:, col_order]])
+        result1 = compute_code_data_h(H, n=5, d=3)
+        result2 = compute_code_data_h(H, n=5, d=3)
 
-        result_orig = compute_code_data_h(H, n=5, d=3)
-        result_shuf = compute_code_data_h(H_shuffled, n=5, d=3)
-
-        # Same canonical hash regardless of column order
-        assert result_orig["code"]["canonical_hash"] == result_shuf["code"]["canonical_hash"]
-        # At least one of them should have a non-trivial permutation
-        assert (
-            result_orig["qubit_permutation"] is not None
-            or result_shuf["qubit_permutation"] is not None
-        )
+        # Same input → same hash (deterministic)
+        assert result1["code"]["canonical_hash"] == result2["code"]["canonical_hash"]
+        assert len(result1["code"]["canonical_hash"]) == 64  # SHA256 hex
 
     def test_original_matrices_returned(self, steane_H):
         result = compute_code_data(steane_H, steane_H, d=3)
