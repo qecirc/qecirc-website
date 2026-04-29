@@ -55,14 +55,13 @@ const formatted = lines
     const source = block.dataset.source || "";
 
     function citeNotice() {
-      const w = window as Window & { showCiteToast?: (msg: string, url?: string) => void };
-      if (typeof w.showCiteToast === "function") {
+      if (typeof window.showCiteToast === "function") {
         if (source && source.startsWith("http")) {
-          w.showCiteToast("Please cite the source when using this circuit:", source);
+          window.showCiteToast("Please cite the source when using this circuit:", source);
         } else if (source) {
-          w.showCiteToast("Please cite the source when using this circuit: " + source);
+          window.showCiteToast("Please cite the source when using this circuit: " + source);
         } else {
-          w.showCiteToast("Please check and cite the corresponding source when using this circuit.");
+          window.showCiteToast("Please check and cite the corresponding source when using this circuit.");
         }
       }
     }
