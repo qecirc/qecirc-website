@@ -5,11 +5,11 @@ description = "QECirc — quantum error correction circuit library"
 license = "MIT"
 requires-python = ">=3.13"
 dependencies = [
-    "numpy",
-    "stim",
+    "numpy>=2.0,<3",
+    "stim>=1.15,<2",
     "mqt-qecc @ git+https://github.com/munich-quantum-toolkit/qecc.git@encoding-circuits",
-    "pyyaml",
-    "stimcirq",
+    "pyyaml>=6,<7",
+    "stimcirq>=1.15,<2",
 ]
 
 [dependency-groups]
