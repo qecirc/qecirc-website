@@ -81,10 +81,10 @@ const hasOriginalMatrices = !!(origH && origLogical);
   </div>
 
   <div class="flex flex-wrap gap-2 mb-4">
-    <MetricBadge value={circuit.gate_count} color="amber" label="G:" title="Gate count" />
-    <MetricBadge value={circuit.two_qubit_gate_count} color="purple" label="2Q:" title="Two-qubit gate count" />
-    <MetricBadge value={circuit.depth} color="green" label="D:" title="Circuit depth" />
-    <MetricBadge value={circuit.qubit_count} color="blue" label="Q:" title="Qubit count" />
+    <MetricBadge value={circuit.gate_count} label="G:" title="Gate count" />
+    <MetricBadge value={circuit.two_qubit_gate_count} label="2Q:" title="Two-qubit gate count" />
+    <MetricBadge value={circuit.depth} label="D:" title="Circuit depth" />
+    <MetricBadge value={circuit.qubit_count} label="Q:" title="Qubit count" />
   </div>
 
   <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm mb-4">

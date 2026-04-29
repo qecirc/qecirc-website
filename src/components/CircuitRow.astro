@@ -76,17 +76,17 @@ const stimFilename = buildStimFilename({
       <HeartIcon filled class="fav-filled w-3.5 h-3.5 hidden" />
     </button>
 
-    <span class="text-xs text-center">
-      <MetricBadge value={circuit.gate_count} color="amber" title="Gate count" />
+    <span class="text-center">
+      <MetricBadge value={circuit.gate_count} title="Gate count" />
     </span>
-    <span class="text-xs text-center">
-      <MetricBadge value={circuit.two_qubit_gate_count} color="purple" title="Two-qubit gate count" />
+    <span class="text-center">
+      <MetricBadge value={circuit.two_qubit_gate_count} title="Two-qubit gate count" />
     </span>
-    <span class="text-xs text-center">
-      <MetricBadge value={circuit.depth} color="green" title="Circuit depth" />
+    <span class="text-center">
+      <MetricBadge value={circuit.depth} title="Circuit depth" />
     </span>
-    <span class="text-xs text-center">
-      <MetricBadge value={circuit.qubit_count} color="blue" title="Qubit count" />
+    <span class="text-center">
+      <MetricBadge value={circuit.qubit_count} title="Qubit count" />
     </span>
 
     <span></span>

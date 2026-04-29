@@ -97,3 +97,25 @@ export function tagToggleUrl(
   const qs = params.toString();
   return basePath + (qs ? "?" + qs : "");
 }
+
+/**
+ * Build the URL that toggles or activates a sort by `field`. Clicking again
+ * with the same active field flips dir; otherwise activates with `desc`.
+ */
+export function circuitSortToggleUrl(
+  currentUrl: URL,
+  sort: CircuitSort,
+  field: CircuitSortField,
+  basePath: string,
+): string {
+  const params = new URLSearchParams(currentUrl.search);
+  params.delete("focus");
+  params.set("sort", field);
+  if (sort.field === field) {
+    params.set("sort_dir", sort.dir === "desc" ? "asc" : "desc");
+  } else {
+    params.set("sort_dir", "desc");
+  }
+  const qs = params.toString();
+  return basePath + (qs ? "?" + qs : "");
+}

@@ -4,6 +4,7 @@ export {
   formatCircuitId,
   getCircuitsForCode,
   countCircuitsForCode,
+  countAllCircuits,
   getCircuitTagsForCode,
   filterCircuitsForCode,
   getCircuitsWithBodies,

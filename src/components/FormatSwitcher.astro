@@ -1,5 +1,6 @@
 ---
 import type { CircuitBody } from "../types";
+import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "../lib/constants";
 import CodeBlock from "./CodeBlock.astro";
 
 interface Props {
@@ -10,19 +11,22 @@ interface Props {
 
 const { bodies, stimFilename, source } = Astro.props;
 const hasMultipleFormats = bodies.length > 1;
+
+function downloadNameFor(format: string): string | undefined {
+  if (!stimFilename) return undefined;
+  return stimFilename.replace(/\.stim$/, `.${format}`);
+}
+
+const TAB_BASE_CLASS =
+  "format-tab px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors";
 ---
 
 {hasMultipleFormats ? (
   <div class="format-switcher">
-    <div class="flex gap-1 mb-2">
+    <div class="flex gap-0.5 mb-2">
       {bodies.map((b, i) => (
         <button
-          class:list={[
-            "format-tab px-3 py-1 text-xs rounded cursor-pointer transition-colors",
-            i === 0
-              ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
-          ]}
+          class:list={[TAB_BASE_CLASS, i === 0 ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS]}
           data-format={b.format}
         >
           {b.format.toUpperCase()}
@@ -34,7 +38,7 @@ const hasMultipleFormats = bodies.length > 1;
         <CodeBlock
           code={b.body}
           label={`${b.format.toUpperCase()} Circuit`}
-          downloadName={b.format === "stim" ? stimFilename : undefined}
+          downloadName={downloadNameFor(b.format)}
           source={source}
         />
       </div>
@@ -44,7 +48,7 @@ const hasMultipleFormats = bodies.length > 1;
   <CodeBlock
     code={bodies[0].body}
     label={`${bodies[0].format.toUpperCase()} Circuit`}
-    downloadName={bodies[0].format === "stim" ? stimFilename : undefined}
+    downloadName={downloadNameFor(bodies[0].format)}
     source={source}
   />
 ) : (

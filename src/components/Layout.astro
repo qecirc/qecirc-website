@@ -3,6 +3,8 @@ import "../styles/global.css";
 import SearchBar from "./SearchBar.astro";
 import CiteToast from "./CiteToast.astro";
 import { HEART_PATH } from "../lib/constants";
+import { countAllCircuits } from "../lib/queries";
+import pkg from "../../package.json";
 
 interface Props {
   title: string;
@@ -13,6 +15,10 @@ const DEFAULT_DESCRIPTION = "QECirc — a community-driven library for quantum e
 const { title, description = DEFAULT_DESCRIPTION } = Astro.props;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const fullTitle = `${title} - QECirc`;
+
+const version = pkg.version;
+const totalCircuits = countAllCircuits();
+const totalCircuitsLabel = new Intl.NumberFormat("en-US").format(totalCircuits);
 
 const NAV_LINKS = [
   { href: "/tools", label: "Tools" },
@@ -150,11 +156,16 @@ const sunIconSvg = `<svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" f
       <slot />
     </main>
     <footer class="border-t border-gray-200 dark:border-gray-800 mt-16">
-      <div class="mx-auto max-w-4xl px-4 py-6 text-sm text-gray-500 dark:text-gray-400 flex items-center justify-between">
-        <span>QECirc — A community-driven library for quantum error correction circuits.</span>
-        <div class="flex gap-4">
-          <a href="/privacy" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Privacy Policy</a>
-          <a href="/legal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Legal Notice</a>
+      <div class="mx-auto max-w-4xl px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
+        <div class="flex items-center justify-between">
+          <span>QECirc — A community-driven library for quantum error correction circuits.</span>
+          <div class="flex gap-4">
+            <a href="/privacy" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Privacy Policy</a>
+            <a href="/legal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Legal Notice</a>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end font-mono text-[11px] text-gray-400 dark:text-gray-500">
+          v{version} · {totalCircuitsLabel} circuits
         </div>
       </div>
     </footer>

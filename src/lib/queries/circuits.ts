@@ -39,6 +39,14 @@ export function countCircuitsForCode(codeId: number): number {
   return row.count;
 }
 
+export function countAllCircuits(): number {
+  const db = getDb();
+  const row = db.prepare("SELECT COUNT(*) as count FROM circuits").get() as {
+    count: number;
+  };
+  return row.count;
+}
+
 export function getCircuitTagsForCode(codeId: number): TagWithCount[] {
   const db = getDb();
   return db

@@ -7,6 +7,7 @@ import CircuitFilter from "../../components/CircuitFilter.astro";
 import CircuitRow from "../../components/CircuitRow.astro";
 import CodeMatrices from "../../components/CodeMatrices.astro";
 import CollapsibleSection from "../../components/CollapsibleSection.astro";
+import HeartIcon from "../../components/HeartIcon.astro";
 import {
   getCodeBySlug,
   getTagsFor,
@@ -17,7 +18,7 @@ import {
   getCircuitsWithBodies,
   getToolsForCircuits,
 } from "../../lib/queries";
-import { parseCircuitParams } from "../../lib/url";
+import { parseCircuitParams, circuitSortToggleUrl } from "../../lib/url";
 import { safeParseMatrix } from "../../lib/utils";
 
 const { code: codeSlug } = Astro.params;
@@ -50,19 +51,30 @@ const toolsMap = getToolsForCircuits(circuits.map((c) => c.id));
 const countLabel = hasFilters
   ? `${circuits.length} of ${totalCount} circuit${totalCount !== 1 ? "s" : ""}`
   : `${totalCount} circuit${totalCount !== 1 ? "s" : ""}`;
+
+const basePath = `/codes/${codeSlug}`;
+const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubit_count") =>
+  circuitSortToggleUrl(Astro.url, sort, field, basePath);
 ---
 
 <Layout title={code.name} description={`Circuits for ${code.name}${params ? ` ${params}` : ""}`}>
-  <h1 class="text-2xl font-bold mb-2">
-    {code.name} <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>
-  </h1>
-
-  <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+  <div class="flex items-baseline flex-wrap gap-x-3.5 gap-y-1 mb-2">
+    <h1 class="text-2xl font-bold">
+      {code.name} <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>
+    </h1>
     {code.zoo_url && (
-      <a href={code.zoo_url} class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
-        QEC Zoo &#x2197;
+      <a
+        href={code.zoo_url}
+        class="text-[13px] font-medium text-gray-600 dark:text-gray-400 underline decoration-gray-300 dark:decoration-gray-600 hover:text-gray-900 dark:hover:text-gray-100 hover:decoration-gray-500 dark:hover:decoration-gray-400"
+        target="_blank"
+        rel="noopener"
+      >
+        View on QEC Zoo<span class="ml-0.5 opacity-65">&#x2197;</span>
       </a>
     )}
+  </div>
+
+  <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
     <TagList tags={tags} />
   </div>
 
@@ -85,21 +97,34 @@ const countLabel = hasFilters
 
   <div class="flex items-baseline justify-between mb-2">
     <h2 class="text-lg font-semibold">Circuits</h2>
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-4">
       {circuits.length > 0 && (
         <button
           id="download-all-btn"
-          class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+          class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 rounded-md cursor-pointer"
           data-code-slug={codeSlug}
           title="Download all visible circuits (.stim)"
           aria-label="Download all visible circuits"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
           </svg>
+          <span>{countLabel}</span>
         </button>
       )}
-      <span class="text-sm text-gray-500 dark:text-gray-400">{countLabel}</span>
+      {circuits.length === 0 && (
+        <span class="text-[13px] text-gray-500 dark:text-gray-400 px-1.5 py-1">{countLabel}</span>
+      )}
+      <button
+        type="button"
+        id="fav-filter-toggle"
+        class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 aria-pressed:text-red-500 dark:aria-pressed:text-red-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 rounded-md cursor-pointer"
+        title="Show favorites only"
+        aria-pressed="false"
+      >
+        <HeartIcon class="w-3.5 h-3.5" />
+        <span>Favorites</span>
+      </button>
     </div>
   </div>
 
@@ -126,18 +151,18 @@ const countLabel = hasFilters
   ) : (
     <div>
       <div
-        class="sticky top-0 z-10 bg-white dark:bg-gray-950 grid items-center gap-x-1.5 px-4 py-1.5 text-xs font-medium"
+        class="sticky top-0 z-10 bg-white dark:bg-gray-950 grid items-center gap-x-1.5 px-4 py-1.5 text-[11px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400"
         style="grid-template-columns: var(--circuit-grid);"
       >
         <span></span>
         <span></span>
         <span></span>
-        <span class="text-center text-amber-700 dark:text-amber-300" title="Gate count">G</span>
-        <span class="text-center text-purple-700 dark:text-purple-300" title="Two-qubit gate count">2Q</span>
-        <span class="text-center text-green-700 dark:text-green-300" title="Circuit depth">D</span>
-        <span class="text-center text-blue-700 dark:text-blue-300" title="Qubit count">Q</span>
+        <a href={sortHref("gate_count")} class:list={["text-center hover:text-gray-900 dark:hover:text-gray-100", sort.field === "gate_count" && "text-amber-600 dark:text-amber-400"]} title="Gate count — click to sort">G</a>
+        <a href={sortHref("two_qubit_gate_count")} class:list={["text-center hover:text-gray-900 dark:hover:text-gray-100", sort.field === "two_qubit_gate_count" && "text-amber-600 dark:text-amber-400"]} title="Two-qubit gate count — click to sort">2Q</a>
+        <a href={sortHref("depth")} class:list={["text-center hover:text-gray-900 dark:hover:text-gray-100", sort.field === "depth" && "text-amber-600 dark:text-amber-400"]} title="Circuit depth — click to sort">D</a>
+        <a href={sortHref("qubit_count")} class:list={["text-center hover:text-gray-900 dark:hover:text-gray-100", sort.field === "qubit_count" && "text-amber-600 dark:text-amber-400"]} title="Qubit count — click to sort">Q</a>
         <span></span>
-        <span class="text-gray-500 dark:text-gray-400">Name</span>
+        <span>Name</span>
       </div>
       <div class="space-y-2">
         {circuits.map((circuit) => (
@@ -149,6 +174,35 @@ const countLabel = hasFilters
 </Layout>
 
 <script>
+  import { getFavorites } from "../../lib/favorites-client";
+
+  const FAV_FILTER_LS_KEY = "qecirc:fav-filter-active";
+
+  function applyFavFilter(active: boolean): void {
+    const favSet = new Set(getFavorites());
+    document.querySelectorAll("[id] > .circuit-toggle").forEach(function (toggle) {
+      const row = toggle.closest("[id]") as HTMLElement;
+      if (!row || !row.id || isNaN(Number(row.id))) return;
+      const qecId = Number(row.id);
+      row.style.display = active && !favSet.has(qecId) ? "none" : "";
+    });
+  }
+
+  const favToggle = document.getElementById("fav-filter-toggle");
+  if (favToggle) {
+    let active = localStorage.getItem(FAV_FILTER_LS_KEY) === "true";
+    if (active) {
+      favToggle.setAttribute("aria-pressed", "true");
+      applyFavFilter(true);
+    }
+    favToggle.addEventListener("click", function () {
+      active = !active;
+      favToggle.setAttribute("aria-pressed", active ? "true" : "false");
+      localStorage.setItem(FAV_FILTER_LS_KEY, String(active));
+      applyFavFilter(active);
+    });
+  }
+
   const downloadBtn = document.getElementById("download-all-btn");
   if (downloadBtn) {
     downloadBtn.addEventListener("click", async function () {
