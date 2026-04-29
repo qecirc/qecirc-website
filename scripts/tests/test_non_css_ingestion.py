@@ -148,3 +148,32 @@ class TestYamlDedupH:
             ]
         )
         assert find_existing_code_h(H_b, n=4, data_dir=str(tmp_path)) is None
+
+    def test_qubit_permutation_is_real_list_not_silent_none(self, tmp_path):
+        """Regression for the bug where find_existing_code_h always returned
+        qubit_permutation=None for non-CSS matches, silently wiring circuits
+        to the wrong qubits."""
+        from scripts.add_circuit import find_existing_code_h
+        from scripts.add_circuit.yaml_helpers import build_code_yaml, dump_yaml
+
+        Hx, Hz = _five_qubit_matrices()
+        H = np.hstack([Hx, Hz])
+        codes_dir = tmp_path / "codes"
+        codes_dir.mkdir(parents=True)
+        seed = compute_code_data_h(H, n=5, d=3, code_name="Five-Qubit", data_dir=str(tmp_path))
+        (codes_dir / "five-qubit.yaml").write_text(dump_yaml(build_code_yaml(seed["code"])))
+
+        # Resubmit the same H. Match must be found and the perm must be the
+        # actual canonical_form_h relabel (not a silent None).
+        match = find_existing_code_h(H, n=5, data_dir=str(tmp_path))
+        assert match is not None
+        assert match.slug == "five-qubit"
+        # canonical_form_h(H) for this code yields a non-identity qubit_perm,
+        # so dedup must return that list rather than silently dropping it.
+        from scripts.add_circuit.code_identify import canonical_form_h
+
+        _, expected_perm = canonical_form_h(H, n=5)
+        if expected_perm == list(range(5)):
+            assert match.qubit_permutation is None
+        else:
+            assert match.qubit_permutation == expected_perm

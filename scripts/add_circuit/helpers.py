@@ -154,8 +154,8 @@ def find_existing_code_h(
 
     For CSS-decomposable H this delegates to :func:`find_existing_code_full`
     after recovering (Hx, Hz). For genuinely non-CSS H it matches by
-    ``canonical_hash_h`` only and reports ``qubit_permutation=None`` (callers
-    that need a permutation should use the CSS path).
+    ``canonical_hash_h`` and verifies via canonical form, returning the
+    qubit_permutation from :func:`canonical_form_h`.
     """
     H = np.asarray(H, dtype=int) % 2
     css_split = split_h_to_css(H, n)
@@ -164,10 +164,10 @@ def find_existing_code_h(
         return find_existing_code_full(Hx, Hz, data_dir)
 
     c_hash = canonical_hash_h(H, n)
-    slug = _check_yaml_dedup_h(data_dir, c_hash, H, n)
+    slug, perm = _check_yaml_dedup_h(data_dir, c_hash, H, n)
     if slug is None:
         return None
-    return ExistingCodeMatch(slug=slug, qubit_permutation=None)
+    return ExistingCodeMatch(slug=slug, qubit_permutation=perm)
 
 
 def summarize_circuit(circuit: Union[stim.Circuit, str]) -> dict:

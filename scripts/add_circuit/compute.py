@@ -199,16 +199,24 @@ def compute_code_data_h(
 
     code_status = "new"
     existing_slug = None
+    existing_perm: Optional[list[int]] = None
     if data_dir:
-        existing_slug = _check_yaml_dedup_h(data_dir, c_hash, H, n)
+        existing_slug, existing_perm = _check_yaml_dedup_h(data_dir, c_hash, H, n)
         if existing_slug is not None:
             code_status = "existing"
             if not slug:
                 slug = existing_slug
 
-    final_perm: Optional[list[int]] = qubit_perm
-    if final_perm == list(range(len(final_perm))):
-        final_perm = None
+    if code_status == "existing":
+        # Use the perm from _check_yaml_dedup_h (already normalized to None for
+        # identity). This is the correct relabeling from user qubits to the
+        # stored canonical ordering.
+        final_perm: Optional[list[int]] = existing_perm
+    else:
+        final_perm = qubit_perm
+        # Normalize identity permutation to None (no relabeling needed)
+        if final_perm == list(range(len(final_perm))):
+            final_perm = None
 
     return {
         "code": {
@@ -397,16 +405,21 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz):
 
 
 def _check_yaml_dedup_h(data_dir, c_hash, H, n):
-    """Look up a non-CSS code by ``canonical_hash_h`` and verify by canonical form.
+    """Returns ``(slug, qubit_permutation)`` or ``(None, None)``.
 
-    Hash collisions are astronomically unlikely with the new SHA256-of-canonical
-    hash, but we still verify the stored canonical form matches the user's to
-    rule out malformed YAML or future hash bugs.
+    Look up a non-CSS code by ``canonical_hash_h`` and verify by canonical
+    form. Hash collisions are astronomically unlikely with the new
+    SHA256-of-canonical hash, but we still verify the stored canonical form
+    matches the user's to rule out malformed YAML or future hash bugs.
+
+    The returned ``qubit_permutation`` is the relabeling from user qubits to
+    the canonical (= stored) ordering, normalized to None when it is the
+    identity.
     """
     codes_dir = Path(data_dir) / "codes"
     if not codes_dir.exists():
-        return None
-    canon_user, _ = canonical_form_h(H, n)
+        return None, None
+    canon_user, perm = canonical_form_h(H, n)
     for code_file in sorted(codes_dir.glob("*.yaml")):
         data = yaml.safe_load(code_file.read_text(encoding="utf-8"))
         if data.get("canonical_hash") != c_hash:
@@ -417,13 +430,15 @@ def _check_yaml_dedup_h(data_dir, c_hash, H, n):
             )
         canon_stored = np.array(data["h"], dtype=int) % 2
         if canon_stored.shape == canon_user.shape and np.array_equal(canon_stored, canon_user):
-            return code_file.stem
+            slug = code_file.stem
+            if perm == list(range(len(perm))):
+                perm = None
+            return slug, perm
         raise ValueError(
             f"Hash collision: code '{code_file.stem}' has matching canonical_hash "
-            f"but different canonical H. Stored shape {canon_stored.shape}, "
-            f"user shape {canon_user.shape}."
+            f"but different canonical H."
         )
-    return None
+    return None, None
 
 
 def slugify(name: str) -> str:
