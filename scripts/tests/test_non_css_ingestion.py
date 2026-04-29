@@ -177,3 +177,40 @@ class TestYamlDedupH:
             assert match.qubit_permutation is None
         else:
             assert match.qubit_permutation == expected_perm
+
+
+class TestAddCircuitH:
+    def test_dry_run_writes_expected_files(self, tmp_path):
+        from pathlib import Path
+
+        from scripts.add_circuit import add_circuit
+
+        # Set up data_dir scaffolding (must exist for dedup to even attempt).
+        (tmp_path / "codes").mkdir()
+        (tmp_path / "circuits").mkdir()
+
+        Hx, Hz = _five_qubit_matrices()
+        H = np.hstack([Hx, Hz])
+
+        # Trivial 5-qubit "circuit" — not a real encoder, just a stim placeholder.
+        circuit_text = "I 0 1 2 3 4"
+
+        result = add_circuit(
+            circuit=circuit_text,
+            circuit_name="Smoke Test",
+            d=3,
+            H=H,
+            n=5,
+            source="test://example",
+            code_name="Five-Qubit",
+            data_dir=str(tmp_path),
+            dry_run=True,
+        )
+
+        assert result.dry_run is True
+        assert result.code_status == "new"
+        # Expect: code yaml + circuit yaml + at least one body + originals
+        paths = [Path(p).name for p in result.files_written]
+        assert any(p.endswith(".yaml") and "five-qubit" in p for p in paths)
+        assert any(p.endswith(".stim") for p in paths)
+        assert any(p.endswith(".original.yaml") for p in paths)
