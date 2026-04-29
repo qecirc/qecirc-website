@@ -23,10 +23,12 @@ const symplecticLines = matrix
   .map((row) => `[ ${padCells(row.slice(0, n))} │ ${padCells(row.slice(n, 2 * n))} ]`)
   .join("\n");
 
-// Stable id for client-side toggle binding
-const blockId =
-  id ??
-  `stab-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Math.random().toString(36).slice(2, 8)}`;
+// Stable id for client-side toggle binding.
+// Two StabilizerDisplays on a page must have distinct labels (callers
+// already ensure this: "Stabilizers" / "Logical operators" or "Original
+// Stabilizers" / "Original Logical operators"). For an explicit override,
+// pass `id`.
+const blockId = id ?? `stab-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 ---
 
 <div class="mb-4" data-stab-block={blockId}>
@@ -39,7 +41,7 @@ const blockId =
     >
       <button
         type="button"
-        class="stab-toggle px-2 py-0.5 cursor-pointer"
+        class="stab-toggle px-2 py-0.5 cursor-pointer aria-pressed:bg-gray-200 dark:aria-pressed:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         data-target={blockId}
         data-view="pauli"
         aria-pressed={defaultView === "pauli"}
@@ -48,7 +50,7 @@ const blockId =
       </button>
       <button
         type="button"
-        class="stab-toggle px-2 py-0.5 cursor-pointer border-l border-gray-200 dark:border-gray-700"
+        class="stab-toggle px-2 py-0.5 cursor-pointer border-l border-gray-200 dark:border-gray-700 aria-pressed:bg-gray-200 dark:aria-pressed:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         data-target={blockId}
         data-view="symplectic"
         aria-pressed={defaultView === "symplectic"}
@@ -70,15 +72,6 @@ const blockId =
     hidden={defaultView !== "symplectic"}
   ><code set:text={symplecticLines} /></pre>
 </div>
-
-<style>
-  .stab-toggle[aria-pressed="true"] {
-    background-color: rgb(229 231 235);
-  }
-  :global(.dark) .stab-toggle[aria-pressed="true"] {
-    background-color: rgb(55 65 81);
-  }
-</style>
 
 <script>
   // Bind toggle for every StabilizerDisplay block on the page.
