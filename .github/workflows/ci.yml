@@ -23,6 +23,24 @@ jobs:
       - run: npm run lint
       - run: npm run validate:yaml
       - run: npm run build
+      - name: Start server
+        run: |
+          node ./dist/server/entry.mjs &
+          echo $! > server.pid
+          for i in {1..30}; do
+            if curl -fsS http://localhost:4321/ > /dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server failed to start within 30s"; exit 1
+        env:
+          PORT: 4321
+      - name: Run smoke tests
+        run: ./scripts/smoke.sh
+      - name: Stop server
+        if: always()
+        run: kill "$(cat server.pid)" 2>/dev/null || true
 
   python-tests:
     runs-on: ubuntu-latest
