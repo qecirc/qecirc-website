@@ -10,11 +10,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  no-private-registries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Forbid private artifactory references
+        run: |
+          if git grep -n -F 'jfrog.io' -- ':!.github/workflows/ci.yml'; then
+            echo "::error::Found jfrog.io references. QECirc must only use public registries (PyPI, npm)."
+            exit 1
+          fi
+
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 24
           cache: npm
@@ -45,12 +56,14 @@ jobs:
   python-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
-          version: "0.10.x"
+          version: "0.11.x"
           python-version: "3.13"
       - run: uv lock --check
+        env:
+          UV_NO_CONFIG: "1"
       - run: uv sync
       - run: uv run ruff check scripts/
       - run: uv run ruff format --check scripts/
