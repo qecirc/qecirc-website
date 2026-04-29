@@ -28,6 +28,11 @@ import Layout from "../components/Layout.astro";
     <p class="text-sm text-gray-400 dark:text-gray-500">Browse circuits and click the heart icon to save them here.</p>
   </div>
 
+  <div id="fav-error" class="text-center py-8 hidden">
+    <p class="text-gray-500 dark:text-gray-400 mb-2">Could not load favorites.</p>
+    <p class="text-sm text-gray-400 dark:text-gray-500">Please reload the page or try again later.</p>
+  </div>
+
   <div id="fav-content" class="hidden space-y-6"></div>
 
   <div id="fav-actions" class="border-t border-gray-200 dark:border-gray-800 mt-8 pt-4 flex items-center gap-4">
@@ -65,6 +70,7 @@ import Layout from "../components/Layout.astro";
 
   const loading = document.getElementById("fav-loading")!;
   const empty = document.getElementById("fav-empty")!;
+  const errorBox = document.getElementById("fav-error")!;
   const content = document.getElementById("fav-content")!;
   const downloadBtn = document.getElementById("download-all-favs")!;
 
@@ -75,7 +81,10 @@ import Layout from "../components/Layout.astro";
     empty.classList.remove("hidden");
   } else {
     fetch(`/api/circuits?ids=${favIds.join(",")}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((circuits: FavCircuit[]) => {
         loading.classList.add("hidden");
 
@@ -197,9 +206,10 @@ import Layout from "../components/Layout.astro";
         content.classList.remove("hidden");
         downloadBtn.classList.remove("hidden");
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("favorites: fetch failed", err);
         loading.classList.add("hidden");
-        empty.classList.remove("hidden");
+        errorBox.classList.remove("hidden");
       });
   }
 
@@ -221,9 +231,8 @@ import Layout from "../components/Layout.astro";
       a.download = match ? match[1] : "qecirc_favorites.stim.zip";
       a.click();
       URL.revokeObjectURL(url);
-      const w = window as Window & { showCiteToast?: (msg: string, url?: string) => void };
-      if (typeof w.showCiteToast === "function") {
-        w.showCiteToast("Please cite the corresponding sources when using these circuits.");
+      if (typeof window.showCiteToast === "function") {
+        window.showCiteToast("Please cite the corresponding sources when using these circuits.");
       }
     } finally {
       downloadBtn.classList.remove("opacity-50", "pointer-events-none");
@@ -254,7 +263,7 @@ import Layout from "../components/Layout.astro";
   importFile.addEventListener("change", function () {
     const file = importFile.files?.[0];
     if (!file) return;
-    const toast = (window as Window & { showCiteToast?: (msg: string) => void }).showCiteToast;
+    const toast = window.showCiteToast;
 
     // Reject before reading into memory
     if (file.size > 100_000) {
