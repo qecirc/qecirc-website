@@ -109,7 +109,7 @@ class TestSplitHToCss:
         assert is_h_css(H, n=5) is False
 
     def test_single_xz_not_css(self):
-        # H = [[1, 0, 0, 1]] (one qubit, stabilizer XZ = Y) is non-CSS.
+        # H = [[1, 0, 0, 1]] (n=2) is the 2-qubit stabilizer X⊗Z, which is non-CSS.
         H = np.array([[1, 0, 0, 1]])
         assert split_h_to_css(H, n=2) is None
 
