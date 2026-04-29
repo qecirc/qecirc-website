@@ -5,8 +5,7 @@ import Layout from "../../components/Layout.astro";
 import TagList from "../../components/TagList.astro";
 import CircuitFilter from "../../components/CircuitFilter.astro";
 import CircuitRow from "../../components/CircuitRow.astro";
-import MatrixDisplay from "../../components/MatrixDisplay.astro";
-import StabilizerDisplay from "../../components/StabilizerDisplay.astro";
+import CodeMatrices from "../../components/CodeMatrices.astro";
 import CollapsibleSection from "../../components/CollapsibleSection.astro";
 import {
   getCodeBySlug,
@@ -37,8 +36,7 @@ const logicalX = safeParseMatrix(code.logical_x);
 const logicalZ = safeParseMatrix(code.logical_z);
 const h = safeParseMatrix(code.h);
 const logical = safeParseMatrix(code.logical);
-const isCSS = hx !== null && hz !== null;
-const hasMatrices = isCSS ? !!(hx || hz || logicalX || logicalZ) : !!(h || logical);
+const hasMatrices = !!(h && logical);
 
 // Parse circuit filter and sort params
 const { raw, errors, tags: selectedTags, focus, filters, sort } = parseCircuitParams(Astro.url);
@@ -68,24 +66,19 @@ const countLabel = hasFilters
     <TagList tags={tags} />
   </div>
 
-  {hasMatrices && (
+  {hasMatrices && h && logical && (
     <div class="mb-6">
       <CollapsibleSection id="matrices" label="Check Matrices & Logical Operators">
-        {isCSS ? (
-          <div class="grid gap-x-6 gap-y-2 sm:grid-cols-2">
-            {hx && <MatrixDisplay label="Hx (X-checks)" matrix={hx} />}
-            {hz && <MatrixDisplay label="Hz (Z-checks)" matrix={hz} />}
-            {logicalX && <MatrixDisplay label="Logical X" matrix={logicalX} />}
-            {logicalZ && <MatrixDisplay label="Logical Z" matrix={logicalZ} />}
-          </div>
-        ) : (
-          <div class="space-y-3">
-            {h && <StabilizerDisplay label="Stabilizers" matrix={h} n={code.n} />}
-            {logical && (
-              <StabilizerDisplay label="Logical operators" matrix={logical} n={code.n} />
-            )}
-          </div>
-        )}
+        <CodeMatrices
+          id="code-matrices"
+          n={code.n}
+          h={h}
+          logical={logical}
+          hx={hx}
+          hz={hz}
+          logicalX={logicalX}
+          logicalZ={logicalZ}
+        />
       </CollapsibleSection>
     </div>
   )}

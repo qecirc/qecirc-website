@@ -22,15 +22,8 @@ export function symplecticToPauli(matrix: number[][], n: number): string[] {
   });
 }
 
-// True iff the code carries the CSS view (separate hx/hz). Used by pages to
-// pick between MatrixDisplay (CSS) and StabilizerDisplay (general symplectic).
-export function isCSSView(code: { hx: string | null; hz: string | null }): boolean {
-  return code.hx !== null && code.hz !== null;
-}
-
 // Format a matrix as space-padded rows with brackets, e.g. "[ 1  0  1 ]".
-// Returns an array of formatted row strings (no trailing newline). Used by
-// MatrixDisplay and StabilizerDisplay.
+// Returns an array of formatted row strings (no trailing newline).
 export function formatMatrixRows(matrix: number[][]): string[] {
   const flat = matrix.flat();
   const colWidth = flat.length > 0 ? Math.max(...flat.map((v) => String(v).length)) : 1;

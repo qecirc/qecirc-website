@@ -1,0 +1,216 @@
+---
+import { formatMatrixRows, symplecticToPauli } from "../lib/utils";
+
+interface Props {
+  n: number;
+  h: number[][];
+  logical: number[][];
+  // CSS view (all four required together; null for non-CSS).
+  hx?: number[][] | null;
+  hz?: number[][] | null;
+  logicalX?: number[][] | null;
+  logicalZ?: number[][] | null;
+  // Prefix applied to "Stabilizers" / "Logical operators" headings.
+  prefix?: string;
+  // Stable id for the toggle group; required when more than one CodeMatrices
+  // renders on the same page.
+  id?: string;
+  defaultView?: "pauli" | "symplectic" | "hxhz";
+}
+
+const {
+  n,
+  h,
+  logical,
+  hx = null,
+  hz = null,
+  logicalX = null,
+  logicalZ = null,
+  prefix = "",
+  id = "code-matrices",
+  defaultView = "pauli",
+} = Astro.props;
+
+const isCss = hx !== null && hz !== null && logicalX !== null && logicalZ !== null;
+const view = !isCss && defaultView === "hxhz" ? "pauli" : defaultView;
+
+// Render helpers — all views produce a single string per pane (joined with "\n")
+// so they share the exact same <pre> presentation.
+
+function paulisJoined(matrix: number[][]): string {
+  return symplecticToPauli(matrix, n).join("\n");
+}
+
+function symplecticJoined(matrix: number[][]): string {
+  const flat = matrix.flat();
+  const colWidth = flat.length > 0 ? Math.max(...flat.map((v) => String(v).length)) : 1;
+  const padCells = (cells: number[]) =>
+    cells.map((v) => String(v).padStart(colWidth, " ")).join("  ");
+  return matrix
+    .map((row) => `[ ${padCells(row.slice(0, n))} │ ${padCells(row.slice(n, 2 * n))} ]`)
+    .join("\n");
+}
+
+// CSS Hx/Hz view: two labelled matrix groups inside a single <pre>, sharing
+// the same styling as the other views. Sub-labels keep "[ row ]" formatting
+// consistent and the two groups are separated by a blank line.
+function hxhzJoined(blocks: { label: string; matrix: number[][] }[]): string {
+  return blocks
+    .map(({ label, matrix }) => `${label}\n${formatMatrixRows(matrix).join("\n")}`)
+    .join("\n\n");
+}
+
+const stabPauli = paulisJoined(h);
+const stabSymplectic = symplecticJoined(h);
+const stabHxHz = isCss
+  ? hxhzJoined([
+      { label: "Hx (X-checks)", matrix: hx! },
+      { label: "Hz (Z-checks)", matrix: hz! },
+    ])
+  : "";
+
+const logicalPauli = paulisJoined(logical);
+const logicalSymplectic = symplecticJoined(logical);
+const logicalHxHz = isCss
+  ? hxhzJoined([
+      { label: "Logical X", matrix: logicalX! },
+      { label: "Logical Z", matrix: logicalZ! },
+    ])
+  : "";
+
+const stabLabel = `${prefix}Stabilizers`;
+const logicalLabel = `${prefix}Logical operators`;
+
+// Tab descriptors so the template stays uniform across views.
+const tabs: { view: "pauli" | "symplectic" | "hxhz"; label: string; show: boolean }[] = [
+  { view: "pauli", label: "Pauli", show: true },
+  { view: "symplectic", label: "Symplectic", show: true },
+  { view: "hxhz", label: "Hx/Hz", show: isCss },
+];
+
+const paneClass =
+  "code-matrix-pane text-sm leading-relaxed font-mono bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 px-3 py-2 overflow-x-auto";
+---
+
+<div data-code-matrices={id}>
+  <div class="flex gap-1 mb-3" role="tablist" aria-label="Matrix display format">
+    {
+      tabs
+        .filter((t) => t.show)
+        .map((tab) => (
+          <button
+            type="button"
+            class:list={[
+              "code-matrix-toggle px-3 py-1 text-xs rounded cursor-pointer transition-colors",
+              "focus:outline-none focus:ring-2 focus:ring-blue-500",
+              view === tab.view
+                ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+            ]}
+            data-target={id}
+            data-view={tab.view}
+            aria-pressed={view === tab.view}
+          >
+            {tab.label.toUpperCase()}
+          </button>
+        ))
+    }
+  </div>
+
+  <div class="mb-4">
+    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium">{stabLabel}</p>
+    <pre
+      class={paneClass}
+      data-target={id}
+      data-pane="stab"
+      data-view="pauli"
+      hidden={view !== "pauli"}
+    ><code set:text={stabPauli} /></pre>
+    <pre
+      class={paneClass}
+      data-target={id}
+      data-pane="stab"
+      data-view="symplectic"
+      hidden={view !== "symplectic"}
+    ><code set:text={stabSymplectic} /></pre>
+    {isCss && (
+      <pre
+        class={paneClass}
+        data-target={id}
+        data-pane="stab"
+        data-view="hxhz"
+        hidden={view !== "hxhz"}
+      ><code set:text={stabHxHz} /></pre>
+    )}
+  </div>
+
+  <div>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium">{logicalLabel}</p>
+    <pre
+      class={paneClass}
+      data-target={id}
+      data-pane="logical"
+      data-view="pauli"
+      hidden={view !== "pauli"}
+    ><code set:text={logicalPauli} /></pre>
+    <pre
+      class={paneClass}
+      data-target={id}
+      data-pane="logical"
+      data-view="symplectic"
+      hidden={view !== "symplectic"}
+    ><code set:text={logicalSymplectic} /></pre>
+    {isCss && (
+      <pre
+        class={paneClass}
+        data-target={id}
+        data-pane="logical"
+        data-view="hxhz"
+        hidden={view !== "hxhz"}
+      ><code set:text={logicalHxHz} /></pre>
+    )}
+  </div>
+</div>
+
+<script>
+  // Tab class strings mirror FormatSwitcher (STIM/QASM/CIRQ) for visual parity.
+  const BASE_CLASS = "code-matrix-toggle px-3 py-1 text-xs rounded cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const ACTIVE_CLASS = `${BASE_CLASS} bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900`;
+  const INACTIVE_CLASS = `${BASE_CLASS} bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700`;
+
+  // Section-level toggle: clicking a button flips both panes (stabilizers and
+  // logicals) inside the same data-target group, and resyncs the enclosing
+  // CollapsibleSection's max-height (the new view may be taller than the old).
+  for (const btn of document.querySelectorAll<HTMLButtonElement>(".code-matrix-toggle")) {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.target;
+      const view = btn.dataset.view;
+      if (!target || !view) return;
+      const sel = `[data-target="${CSS.escape(target)}"]`;
+      for (const peer of document.querySelectorAll<HTMLButtonElement>(
+        `.code-matrix-toggle${sel}`,
+      )) {
+        const isActive = peer.dataset.view === view;
+        peer.setAttribute("aria-pressed", String(isActive));
+        peer.className = isActive ? ACTIVE_CLASS : INACTIVE_CLASS;
+      }
+      for (const pane of document.querySelectorAll<HTMLElement>(`.code-matrix-pane${sel}`)) {
+        pane.hidden = pane.dataset.view !== view;
+      }
+      // Resync any open CollapsibleSection ancestor — its max-height was
+      // measured against the previously-visible pane.
+      let node: HTMLElement | null = btn.parentElement;
+      while (node) {
+        if (
+          node.style.maxHeight &&
+          node.style.maxHeight !== "0px" &&
+          node.style.maxHeight !== ""
+        ) {
+          node.style.maxHeight = node.scrollHeight + "px";
+          break;
+        }
+        node = node.parentElement;
+      }
+    });
+  }
+</script>
