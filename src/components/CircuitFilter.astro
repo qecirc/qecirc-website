@@ -1,5 +1,6 @@
 ---
 import type { TagWithCount, CircuitSort, CircuitSortField } from "../types";
+import { circuitSortToggleUrl } from "../lib/url";
 import TagList from "./TagList.astro";
 
 interface Props {
@@ -35,21 +36,8 @@ function labelInfo(field: CircuitSortField) {
   return { arrow, cls };
 }
 
-function sortToggleUrl(field: CircuitSortField): string {
-  const params = new URLSearchParams(currentUrl.search);
-  params.delete("focus");
-  if (sort.field === field) {
-    // Toggle direction
-    params.set("sort", field);
-    params.set("sort_dir", sort.dir === "desc" ? "asc" : "desc");
-  } else {
-    // Activate with desc default
-    params.set("sort", field);
-    params.set("sort_dir", "desc");
-  }
-  const qs = params.toString();
-  return basePath + (qs ? "?" + qs : "");
-}
+const sortToggleUrl = (field: CircuitSortField) =>
+  circuitSortToggleUrl(currentUrl, sort, field, basePath);
 
 const gateSort = labelInfo("gate_count");
 const twoQubitGateSort = labelInfo("two_qubit_gate_count");

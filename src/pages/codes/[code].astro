@@ -18,7 +18,7 @@ import {
   getCircuitsWithBodies,
   getToolsForCircuits,
 } from "../../lib/queries";
-import { parseCircuitParams } from "../../lib/url";
+import { parseCircuitParams, circuitSortToggleUrl } from "../../lib/url";
 import { safeParseMatrix } from "../../lib/utils";
 
 const { code: codeSlug } = Astro.params;
@@ -51,6 +51,10 @@ const toolsMap = getToolsForCircuits(circuits.map((c) => c.id));
 const countLabel = hasFilters
   ? `${circuits.length} of ${totalCount} circuit${totalCount !== 1 ? "s" : ""}`
   : `${totalCount} circuit${totalCount !== 1 ? "s" : ""}`;
+
+const basePath = `/codes/${codeSlug}`;
+const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubit_count") =>
+  circuitSortToggleUrl(Astro.url, sort, field, basePath);
 ---
 
 <Layout title={code.name} description={`Circuits for ${code.name}${params ? ` ${params}` : ""}`}>
@@ -114,7 +118,7 @@ const countLabel = hasFilters
       <button
         type="button"
         id="fav-filter-toggle"
-        class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 rounded-md cursor-pointer"
+        class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 aria-pressed:text-red-500 dark:aria-pressed:text-red-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 rounded-md cursor-pointer"
         title="Show favorites only"
         aria-pressed="false"
       >
@@ -153,10 +157,10 @@ const countLabel = hasFilters
         <span></span>
         <span></span>
         <span></span>
-        <span class:list={["text-center", sort.field === "gate_count" && "text-amber-600 dark:text-amber-400"]} title="Gate count">G</span>
-        <span class:list={["text-center", sort.field === "two_qubit_gate_count" && "text-amber-600 dark:text-amber-400"]} title="Two-qubit gate count">2Q</span>
-        <span class:list={["text-center", sort.field === "depth" && "text-amber-600 dark:text-amber-400"]} title="Circuit depth">D</span>
-        <span class:list={["text-center", sort.field === "qubit_count" && "text-amber-600 dark:text-amber-400"]} title="Qubit count">Q</span>
+        <a href={sortHref("gate_count")} class:list={["text-center hover:text-gray-900 dark:hover:text-gray-100", sort.field === "gate_count" && "text-amber-600 dark:text-amber-400"]} title="Gate count — click to sort">G</a>
+        <a href={sortHref("two_qubit_gate_count")} class:list={["text-center hover:text-gray-900 dark:hover:text-gray-100", sort.field === "two_qubit_gate_count" && "text-amber-600 dark:text-amber-400"]} title="Two-qubit gate count — click to sort">2Q</a>
+        <a href={sortHref("depth")} class:list={["text-center hover:text-gray-900 dark:hover:text-gray-100", sort.field === "depth" && "text-amber-600 dark:text-amber-400"]} title="Circuit depth — click to sort">D</a>
+        <a href={sortHref("qubit_count")} class:list={["text-center hover:text-gray-900 dark:hover:text-gray-100", sort.field === "qubit_count" && "text-amber-600 dark:text-amber-400"]} title="Qubit count — click to sort">Q</a>
         <span></span>
         <span>Name</span>
       </div>
@@ -172,28 +176,30 @@ const countLabel = hasFilters
 <script>
   import { getFavorites } from "../../lib/favorites-client";
 
+  const FAV_FILTER_LS_KEY = "qecirc:fav-filter-active";
+
+  function applyFavFilter(active: boolean): void {
+    const favSet = new Set(getFavorites());
+    document.querySelectorAll("[id] > .circuit-toggle").forEach(function (toggle) {
+      const row = toggle.closest("[id]") as HTMLElement;
+      if (!row || !row.id || isNaN(Number(row.id))) return;
+      const qecId = Number(row.id);
+      row.style.display = active && !favSet.has(qecId) ? "none" : "";
+    });
+  }
+
   const favToggle = document.getElementById("fav-filter-toggle");
   if (favToggle) {
-    let active = false;
+    let active = localStorage.getItem(FAV_FILTER_LS_KEY) === "true";
+    if (active) {
+      favToggle.setAttribute("aria-pressed", "true");
+      applyFavFilter(true);
+    }
     favToggle.addEventListener("click", function () {
       active = !active;
       favToggle.setAttribute("aria-pressed", active ? "true" : "false");
-      favToggle.classList.toggle("text-red-500", active);
-      favToggle.classList.toggle("dark:text-red-400", active);
-      favToggle.classList.toggle("text-gray-500", !active);
-      favToggle.classList.toggle("dark:text-gray-400", !active);
-
-      const favSet = new Set(getFavorites());
-      document.querySelectorAll("[id] > .circuit-toggle").forEach(function (toggle) {
-        const row = toggle.closest("[id]") as HTMLElement;
-        if (!row || !row.id || isNaN(Number(row.id))) return;
-        const qecId = Number(row.id);
-        if (active && !favSet.has(qecId)) {
-          row.style.display = "none";
-        } else {
-          row.style.display = "";
-        }
-      });
+      localStorage.setItem(FAV_FILTER_LS_KEY, String(active));
+      applyFavFilter(active);
     });
   }
 

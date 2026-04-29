@@ -1,5 +1,6 @@
 ---
 import type { CircuitBody } from "../types";
+import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "../lib/constants";
 import CodeBlock from "./CodeBlock.astro";
 
 interface Props {
@@ -15,6 +16,9 @@ function downloadNameFor(format: string): string | undefined {
   if (!stimFilename) return undefined;
   return stimFilename.replace(/\.stim$/, `.${format}`);
 }
+
+const TAB_BASE_CLASS =
+  "format-tab px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors";
 ---
 
 {hasMultipleFormats ? (
@@ -22,12 +26,7 @@ function downloadNameFor(format: string): string | undefined {
     <div class="flex gap-0.5 mb-2">
       {bodies.map((b, i) => (
         <button
-          class:list={[
-            "format-tab px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors",
-            i === 0
-              ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-200 dark:ring-gray-700"
-              : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100",
-          ]}
+          class:list={[TAB_BASE_CLASS, i === 0 ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS]}
           data-format={b.format}
         >
           {b.format.toUpperCase()}
