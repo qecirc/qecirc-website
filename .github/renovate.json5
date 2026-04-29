@@ -1,0 +1,57 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  minimumReleaseAge: "7 days",
+  extends: [
+    "config:recommended",
+    "helpers:pinGitHubActionDigestsToSemver",
+    ":automergeDigest",
+    ":combinePatchMinorReleases",
+    ":configMigration",
+    ":enablePreCommit",
+    ":prConcurrentLimitNone",
+    ":prHourlyLimitNone",
+  ],
+  enabledManagers: ["github-actions", "npm", "pep621", "pre-commit"],
+  lockFileMaintenance: { enabled: true, automerge: true },
+  labels: ["dependencies"],
+  schedule: ["every weekend"],
+  packageRules: [
+    {
+      matchManagers: ["github-actions"],
+      addLabels: ["github-actions"],
+      commitMessagePrefix: "chore(ci)",
+    },
+    {
+      matchManagers: ["npm"],
+      addLabels: ["javascript"],
+      commitMessagePrefix: "chore(deps)",
+    },
+    {
+      matchManagers: ["pep621"],
+      addLabels: ["python"],
+      commitMessagePrefix: "chore(deps)",
+    },
+    {
+      matchManagers: ["pre-commit"],
+      addLabels: ["pre-commit"],
+      commitMessagePrefix: "chore(ci)",
+      versioning: "pep440",
+    },
+    {
+      description: "Auto-merge patch updates",
+      groupName: "patch updates",
+      matchUpdateTypes: ["patch"],
+      matchCurrentVersion: "!/^0\\.0/",
+      commitMessagePrefix: "chore(deps)",
+      automerge: true,
+    },
+    {
+      description: "Auto-merge minor updates of stable (>=1.0) deps",
+      groupName: "minor stable updates",
+      matchUpdateTypes: ["minor"],
+      matchCurrentVersion: "!/^0\\./",
+      commitMessagePrefix: "chore(deps)",
+      automerge: true,
+    },
+  ],
+}
