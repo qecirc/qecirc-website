@@ -50,7 +50,7 @@ Non-CSS (or general) code via a single symplectic `H`:
 from scripts.add_circuit import check_code_h, find_existing_code_h
 
 print(check_code_h(H, n=5, d=3))
-# {'n': 5, 'k': 1, 'd': 3, 'is_css': False, 'is_self_dual': False, 'canonical_hash': 'sym:5:...'}
+# {'n': 5, 'k': 1, 'd': 3, 'is_css': False, 'is_self_dual': False, 'canonical_hash': '<64-char SHA-256 hex>'}
 
 print(find_existing_code_h(H, n=5))
 # ExistingCodeMatch(slug='five-qubit-code', qubit_permutation=...) or None

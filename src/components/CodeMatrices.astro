@@ -324,12 +324,21 @@ const isPauli = (v: typeof view) => v === "pauli";
         peer.className = `code-matrix-toggle ${isActive ? ACTIVE_CLASS : INACTIVE_CLASS}`;
       }
 
-      // The NumPy toggle is meaningless on Pauli — hide it (Pauli is a string
-      // representation, not a matrix).
+      // The NumPy toggle is meaningless on Pauli — hide it. Also reset its
+      // pressed state, otherwise activeFormatFor() would still report "numpy"
+      // and syncPanes() would hide the Pauli pane (which only has
+      // data-format="human"), leaving no pane visible.
       const numpyBtn = document.querySelector<HTMLButtonElement>(
         `.code-matrix-numpy${sel}`,
       );
-      if (numpyBtn) numpyBtn.hidden = view === "pauli";
+      if (numpyBtn) {
+        const hideNumpy = view === "pauli";
+        numpyBtn.hidden = hideNumpy;
+        if (hideNumpy) {
+          numpyBtn.setAttribute("aria-pressed", "false");
+          numpyBtn.className = `code-matrix-numpy ${INACTIVE_CLASS}`;
+        }
+      }
 
       syncPanes(sel);
       syncCollapsible(btn.parentElement);
