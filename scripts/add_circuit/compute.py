@@ -264,6 +264,39 @@ def _compute_logicals_css(Hx, Hz, d):
     return Lx, Lz
 
 
+def _symplectic_weight(row: np.ndarray, n: int) -> int:
+    """Count of non-identity Paulis in a 2n-vector (X or Z half nonzero)."""
+    return int(sum(1 for i in range(n) if row[i] or row[i + n]))
+
+
+def _reduce_logical_weight(L: np.ndarray, H: np.ndarray, n: int) -> np.ndarray:
+    """Replace each row of L with the minimum-weight element of L_i + rowspace(H).
+
+    Brute-forces over all 2^m stabilizer combinations (m = rows of H). Skips
+    reduction for m > 16 (would take >= 65k iterations per logical, which we
+    don't expect to encounter in practice).
+    """
+    L = L.astype(int) % 2
+    H = H.astype(int) % 2
+    m = H.shape[0]
+    if m > 16:
+        return L  # leave as-is for large codes
+
+    reduced = np.empty_like(L)
+    for i, log_row in enumerate(L):
+        best = log_row
+        best_w = _symplectic_weight(best, n)
+        for combo in range(1, 1 << m):
+            mask = np.array([(combo >> j) & 1 for j in range(m)], dtype=int)
+            stabilizer_sum = (mask @ H) % 2
+            candidate = (log_row + stabilizer_sum) % 2
+            w = _symplectic_weight(candidate, n)
+            if w < best_w:
+                best, best_w = candidate, w
+        reduced[i] = best
+    return reduced
+
+
 def _compute_symplectic_logicals(H: np.ndarray, n: int, k: int) -> np.ndarray:
     """Compute logical operators for any stabilizer code in symplectic form.
 
@@ -299,7 +332,8 @@ def _compute_symplectic_logicals(H: np.ndarray, n: int, k: int) -> np.ndarray:
             f"got {len(indep_indices)}; check that n={n} and k={k} match H."
         )
     L = stacked[indep_indices]
-    return _symplectic_pair_basis(L, n)
+    paired = _symplectic_pair_basis(L, n)
+    return _reduce_logical_weight(paired, H, n)
 
 
 def _symplectic_inner(u: np.ndarray, v: np.ndarray, n: int) -> int:

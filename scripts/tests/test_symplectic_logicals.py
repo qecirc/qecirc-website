@@ -155,6 +155,21 @@ class TestCanonicalFormH:
         assert np.all(canon.sum(axis=1) > 0)
 
 
+class TestLogicalMinimumWeight:
+    def test_five_qubit_logicals_are_weight_d(self):
+        """For the [[5,1,3]] code, both X-bar and Z-bar minimum weights are
+        the code distance d = 3 in symplectic weight (number of non-identity
+        Paulis)."""
+        H = _five_qubit_H()
+        L = _compute_symplectic_logicals(H, n=5, k=1)
+
+        def symplectic_weight(row, n):
+            return int(sum(1 for i in range(n) if row[i] or row[i + n]))
+
+        weights = sorted(symplectic_weight(row, 5) for row in L)
+        assert weights == [3, 3], f"expected [3, 3], got {weights}"
+
+
 class TestBuildSymplecticHelpers:
     def test_build_symplectic_h_block_diagonal(self):
         Hx = np.array([[1, 0], [0, 1]])
