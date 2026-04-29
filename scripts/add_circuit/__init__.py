@@ -89,6 +89,7 @@ def add_circuit(
     circuit: Union[stim.Circuit, str],
     circuit_name: str,
     d: int,
+    *,
     Hx: Optional[np.ndarray] = None,
     Hz: Optional[np.ndarray] = None,
     H: Optional[np.ndarray] = None,

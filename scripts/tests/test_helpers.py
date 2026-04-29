@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
+import pytest
 import yaml
 
 from scripts.add_circuit.code_identify import canonical_hash
@@ -230,3 +231,19 @@ class TestPreviewCircuitH:
             d=3,
         )
         assert result.dry_run is True
+
+
+# ---------------------------------------------------------------------------
+# add_circuit API
+# ---------------------------------------------------------------------------
+
+
+class TestAddCircuitSignature:
+    def test_old_positional_call_raises_type_error(self):
+        """Old API: add_circuit(Hx, Hz, circuit, ...) must fail loudly."""
+        from scripts.add_circuit import add_circuit
+
+        Hx = np.eye(7, dtype=int)
+        Hz = np.eye(7, dtype=int)
+        with pytest.raises(TypeError):
+            add_circuit(Hx, Hz, "I 0", "name", 3)  # positional — should reject
