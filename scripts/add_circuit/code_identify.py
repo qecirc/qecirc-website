@@ -81,6 +81,81 @@ def is_css(Hx: np.ndarray, Hz: np.ndarray) -> bool:
     return bool(np.all((Hx @ Hz.T) % 2 == 0))
 
 
+# ---------------------------------------------------------------------------
+# Symplectic <-> CSS conversion
+# ---------------------------------------------------------------------------
+
+
+def build_symplectic_h(Hx: np.ndarray, Hz: np.ndarray) -> np.ndarray:
+    """Build the block-diagonal symplectic h for a CSS code.
+
+    Hx (m_x x n) and Hz (m_z x n) describe independent X- and Z-type
+    stabilizer sets:
+        h = [[Hx, 0], [0, Hz]]   shape (m_x + m_z) x 2n
+    """
+    Hx = np.asarray(Hx, dtype=int) % 2
+    Hz = np.asarray(Hz, dtype=int) % 2
+    m_x, n = Hx.shape
+    m_z, n_z = Hz.shape
+    if n_z != n:
+        raise ValueError(f"Hx and Hz have different qubit counts: {n} vs {n_z}")
+    top = np.hstack([Hx, np.zeros((m_x, n), dtype=int)])
+    bot = np.hstack([np.zeros((m_z, n), dtype=int), Hz])
+    return np.vstack([top, bot])
+
+
+def build_symplectic_logical(Lx: np.ndarray, Lz: np.ndarray, n: int, k: int) -> np.ndarray:
+    """Build the symplectic logical matrix for a CSS code.
+
+    Returns shape (2k, 2n): rows 0..k-1 are X-bar logicals (pure X),
+    rows k..2k-1 are Z-bar logicals (pure Z). Non-CSS codes use
+    :func:`_compute_symplectic_logicals` and skip this function.
+    """
+    Lx = np.asarray(Lx, dtype=int) % 2
+    Lz = np.asarray(Lz, dtype=int) % 2
+    if Lx.shape != (k, n) or Lz.shape != (k, n):
+        raise ValueError(f"Expected Lx, Lz of shape ({k}, {n}); got {Lx.shape}, {Lz.shape}")
+    top = np.hstack([Lx, np.zeros((k, n), dtype=int)])
+    bot = np.hstack([np.zeros((k, n), dtype=int), Lz])
+    return np.vstack([top, bot])
+
+
+def split_h_to_css(H: np.ndarray, n: int) -> Optional[tuple[np.ndarray, np.ndarray]]:
+    """Detect CSS structure in a symplectic h matrix and split into (Hx, Hz).
+
+    Returns (Hx, Hz) when every RREF row of H is either pure-X (Z-half zero)
+    or pure-Z (X-half zero); otherwise returns None.
+
+    RREF processes columns left-to-right, so the X-half pivots come before
+    the Z-half pivots. If the row space is CSS-decomposable this yields a
+    basis where each row is purely in one half.
+    """
+    H = np.asarray(H, dtype=int) % 2
+    if H.shape[1] != 2 * n:
+        raise ValueError(f"Expected H with 2n={2 * n} columns, got {H.shape[1]}")
+    rref = gf2_rref(H)
+    rref = rref[np.any(rref, axis=1)]
+    pure_x: list[np.ndarray] = []
+    pure_z: list[np.ndarray] = []
+    for row in rref:
+        x_part = row[:n]
+        z_part = row[n:]
+        if not z_part.any():
+            pure_x.append(x_part)
+        elif not x_part.any():
+            pure_z.append(z_part)
+        else:
+            return None
+    Hx = np.array(pure_x, dtype=int) if pure_x else np.zeros((0, n), dtype=int)
+    Hz = np.array(pure_z, dtype=int) if pure_z else np.zeros((0, n), dtype=int)
+    return Hx, Hz
+
+
+def is_h_css(H: np.ndarray, n: int) -> bool:
+    """True iff H is CSS-decomposable (see :func:`split_h_to_css`)."""
+    return split_h_to_css(H, n) is not None
+
+
 def extract_params(Hx: np.ndarray, Hz: np.ndarray) -> CodeParams:
     """Extract (n, k) and detect CSS vs general stabilizer.
 
@@ -148,6 +223,59 @@ def canonical_hash(Hx: np.ndarray, Hz: np.ndarray) -> str:
     prefix = f"{canon_Hx.shape[0]}:{canon_Hz.shape[0]}:".encode()
     combined = np.hstack([canon_Hx, canon_Hz])
     return hashlib.sha256(prefix + combined.tobytes()).hexdigest()
+
+
+def canonical_form_h(H: np.ndarray, n: int) -> tuple[np.ndarray, list[int]]:
+    """Canonicalize a symplectic stabilizer matrix H of shape (m, 2n).
+
+    Mirrors :func:`canonical_form` but operates on a single H matrix without
+    splitting into Hx/Hz halves — required for non-CSS codes where each row
+    mixes X and Z.
+
+    Steps:
+    1. RREF of H over GF(2), drop zero rows.
+    2. Sort qubits by their joint (X_col, Z_col) profile.
+    3. Reapply the qubit permutation to both halves and re-RREF.
+
+    Returns (canon_H, qubit_perm) where qubit_perm maps canonical column
+    index -> original column index.
+    """
+    H = np.asarray(H, dtype=int) % 2
+    if H.shape[1] != 2 * n:
+        raise ValueError(f"Expected H with 2n={2 * n} columns, got {H.shape[1]}")
+
+    rref = gf2_rref(H)
+    rref = rref[np.any(rref, axis=1)]
+    # Sort qubits by joint X/Z column profile (qubit j has X-col rref[:, j]
+    # and Z-col rref[:, j+n]).
+    joint_cols = np.vstack([rref[:, :n], rref[:, n:]])
+    joint_keys = [(tuple(joint_cols[:, j].tolist()), j) for j in range(n)]
+    joint_keys.sort()
+    qubit_perm = [k[1] for k in joint_keys]
+
+    z_indices = [n + p for p in qubit_perm]
+    permuted = np.hstack([H[:, qubit_perm], H[:, z_indices]])
+    canon = gf2_rref(permuted)
+    canon = canon[np.any(canon, axis=1)]
+    return canon, qubit_perm
+
+
+def canonical_hash_h(H: np.ndarray, n: int) -> str:
+    """Stable hash for any stabilizer code given by a single symplectic H matrix.
+
+    Hashes the output of :func:`canonical_form_h`, which preserves the row
+    pairing between X and Z parts (unlike halves-canonicalization) and works
+    when X-half and Z-half row spaces have different ranks.
+
+    Prefixed with ``sym:<n>:`` so it cannot collide with the CSS hash format
+    (``<m_x>:<m_z>:``).
+    """
+    H = np.asarray(H, dtype=int) % 2
+    if H.shape[1] != 2 * n:
+        raise ValueError(f"Expected H with 2n={2 * n} columns, got {H.shape[1]}")
+    canon, _ = canonical_form_h(H, n)
+    prefix = f"sym:{n}:{canon.shape[0]}:".encode()
+    return hashlib.sha256(prefix + canon.tobytes()).hexdigest()
 
 
 # ---------------------------------------------------------------------------

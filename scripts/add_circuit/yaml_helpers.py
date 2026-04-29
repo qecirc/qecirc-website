@@ -19,7 +19,7 @@ def build_code_yaml(code):
     if code.get("canonical_hash"):
         data["canonical_hash"] = code["canonical_hash"]
 
-    for field in ("hx", "hz", "logical_x", "logical_z"):
+    for field in ("hx", "hz", "logical_x", "logical_z", "h", "logical"):
         if code.get(field) is not None:
             data[field] = code[field]
 
@@ -62,7 +62,7 @@ def build_circuit_yaml(circ):
 def build_original_yaml(matrices):
     """Build YAML dict for original (pre-canonicalization) matrices."""
     data = {}
-    for field in ("hx", "hz", "logical_x", "logical_z"):
+    for field in ("hx", "hz", "logical_x", "logical_z", "h", "logical"):
         if matrices.get(field) is not None:
             data[field] = matrices[field]
     return data
@@ -91,7 +91,9 @@ def _convert_matrices(data):
     """Convert matrix fields (lists of lists) to flow-style representation."""
     result = {}
     for key, value in data.items():
-        if key in ("hx", "hz", "logical_x", "logical_z", "tags") and isinstance(value, list):
+        if key in ("hx", "hz", "logical_x", "logical_z", "h", "logical", "tags") and isinstance(
+            value, list
+        ):
             if key == "tags":
                 result[key] = _FlowList(value)
             else:

@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
+import pytest
 import yaml
 
 from scripts.add_circuit.code_identify import canonical_hash
@@ -197,3 +198,53 @@ class TestPreviewCircuit:
         assert result.circuit_name == "Test Encoding"
         assert any(".original.stim" in f for f in result.files_written)
         assert any(".original.yaml" in f for f in result.files_written)
+
+
+class TestPreviewCircuitH:
+    def test_h_path_dry_run(self):
+        from scripts.add_circuit import preview_circuit
+
+        # Minimal valid stim circuit on 5 qubits — just initialization.
+        circuit_text = "I 0 1 2 3 4"
+
+        Hx = np.array(
+            [
+                [1, 0, 0, 1, 0],
+                [0, 1, 0, 0, 1],
+                [1, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0],
+            ]
+        )
+        Hz = np.array(
+            [
+                [0, 1, 1, 0, 0],
+                [0, 0, 1, 1, 0],
+                [0, 0, 0, 1, 1],
+                [1, 0, 0, 0, 1],
+            ]
+        )
+        H = np.hstack([Hx, Hz])
+        result = preview_circuit(
+            H=H,
+            n=5,
+            circuit=circuit_text,
+            circuit_name="Test",
+            d=3,
+        )
+        assert result.dry_run is True
+
+
+# ---------------------------------------------------------------------------
+# add_circuit API
+# ---------------------------------------------------------------------------
+
+
+class TestAddCircuitSignature:
+    def test_old_positional_call_raises_type_error(self):
+        """Old API: add_circuit(Hx, Hz, circuit, ...) must fail loudly."""
+        from scripts.add_circuit import add_circuit
+
+        Hx = np.eye(7, dtype=int)
+        Hz = np.eye(7, dtype=int)
+        with pytest.raises(TypeError):
+            add_circuit(Hx, Hz, "I 0", "name", 3)  # positional — should reject

@@ -3,7 +3,7 @@ export const prerender = false;
 
 import Layout from "../../components/Layout.astro";
 import CodeBlock from "../../components/CodeBlock.astro";
-import MatrixDisplay from "../../components/MatrixDisplay.astro";
+import CodeMatrices from "../../components/CodeMatrices.astro";
 import CollapsibleSection from "../../components/CollapsibleSection.astro";
 import FormatSwitcher from "../../components/FormatSwitcher.astro";
 import HeartIcon from "../../components/HeartIcon.astro";
@@ -49,7 +49,9 @@ const origHx = original ? safeParseMatrix(original.original_hx) : null;
 const origHz = original ? safeParseMatrix(original.original_hz) : null;
 const origLx = original ? safeParseMatrix(original.original_logical_x) : null;
 const origLz = original ? safeParseMatrix(original.original_logical_z) : null;
-const hasOriginalMatrices = origHx || origHz || origLx || origLz;
+const origH = original ? safeParseMatrix(original.original_h) : null;
+const origLogical = original ? safeParseMatrix(original.original_logical) : null;
+const hasOriginalMatrices = !!(origH && origLogical);
 ---
 
 <Layout title={`${circuit.name} ${displayId}`} description={`Circuit ${displayId} for ${circuit.code_name}`}>
@@ -151,13 +153,18 @@ const hasOriginalMatrices = origHx || origHz || origLx || origLz;
           {original?.original_stim && (
             <CodeBlock code={original.original_stim} label="Original STIM Circuit" source={circuit.source} />
           )}
-          {hasOriginalMatrices && (
-            <div class="grid gap-x-6 gap-y-2 sm:grid-cols-2">
-              {origHx && <MatrixDisplay label="Original Hx (X-checks)" matrix={origHx} />}
-              {origHz && <MatrixDisplay label="Original Hz (Z-checks)" matrix={origHz} />}
-              {origLx && <MatrixDisplay label="Original Logical X" matrix={origLx} />}
-              {origLz && <MatrixDisplay label="Original Logical Z" matrix={origLz} />}
-            </div>
+          {hasOriginalMatrices && origH && origLogical && (
+            <CodeMatrices
+              id="original-matrices"
+              n={circuit.code_n}
+              h={origH}
+              logical={origLogical}
+              hx={origHx}
+              hz={origHz}
+              logicalX={origLx}
+              logicalZ={origLz}
+              prefix="Original "
+            />
           )}
         </div>
       </CollapsibleSection>

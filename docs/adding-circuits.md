@@ -12,7 +12,9 @@ uv sync                # install Python dependencies
 
 ## What You Need
 
-- **Hx, Hz matrices** — as JSON files or numpy arrays
+- **Stabilizer matrices** — provide either:
+  - **`Hx, Hz`** — separate X-check and Z-check matrices. The pipeline rejects these unless they describe a CSS code (`Hx · Hzᵀ = 0 mod 2`); CSS detection is automatic and adds the `CSS` tag.
+  - **`H, n`** — a single symplectic stabilizer matrix of shape `(n−k) × 2n` (X-half on the left, Z-half on the right) plus the qubit count `n`. CSS-decomposable `H` is auto-detected and routed through the CSS path so the `Hx`/`Hz` view and `CSS` tag are filled in automatically.
 - **STIM circuit** — file path or string
 - **Code distance `d`** — integer
 - **Source** — DOI, URL, or citation
@@ -30,16 +32,28 @@ uv sync                # install Python dependencies
 
 ### Check your code
 
+CSS code via `Hx`/`Hz`:
+
 ```python
 from scripts.add_circuit import check_code, find_existing_code
 
-# Quick summary
 print(check_code(Hx, Hz, d=3))
 # {'n': 7, 'k': 1, 'd': 3, 'is_css': True, 'is_self_dual': True, 'canonical_hash': '...'}
 
-# Check if it already exists in data_yaml/
 print(find_existing_code(Hx, Hz))
 # 'steane-code' or None
+```
+
+Non-CSS (or general) code via a single symplectic `H`:
+
+```python
+from scripts.add_circuit import check_code_h, find_existing_code_h
+
+print(check_code_h(H, n=5, d=3))
+# {'n': 5, 'k': 1, 'd': 3, 'is_css': False, 'is_self_dual': False, 'canonical_hash': '<64-char SHA-256 hex>'}
+
+print(find_existing_code_h(H, n=5))
+# ExistingCodeMatch(slug='five-qubit-code', qubit_permutation=...) or None
 ```
 
 ### Inspect your circuit
@@ -101,7 +115,7 @@ result = preview_circuit(
 )
 print(result.summary())
 
-# Generate for real
+# Generate for real (CSS code)
 result = add_circuit(
     Hx=Hx, Hz=Hz, circuit=circuit,
     circuit_name="Standard Encoding", d=3,
@@ -109,24 +123,35 @@ result = add_circuit(
     tool="mqt-qecc", zoo_url="https://errorcorrectionzoo.org/c/steane",
 )
 print(result.summary())
+
+# Non-CSS code: pass the symplectic stabilizer matrix H instead of Hx/Hz.
+# H has shape (n-k, 2n) — X-half on the left, Z-half on the right.
+result = add_circuit(
+    H=H, n=5, circuit=circuit,
+    circuit_name="Standard Encoding", d=3,
+    code_name="Five-Qubit Code", source="https://doi.org/...",
+)
+print(result.summary())
 ```
 
 #### Parameters
 
-| Parameter      | Required | Description                                                 |
-| -------------- | -------- | ----------------------------------------------------------- |
-| `Hx`           | yes      | X-check matrix (numpy array)                                |
-| `Hz`           | yes      | Z-check matrix (numpy array)                                |
-| `circuit`      | yes      | STIM circuit (`stim.Circuit` or string)                     |
-| `circuit_name` | yes      | Human-readable circuit name                                 |
-| `d`            | yes      | Code distance                                               |
-| `source`       | no       | Provenance (DOI/URL)                                        |
-| `code_name`    | no       | Code name (optional if code already exists in `data_yaml/`) |
-| `zoo_url`      | no       | QEC Zoo URL                                                 |
-| `tool`         | no       | Tool slug (must exist in `data_yaml/tools/`)                |
-| `notes`        | no       | Circuit notes                                               |
-| `data_dir`     | no       | Path to data_yaml directory (default: `"data_yaml"`)        |
-| `dry_run`      | no       | If `True`, preview without writing                          |
+| Parameter      | Required | Description                                                                 |
+| -------------- | -------- | --------------------------------------------------------------------------- |
+| `Hx`           | one path | X-check matrix (numpy array). CSS path; pass alongside `Hz`.                |
+| `Hz`           | one path | Z-check matrix (numpy array). CSS path; pass alongside `Hx`.                |
+| `H`            | one path | Symplectic stabilizer matrix `(n-k, 2n)`. General path; pass alongside `n`. |
+| `n`            | with `H` | Number of physical qubits.                                                  |
+| `circuit`      | yes      | STIM circuit (`stim.Circuit` or string)                                     |
+| `circuit_name` | yes      | Human-readable circuit name                                                 |
+| `d`            | yes      | Code distance                                                               |
+| `source`       | no       | Provenance (DOI/URL)                                                        |
+| `code_name`    | no       | Code name (optional if code already exists in `data_yaml/`)                 |
+| `zoo_url`      | no       | QEC Zoo URL                                                                 |
+| `tool`         | no       | Tool slug (must exist in `data_yaml/tools/`)                                |
+| `notes`        | no       | Circuit notes                                                               |
+| `data_dir`     | no       | Path to data_yaml directory (default: `"data_yaml"`)                        |
+| `dry_run`      | no       | If `True`, preview without writing                                          |
 
 #### Return value
 

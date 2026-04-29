@@ -15,6 +15,7 @@ const detailId = `${id}-detail`;
     id={buttonId}
     class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
     aria-expanded={String(open)}
+    data-toggle-detail={detailId}
   >
     <svg
       class:list={["w-3.5 h-3.5 shrink-0 transition-transform duration-200", open && "rotate-90"]}
@@ -39,8 +40,12 @@ const detailId = `${id}-detail`;
   </div>
 </div>
 
-<script define:vars={{ buttonId, detailId }}>
-  import("../lib/toggle-client").then(({ initToggle }) => {
-    initToggle(buttonId, detailId);
-  });
+<script>
+  import { initToggle } from "../lib/toggle-client";
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    "button[data-toggle-detail]",
+  )) {
+    initToggle(button.id, button.dataset.toggleDetail!);
+  }
 </script>

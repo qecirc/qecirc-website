@@ -10,9 +10,10 @@ import pytest
 import yaml
 
 from scripts.add_circuit.compute import (
-    _compute_logicals,
+    _compute_logicals_css,
     _is_self_dual,
     compute_code_data,
+    compute_code_data_h,
     slugify,
 )
 
@@ -93,10 +94,10 @@ class TestComputeCodeData:
         result = compute_code_data(steane_H, steane_H, d=3, zoo_url="https://example.com")
         assert result["code"]["zoo_url"] == "https://example.com"
 
-    def test_new_code_returns_nontrivial_permutation(self):
-        """New code with non-identity canonical perm returns qubit_permutation."""
-        # Non-CSS [[5,1,3]] code — columns are distinguishable, so shuffling
-        # produces a non-identity canonical permutation.
+    def test_non_css_hash_is_deterministic(self):
+        """compute_code_data_h returns a deterministic canonical_hash for a
+        non-CSS code. canonical_hash_h is NOT invariant under qubit permutations
+        of the input (see plan task 4 for permuted-submission handling)."""
         Hx = np.array(
             [
                 [1, 0, 0, 1, 0],
@@ -113,21 +114,13 @@ class TestComputeCodeData:
                 [1, 0, 0, 0, 1],
             ]
         )
-        # Shuffle columns
-        col_order = [4, 2, 0, 3, 1]
-        Hx_shuffled = Hx[:, col_order]
-        Hz_shuffled = Hz[:, col_order]
+        H = np.hstack([Hx, Hz])
+        result1 = compute_code_data_h(H, n=5, d=3)
+        result2 = compute_code_data_h(H, n=5, d=3)
 
-        result_orig = compute_code_data(Hx, Hz, d=3)
-        result_shuf = compute_code_data(Hx_shuffled, Hz_shuffled, d=3)
-
-        # Same canonical hash regardless of column order
-        assert result_orig["code"]["canonical_hash"] == result_shuf["code"]["canonical_hash"]
-        # At least one of them should have a non-trivial permutation
-        assert (
-            result_orig["qubit_permutation"] is not None
-            or result_shuf["qubit_permutation"] is not None
-        )
+        # Same input → same hash (deterministic)
+        assert result1["code"]["canonical_hash"] == result2["code"]["canonical_hash"]
+        assert len(result1["code"]["canonical_hash"]) == 64  # SHA256 hex
 
     def test_original_matrices_returned(self, steane_H):
         result = compute_code_data(steane_H, steane_H, d=3)
@@ -142,6 +135,7 @@ class TestComputeCodeData:
 
     def test_original_logicals_from_pre_canonicalization(self):
         """Original logicals are computed from input matrices, not canonical ones."""
+        # Non-CSS [[5,1,3]] code via H input.
         Hx = np.array(
             [
                 [1, 0, 0, 1, 0],
@@ -158,17 +152,23 @@ class TestComputeCodeData:
                 [1, 0, 0, 0, 1],
             ]
         )
-        result = compute_code_data(Hx, Hz, d=3)
+        H = np.hstack([Hx, Hz])
+        result = compute_code_data_h(H, n=5, d=3)
         om = result["original_matrices"]
-        orig_Lx = np.array(om["logical_x"])
-        orig_Lz = np.array(om["logical_z"])
-        # Original logicals must be valid for the ORIGINAL matrices
-        assert np.all(Hz @ orig_Lx.T % 2 == 0)
-        assert np.all(Hx @ orig_Lz.T % 2 == 0)
+        # Non-CSS originals: hx/hz/logical_x/logical_z are all None;
+        # h equals the submitted H exactly, and logical commutes with H
+        # symplectically.
+        assert om["hx"] is None and om["hz"] is None
+        assert om["logical_x"] is None and om["logical_z"] is None
+        assert np.array_equal(om["h"], H.tolist())
+        orig_logical = np.array(om["logical"])
+        # logical · Λ · Hᵀ = 0 mod 2  (commutes with all stabilizers)
+        H_swap = np.hstack([H[:, 5:], H[:, :5]])
+        assert np.all((orig_logical @ H_swap.T) % 2 == 0)
 
-    def test_logicals_consistent_with_canonical_hx_hz(self):
-        """Logicals must satisfy Hz @ Lx.T = 0 and Hx @ Lz.T = 0 mod 2."""
-        # Non-CSS [[5,1,3]] code
+    def test_logicals_consistent_with_canonical_h(self):
+        """For non-CSS codes, ``logical`` is a symplectic matrix that commutes
+        with the canonical H and pairs as 1 X-bar + 1 Z-bar (k=1)."""
         Hx = np.array(
             [
                 [1, 0, 0, 1, 0],
@@ -185,19 +185,26 @@ class TestComputeCodeData:
                 [1, 0, 0, 0, 1],
             ]
         )
-        result = compute_code_data(Hx, Hz, d=3)
+        H = np.hstack([Hx, Hz])
+        result = compute_code_data_h(H, n=5, d=3)
         code = result["code"]
-        canon_Hx = np.array(code["hx"])
-        canon_Hz = np.array(code["hz"])
-        Lx = np.array(code["logical_x"])
-        Lz = np.array(code["logical_z"])
-        # Lx in ker(Hz): Hz @ Lx.T = 0 mod 2
-        assert np.all(canon_Hz @ Lx.T % 2 == 0)
-        # Lz in ker(Hx): Hx @ Lz.T = 0 mod 2
-        assert np.all(canon_Hx @ Lz.T % 2 == 0)
-        # Symplectic inner product: Lx @ Lz.T = I_k mod 2
-        k = Lx.shape[0]
-        assert np.array_equal(Lx @ Lz.T % 2, np.eye(k, dtype=int))
+        n, k = code["n"], code["k"]
+        assert (n, k, code["d"]) == (5, 1, 3)
+        canon_H = np.array(code["h"])
+        logical = np.array(code["logical"])
+        # logical commutes with all stabilizers symplectically
+        H_swap = np.hstack([canon_H[:, n:], canon_H[:, :n]])
+        assert np.all((logical @ H_swap.T) % 2 == 0)
+        # Symplectic pairing: L_X · Λ · L_Zᵀ = I_k
+        log_swap = np.hstack([logical[:, n:], logical[:, :n]])
+        gram = (logical @ log_swap.T) % 2
+        # Off-anti-diagonal block: rows 0..k-1 (X-bars) vs rows k..2k-1 (Z-bars)
+        # Pairing block must equal I_k.
+        assert np.array_equal(gram[:k, k:], np.eye(k, dtype=int))
+        assert np.array_equal(gram[k:, :k], np.eye(k, dtype=int))
+        # X-bars commute with X-bars; Z-bars commute with Z-bars.
+        assert np.all(gram[:k, :k] == 0)
+        assert np.all(gram[k:, k:] == 0)
 
     def test_yaml_dedup_existing(self, steane_H):
         """When code exists in data_yaml/codes/, status is 'existing'."""
@@ -246,13 +253,13 @@ class TestIsSelfDual:
 
 
 # ---------------------------------------------------------------------------
-# _compute_logicals
+# _compute_logicals_css
 # ---------------------------------------------------------------------------
 
 
 class TestComputeLogicals:
     def test_steane_logicals_valid(self, steane_H):
-        Lx, Lz = _compute_logicals(steane_H, steane_H, True, 3)
+        Lx, Lz = _compute_logicals_css(steane_H, steane_H, 3)
         # Lx in ker(Hz): Hz @ Lx.T = 0 mod 2
         assert np.all(steane_H @ Lx.T % 2 == 0)
         # Lz in ker(Hx): Hx @ Lz.T = 0 mod 2
