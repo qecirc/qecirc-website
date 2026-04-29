@@ -34,7 +34,7 @@ from scripts.add_circuit.circuit_validate import (  # noqa: E402
 @dataclass
 class CheckResult:
     name: str
-    status: str  # "passed" | "failed" | "error"
+    status: str  # "passed" | "failed" | "error" | "skipped"
     detail: str = ""
 
 
@@ -46,7 +46,12 @@ class CircuitResult:
 
     @property
     def passed(self) -> bool:
-        return all(c.status == "passed" for c in self.checks)
+        # Circuit passes if all checks are "passed" and there are checks (not all-skipped)
+        if not self.checks:
+            return False
+        return all(c.status in ("passed", "skipped") for c in self.checks) and any(
+            c.status == "passed" for c in self.checks
+        )
 
 
 def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
@@ -84,9 +89,20 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
 
         code_data = yaml.safe_load(code_yaml_path.read_text())
 
-        # Check required code fields
-        if "hx" not in code_data or "hz" not in code_data:
-            result.checks.append(CheckResult("load_code", "error", "Code YAML missing hx/hz"))
+        # CSS path is required for the existing validators.
+        if code_data.get("hx") is None or code_data.get("hz") is None:
+            if code_data.get("h") is not None:
+                result.checks.append(
+                    CheckResult(
+                        "load_code",
+                        "skipped",
+                        "non-CSS validation not yet supported (only encoding/state-prep validators for CSS)",
+                    )
+                )
+            else:
+                result.checks.append(
+                    CheckResult("load_code", "error", "Code YAML missing both hx/hz and h")
+                )
             results.append(result)
             continue
 
@@ -158,7 +174,7 @@ def print_results(results: list[CircuitResult]) -> None:
             continue
         print(f"\n  {r.stem} [{r.circuit_type}]")
         for c in r.checks:
-            status_icon = {"passed": "ok", "failed": "FAIL", "error": "ERROR"}[c.status]
+            status_icon = {"passed": "ok", "failed": "FAIL", "error": "ERROR", "skipped": "skip"}[c.status]
             line = f"    {c.name}: {status_icon}"
             if c.detail:
                 line += f" ({c.detail})"
