@@ -419,9 +419,7 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz):
         if data.get("canonical_hash") == c_hash:
             slug = code_file.stem
             if data.get("hx") is None or data.get("hz") is None:
-                raise ValueError(
-                    f"Code '{slug}' has CSS-format canonical_hash but missing hx/hz"
-                )
+                raise ValueError(f"Code '{slug}' has CSS-format canonical_hash but missing hx/hz")
             ref_Hx = np.array(data["hx"])
             ref_Hz = np.array(data["hz"])
             perm = find_qubit_permutation(Hx, Hz, ref_Hx, ref_Hz)
@@ -459,9 +457,7 @@ def _check_yaml_dedup_h(data_dir, c_hash, H, n):
         if data.get("canonical_hash") != c_hash:
             continue
         if data.get("h") is None:
-            raise ValueError(
-                f"Code '{code_file.stem}' matches non-CSS hash but has no 'h' field"
-            )
+            raise ValueError(f"Code '{code_file.stem}' matches non-CSS hash but has no 'h' field")
         canon_stored = np.array(data["h"], dtype=int) % 2
         if canon_stored.shape == canon_user.shape and np.array_equal(canon_stored, canon_user):
             slug = code_file.stem

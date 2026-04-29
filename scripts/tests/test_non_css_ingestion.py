@@ -123,6 +123,7 @@ class TestYamlDedupH:
         codes_dir.mkdir(parents=True)
         result = compute_code_data_h(H, n=5, d=3, code_name="Five-Qubit", data_dir=str(tmp_path))
         from scripts.add_circuit.yaml_helpers import build_code_yaml, dump_yaml
+
         (codes_dir / "five-qubit.yaml").write_text(dump_yaml(build_code_yaml(result["code"])))
 
         match = find_existing_code_h(H, n=5, data_dir=str(tmp_path))

@@ -96,7 +96,8 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
                     CheckResult(
                         "load_code",
                         "skipped",
-                        "non-CSS validation not yet supported (only encoding/state-prep validators for CSS)",
+                        "non-CSS validation not yet supported "
+                        "(only encoding/state-prep validators for CSS)",
                     )
                 )
             else:
@@ -173,8 +174,9 @@ def print_results(results: list[CircuitResult]) -> None:
         if r.circuit_type == "skipped":
             continue
         print(f"\n  {r.stem} [{r.circuit_type}]")
+        status_icons = {"passed": "ok", "failed": "FAIL", "error": "ERROR", "skipped": "skip"}
         for c in r.checks:
-            status_icon = {"passed": "ok", "failed": "FAIL", "error": "ERROR", "skipped": "skip"}[c.status]
+            status_icon = status_icons[c.status]
             line = f"    {c.name}: {status_icon}"
             if c.detail:
                 line += f" ({c.detail})"

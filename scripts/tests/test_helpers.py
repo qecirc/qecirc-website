@@ -225,7 +225,8 @@ class TestPreviewCircuitH:
         )
         H = np.hstack([Hx, Hz])
         result = preview_circuit(
-            H=H, n=5,
+            H=H,
+            n=5,
             circuit=circuit_text,
             circuit_name="Test",
             d=3,

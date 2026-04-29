@@ -104,9 +104,7 @@ def build_symplectic_h(Hx: np.ndarray, Hz: np.ndarray) -> np.ndarray:
     return np.vstack([top, bot])
 
 
-def build_symplectic_logical(
-    Lx: np.ndarray, Lz: np.ndarray, n: int, k: int
-) -> np.ndarray:
+def build_symplectic_logical(Lx: np.ndarray, Lz: np.ndarray, n: int, k: int) -> np.ndarray:
     """Build the symplectic logical matrix for a CSS code.
 
     Returns shape (2k, 2n): rows 0..k-1 are X-bar logicals (pure X),
