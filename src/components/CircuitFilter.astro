@@ -30,7 +30,7 @@ function labelInfo(field: CircuitSortField) {
   const isActive = sort.field === field;
   const arrow = isActive ? (sort.dir === "desc" ? "▼" : "▲") : "";
   const cls = isActive
-    ? "text-gray-900 dark:text-gray-100 font-semibold cursor-pointer"
+    ? "text-amber-600 dark:text-amber-400 font-semibold cursor-pointer"
     : "text-gray-600 dark:text-gray-400 font-medium hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer";
   return { arrow, cls };
 }

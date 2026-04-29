@@ -153,10 +153,10 @@ const countLabel = hasFilters
         <span></span>
         <span></span>
         <span></span>
-        <span class="text-center" title="Gate count">G</span>
-        <span class="text-center" title="Two-qubit gate count">2Q</span>
-        <span class="text-center" title="Circuit depth">D</span>
-        <span class="text-center" title="Qubit count">Q</span>
+        <span class:list={["text-center", sort.field === "gate_count" && "text-amber-600 dark:text-amber-400"]} title="Gate count">G</span>
+        <span class:list={["text-center", sort.field === "two_qubit_gate_count" && "text-amber-600 dark:text-amber-400"]} title="Two-qubit gate count">2Q</span>
+        <span class:list={["text-center", sort.field === "depth" && "text-amber-600 dark:text-amber-400"]} title="Circuit depth">D</span>
+        <span class:list={["text-center", sort.field === "qubit_count" && "text-amber-600 dark:text-amber-400"]} title="Qubit count">Q</span>
         <span></span>
         <span>Name</span>
       </div>
