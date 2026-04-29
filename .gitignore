@@ -21,5 +21,8 @@ data/*.db-shm
 # Generated payload files
 *_payload.yaml
 
+# Git worktrees
+.worktrees/
+
 # OS
 .DS_Store
