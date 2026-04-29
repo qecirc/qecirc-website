@@ -197,3 +197,36 @@ class TestPreviewCircuit:
         assert result.circuit_name == "Test Encoding"
         assert any(".original.stim" in f for f in result.files_written)
         assert any(".original.yaml" in f for f in result.files_written)
+
+
+class TestPreviewCircuitH:
+    def test_h_path_dry_run(self):
+        from scripts.add_circuit import preview_circuit
+
+        # Minimal valid stim circuit on 5 qubits — just initialization.
+        circuit_text = "I 0 1 2 3 4"
+
+        Hx = np.array(
+            [
+                [1, 0, 0, 1, 0],
+                [0, 1, 0, 0, 1],
+                [1, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0],
+            ]
+        )
+        Hz = np.array(
+            [
+                [0, 1, 1, 0, 0],
+                [0, 0, 1, 1, 0],
+                [0, 0, 0, 1, 1],
+                [1, 0, 0, 0, 1],
+            ]
+        )
+        H = np.hstack([Hx, Hz])
+        result = preview_circuit(
+            H=H, n=5,
+            circuit=circuit_text,
+            circuit_name="Test",
+            d=3,
+        )
+        assert result.dry_run is True

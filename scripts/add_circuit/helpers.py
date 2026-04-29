@@ -197,26 +197,29 @@ def summarize_circuit(circuit: Union[stim.Circuit, str]) -> dict:
 
 
 def preview_circuit(
-    Hx: np.ndarray,
-    Hz: np.ndarray,
     circuit: Union[stim.Circuit, str],
     circuit_name: str,
     d: int,
+    Hx: Optional[np.ndarray] = None,
+    Hz: Optional[np.ndarray] = None,
+    H: Optional[np.ndarray] = None,
+    n: Optional[int] = None,
     **kwargs,
 ):
     """Dry-run preview of what add_circuit would generate.
 
-    Accepts the same arguments as add_circuit. Returns an AddCircuitResult
-    without writing any files.
+    Accepts the same arguments as :func:`add_circuit`.
     """
     from . import add_circuit
 
     return add_circuit(
-        Hx=Hx,
-        Hz=Hz,
         circuit=circuit,
         circuit_name=circuit_name,
         d=d,
+        Hx=Hx,
+        Hz=Hz,
+        H=H,
+        n=n,
         dry_run=True,
         **kwargs,
     )
