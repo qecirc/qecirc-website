@@ -23,6 +23,8 @@ const SCHEMAS = {
       hz: "matrix",
       logical_x: "matrix",
       logical_z: "matrix",
+      h: "matrix",
+      logical: "matrix",
       tags: "tags",
     },
   },

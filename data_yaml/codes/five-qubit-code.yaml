@@ -1,0 +1,15 @@
+name: Five-Qubit Perfect Code
+n: 5
+k: 1
+d: 3
+zoo_url: https://errorcorrectionzoo.org/c/stab_5_1_3
+canonical_hash: f74558ea92d54f2a4f7c62ad83adda81daa5968ad82a2c7f8ae043141a3ec3bf
+h:
+  - [1, 0, 0, 0, 1, 1, 1, 0, 1, 1]
+  - [0, 1, 0, 0, 1, 0, 0, 1, 1, 0]
+  - [0, 0, 1, 0, 1, 1, 1, 0, 0, 0]
+  - [0, 0, 0, 1, 1, 1, 0, 1, 1, 1]
+logical:
+  - [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
+  - [0, 0, 1, 1, 0, 1, 0, 0, 0, 0]
+tags: [stabilizer]

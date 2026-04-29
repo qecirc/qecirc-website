@@ -21,7 +21,7 @@ Usage:
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import stim
@@ -32,13 +32,15 @@ from .circuit_validate import (  # noqa: F401
     validate_state_prep,
     validate_syndrome_extraction,
 )
-from .compute import compute_code_data
+from .compute import compute_code_data, compute_code_data_h
 from .compute_circuit import compute_circuit_data
 from .helpers import (  # noqa: F401
     ExistingCodeMatch,
     check_code,
+    check_code_h,
     find_existing_code,
     find_existing_code_full,
+    find_existing_code_h,
     preview_circuit,
     summarize_circuit,
 )
@@ -84,11 +86,13 @@ class AddCircuitResult:
 
 
 def add_circuit(
-    Hx: np.ndarray,
-    Hz: np.ndarray,
     circuit: Union[stim.Circuit, str],
     circuit_name: str,
     d: int,
+    Hx: Optional[np.ndarray] = None,
+    Hz: Optional[np.ndarray] = None,
+    H: Optional[np.ndarray] = None,
+    n: Optional[int] = None,
     source: str = "",
     code_name: str = "",
     zoo_url: str = "",
@@ -100,12 +104,21 @@ def add_circuit(
     """
     Add a circuit to the QECirc library by writing YAML files to data_yaml/.
 
+    Two ways to specify the code:
+      * CSS path: pass ``Hx`` and ``Hz`` (must satisfy Hx · Hzᵀ = 0 mod 2).
+      * General path: pass ``H`` (symplectic stabilizer matrix of shape
+        ``(m, 2n)``) along with ``n``. CSS-decomposable H is auto-detected
+        and routed through the CSS path so the ``CSS`` tag and Hx/Hz view
+        are populated.
+
     Args:
-        Hx: X-check matrix as a numpy array.
-        Hz: Z-check matrix as a numpy array.
         circuit: STIM circuit (stim.Circuit object or string).
         circuit_name: Name for the circuit (e.g. "Standard Encoding").
         d: Code distance.
+        Hx: X-check matrix (CSS path).
+        Hz: Z-check matrix (CSS path).
+        H: Symplectic stabilizer matrix (general path).
+        n: Number of physical qubits (required with H).
         source: Provenance (DOI, URL, or citation).
         code_name: Name for the code. Optional if code already exists in data_yaml/.
         zoo_url: QEC Zoo URL for the code.
@@ -117,8 +130,10 @@ def add_circuit(
     Returns:
         AddCircuitResult with code/circuit info and list of files written.
     """
-    Hx = np.asarray(Hx, dtype=int)
-    Hz = np.asarray(Hz, dtype=int)
+    css_path = Hx is not None and Hz is not None
+    h_path = H is not None and n is not None
+    if css_path == h_path:
+        raise ValueError("Provide exactly one of (Hx, Hz) or (H, n) to specify the code.")
 
     if isinstance(circuit, stim.Circuit):
         circuit_text = str(circuit)
@@ -126,16 +141,27 @@ def add_circuit(
         circuit_text = circuit
 
     data_dir = Path(data_dir)
+    data_dir_arg = str(data_dir) if data_dir.exists() else None
 
     # Compute code data
-    code_result = compute_code_data(
-        Hx,
-        Hz,
-        d=d,
-        code_name=code_name,
-        zoo_url=zoo_url,
-        data_dir=str(data_dir) if data_dir.exists() else None,
-    )
+    if css_path:
+        code_result = compute_code_data(
+            np.asarray(Hx, dtype=int),
+            np.asarray(Hz, dtype=int),
+            d=d,
+            code_name=code_name,
+            zoo_url=zoo_url,
+            data_dir=data_dir_arg,
+        )
+    else:
+        code_result = compute_code_data_h(
+            np.asarray(H, dtype=int),
+            n=n,
+            d=d,
+            code_name=code_name,
+            zoo_url=zoo_url,
+            data_dir=data_dir_arg,
+        )
 
     code = code_result["code"]
     perm = code_result["qubit_permutation"]

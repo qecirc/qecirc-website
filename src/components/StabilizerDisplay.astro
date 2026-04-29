@@ -1,0 +1,110 @@
+---
+import { symplecticToPauli } from "../lib/utils";
+
+interface Props {
+  label: string;
+  matrix: number[][]; // (rows × 2n)
+  n: number;
+  defaultView?: "pauli" | "symplectic";
+  id?: string;
+}
+
+const { label, matrix, n, defaultView = "pauli", id } = Astro.props;
+
+// Pauli view ─ one row per stabilizer
+const pauliLines = symplecticToPauli(matrix, n).join("\n");
+
+// Symplectic view ─ X-half | Z-half with a vertical divider rendered as ` │ `
+const flat = matrix.flat();
+const colWidth = flat.length > 0 ? Math.max(...flat.map((v) => String(v).length)) : 1;
+const symplecticLines = matrix
+  .map((row) => {
+    const left = row
+      .slice(0, n)
+      .map((v) => String(v).padStart(colWidth, " "))
+      .join("  ");
+    const right = row
+      .slice(n, 2 * n)
+      .map((v) => String(v).padStart(colWidth, " "))
+      .join("  ");
+    return `[ ${left} │ ${right} ]`;
+  })
+  .join("\n");
+
+// Stable id for client-side toggle binding
+const blockId =
+  id ??
+  `stab-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<div class="mb-4" data-stab-block={blockId}>
+  <div class="flex items-baseline justify-between mb-1">
+    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">{label}</p>
+    <div
+      class="inline-flex rounded border border-gray-200 dark:border-gray-700 text-xs overflow-hidden"
+      role="tablist"
+      aria-label={`Display format for ${label}`}
+    >
+      <button
+        type="button"
+        class="stab-toggle px-2 py-0.5 cursor-pointer"
+        data-target={blockId}
+        data-view="pauli"
+        aria-pressed={defaultView === "pauli"}
+      >
+        Pauli
+      </button>
+      <button
+        type="button"
+        class="stab-toggle px-2 py-0.5 cursor-pointer border-l border-gray-200 dark:border-gray-700"
+        data-target={blockId}
+        data-view="symplectic"
+        aria-pressed={defaultView === "symplectic"}
+      >
+        Symplectic
+      </button>
+    </div>
+  </div>
+  <pre
+    class="stab-pane text-sm leading-relaxed font-mono bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 px-3 py-2 overflow-x-auto"
+    data-target={blockId}
+    data-view="pauli"
+    hidden={defaultView !== "pauli"}
+  ><code set:text={pauliLines} /></pre>
+  <pre
+    class="stab-pane text-sm leading-relaxed font-mono bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 px-3 py-2 overflow-x-auto"
+    data-target={blockId}
+    data-view="symplectic"
+    hidden={defaultView !== "symplectic"}
+  ><code set:text={symplecticLines} /></pre>
+</div>
+
+<style>
+  .stab-toggle[aria-pressed="true"] {
+    background-color: rgb(229 231 235);
+  }
+  :global(.dark) .stab-toggle[aria-pressed="true"] {
+    background-color: rgb(55 65 81);
+  }
+</style>
+
+<script>
+  // Bind toggle for every StabilizerDisplay block on the page.
+  for (const btn of document.querySelectorAll<HTMLButtonElement>(".stab-toggle")) {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.target;
+      const view = btn.dataset.view;
+      if (!target || !view) return;
+      for (const peer of document.querySelectorAll<HTMLButtonElement>(
+        `.stab-toggle[data-target="${CSS.escape(target)}"]`,
+      )) {
+        peer.setAttribute("aria-pressed", String(peer.dataset.view === view));
+      }
+      for (const pane of document.querySelectorAll<HTMLElement>(
+        `.stab-pane[data-target="${CSS.escape(target)}"]`,
+      )) {
+        pane.hidden = pane.dataset.view !== view;
+      }
+    });
+  }
+</script>

@@ -18,7 +18,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "validate:yaml": "node scripts/validate-yaml.mjs",
-    "validate:circuits": "uv run python scripts/validate_circuits.py"
+    "validate:circuits": "uv run python scripts/validate_circuits.py",
+    "backfill:symplectic": "uv run python scripts/regenerate_h_logical.py"
   },
   "dependencies": {
     "@astrojs/node": "^10.0.3",

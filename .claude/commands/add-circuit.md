@@ -17,8 +17,9 @@ Gather the following from the user. Ask for anything not yet provided. Do not pr
 
 ### Required (hard stop if missing)
 
-- **Hx matrix** — text rows, JSON, numpy-style, or file path
-- **Hz matrix** — same format, must have same number of columns as Hx
+- **Stabilizer matrices** — one of:
+  - **`Hx` and `Hz`** (CSS path): text rows, JSON, numpy-style, or file path. Must satisfy `Hx · Hzᵀ = 0 mod 2`; if not, the pipeline will reject and ask the user to provide `H` instead.
+  - **`H` and `n`** (general path): a single symplectic stabilizer matrix of shape `(n−k) × 2n` (X-half on the left, Z-half on the right) plus the qubit count `n`. CSS-decomposable `H` is auto-detected and routed through the CSS path.
 - **STIM circuit** — text, file path, or stim string
 - **Code distance `d`** — integer (must be provided by the user)
 - **Source** — DOI, URL, or citation (refuse to proceed without provenance)
