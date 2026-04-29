@@ -72,11 +72,7 @@ export interface CodeFilters {
   tags?: string[];
 }
 
-export type CircuitSortField =
-  | "qubit_count"
-  | "depth"
-  | "gate_count"
-  | "two_qubit_gate_count";
+export type CircuitSortField = "qubit_count" | "depth" | "gate_count" | "two_qubit_gate_count";
 export type SortDir = "asc" | "desc";
 
 export interface CircuitSort {

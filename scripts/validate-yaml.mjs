@@ -55,16 +55,12 @@ const SCHEMAS = {
 
 function checkType(value, type) {
   if (type === "string") return typeof value === "string";
-  if (type === "number")
-    return typeof value === "number" && Number.isFinite(value);
-  if (type === "tags")
-    return Array.isArray(value) && value.every((v) => typeof v === "string");
+  if (type === "number") return typeof value === "number" && Number.isFinite(value);
+  if (type === "tags") return Array.isArray(value) && value.every((v) => typeof v === "string");
   if (type === "matrix")
     return (
       Array.isArray(value) &&
-      value.every(
-        (row) => Array.isArray(row) && row.every((v) => typeof v === "number"),
-      )
+      value.every((row) => Array.isArray(row) && row.every((v) => typeof v === "number"))
     );
   return false;
 }
@@ -76,10 +72,7 @@ function validate(file, data, schema) {
     return [`${file}: expected a YAML mapping, got ${typeof data}`];
   }
 
-  const allowedKeys = new Set([
-    ...Object.keys(schema.required),
-    ...Object.keys(schema.optional),
-  ]);
+  const allowedKeys = new Set([...Object.keys(schema.required), ...Object.keys(schema.optional)]);
 
   for (const key of Object.keys(schema.required)) {
     if (!(key in data)) {
@@ -94,10 +87,7 @@ function validate(file, data, schema) {
   for (const key of Object.keys(data)) {
     if (!allowedKeys.has(key)) {
       errors.push(`${file}: unknown field "${key}"`);
-    } else if (
-      key in schema.optional &&
-      !checkType(data[key], schema.optional[key])
-    ) {
+    } else if (key in schema.optional && !checkType(data[key], schema.optional[key])) {
       errors.push(
         `${file}: field "${key}" should be ${schema.optional[key]}, got ${typeof data[key]}`,
       );
@@ -145,44 +135,32 @@ for (const [dir, schema] of Object.entries(SCHEMAS)) {
         typeof data.qec_id === "number" &&
         (!Number.isInteger(data.qec_id) || data.qec_id < 1)
       ) {
-        allErrors.push(
-          `${relPath}: qec_id must be a positive integer, got ${data.qec_id}`,
-        );
+        allErrors.push(`${relPath}: qec_id must be a positive integer, got ${data.qec_id}`);
       }
 
       // Check filename convention: <code-slug>--<circuit-slug>
       const sep = base.indexOf("--");
       if (sep === -1) {
-        allErrors.push(
-          `${relPath}: filename must follow <code-slug>--<circuit-slug>.yaml`,
-        );
+        allErrors.push(`${relPath}: filename must follow <code-slug>--<circuit-slug>.yaml`);
       } else {
         const codeSlug = base.slice(0, sep);
         const codeFile = path.join(DATA_DIR, "codes", codeSlug + ".yaml");
         if (!fs.existsSync(codeFile)) {
-          allErrors.push(
-            `${relPath}: no matching code file codes/${codeSlug}.yaml`,
-          );
+          allErrors.push(`${relPath}: no matching code file codes/${codeSlug}.yaml`);
         }
       }
 
       // Check that at least one body file exists
-      const hasBody = BODY_EXTENSIONS.some((ext) =>
-        fs.existsSync(path.join(dirPath, base + ext)),
-      );
+      const hasBody = BODY_EXTENSIONS.some((ext) => fs.existsSync(path.join(dirPath, base + ext)));
       if (!hasBody) {
-        allErrors.push(
-          `${relPath}: no body file found (expected ${BODY_EXTENSIONS.join(", ")})`,
-        );
+        allErrors.push(`${relPath}: no body file found (expected ${BODY_EXTENSIONS.join(", ")})`);
       }
 
       // Check tool reference
       if (data && data.tool) {
         const toolFile = path.join(DATA_DIR, "tools", data.tool + ".yaml");
         if (!fs.existsSync(toolFile)) {
-          allErrors.push(
-            `${relPath}: tool '${data.tool}' not found in data_yaml/tools/`,
-          );
+          allErrors.push(`${relPath}: tool '${data.tool}' not found in data_yaml/tools/`);
         }
       }
     }
@@ -194,9 +172,7 @@ for (const [dir, schema] of Object.entries(SCHEMAS)) {
   const circuitsDir = path.join(DATA_DIR, "circuits");
   if (fs.existsSync(circuitsDir)) {
     const seen = new Map(); // qec_id -> filename
-    for (const file of fs
-      .readdirSync(circuitsDir)
-      .filter((f) => f.endsWith(".yaml"))) {
+    for (const file of fs.readdirSync(circuitsDir).filter((f) => f.endsWith(".yaml"))) {
       let data;
       try {
         data = yaml.load(fs.readFileSync(path.join(circuitsDir, file), "utf8"));

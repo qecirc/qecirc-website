@@ -11,10 +11,7 @@ import type {
 } from "../../types";
 import { CIRCUIT_SORT_FIELDS, FILTER_PART_REGEX } from "../constants";
 
-export function getTagsFor(
-  taggableType: TaggableType,
-  taggableId: number,
-): string[] {
+export function getTagsFor(taggableType: TaggableType, taggableId: number): string[] {
   const db = getDb();
   const rows = db
     .prepare(
@@ -115,9 +112,7 @@ export function parseFilterString(input: string): FilterCondition[] | null {
   return conditions.length > 0 ? conditions : null;
 }
 
-export function hasActiveFilters(
-  filters: CodeFilters | CircuitFilters | ToolFilters,
-): boolean {
+export function hasActiveFilters(filters: CodeFilters | CircuitFilters | ToolFilters): boolean {
   return Object.values(filters).some((v) => Array.isArray(v) && v.length > 0);
 }
 

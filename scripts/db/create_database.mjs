@@ -17,10 +17,7 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 
-const root = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../..",
-);
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const dbPath = path.join(root, "data", "qecirc.db");
 const dataDir = path.join(root, "data_yaml");
 
@@ -186,9 +183,7 @@ try {
       // Parse code-slug and circuit-slug from stem
       const sepIdx = stem.indexOf("--");
       if (sepIdx === -1) {
-        errors.push(
-          `Circuit ${stem}: filename must use '<code-slug>--<circuit-slug>' format`,
-        );
+        errors.push(`Circuit ${stem}: filename must use '<code-slug>--<circuit-slug>' format`);
         continue;
       }
       const codeSlug = stem.slice(0, sepIdx);
@@ -201,9 +196,7 @@ try {
 
       const codeId = codeSlugToId.get(codeSlug);
       if (codeId == null) {
-        errors.push(
-          `Circuit ${stem}: code '${codeSlug}' not found in data_yaml/codes/`,
-        );
+        errors.push(`Circuit ${stem}: code '${codeSlug}' not found in data_yaml/codes/`);
         continue;
       }
 
@@ -217,14 +210,8 @@ try {
         errors.push(`Circuit ${stem}: missing required field 'source'`);
         continue;
       }
-      if (
-        data.qec_id == null ||
-        !Number.isInteger(data.qec_id) ||
-        data.qec_id < 1
-      ) {
-        errors.push(
-          `Circuit ${stem}: missing or invalid 'qec_id' (must be a positive integer)`,
-        );
+      if (data.qec_id == null || !Number.isInteger(data.qec_id) || data.qec_id < 1) {
+        errors.push(`Circuit ${stem}: missing or invalid 'qec_id' (must be a positive integer)`);
         continue;
       }
 
@@ -233,9 +220,7 @@ try {
       if (data.tool) {
         toolId = toolSlugToId.get(data.tool) ?? null;
         if (toolId == null) {
-          errors.push(
-            `Circuit ${stem}: tool '${data.tool}' not found in data_yaml/tools/`,
-          );
+          errors.push(`Circuit ${stem}: tool '${data.tool}' not found in data_yaml/tools/`);
           continue;
         }
       }
@@ -286,8 +271,7 @@ try {
       }
 
       const bodyFormats = Object.keys(bodies).join(", ") || "none";
-      const hasOriginals =
-        fs.existsSync(origStimPath) && fs.existsSync(origYamlPath);
+      const hasOriginals = fs.existsSync(origStimPath) && fs.existsSync(origYamlPath);
       console.log(
         `  Circuit: ${data.name} (${codeSlug}/${circuitSlug}) [bodies: ${bodyFormats}]${hasOriginals ? " [originals]" : ""}`,
       );

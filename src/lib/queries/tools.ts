@@ -21,9 +21,7 @@ export function getAllTools(): ToolWithMeta[] {
 
 export function getToolById(id: number): Tool | undefined {
   const db = getDb();
-  return db.prepare("SELECT * FROM tools WHERE id = ?").get(id) as
-    | Tool
-    | undefined;
+  return db.prepare("SELECT * FROM tools WHERE id = ?").get(id) as Tool | undefined;
 }
 
 export function filterTools(filters: ToolFilters): ToolWithMeta[] {
@@ -33,8 +31,7 @@ export function filterTools(filters: ToolFilters): ToolWithMeta[] {
 
   addTagConditions(filters.tags, "tool", conditions, params);
 
-  const where =
-    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const tools = db
     .prepare(
       `SELECT c.* FROM tools c

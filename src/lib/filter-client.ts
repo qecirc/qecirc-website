@@ -24,9 +24,7 @@ export function initFilterForm(form: HTMLFormElement): void {
 
   // Restore focus after page reload, then strip focus param from visible URL
   if (focus && fields.includes(focus)) {
-    const target = form.querySelector<HTMLInputElement>(
-      `input[name="${focus}"]`,
-    );
+    const target = form.querySelector<HTMLInputElement>(`input[name="${focus}"]`);
     if (target) {
       target.focus();
       const val = target.value;

@@ -3,10 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../..",
-);
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const dbPath = path.join(root, "data", "qecirc.db");
 const migrationsDir = path.join(root, "data", "migrations");
 

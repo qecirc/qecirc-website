@@ -1,16 +1,9 @@
 import { getDb } from "../db";
 import type { Code, CodeFilters, CodeWithMeta } from "../../types";
-import {
-  withTags,
-  withCircuitCounts,
-  addConditions,
-  addTagConditions,
-} from "./shared";
+import { withTags, withCircuitCounts, addConditions, addTagConditions } from "./shared";
 
 export function formatCodeParams(code: Code): string {
-  return code.d != null
-    ? `[[${code.n},${code.k},${code.d}]]`
-    : `[[${code.n},${code.k}]]`;
+  return code.d != null ? `[[${code.n},${code.k},${code.d}]]` : `[[${code.n},${code.k}]]`;
 }
 
 export function getAllCodes(): CodeWithMeta[] {
@@ -21,9 +14,7 @@ export function getAllCodes(): CodeWithMeta[] {
 
 export function getCodeBySlug(slug: string): Code | undefined {
   const db = getDb();
-  return db.prepare("SELECT * FROM codes WHERE slug = ?").get(slug) as
-    | Code
-    | undefined;
+  return db.prepare("SELECT * FROM codes WHERE slug = ?").get(slug) as Code | undefined;
 }
 
 export function filterCodes(filters: CodeFilters): CodeWithMeta[] {
@@ -36,8 +27,7 @@ export function filterCodes(filters: CodeFilters): CodeWithMeta[] {
   addConditions("d", filters.d, conditions, params);
   addTagConditions(filters.tags, "code", conditions, params);
 
-  const where =
-    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const codes = db
     .prepare(`SELECT * FROM codes c ${where} ORDER BY c.name`)
     .all(...params) as Code[];

@@ -62,14 +62,10 @@ export function parseCircuitParams(
 
   const rawSort = url.searchParams.get("sort") ?? "";
   const rawSortDir = url.searchParams.get("sort_dir") ?? "";
-  const sort: CircuitSort = CIRCUIT_SORT_FIELDS.includes(
-    rawSort as CircuitSortField,
-  )
+  const sort: CircuitSort = CIRCUIT_SORT_FIELDS.includes(rawSort as CircuitSortField)
     ? {
         field: rawSort as CircuitSortField,
-        dir: VALID_SORT_DIRS.has(rawSortDir as SortDir)
-          ? (rawSortDir as SortDir)
-          : "desc",
+        dir: VALID_SORT_DIRS.has(rawSortDir as SortDir) ? (rawSortDir as SortDir) : "desc",
       }
     : { field: "gate_count", dir: "desc" };
 

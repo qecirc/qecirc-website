@@ -62,12 +62,7 @@ export function filterCircuitsForCode(
   const params: (number | string)[] = [codeId];
 
   addConditions("gate_count", filters.gate_count, conditions, params);
-  addConditions(
-    "two_qubit_gate_count",
-    filters.two_qubit_gate_count,
-    conditions,
-    params,
-  );
+  addConditions("two_qubit_gate_count", filters.two_qubit_gate_count, conditions, params);
   addConditions("depth", filters.depth, conditions, params);
   addConditions("qubit_count", filters.qubit_count, conditions, params);
   addTagConditions(filters.tags, "circuit", conditions, params);
@@ -97,9 +92,7 @@ export function getCircuitsWithBodies(
 
 const FORMAT_ORDER = ["stim", "qasm", "cirq"];
 
-export function getBodiesForCircuits(
-  circuitIds: number[],
-): Map<number, CircuitBody[]> {
+export function getBodiesForCircuits(circuitIds: number[]): Map<number, CircuitBody[]> {
   const db = getDb();
   const result = new Map<number, CircuitBody[]>();
   if (circuitIds.length === 0) return result;
@@ -141,9 +134,7 @@ export function getCircuitByQecId(
        JOIN codes co ON co.id = c.code_id
        WHERE c.qec_id = ?`,
     )
-    .get(qecId) as
-    | (Circuit & { code_slug: string; code_name: string })
-    | undefined;
+    .get(qecId) as (Circuit & { code_slug: string; code_name: string }) | undefined;
   if (!row) return null;
   const [enriched] = withTags([row], "circuit");
   return { ...enriched, code_slug: row.code_slug, code_name: row.code_name };
@@ -172,9 +163,7 @@ export function getCircuitsByQecIds(
   })[];
 }
 
-export function getOriginalForCircuit(
-  circuitId: number,
-): CircuitOriginal | null {
+export function getOriginalForCircuit(circuitId: number): CircuitOriginal | null {
   const db = getDb();
   return (
     (db

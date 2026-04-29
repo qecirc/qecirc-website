@@ -2,10 +2,7 @@ import Database from "better-sqlite3";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../..",
-);
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const dbPath = path.join(root, "data", "qecirc.db");
 
 const args = process.argv.slice(2);
@@ -39,14 +36,10 @@ if (toolsOnly) {
   }
 
   db.transaction(() => {
-    db.prepare(
-      "UPDATE circuits SET tool_id = NULL WHERE tool_id IS NOT NULL",
-    ).run();
+    db.prepare("UPDATE circuits SET tool_id = NULL WHERE tool_id IS NOT NULL").run();
     db.prepare("DELETE FROM taggings WHERE taggable_type = 'tool'").run();
     db.prepare("DELETE FROM tools").run();
-    db.prepare(
-      "DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM taggings)",
-    ).run();
+    db.prepare("DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM taggings)").run();
   })();
 
   console.log(
@@ -56,9 +49,7 @@ if (toolsOnly) {
   const nCircuits = count("circuits");
   const nBodies = count("circuit_bodies");
   const nTaggings = db
-    .prepare(
-      "SELECT COUNT(*) as n FROM taggings WHERE taggable_type = 'circuit'",
-    )
+    .prepare("SELECT COUNT(*) as n FROM taggings WHERE taggable_type = 'circuit'")
     .get().n;
 
   if (!confirmed) {
@@ -74,22 +65,16 @@ if (toolsOnly) {
   db.transaction(() => {
     db.prepare("DELETE FROM taggings WHERE taggable_type = 'circuit'").run();
     db.prepare("DELETE FROM circuits").run(); // cascades to circuit_bodies
-    db.prepare(
-      "DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM taggings)",
-    ).run();
+    db.prepare("DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM taggings)").run();
   })();
 
-  console.log(
-    `Cleared ${nCircuits} circuit(s), ${nBodies} body/bodies, ${nTaggings} tagging(s).`,
-  );
+  console.log(`Cleared ${nCircuits} circuit(s), ${nBodies} body/bodies, ${nTaggings} tagging(s).`);
 } else {
   const nCodes = count("codes");
   const nCircuits = count("circuits");
   const nBodies = count("circuit_bodies");
   const nTaggings = db
-    .prepare(
-      "SELECT COUNT(*) as n FROM taggings WHERE taggable_type IN ('code', 'circuit')",
-    )
+    .prepare("SELECT COUNT(*) as n FROM taggings WHERE taggable_type IN ('code', 'circuit')")
     .get().n;
 
   if (!confirmed) {
@@ -104,14 +89,10 @@ if (toolsOnly) {
   }
 
   db.transaction(() => {
-    db.prepare(
-      "DELETE FROM taggings WHERE taggable_type IN ('code', 'circuit')",
-    ).run();
+    db.prepare("DELETE FROM taggings WHERE taggable_type IN ('code', 'circuit')").run();
     db.prepare("DELETE FROM circuits").run(); // cascades to circuit_bodies
     db.prepare("DELETE FROM codes").run();
-    db.prepare(
-      "DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM taggings)",
-    ).run();
+    db.prepare("DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM taggings)").run();
   })();
 
   console.log(

@@ -6,9 +6,7 @@ export function getFavorites(): number[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (v): v is number => typeof v === "number" && Number.isInteger(v),
-    );
+    return parsed.filter((v): v is number => typeof v === "number" && Number.isInteger(v));
   } catch {
     return [];
   }
@@ -43,17 +41,11 @@ const MAX_FAVORITES = 5_000; // cap total favorites
 export function importFavorites(json: string): number {
   if (json.length > MAX_IMPORT_SIZE) throw new Error("File too large");
   const parsed = JSON.parse(json);
-  if (
-    typeof parsed !== "object" ||
-    parsed === null ||
-    !Array.isArray(parsed.favorites)
-  )
+  if (typeof parsed !== "object" || parsed === null || !Array.isArray(parsed.favorites))
     throw new Error("Invalid format");
-  if (Object.keys(parsed).length !== 1)
-    throw new Error("Unexpected fields in file");
+  if (Object.keys(parsed).length !== 1) throw new Error("Unexpected fields in file");
   const valid = parsed.favorites.filter(
-    (v: unknown): v is number =>
-      typeof v === "number" && Number.isInteger(v) && v > 0,
+    (v: unknown): v is number => typeof v === "number" && Number.isInteger(v) && v > 0,
   );
   const existing = new Set(getFavorites());
   const before = existing.size;
