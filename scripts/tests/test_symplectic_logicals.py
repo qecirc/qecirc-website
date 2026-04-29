@@ -57,7 +57,7 @@ def _steane_H():
         ]
     )
     Hz = Hx.copy()
-    return build_symplectic_h(Hx, Hz, css_code=True)
+    return build_symplectic_h(Hx, Hz)
 
 
 class TestComputeSymplecticLogicals:
@@ -156,10 +156,10 @@ class TestCanonicalFormH:
 
 
 class TestBuildSymplecticHelpers:
-    def test_build_symplectic_h_css_block_diagonal(self):
+    def test_build_symplectic_h_block_diagonal(self):
         Hx = np.array([[1, 0], [0, 1]])
         Hz = np.array([[1, 1]])
-        h = build_symplectic_h(Hx, Hz, css_code=True)
+        h = build_symplectic_h(Hx, Hz)
         assert h.shape == (3, 4)
         # Top rows: [Hx | 0]
         assert np.array_equal(h[:2, :2], Hx)
@@ -168,18 +168,10 @@ class TestBuildSymplecticHelpers:
         assert np.array_equal(h[2:, :2], np.zeros((1, 2), dtype=int))
         assert np.array_equal(h[2:, 2:], Hz)
 
-    def test_build_symplectic_h_non_css_hstack(self):
-        Hx = np.array([[1, 0], [0, 1]])
-        Hz = np.array([[1, 1], [1, 0]])
-        h = build_symplectic_h(Hx, Hz, css_code=False)
-        assert h.shape == (2, 4)
-        assert np.array_equal(h[:, :2], Hx)
-        assert np.array_equal(h[:, 2:], Hz)
-
-    def test_build_symplectic_logical_css_pairs(self):
+    def test_build_symplectic_logical_pairs(self):
         Lx = np.array([[1, 1, 1]])
         Lz = np.array([[1, 1, 1]])
-        L = build_symplectic_logical(Lx, Lz, css_code=True, n=3, k=1)
+        L = build_symplectic_logical(Lx, Lz, n=3, k=1)
         assert L.shape == (2, 6)
         assert np.array_equal(L[0], np.array([1, 1, 1, 0, 0, 0]))
         assert np.array_equal(L[1], np.array([0, 0, 0, 1, 1, 1]))

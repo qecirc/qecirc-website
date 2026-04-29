@@ -86,47 +86,33 @@ def is_css(Hx: np.ndarray, Hz: np.ndarray) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def build_symplectic_h(Hx: np.ndarray, Hz: np.ndarray, css_code: bool) -> np.ndarray:
-    """Build the symplectic stabilizer matrix h of shape (m, 2n).
+def build_symplectic_h(Hx: np.ndarray, Hz: np.ndarray) -> np.ndarray:
+    """Build the block-diagonal symplectic h for a CSS code.
 
-    For CSS codes, Hx (m_x x n) and Hz (m_z x n) describe independent X- and
-    Z-type stabilizer sets; h is block-diagonal:
+    Hx (m_x x n) and Hz (m_z x n) describe independent X- and Z-type
+    stabilizer sets:
         h = [[Hx, 0], [0, Hz]]   shape (m_x + m_z) x 2n
-
-    For non-CSS codes the caller passes Hx and Hz with the same number of
-    rows, where row i of each is the X/Z half of the same stabilizer:
-        h = [Hx | Hz]            shape (n - k) x 2n
     """
     Hx = np.asarray(Hx, dtype=int) % 2
     Hz = np.asarray(Hz, dtype=int) % 2
-    if css_code:
-        m_x, n = Hx.shape
-        m_z, n_z = Hz.shape
-        if n_z != n:
-            raise ValueError(f"Hx and Hz have different qubit counts: {n} vs {n_z}")
-        top = np.hstack([Hx, np.zeros((m_x, n), dtype=int)])
-        bot = np.hstack([np.zeros((m_z, n), dtype=int), Hz])
-        return np.vstack([top, bot])
-    if Hx.shape != Hz.shape:
-        raise ValueError(
-            f"Non-CSS build_symplectic_h requires matching shapes; got {Hx.shape} vs {Hz.shape}"
-        )
-    return np.hstack([Hx, Hz])
+    m_x, n = Hx.shape
+    m_z, n_z = Hz.shape
+    if n_z != n:
+        raise ValueError(f"Hx and Hz have different qubit counts: {n} vs {n_z}")
+    top = np.hstack([Hx, np.zeros((m_x, n), dtype=int)])
+    bot = np.hstack([np.zeros((m_z, n), dtype=int), Hz])
+    return np.vstack([top, bot])
 
 
 def build_symplectic_logical(
-    Lx: np.ndarray, Lz: np.ndarray, css_code: bool, n: int, k: int
+    Lx: np.ndarray, Lz: np.ndarray, n: int, k: int
 ) -> np.ndarray:
-    """CSS-only logical builder. Returns shape (2k, 2n).
+    """Build the symplectic logical matrix for a CSS code.
 
-    Rows 0..k-1 are X-bar logicals (pure X), rows k..2k-1 are Z-bar logicals
-    (pure Z). Non-CSS codes compute their logicals via
+    Returns shape (2k, 2n): rows 0..k-1 are X-bar logicals (pure X),
+    rows k..2k-1 are Z-bar logicals (pure Z). Non-CSS codes use
     :func:`_compute_symplectic_logicals` and skip this function.
     """
-    if not css_code:
-        raise AssertionError(
-            "build_symplectic_logical is CSS-only; non-CSS path uses _compute_symplectic_logicals"
-        )
     Lx = np.asarray(Lx, dtype=int) % 2
     Lz = np.asarray(Lz, dtype=int) % 2
     if Lx.shape != (k, n) or Lz.shape != (k, n):

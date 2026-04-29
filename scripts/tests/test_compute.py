@@ -10,7 +10,7 @@ import pytest
 import yaml
 
 from scripts.add_circuit.compute import (
-    _compute_logicals,
+    _compute_logicals_css,
     _is_self_dual,
     compute_code_data,
     compute_code_data_h,
@@ -253,13 +253,13 @@ class TestIsSelfDual:
 
 
 # ---------------------------------------------------------------------------
-# _compute_logicals
+# _compute_logicals_css
 # ---------------------------------------------------------------------------
 
 
 class TestComputeLogicals:
     def test_steane_logicals_valid(self, steane_H):
-        Lx, Lz = _compute_logicals(steane_H, steane_H, True, 3)
+        Lx, Lz = _compute_logicals_css(steane_H, steane_H, 3)
         # Lx in ker(Hz): Hz @ Lx.T = 0 mod 2
         assert np.all(steane_H @ Lx.T % 2 == 0)
         # Lz in ker(Hx): Hx @ Lz.T = 0 mod 2

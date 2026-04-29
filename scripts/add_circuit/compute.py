@@ -63,16 +63,16 @@ def compute_code_data(
     c_hash = canonical_hash(Hx, Hz)
 
     # 3. Logical operators (use canonical matrices so logicals match stored Hx/Hz)
-    Lx, Lz = _compute_logicals(canon_Hx, canon_Hz, params.is_css, d)
+    Lx, Lz = _compute_logicals_css(canon_Hx, canon_Hz, d)
 
     # 3b. Original logical operators (from pre-canonicalization matrices)
-    orig_Lx, orig_Lz = _compute_logicals(Hx, Hz, params.is_css, d)
+    orig_Lx, orig_Lz = _compute_logicals_css(Hx, Hz, d)
 
     # 3c. Symplectic forms (always populated alongside the CSS view)
-    h = build_symplectic_h(canon_Hx, canon_Hz, css_code=True)
-    logical = build_symplectic_logical(Lx, Lz, css_code=True, n=params.n, k=params.k)
-    orig_h = build_symplectic_h(Hx, Hz, css_code=True)
-    orig_logical = build_symplectic_logical(orig_Lx, orig_Lz, css_code=True, n=params.n, k=params.k)
+    h = build_symplectic_h(canon_Hx, canon_Hz)
+    logical = build_symplectic_logical(Lx, Lz, n=params.n, k=params.k)
+    orig_h = build_symplectic_h(Hx, Hz)
+    orig_logical = build_symplectic_logical(orig_Lx, orig_Lz, n=params.n, k=params.k)
 
     # 4. Tags
     params_with_d = CodeParams(n=params.n, k=params.k, is_css=params.is_css, d=d)
@@ -242,18 +242,8 @@ def compute_code_data_h(
     }
 
 
-def _compute_logicals(Hx, Hz, code_is_css, d):
-    """CSS-only logical computation. Tries MQT QECC, falls back to pure GF(2).
-
-    For non-CSS codes the GF(2) fallback below is mathematically wrong (Hz
-    rows are the Z-halves of mixed stabilizers, not pure-Z stabilizers), so
-    we hard-fail rather than return nonsense; non-CSS code paths use
-    :func:`_compute_symplectic_logicals` instead.
-    """
-    if not code_is_css:
-        raise AssertionError(
-            "Non-CSS path must use _compute_symplectic_logicals, not _compute_logicals"
-        )
+def _compute_logicals_css(Hx, Hz, d):
+    """CSS logical operators. Try MQT QECC first, fall back to GF(2)."""
     try:
         from mqt.qecc.codes import CSSCode
 
@@ -261,9 +251,6 @@ def _compute_logicals(Hx, Hz, code_is_css, d):
         return np.array(code.Lx), np.array(code.Lz)
     except Exception:
         pass
-    # CSS fallback: pure-numpy GF(2) linear algebra. Lx in ker(Hz) \ im(Hx),
-    # Lz in ker(Hx) \ im(Hz) — valid because Hx, Hz are pure-X and pure-Z
-    # stabilizer matrices in the CSS case.
     Lx = _compute_logical_mod2(Hz, Hx)
     Lz = _compute_logical_mod2(Hx, Hz)
     return Lx, Lz
@@ -292,11 +279,6 @@ def _compute_symplectic_logicals(H: np.ndarray, n: int, k: int) -> np.ndarray:
     H_swap = np.hstack([H[:, n:], H[:, :n]])
     ker = gf2_nullspace(H_swap)
     im = gf2_row_basis(H)
-
-    if ker.shape[0] == 0:
-        if k != 0:
-            raise ValueError(f"ker(H·Λ) is empty but k={k}; check H consistency")
-        return np.zeros((0, 2 * n), dtype=int)
 
     stacked = np.vstack([im, ker]).astype(int) % 2
     _R, pivots = gf2_rref_pivots(stacked.T)

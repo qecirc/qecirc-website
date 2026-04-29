@@ -44,7 +44,7 @@ def _upgrade(data: dict, *, n: int | None = None, k: int | None = None) -> bool:
     n_eff = n if n is not None else int(Hx.shape[1])
 
     if "h" not in data:
-        h = build_symplectic_h(Hx, Hz, css_code=True)
+        h = build_symplectic_h(Hx, Hz)
         data["h"] = h.tolist()
 
     if "logical" not in data:
@@ -53,7 +53,7 @@ def _upgrade(data: dict, *, n: int | None = None, k: int | None = None) -> bool:
         Lx = np.array(data["logical_x"], dtype=int)
         Lz = np.array(data["logical_z"], dtype=int)
         k_eff = k if k is not None else int(Lx.shape[0])
-        logical = build_symplectic_logical(Lx, Lz, css_code=True, n=n_eff, k=k_eff)
+        logical = build_symplectic_logical(Lx, Lz, n=n_eff, k=k_eff)
         data["logical"] = logical.tolist()
     return True
 

@@ -111,14 +111,6 @@ class TestComputeCodeDataCssGuard:
         with pytest.raises(ValueError, match="CSS"):
             compute_code_data(Hx, Hz, d=3)
 
-    def test_non_css_compute_logicals_rejected(self):
-        """The legacy CSS-only _compute_logicals fails fast on non-CSS input."""
-        from scripts.add_circuit.compute import _compute_logicals
-
-        Hx, Hz = _five_qubit_matrices()
-        with pytest.raises(AssertionError, match="(?i)non-css"):
-            _compute_logicals(Hx, Hz, code_is_css=False, d=3)
-
 
 class TestYamlDedupH:
     def test_identical_h_dedup_finds_existing(self, tmp_path):
