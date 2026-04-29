@@ -172,7 +172,7 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz):
     if not codes_dir.exists():
         return None, None
     for code_file in sorted(codes_dir.glob("*.yaml")):
-        data = yaml.safe_load(code_file.read_text())
+        data = yaml.safe_load(code_file.read_text(encoding="utf-8"))
         if data.get("canonical_hash") == c_hash:
             slug = code_file.stem
             ref_Hx = np.array(data["hx"])

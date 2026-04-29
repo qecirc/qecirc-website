@@ -37,7 +37,7 @@ def _next_qec_id(data_dir: Path) -> int:
     max_id = 0
     if circuits_dir.exists():
         for f in circuits_dir.glob("*.yaml"):
-            data = yaml.safe_load(f.read_text())
+            data = yaml.safe_load(f.read_text(encoding="utf-8"))
             if data and isinstance(data.get("qec_id"), int):
                 max_id = max(max_id, data["qec_id"])
     return max_id + 1
@@ -99,7 +99,7 @@ def main():
     next_id = _next_qec_id(data_dir)
     circuits = []
     for i, stim_path in enumerate(args.stim):
-        circuit_text = Path(stim_path).read_text()
+        circuit_text = Path(stim_path).read_text(encoding="utf-8")
         circ_data = compute_circuit_data(
             circuit_text=circuit_text,
             qubit_permutation=perm,
@@ -159,7 +159,7 @@ def main():
 def _load_matrix(arg):
     """Load matrix from JSON string or file path."""
     if Path(arg).exists():
-        with open(arg) as f:
+        with open(arg, encoding="utf-8") as f:
             return np.array(json.load(f), dtype=int)
     try:
         return np.array(json.loads(arg), dtype=int)
