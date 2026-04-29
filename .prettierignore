@@ -3,5 +3,6 @@ node_modules/
 data/
 .astro/
 .venv/
+.mypy_cache/
 uv.lock
 *.db
