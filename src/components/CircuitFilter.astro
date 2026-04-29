@@ -72,11 +72,20 @@ const qubitSort = labelInfo("qubit_count");
       </a>
       <input type="text" name="qubit_count" value={rawQubitCount} class={inputClass(errors.qubit_count)} placeholder="7" aria-label="Filter by qubit count" data-filter />
     </div>
-    <div class="ml-auto text-xs" data-filter-status>
+    <div class="text-xs" data-filter-status>
       {anyError ? (
         <span data-filter-error class="text-red-500">Invalid filter</span>
       ) : hasFilters && (
-        <a href={basePath} class="text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 underline">Clear</a>
+        <a
+          href={basePath}
+          class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
+          title="Clear all active filters"
+        >
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Clear filters
+        </a>
       )}
       {!anyError && <span data-filter-error class="text-red-500 hidden">Invalid filter</span>}
     </div>
