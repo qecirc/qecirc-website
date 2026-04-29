@@ -39,7 +39,7 @@ repos:
         files: \.(astro|ts|tsx|js|jsx|css|json|md|yml|yaml)$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.7.0
+    rev: v0.15.11
     hooks:
       - id: ruff
         args: ["--fix"]
