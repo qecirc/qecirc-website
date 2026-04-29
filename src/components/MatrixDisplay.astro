@@ -1,18 +1,13 @@
 ---
+import { formatMatrixRows } from "../lib/utils";
+
 interface Props {
   label: string;
   matrix: number[][];
 }
 
 const { label, matrix } = Astro.props;
-
-// Format matrix rows with aligned columns
-const flat = matrix.flat();
-const colWidth = flat.length > 0 ? Math.max(...flat.map((v) => String(v).length)) : 1;
-const rows = matrix.map(
-  (row) => row.map((v) => String(v).padStart(colWidth, " ")).join("  "),
-);
-const formatted = rows.map((r) => `[ ${r} ]`).join("\n");
+const formatted = formatMatrixRows(matrix).join("\n");
 ---
 
 <div class="mb-3">

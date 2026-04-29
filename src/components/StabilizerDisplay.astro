@@ -17,18 +17,10 @@ const pauliLines = symplecticToPauli(matrix, n).join("\n");
 // Symplectic view ─ X-half | Z-half with a vertical divider rendered as ` │ `
 const flat = matrix.flat();
 const colWidth = flat.length > 0 ? Math.max(...flat.map((v) => String(v).length)) : 1;
+const padCells = (cells: number[]) =>
+  cells.map((v) => String(v).padStart(colWidth, " ")).join("  ");
 const symplecticLines = matrix
-  .map((row) => {
-    const left = row
-      .slice(0, n)
-      .map((v) => String(v).padStart(colWidth, " "))
-      .join("  ");
-    const right = row
-      .slice(n, 2 * n)
-      .map((v) => String(v).padStart(colWidth, " "))
-      .join("  ");
-    return `[ ${left} │ ${right} ]`;
-  })
+  .map((row) => `[ ${padCells(row.slice(0, n))} │ ${padCells(row.slice(n, 2 * n))} ]`)
   .join("\n");
 
 // Stable id for client-side toggle binding
