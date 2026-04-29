@@ -38,9 +38,9 @@ function searchByType<T extends { id: number }>(
       `SELECT c.* FROM ${table} c
        WHERE ${tokenClauses.join(" AND ")}
        ORDER BY c.name
-       LIMIT ${limit}`,
+       LIMIT ?`,
     )
-    .all(...params) as T[];
+    .all(...params, limit) as T[];
   return withTags(rows, taggableType);
 }
 
