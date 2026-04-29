@@ -1,7 +1,6 @@
 ---
 import type { TagWithCount, CircuitSort, CircuitSortField } from "../types";
 import TagList from "./TagList.astro";
-import HeartIcon from "./HeartIcon.astro";
 
 interface Props {
   rawGateCount: string;
@@ -27,20 +26,12 @@ function inputClass(hasError: boolean): string {
   return hasError ? `${base} ring-1 ring-red-300` : base;
 }
 
-const sortLabels: { field: CircuitSortField; label: string; activeClass: string }[] = [
-  { field: "gate_count", label: "Gates", activeClass: "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700" },
-  { field: "two_qubit_gate_count", label: "2Q Gates", activeClass: "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700" },
-  { field: "depth", label: "Depth", activeClass: "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700" },
-  { field: "qubit_count", label: "Qubits", activeClass: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700" },
-];
-
 function labelInfo(field: CircuitSortField) {
-  const meta = sortLabels.find((s) => s.field === field)!;
   const isActive = sort.field === field;
-  const arrow = isActive ? (sort.dir === "desc" ? " \u25BC" : " \u25B2") : "";
+  const arrow = isActive ? (sort.dir === "desc" ? "▼" : "▲") : "";
   const cls = isActive
-    ? `${meta.activeClass} cursor-pointer`
-    : "bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer";
+    ? "text-gray-900 dark:text-gray-100 font-semibold cursor-pointer"
+    : "text-gray-600 dark:text-gray-400 font-medium hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer";
   return { arrow, cls };
 }
 
@@ -69,31 +60,30 @@ const qubitSort = labelInfo("qubit_count");
 <form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2 sm:sticky sm:top-0 sm:z-10 bg-white dark:bg-gray-950 sm:border-b sm:border-gray-200 sm:dark:border-gray-800 sm:pb-4 sm:-mb-2"
   data-filter-fields="gate_count,two_qubit_gate_count,depth,qubit_count" data-filter-focus={focus} data-base-path={basePath} data-preserve-sort>
   <div class="flex flex-wrap items-center gap-3">
-    <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
-      <a href={sortToggleUrl("gate_count")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${gateSort.cls}`}>Gates{gateSort.arrow}</a>
+    <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
+      <a href={sortToggleUrl("gate_count")} class={`px-1 py-0.5 text-xs transition-colors ${gateSort.cls}`}>
+        Gates{gateSort.arrow && <span class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{gateSort.arrow}</span>}
+      </a>
       <input type="text" name="gate_count" value={rawGateCount} class={inputClass(errors.gate_count)} placeholder=">10" aria-label="Filter by gate count" data-filter />
     </div>
-    <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
-      <a href={sortToggleUrl("two_qubit_gate_count")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${twoQubitGateSort.cls}`}>2Q Gates{twoQubitGateSort.arrow}</a>
+    <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
+      <a href={sortToggleUrl("two_qubit_gate_count")} class={`px-1 py-0.5 text-xs transition-colors ${twoQubitGateSort.cls}`}>
+        2Q Gates{twoQubitGateSort.arrow && <span class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{twoQubitGateSort.arrow}</span>}
+      </a>
       <input type="text" name="two_qubit_gate_count" value={rawTwoQubitGateCount} class={inputClass(errors.two_qubit_gate_count)} placeholder=">5" aria-label="Filter by two-qubit gate count" data-filter />
     </div>
-    <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
-      <a href={sortToggleUrl("depth")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${depthSort.cls}`}>Depth{depthSort.arrow}</a>
+    <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
+      <a href={sortToggleUrl("depth")} class={`px-1 py-0.5 text-xs transition-colors ${depthSort.cls}`}>
+        Depth{depthSort.arrow && <span class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{depthSort.arrow}</span>}
+      </a>
       <input type="text" name="depth" value={rawDepth} class={inputClass(errors.depth)} placeholder="<=5" aria-label="Filter by depth" data-filter />
     </div>
-    <div class="flex items-center gap-1.5 rounded border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
-      <a href={sortToggleUrl("qubit_count")} class={`rounded px-1.5 py-0.5 text-xs transition-colors ${qubitSort.cls}`}>Qubits{qubitSort.arrow}</a>
+    <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
+      <a href={sortToggleUrl("qubit_count")} class={`px-1 py-0.5 text-xs transition-colors ${qubitSort.cls}`}>
+        Qubits{qubitSort.arrow && <span class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{qubitSort.arrow}</span>}
+      </a>
       <input type="text" name="qubit_count" value={rawQubitCount} class={inputClass(errors.qubit_count)} placeholder="7" aria-label="Filter by qubit count" data-filter />
     </div>
-    <button
-      type="button"
-      id="fav-filter-toggle"
-      class="rounded px-1.5 py-0.5 text-xs transition-colors bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-      title="Show favorites only"
-    >
-      <HeartIcon class="w-3 h-3 inline -mt-0.5" />
-      Favorites
-    </button>
     <div class="ml-auto text-xs" data-filter-status>
       {anyError ? (
         <span data-filter-error class="text-red-500">Invalid filter</span>
@@ -109,38 +99,7 @@ const qubitSort = labelInfo("qubit_count");
 
 <script>
   import { initFilterForm } from "../lib/filter-client";
-  import { getFavorites } from "../lib/favorites-client";
 
   const form = document.getElementById("circuit-filter") as HTMLFormElement;
   if (form) initFilterForm(form);
-
-  const favToggle = document.getElementById("fav-filter-toggle");
-  if (favToggle) {
-    let active = false;
-    const activeClasses = ["bg-red-50", "dark:bg-red-900/30", "text-red-600", "dark:text-red-400", "border-red-300", "dark:border-red-700"];
-    const inactiveClasses = ["bg-gray-50", "dark:bg-gray-800", "text-gray-500", "dark:text-gray-400", "hover:bg-gray-100", "dark:hover:bg-gray-700"];
-
-    favToggle.addEventListener("click", function () {
-      active = !active;
-
-      // Update button style
-      const toAdd = active ? activeClasses : inactiveClasses;
-      const toRemove = active ? inactiveClasses : activeClasses;
-      favToggle.classList.remove(...toRemove);
-      favToggle.classList.add(...toAdd);
-
-      // Get favorites and toggle visibility of circuit rows
-      const favSet = new Set(getFavorites());
-      document.querySelectorAll("[id] > .circuit-toggle").forEach(function (toggle) {
-        const row = toggle.closest("[id]") as HTMLElement;
-        if (!row || !row.id || isNaN(Number(row.id))) return;
-        const qecId = Number(row.id);
-        if (active && !favSet.has(qecId)) {
-          row.style.display = "none";
-        } else {
-          row.style.display = "";
-        }
-      });
-    });
-  }
 </script>

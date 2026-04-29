@@ -1,7 +1,7 @@
 const ACTIVE_CLASS =
-  "format-tab px-3 py-1 text-xs rounded cursor-pointer transition-colors bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900";
+  "format-tab px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-200 dark:ring-gray-700";
 const INACTIVE_CLASS =
-  "format-tab px-3 py-1 text-xs rounded cursor-pointer transition-colors bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700";
+  "format-tab px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100";
 
 export function initFormatSwitchers(root: HTMLElement | Document = document): void {
   root.querySelectorAll(".format-switcher").forEach(function (switcher) {
