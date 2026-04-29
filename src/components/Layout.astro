@@ -156,16 +156,16 @@ const sunIconSvg = `<svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" f
       <slot />
     </main>
     <footer class="border-t border-gray-200 dark:border-gray-800 mt-16">
-      <div class="mx-auto max-w-4xl px-4 py-6 text-sm text-gray-500 dark:text-gray-400 flex items-center justify-between">
-        <span class="flex items-center flex-wrap gap-x-2">
+      <div class="mx-auto max-w-4xl px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
+        <div class="flex items-center justify-between">
           <span>QECirc — A community-driven library for quantum error correction circuits.</span>
-          <span class="font-mono text-[11.5px] text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-px">
-            v{version} · {totalCircuitsLabel} circuits
-          </span>
-        </span>
-        <div class="flex gap-4">
-          <a href="/privacy" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Privacy Policy</a>
-          <a href="/legal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Legal Notice</a>
+          <div class="flex gap-4">
+            <a href="/privacy" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Privacy Policy</a>
+            <a href="/legal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Legal Notice</a>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end font-mono text-[11px] text-gray-400 dark:text-gray-500">
+          v{version} · {totalCircuitsLabel} circuits
         </div>
       </div>
     </footer>
