@@ -34,8 +34,9 @@ const {
 const isCss = hx !== null && hz !== null && logicalX !== null && logicalZ !== null;
 const view = !isCss && defaultView === "hxhz" ? "pauli" : defaultView;
 
-// Render helpers — all views produce a single string per pane (joined with "\n")
-// so they share the exact same <pre> presentation.
+// ---------------------------------------------------------------------------
+// Render helpers
+// ---------------------------------------------------------------------------
 
 function paulisJoined(matrix: number[][]): string {
   return symplecticToPauli(matrix, n).join("\n");
@@ -60,21 +61,50 @@ function hxhzJoined(blocks: { label: string; matrix: number[][] }[]): string {
     .join("\n\n");
 }
 
+// Paste-ready np.array(...) literal.
+function numpyArray(matrix: number[][]): string {
+  if (matrix.length === 0) return "np.array([])";
+  const rows = matrix.map((row) => `    [${row.join(", ")}],`).join("\n");
+  return `np.array([\n${rows}\n])`;
+}
+
+function numpyAssign(blocks: { name: string; matrix: number[][] }[]): string {
+  return blocks.map(({ name, matrix }) => `${name} = ${numpyArray(matrix)}`).join("\n\n");
+}
+
+// ---------------------------------------------------------------------------
+// Pre-computed pane strings
+// ---------------------------------------------------------------------------
+
 const stabPauli = paulisJoined(h);
-const stabSymplectic = symplecticJoined(h);
-const stabHxHz = isCss
+const stabSymplecticHuman = symplecticJoined(h);
+const stabSymplecticNumpy = numpyAssign([{ name: "H", matrix: h }]);
+const stabHxHzHuman = isCss
   ? hxhzJoined([
       { label: "Hx (X-checks)", matrix: hx! },
       { label: "Hz (Z-checks)", matrix: hz! },
     ])
   : "";
+const stabHxHzNumpy = isCss
+  ? numpyAssign([
+      { name: "Hx", matrix: hx! },
+      { name: "Hz", matrix: hz! },
+    ])
+  : "";
 
 const logicalPauli = paulisJoined(logical);
-const logicalSymplectic = symplecticJoined(logical);
-const logicalHxHz = isCss
+const logicalSymplecticHuman = symplecticJoined(logical);
+const logicalSymplecticNumpy = numpyAssign([{ name: "L", matrix: logical }]);
+const logicalHxHzHuman = isCss
   ? hxhzJoined([
       { label: "Logical X", matrix: logicalX! },
       { label: "Logical Z", matrix: logicalZ! },
+    ])
+  : "";
+const logicalHxHzNumpy = isCss
+  ? numpyAssign([
+      { name: "Lx", matrix: logicalX! },
+      { name: "Lz", matrix: logicalZ! },
     ])
   : "";
 
@@ -90,31 +120,53 @@ const tabs: { view: "pauli" | "symplectic" | "hxhz"; label: string; show: boolea
 
 const paneClass =
   "code-matrix-pane text-sm leading-relaxed font-mono bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 px-3 py-2 overflow-x-auto";
+
+// Initial format is "human"; NumPy button starts inactive.
+const format: "human" | "numpy" = "human";
+const isPauli = (v: typeof view) => v === "pauli";
 ---
 
 <div data-code-matrices={id}>
-  <div class="flex gap-1 mb-3" role="tablist" aria-label="Matrix display format">
-    {
-      tabs
-        .filter((t) => t.show)
-        .map((tab) => (
-          <button
-            type="button"
-            class:list={[
-              "code-matrix-toggle px-3 py-1 text-xs rounded cursor-pointer transition-colors",
-              "focus:outline-none focus:ring-2 focus:ring-blue-500",
-              view === tab.view
-                ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
-            ]}
-            data-target={id}
-            data-view={tab.view}
-            aria-pressed={view === tab.view}
-          >
-            {tab.label.toUpperCase()}
-          </button>
-        ))
-    }
+  <div class="flex items-center justify-between gap-2 mb-3">
+    <div class="flex gap-1" role="tablist" aria-label="Matrix display format">
+      {
+        tabs
+          .filter((t) => t.show)
+          .map((tab) => (
+            <button
+              type="button"
+              class:list={[
+                "code-matrix-toggle px-3 py-1 text-xs rounded cursor-pointer transition-colors",
+                "focus:outline-none focus:ring-2 focus:ring-blue-500",
+                view === tab.view
+                  ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+              ]}
+              data-target={id}
+              data-view={tab.view}
+              aria-pressed={view === tab.view}
+            >
+              {tab.label.toUpperCase()}
+            </button>
+          ))
+      }
+    </div>
+    <button
+      type="button"
+      class:list={[
+        "code-matrix-numpy px-3 py-1 text-xs rounded cursor-pointer transition-colors",
+        "focus:outline-none focus:ring-2 focus:ring-blue-500",
+        format === "numpy"
+          ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
+          : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+      ]}
+      data-target={id}
+      aria-pressed={format === "numpy"}
+      title="Show as np.array(...) for direct paste into Python"
+      hidden={isPauli(view)}
+    >
+      NUMPY
+    </button>
   </div>
 
   <div class="mb-4">
@@ -124,6 +176,7 @@ const paneClass =
       data-target={id}
       data-pane="stab"
       data-view="pauli"
+      data-format="human"
       hidden={view !== "pauli"}
     ><code set:text={stabPauli} /></pre>
     <pre
@@ -131,16 +184,36 @@ const paneClass =
       data-target={id}
       data-pane="stab"
       data-view="symplectic"
-      hidden={view !== "symplectic"}
-    ><code set:text={stabSymplectic} /></pre>
+      data-format="human"
+      hidden={view !== "symplectic" || format !== "human"}
+    ><code set:text={stabSymplecticHuman} /></pre>
+    <pre
+      class={paneClass}
+      data-target={id}
+      data-pane="stab"
+      data-view="symplectic"
+      data-format="numpy"
+      hidden={view !== "symplectic" || format !== "numpy"}
+    ><code set:text={stabSymplecticNumpy} /></pre>
     {isCss && (
       <pre
         class={paneClass}
         data-target={id}
         data-pane="stab"
         data-view="hxhz"
-        hidden={view !== "hxhz"}
-      ><code set:text={stabHxHz} /></pre>
+        data-format="human"
+        hidden={view !== "hxhz" || format !== "human"}
+      ><code set:text={stabHxHzHuman} /></pre>
+    )}
+    {isCss && (
+      <pre
+        class={paneClass}
+        data-target={id}
+        data-pane="stab"
+        data-view="hxhz"
+        data-format="numpy"
+        hidden={view !== "hxhz" || format !== "numpy"}
+      ><code set:text={stabHxHzNumpy} /></pre>
     )}
   </div>
 
@@ -151,6 +224,7 @@ const paneClass =
       data-target={id}
       data-pane="logical"
       data-view="pauli"
+      data-format="human"
       hidden={view !== "pauli"}
     ><code set:text={logicalPauli} /></pre>
     <pre
@@ -158,59 +232,122 @@ const paneClass =
       data-target={id}
       data-pane="logical"
       data-view="symplectic"
-      hidden={view !== "symplectic"}
-    ><code set:text={logicalSymplectic} /></pre>
+      data-format="human"
+      hidden={view !== "symplectic" || format !== "human"}
+    ><code set:text={logicalSymplecticHuman} /></pre>
+    <pre
+      class={paneClass}
+      data-target={id}
+      data-pane="logical"
+      data-view="symplectic"
+      data-format="numpy"
+      hidden={view !== "symplectic" || format !== "numpy"}
+    ><code set:text={logicalSymplecticNumpy} /></pre>
     {isCss && (
       <pre
         class={paneClass}
         data-target={id}
         data-pane="logical"
         data-view="hxhz"
-        hidden={view !== "hxhz"}
-      ><code set:text={logicalHxHz} /></pre>
+        data-format="human"
+        hidden={view !== "hxhz" || format !== "human"}
+      ><code set:text={logicalHxHzHuman} /></pre>
+    )}
+    {isCss && (
+      <pre
+        class={paneClass}
+        data-target={id}
+        data-pane="logical"
+        data-view="hxhz"
+        data-format="numpy"
+        hidden={view !== "hxhz" || format !== "numpy"}
+      ><code set:text={logicalHxHzNumpy} /></pre>
     )}
   </div>
 </div>
 
 <script>
   // Tab class strings mirror FormatSwitcher (STIM/QASM/CIRQ) for visual parity.
-  const BASE_CLASS = "code-matrix-toggle px-3 py-1 text-xs rounded cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500";
-  const ACTIVE_CLASS = `${BASE_CLASS} bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900`;
-  const INACTIVE_CLASS = `${BASE_CLASS} bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700`;
+  const BASE_TAB_CLASS = "px-3 py-1 text-xs rounded cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const ACTIVE_CLASS = `${BASE_TAB_CLASS} bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900`;
+  const INACTIVE_CLASS = `${BASE_TAB_CLASS} bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700`;
 
-  // Section-level toggle: clicking a button flips both panes (stabilizers and
-  // logicals) inside the same data-target group, and resyncs the enclosing
-  // CollapsibleSection's max-height (the new view may be taller than the old).
+  function activeViewFor(sel: string): string {
+    const pressed = document.querySelector<HTMLButtonElement>(
+      `.code-matrix-toggle${sel}[aria-pressed="true"]`,
+    );
+    return pressed?.dataset.view ?? "pauli";
+  }
+
+  function activeFormatFor(sel: string): "human" | "numpy" {
+    const btn = document.querySelector<HTMLButtonElement>(`.code-matrix-numpy${sel}`);
+    return btn?.getAttribute("aria-pressed") === "true" ? "numpy" : "human";
+  }
+
+  function syncPanes(sel: string): void {
+    const view = activeViewFor(sel);
+    const format = activeFormatFor(sel);
+    for (const pane of document.querySelectorAll<HTMLElement>(`.code-matrix-pane${sel}`)) {
+      const matchView = pane.dataset.view === view;
+      const matchFormat = pane.dataset.format === format;
+      pane.hidden = !(matchView && matchFormat);
+    }
+  }
+
+  function syncCollapsible(node: HTMLElement | null): void {
+    while (node) {
+      if (
+        node.style.maxHeight &&
+        node.style.maxHeight !== "0px" &&
+        node.style.maxHeight !== ""
+      ) {
+        node.style.maxHeight = node.scrollHeight + "px";
+        break;
+      }
+      node = node.parentElement;
+    }
+  }
+
+  // View tabs (Pauli / Symplectic / Hx-Hz).
   for (const btn of document.querySelectorAll<HTMLButtonElement>(".code-matrix-toggle")) {
     btn.addEventListener("click", () => {
       const target = btn.dataset.target;
       const view = btn.dataset.view;
       if (!target || !view) return;
       const sel = `[data-target="${CSS.escape(target)}"]`;
+
       for (const peer of document.querySelectorAll<HTMLButtonElement>(
         `.code-matrix-toggle${sel}`,
       )) {
         const isActive = peer.dataset.view === view;
         peer.setAttribute("aria-pressed", String(isActive));
-        peer.className = isActive ? ACTIVE_CLASS : INACTIVE_CLASS;
+        peer.className = `code-matrix-toggle ${isActive ? ACTIVE_CLASS : INACTIVE_CLASS}`;
       }
-      for (const pane of document.querySelectorAll<HTMLElement>(`.code-matrix-pane${sel}`)) {
-        pane.hidden = pane.dataset.view !== view;
-      }
-      // Resync any open CollapsibleSection ancestor — its max-height was
-      // measured against the previously-visible pane.
-      let node: HTMLElement | null = btn.parentElement;
-      while (node) {
-        if (
-          node.style.maxHeight &&
-          node.style.maxHeight !== "0px" &&
-          node.style.maxHeight !== ""
-        ) {
-          node.style.maxHeight = node.scrollHeight + "px";
-          break;
-        }
-        node = node.parentElement;
-      }
+
+      // The NumPy toggle is meaningless on Pauli — hide it (Pauli is a string
+      // representation, not a matrix).
+      const numpyBtn = document.querySelector<HTMLButtonElement>(
+        `.code-matrix-numpy${sel}`,
+      );
+      if (numpyBtn) numpyBtn.hidden = view === "pauli";
+
+      syncPanes(sel);
+      syncCollapsible(btn.parentElement);
+    });
+  }
+
+  // NumPy toggle.
+  for (const btn of document.querySelectorAll<HTMLButtonElement>(".code-matrix-numpy")) {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.target;
+      if (!target) return;
+      const sel = `[data-target="${CSS.escape(target)}"]`;
+      const wasActive = btn.getAttribute("aria-pressed") === "true";
+      btn.setAttribute("aria-pressed", String(!wasActive));
+      btn.className = `code-matrix-numpy ${!wasActive ? ACTIVE_CLASS : INACTIVE_CLASS}`;
+
+      syncPanes(sel);
+      syncCollapsible(btn.parentElement);
     });
   }
 </script>
