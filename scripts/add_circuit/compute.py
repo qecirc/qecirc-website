@@ -200,7 +200,7 @@ def compute_code_data_h(
     code_status = "new"
     existing_slug = None
     if data_dir:
-        existing_slug = _check_yaml_dedup_h(data_dir, c_hash)
+        existing_slug = _check_yaml_dedup_h(data_dir, c_hash, H, n)
         if existing_slug is not None:
             code_status = "existing"
             if not slug:
@@ -395,9 +395,9 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz):
         if data.get("canonical_hash") == c_hash:
             slug = code_file.stem
             if data.get("hx") is None or data.get("hz") is None:
-                # Hash collision against a non-CSS code is impossible (the hash
-                # prefixes differ), so skip rather than crash.
-                continue
+                raise ValueError(
+                    f"Code '{slug}' has CSS-format canonical_hash but missing hx/hz"
+                )
             ref_Hx = np.array(data["hx"])
             ref_Hz = np.array(data["hz"])
             perm = find_qubit_permutation(Hx, Hz, ref_Hx, ref_Hz)
@@ -414,20 +414,33 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz):
     return None, None
 
 
-def _check_yaml_dedup_h(data_dir, c_hash):
-    """Check data_yaml/codes/ for an existing non-CSS code by canonical_hash_h.
+def _check_yaml_dedup_h(data_dir, c_hash, H, n):
+    """Look up a non-CSS code by ``canonical_hash_h`` and verify by canonical form.
 
-    Non-CSS hashes are prefixed ``sym:<n>:`` and CSS hashes are prefixed
-    ``<m_x>:<m_z>:`` so the two hash formats can never collide; matching against
-    any code with the same hash is sufficient.
+    Hash collisions are astronomically unlikely with the new SHA256-of-canonical
+    hash, but we still verify the stored canonical form matches the user's to
+    rule out malformed YAML or future hash bugs.
     """
     codes_dir = Path(data_dir) / "codes"
     if not codes_dir.exists():
         return None
+    canon_user, _ = canonical_form_h(H, n)
     for code_file in sorted(codes_dir.glob("*.yaml")):
         data = yaml.safe_load(code_file.read_text(encoding="utf-8"))
-        if data.get("canonical_hash") == c_hash:
+        if data.get("canonical_hash") != c_hash:
+            continue
+        if data.get("h") is None:
+            raise ValueError(
+                f"Code '{code_file.stem}' matches non-CSS hash but has no 'h' field"
+            )
+        canon_stored = np.array(data["h"], dtype=int) % 2
+        if canon_stored.shape == canon_user.shape and np.array_equal(canon_stored, canon_user):
             return code_file.stem
+        raise ValueError(
+            f"Hash collision: code '{code_file.stem}' has matching canonical_hash "
+            f"but different canonical H. Stored shape {canon_stored.shape}, "
+            f"user shape {canon_user.shape}."
+        )
     return None
 
 

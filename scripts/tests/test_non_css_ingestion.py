@@ -118,3 +118,41 @@ class TestComputeCodeDataCssGuard:
         Hx, Hz = _five_qubit_matrices()
         with pytest.raises(AssertionError, match="(?i)non-css"):
             _compute_logicals(Hx, Hz, code_is_css=False, d=3)
+
+
+class TestYamlDedupH:
+    def test_identical_h_dedup_finds_existing(self, tmp_path):
+        from scripts.add_circuit import find_existing_code_h
+
+        Hx, Hz = _five_qubit_matrices()
+        H = np.hstack([Hx, Hz])
+        # Seed data_yaml with the five-qubit code via a dry-run-style write.
+        codes_dir = tmp_path / "codes"
+        codes_dir.mkdir(parents=True)
+        result = compute_code_data_h(H, n=5, d=3, code_name="Five-Qubit", data_dir=str(tmp_path))
+        from scripts.add_circuit.yaml_helpers import build_code_yaml, dump_yaml
+        (codes_dir / "five-qubit.yaml").write_text(dump_yaml(build_code_yaml(result["code"])))
+
+        match = find_existing_code_h(H, n=5, data_dir=str(tmp_path))
+        assert match is not None
+        assert match.slug == "five-qubit"
+
+    def test_different_h_does_not_dedup(self, tmp_path):
+        from scripts.add_circuit import find_existing_code_h
+        from scripts.add_circuit.yaml_helpers import build_code_yaml, dump_yaml
+
+        Hx, Hz = _five_qubit_matrices()
+        H_a = np.hstack([Hx, Hz])
+        codes_dir = tmp_path / "codes"
+        codes_dir.mkdir(parents=True)
+        seed = compute_code_data_h(H_a, n=5, d=3, code_name="A", data_dir=str(tmp_path))
+        (codes_dir / "a.yaml").write_text(dump_yaml(build_code_yaml(seed["code"])))
+
+        # n != 5 so they can't dedup by definition.
+        H_b = np.array(
+            [
+                [1, 1, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1, 1, 1, 1],
+            ]
+        )
+        assert find_existing_code_h(H_b, n=4, data_dir=str(tmp_path)) is None

@@ -164,7 +164,7 @@ def find_existing_code_h(
         return find_existing_code_full(Hx, Hz, data_dir)
 
     c_hash = canonical_hash_h(H, n)
-    slug = _check_yaml_dedup_h(data_dir, c_hash)
+    slug = _check_yaml_dedup_h(data_dir, c_hash, H, n)
     if slug is None:
         return None
     return ExistingCodeMatch(slug=slug, qubit_permutation=None)
