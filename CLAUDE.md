@@ -187,6 +187,15 @@ convention (currently `0.x.y`):
 
 Bump the version in the same PR that ships the change.
 
+**Files to update together with `package.json` `version`:**
+
+- `pyproject.toml` `version` field
+- `uv.lock` (run `UV_NO_CONFIG=1 uv lock`)
+- `package-lock.json` (npm syncs this on `npm install`; commit if it drifted)
+
+**When bumping `engines.node` in `package.json`** (Node major version),
+also update `railpack.json` `packages.node` to the same major.
+
 ---
 
 ## Licensing
