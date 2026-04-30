@@ -176,6 +176,7 @@ const hasOriginalMatrices = !!(origH && origLogical);
 <script>
   import { initCircuitActions } from "../../lib/circuit-actions-client";
   import { initBackKey } from "../../lib/back-key-client";
+  import { setFavState } from "../../lib/dom-helpers";
 
   // The page contains exactly one circuit body; main is the natural container.
   // `f` toggles this circuit's favorite (the heart in the title row).
@@ -192,22 +193,11 @@ const hasOriginalMatrices = !!(origH && origLogical);
   if (favBtn) {
     import("../../lib/favorites-client").then(function ({ isFavorite, toggleFavorite }) {
       const qecId = Number(favBtn.dataset.qecId);
-      const outline = favBtn.querySelector(".fav-outline") as HTMLElement;
-      const filled = favBtn.querySelector(".fav-filled") as HTMLElement;
 
-      function setFavState(isFav: boolean) {
-        outline.classList.toggle("hidden", isFav);
-        filled.classList.toggle("hidden", !isFav);
-        favBtn.classList.toggle("text-red-400", isFav);
-        favBtn.classList.toggle("dark:text-red-400", isFav);
-        favBtn.classList.toggle("text-gray-300", !isFav);
-        favBtn.classList.toggle("dark:text-gray-600", !isFav);
-      }
-
-      setFavState(isFavorite(qecId));
+      setFavState(favBtn, isFavorite(qecId));
 
       favBtn.addEventListener("click", function () {
-        setFavState(toggleFavorite(qecId));
+        setFavState(favBtn, toggleFavorite(qecId));
       });
     });
   }
