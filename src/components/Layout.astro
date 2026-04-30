@@ -182,8 +182,8 @@ const sunIconSvg = `<svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" f
       const navMenu = document.getElementById("nav-menu");
       if (navToggle && navMenu) {
         navToggle.addEventListener("click", function () {
-          const isOpen = navMenu.style.maxHeight !== "0px";
-          if (isOpen) {
+          const expanded = navToggle.getAttribute("aria-expanded") === "true";
+          if (expanded) {
             navMenu.style.maxHeight = "0px";
             navToggle.setAttribute("aria-expanded", "false");
             navToggle.querySelector(".nav-icon-open").classList.remove("hidden");
