@@ -2,7 +2,7 @@
   "$schema": "https://schema.railpack.com",
   "provider": "node",
   "packages": {
-    "node": "23"
+    "node": "24"
   },
   "deploy": {
     "startCommand": "node dist/server/entry.mjs"
