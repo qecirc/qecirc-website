@@ -8,8 +8,10 @@ import yaml
 def next_qec_id(data_dir: Path) -> int:
     """Return the next available qec_id by scanning existing circuit YAMLs.
 
-    qec_ids are permanent and never reused; this scans data_yaml/circuits/*.yaml
-    to find max(qec_id) and returns max + 1. Returns 1 if no circuits exist.
+    Scans data_yaml/circuits/*.yaml to find max(qec_id) and returns max + 1.
+    Returns 1 if no circuits exist. This avoids reusing IDs only while the
+    previously assigned circuit YAML files remain present on disk; deleting
+    the highest-id YAML would cause the next allocation to reuse that id.
     """
     circuits_dir = Path(data_dir) / "circuits"
     max_id = 0
