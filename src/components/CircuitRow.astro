@@ -189,7 +189,7 @@ const stimFilename = buildStimFilename({
 </div>
 
 <script>
-  import { setFavState } from "../lib/dom-helpers";
+  import { copyToClipboard, setFavState } from "../lib/dom-helpers";
 
   function initCircuitRows() {
     document.querySelectorAll(".circuit-toggle").forEach(function (btn) {
@@ -288,9 +288,9 @@ const stimFilename = buildStimFilename({
       btn.addEventListener("click", async function () {
         const qecId = btn.dataset.qecId;
         const url = location.origin + location.pathname + "#" + qecId;
-        try {
-          await navigator.clipboard.writeText(url);
-        } catch {
+        const ok = await copyToClipboard(url);
+        if (!ok) {
+          console.warn("Clipboard write failed");
           return;
         }
         showCopyCheck(btn, ".permalink-label", ".permalink-check");
@@ -305,9 +305,9 @@ const stimFilename = buildStimFilename({
 
       btn.addEventListener("click", async function () {
         const qecId = btn.dataset.qecId;
-        try {
-          await navigator.clipboard.writeText("#" + qecId);
-        } catch {
+        const ok = await copyToClipboard("#" + qecId);
+        if (!ok) {
+          console.warn("Clipboard write failed");
           return;
         }
         showCopyCheck(btn, ".id-label", ".id-check");
