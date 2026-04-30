@@ -7,6 +7,8 @@
 // expand/collapse, favorite, and link navigation all behave exactly as they
 // do for mouse users. No logic is duplicated.
 
+import { isInputFocused } from "./dom-helpers";
+
 export interface ListKeynavConfig {
   // CSS selector for the focusable rows in the list.
   rowSelector: string;
@@ -31,16 +33,6 @@ export interface ListKeynavConfig {
   // (so /codes/foo#42 focuses the row whose [hashAttr] === "42").
   // Default: "id".
   hashAttr?: string;
-}
-
-function isInputFocused(): boolean {
-  const a = document.activeElement;
-  return (
-    a instanceof HTMLInputElement ||
-    a instanceof HTMLTextAreaElement ||
-    a instanceof HTMLSelectElement ||
-    (a instanceof HTMLElement && a.isContentEditable)
-  );
 }
 
 export function initListKeynav(config: ListKeynavConfig): () => void {

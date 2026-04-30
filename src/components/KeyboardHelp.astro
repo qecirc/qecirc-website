@@ -75,6 +75,8 @@ const SHORTCUTS: { keys: string[]; action: string }[] = [
 </div>
 
 <script>
+  import { isInputFocused } from "../lib/dom-helpers";
+
   const overlay = document.getElementById("keyboard-help");
   if (overlay) {
     const backdrop = overlay.querySelector(".kbd-help-backdrop");
@@ -102,16 +104,6 @@ const SHORTCUTS: { keys: string[]; action: string }[] = [
         previouslyFocused.focus();
       }
       previouslyFocused = null;
-    }
-
-    function isInputFocused(): boolean {
-      const a = document.activeElement;
-      return (
-        a instanceof HTMLInputElement ||
-        a instanceof HTMLTextAreaElement ||
-        a instanceof HTMLSelectElement ||
-        (a instanceof HTMLElement && a.isContentEditable)
-      );
     }
 
     document.addEventListener(
