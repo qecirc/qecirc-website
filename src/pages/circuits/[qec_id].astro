@@ -45,8 +45,12 @@ const stimFilename = buildStimFilename({
   qubitCount: circuit.qubit_count,
 });
 
-const origH = original ? safeParseMatrix(original.original_h) : null;
-const origLogical = original ? safeParseMatrix(original.original_logical) : null;
+const origH = original
+  ? safeParseMatrix(original.original_h, circuit.code_n - circuit.code_k, 2 * circuit.code_n)
+  : null;
+const origLogical = original
+  ? safeParseMatrix(original.original_logical, 2 * circuit.code_k, 2 * circuit.code_n)
+  : null;
 const hasOriginalMatrices = !!(origH && origLogical);
 ---
 

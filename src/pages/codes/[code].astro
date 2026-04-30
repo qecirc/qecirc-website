@@ -31,8 +31,8 @@ if (!code) {
 const tags = getTagsFor("code", code.id);
 const params = formatCodeParams(code);
 
-const h = safeParseMatrix(code.h);
-const logical = safeParseMatrix(code.logical);
+const h = safeParseMatrix(code.h, code.n - code.k, 2 * code.n);
+const logical = safeParseMatrix(code.logical, 2 * code.k, 2 * code.n);
 const hasMatrices = !!(h && logical);
 
 // Parse circuit filter and sort params
