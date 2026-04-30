@@ -131,18 +131,26 @@ export function getBodiesForCircuits(circuitIds: number[]): Map<number, CircuitB
   return result;
 }
 
-export function getCircuitByQecId(
-  qecId: number,
-): (Circuit & { tags: string[]; code_slug: string; code_name: string; code_n: number }) | null {
+export function getCircuitByQecId(qecId: number):
+  | (Circuit & {
+      tags: string[];
+      code_slug: string;
+      code_name: string;
+      code_n: number;
+      code_k: number;
+    })
+  | null {
   const db = getDb();
   const row = db
     .prepare(
-      `SELECT c.*, co.slug AS code_slug, co.name AS code_name, co.n AS code_n
+      `SELECT c.*, co.slug AS code_slug, co.name AS code_name, co.n AS code_n, co.k AS code_k
        FROM circuits c
        JOIN codes co ON co.id = c.code_id
        WHERE c.qec_id = ?`,
     )
-    .get(qecId) as (Circuit & { code_slug: string; code_name: string; code_n: number }) | undefined;
+    .get(qecId) as
+    | (Circuit & { code_slug: string; code_name: string; code_n: number; code_k: number })
+    | undefined;
   if (!row) return null;
   const [enriched] = withTags([row], "circuit");
   return {
@@ -150,6 +158,7 @@ export function getCircuitByQecId(
     code_slug: row.code_slug,
     code_name: row.code_name,
     code_n: row.code_n,
+    code_k: row.code_k,
   };
 }
 
@@ -181,7 +190,7 @@ export function getOriginalForCircuit(circuitId: number): CircuitOriginal | null
   return (
     (db
       .prepare(
-        `SELECT original_stim, original_hx, original_hz, original_logical_x, original_logical_z, original_h, original_logical
+        `SELECT original_stim, original_h, original_logical
        FROM circuit_originals WHERE circuit_id = ?`,
       )
       .get(circuitId) as CircuitOriginal | undefined) ?? null

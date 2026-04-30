@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import yaml
 
-from scripts.add_circuit.code_identify import canonical_hash
+from scripts.add_circuit.code_identify import build_symplectic_h, canonical_hash
 from scripts.add_circuit.helpers import (
     ExistingCodeMatch,
     check_code,
@@ -81,14 +81,15 @@ class TestCheckCode:
 class TestFindExistingCode:
     def test_finds_existing(self):
         c_hash = canonical_hash(STEANE_H, STEANE_H)
+        h = build_symplectic_h(STEANE_H, STEANE_H).tolist()
         with tempfile.TemporaryDirectory() as tmpdir:
             codes_dir = Path(tmpdir) / "codes"
             codes_dir.mkdir()
             code_yaml = {
                 "name": "Steane Code",
+                "n": 7,
                 "canonical_hash": c_hash,
-                "hx": STEANE_H.tolist(),
-                "hz": STEANE_H.tolist(),
+                "h": h,
             }
             (codes_dir / "steane-code.yaml").write_text(yaml.dump(code_yaml))
             assert find_existing_code(STEANE_H, STEANE_H, data_dir=tmpdir) == "steane-code"
@@ -111,11 +112,12 @@ class TestFindExistingCodeFull:
         codes_dir = Path(tmpdir) / "codes"
         codes_dir.mkdir()
         c_hash = canonical_hash(Hx, Hz)
+        h = build_symplectic_h(Hx, Hz).tolist()
         code_yaml = {
             "name": "Steane Code",
+            "n": Hx.shape[1],
             "canonical_hash": c_hash,
-            "hx": Hx.tolist(),
-            "hz": Hz.tolist(),
+            "h": h,
         }
         (codes_dir / "steane-code.yaml").write_text(yaml.dump(code_yaml))
 

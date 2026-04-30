@@ -6,10 +6,6 @@ export interface Code {
   k: number;
   d: number | null;
   zoo_url: string | null;
-  hx: string | null;
-  hz: string | null;
-  logical_x: string | null;
-  logical_z: string | null;
   h: string | null;
   logical: string | null;
   canonical_hash: string | null;
@@ -39,10 +35,6 @@ export interface CircuitBody {
 
 export interface CircuitOriginal {
   original_stim: string;
-  original_hx: string | null;
-  original_hz: string | null;
-  original_logical_x: string | null;
-  original_logical_z: string | null;
   original_h: string | null;
   original_logical: string | null;
 }

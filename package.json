@@ -1,7 +1,7 @@
 {
   "name": "qecirc-website",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "scripts": {
     "dev": "astro dev",
@@ -18,8 +18,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "validate:yaml": "node scripts/validate-yaml.mjs",
-    "validate:circuits": "uv run python scripts/validate_circuits.py",
-    "backfill:symplectic": "uv run python scripts/regenerate_h_logical.py"
+    "validate:circuits": "uv run python scripts/validate_circuits.py"
   },
   "dependencies": {
     "@astrojs/node": "^10.0.3",

@@ -49,10 +49,10 @@ class TestComputeCodeDataHNonCss:
         result = compute_code_data_h(H, n=5, d=3)
         code = result["code"]
         assert code["is_css"] is False
-        assert code["hx"] is None
-        assert code["hz"] is None
-        assert code["logical_x"] is None
-        assert code["logical_z"] is None
+        # Non-CSS codes carry no CSS view in the returned dict; the UI hides
+        # the Hx/Hz tab when splitHToCss(h, n) returns null.
+        for key in ("hx", "hz", "logical_x", "logical_z"):
+            assert key not in code
         assert np.array(code["h"]).shape == (4, 10)
         assert np.array(code["logical"]).shape == (2, 10)
         assert (code["n"], code["k"], code["d"]) == (5, 1, 3)
@@ -69,8 +69,7 @@ class TestComputeCodeDataHNonCss:
         H = np.hstack([Hx, Hz])
         result = compute_code_data_h(H, n=5, d=3)
         om = result["original_matrices"]
-        assert om["hx"] is None
-        assert om["hz"] is None
+        assert set(om.keys()) == {"h", "logical"}
         assert np.array_equal(om["h"], H.tolist())
         assert np.array(om["logical"]).shape == (2, 10)
 
@@ -87,16 +86,16 @@ class TestComputeCodeDataHNonCss:
 
 class TestComputeCodeDataHCssAutoDetect:
     def test_steane_via_h_routes_to_css(self):
-        """Submitting Steane's block-diagonal H should auto-detect CSS and
-        populate hx/hz/lx/lz plus the CSS tag."""
+        """Submitting Steane's block-diagonal H should auto-detect CSS,
+        set the CSS tag, and store h/logical (Hx/Hz are derived in the UI)."""
         H = _steane_block_diagonal_H()
         result = compute_code_data_h(H, n=7, d=3)
         code = result["code"]
         assert code["is_css"] is True
-        assert code["hx"] is not None
-        assert code["hz"] is not None
-        assert code["logical_x"] is not None
-        assert code["logical_z"] is not None
+        tag_names = [t["name"] for t in code["tags"]]
+        assert "CSS" in tag_names
+        assert np.array(code["h"]).shape == (6, 14)
+        assert np.array(code["logical"]).shape == (2, 14)
         # h and logical are still populated (CSS path also fills them).
         assert np.array(code["h"]).shape[1] == 14  # 2n
         assert np.array(code["logical"]).shape[1] == 14

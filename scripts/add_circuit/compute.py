@@ -125,10 +125,6 @@ def compute_code_data(
             "k": params.k,
             "d": d,
             "zoo_url": zoo_url or None,
-            "hx": canon_Hx.tolist(),
-            "hz": canon_Hz.tolist(),
-            "logical_x": Lx.tolist(),
-            "logical_z": Lz.tolist(),
             "h": h.tolist(),
             "logical": logical.tolist(),
             "is_css": params.is_css,
@@ -137,10 +133,6 @@ def compute_code_data(
         },
         "qubit_permutation": final_perm,
         "original_matrices": {
-            "hx": Hx.tolist(),
-            "hz": Hz.tolist(),
-            "logical_x": orig_Lx.tolist(),
-            "logical_z": orig_Lz.tolist(),
             "h": orig_h.tolist(),
             "logical": orig_logical.tolist(),
         },
@@ -161,15 +153,16 @@ def compute_code_data_h(
     H has shape (m, 2n): the first n columns are the X-half, the last n the
     Z-half. Auto-detects CSS structure: if H is CSS-decomposable (every RREF
     row is purely X or purely Z), delegates to :func:`compute_code_data` with
-    the recovered (Hx, Hz) so the returned dict carries the full CSS view and
-    the `CSS` tag. Otherwise stores only the symplectic h/logical fields.
+    the recovered (Hx, Hz) so the result picks up the `CSS` tag and the
+    canonical CSS-form h/logical. Storage is always symplectic-only
+    (h, logical); the Hx/Hz/Lx/Lz view is derived in the UI at render time.
     """
     H = np.asarray(H, dtype=int) % 2
     if H.shape[1] != 2 * n:
         raise ValueError(f"Expected H with 2n={2 * n} columns, got {H.shape[1]}")
 
     # Try CSS detection first; if the row space is CSS-decomposable, route
-    # through the CSS path so we get hx/hz/lx/lz populated and the CSS tag.
+    # through the CSS path so we get the CSS tag and the canonical-form h.
     css_split = split_h_to_css(H, n)
     if css_split is not None:
         Hx, Hz = css_split
@@ -228,10 +221,6 @@ def compute_code_data_h(
             "k": k,
             "d": d,
             "zoo_url": zoo_url or None,
-            "hx": None,
-            "hz": None,
-            "logical_x": None,
-            "logical_z": None,
             "h": canon_H.tolist(),
             "logical": logical.tolist(),
             "is_css": False,
@@ -240,10 +229,6 @@ def compute_code_data_h(
         },
         "qubit_permutation": final_perm,
         "original_matrices": {
-            "hx": None,
-            "hz": None,
-            "logical_x": None,
-            "logical_z": None,
             "h": H.tolist(),
             "logical": orig_logical.tolist(),
         },
@@ -410,7 +395,11 @@ def _is_self_dual(Hx, Hz):
 
 
 def _check_yaml_dedup(data_dir, c_hash, Hx, Hz):
-    """Check data_yaml/codes/ for existing CSS code. Returns (slug, permutation) or (None, None)."""
+    """Check data_yaml/codes/ for existing CSS code. Returns (slug, permutation) or (None, None).
+
+    The stored YAML carries only ``h`` and ``logical``; we recover the reference
+    Hx/Hz via :func:`split_h_to_css` before matching qubit orderings.
+    """
     codes_dir = Path(data_dir) / "codes"
     if not codes_dir.exists():
         return None, None
@@ -418,10 +407,19 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz):
         data = yaml.safe_load(code_file.read_text(encoding="utf-8"))
         if data.get("canonical_hash") == c_hash:
             slug = code_file.stem
-            if data.get("hx") is None or data.get("hz") is None:
-                raise ValueError(f"Code '{slug}' has CSS-format canonical_hash but missing hx/hz")
-            ref_Hx = np.array(data["hx"])
-            ref_Hz = np.array(data["hz"])
+            if data.get("h") is None:
+                raise ValueError(f"Code '{slug}' has CSS-format canonical_hash but missing h")
+            n_stored = data.get("n")
+            if n_stored is None:
+                raise ValueError(f"Code '{slug}' is missing required field 'n'")
+            H_stored = np.array(data["h"], dtype=int)
+            css_split = split_h_to_css(H_stored, n_stored)
+            if css_split is None:
+                raise ValueError(
+                    f"Code '{slug}' has CSS-format canonical_hash but stored h is not "
+                    f"row-CSS decomposable"
+                )
+            ref_Hx, ref_Hz = css_split
             perm = find_qubit_permutation(Hx, Hz, ref_Hx, ref_Hz)
             if perm is None:
                 raise ValueError(

@@ -29,6 +29,7 @@ from scripts.add_circuit.circuit_validate import (  # noqa: E402
     validate_encoding,
     validate_state_prep,
 )
+from scripts.add_circuit.code_identify import split_h_to_css  # noqa: E402
 
 
 @dataclass
@@ -89,26 +90,33 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
 
         code_data = yaml.safe_load(code_yaml_path.read_text())
 
-        # CSS path is required for the existing validators.
-        if code_data.get("hx") is None or code_data.get("hz") is None:
-            if code_data.get("h") is not None:
-                result.checks.append(
-                    CheckResult(
-                        "load_code",
-                        "skipped",
-                        "non-CSS validation not yet supported "
-                        "(only encoding/state-prep validators for CSS)",
-                    )
-                )
-            else:
-                result.checks.append(
-                    CheckResult("load_code", "error", "Code YAML missing both hx/hz and h")
-                )
+        # CSS path is required for the existing validators. Recover Hx/Hz from
+        # the symplectic h when it is row-CSS decomposable; otherwise skip.
+        if code_data.get("h") is None:
+            result.checks.append(CheckResult("load_code", "error", "Code YAML missing h"))
             results.append(result)
             continue
 
-        Hx = np.array(code_data["hx"], dtype=int)
-        Hz = np.array(code_data["hz"], dtype=int)
+        n = code_data.get("n")
+        if n is None:
+            result.checks.append(CheckResult("load_code", "error", "Code YAML missing n"))
+            results.append(result)
+            continue
+
+        css_split = split_h_to_css(np.array(code_data["h"], dtype=int), n)
+        if css_split is None:
+            result.checks.append(
+                CheckResult(
+                    "load_code",
+                    "skipped",
+                    "non-CSS validation not yet supported "
+                    "(only encoding/state-prep validators for CSS)",
+                )
+            )
+            results.append(result)
+            continue
+
+        Hx, Hz = css_split
 
         # Load STIM body
         stim_path = circ_yaml_path.with_suffix(".stim")

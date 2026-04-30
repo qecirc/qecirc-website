@@ -1,16 +1,12 @@
 ---
 import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "../lib/constants";
-import { formatMatrixRows, symplecticToPauli } from "../lib/utils";
+import { formatMatrixRows, splitHToCss, splitLogicalToCss, symplecticToPauli } from "../lib/utils";
 
 interface Props {
   n: number;
+  k: number;
   h: number[][];
   logical: number[][];
-  // CSS view (all four required together; null for non-CSS).
-  hx?: number[][] | null;
-  hz?: number[][] | null;
-  logicalX?: number[][] | null;
-  logicalZ?: number[][] | null;
   // Prefix applied to "Stabilizers" / "Logical operators" headings.
   prefix?: string;
   // Stable id for the toggle group; required when more than one CodeMatrices
@@ -19,20 +15,19 @@ interface Props {
   defaultView?: "pauli" | "symplectic" | "hxhz";
 }
 
-const {
-  n,
-  h,
-  logical,
-  hx = null,
-  hz = null,
-  logicalX = null,
-  logicalZ = null,
-  prefix = "",
-  id = "code-matrices",
-  defaultView = "pauli",
-} = Astro.props;
+const { n, k, h, logical, prefix = "", id = "code-matrices", defaultView = "pauli" } = Astro.props;
 
-const isCss = hx !== null && hz !== null && logicalX !== null && logicalZ !== null;
+// Derive the CSS view from the symplectic h/logical at render time. Both
+// splits must succeed for the Hx/Hz tab to be offered — for a row-CSS h paired
+// with mixed-support logicals we conservatively hide CSS rather than show
+// inconsistent halves.
+const splitH = splitHToCss(h, n);
+const splitLogical = splitLogicalToCss(logical, n, k);
+const isCss = splitH !== null && splitLogical !== null;
+const hx = splitH?.hx ?? null;
+const hz = splitH?.hz ?? null;
+const logicalX = splitLogical?.logicalX ?? null;
+const logicalZ = splitLogical?.logicalZ ?? null;
 const view = !isCss && defaultView === "hxhz" ? "pauli" : defaultView;
 
 // ---------------------------------------------------------------------------
