@@ -12,9 +12,11 @@
 // surface, so we pick a single high-contrast design: dark gate + white "Q"
 // on a solid white background.
 //
-// The "Q" is a hand-traced SVG path rather than a `<text>` element so the
-// output is deterministic across machines (sharp's text rendering depends
-// on the system fonts present, which differ between macOS, Linux CI, etc.).
+// The "Q" is rendered with a `<text>` element to match the typographic feel
+// of `public/favicon.svg`. Sharp/librsvg picks a system font for the family
+// listed below, so the rasterised output is technically host-dependent —
+// re-run on macOS for visual parity with the committed PNGs, and verify
+// before committing if regenerating on a different OS.
 
 import sharp from "sharp";
 import { Buffer } from "node:buffer";
@@ -26,15 +28,12 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 const publicDir = path.join(projectRoot, "public");
 
 // 64-unit viewBox keeps proportions identical to public/favicon.svg.
-// The "Q" glyph is two paths: a filled ring (outer ellipse with the inner
-// counter cut out via fill-rule="evenodd") plus a short diagonal tail.
 const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <rect x="0" y="0" width="64" height="64" fill="#ffffff"/>
   <line x1="0" y1="22" x2="64" y2="22" stroke="#111827" stroke-width="4" stroke-linecap="round"/>
   <line x1="0" y1="42" x2="64" y2="42" stroke="#111827" stroke-width="4" stroke-linecap="round"/>
   <rect x="12" y="10" width="40" height="44" rx="4" fill="#111827"/>
-  <path fill="#ffffff" fill-rule="evenodd" d="M 20 32 C 20 24 25 18 32 18 C 39 18 44 24 44 32 C 44 40 39 46 32 46 C 25 46 20 40 20 32 Z M 26 32 C 26 28 29 24 32 24 C 35 24 38 28 38 32 C 38 36 35 40 32 40 C 29 40 26 36 26 32 Z"/>
-  <path fill="#ffffff" d="M 36 38 L 38 36 L 46 44 L 44 46 Z"/>
+  <text x="32" y="42" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-weight="700" font-size="36" fill="#ffffff">Q</text>
 </svg>`;
 
 const TARGETS = [
