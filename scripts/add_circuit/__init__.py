@@ -34,6 +34,7 @@ from .circuit_validate import (  # noqa: F401
 )
 from .compute import compute_code_data, compute_code_data_h
 from .compute_circuit import compute_circuit_data
+from .ids import next_qec_id
 from .helpers import (  # noqa: F401
     ExistingCodeMatch,
     check_code,
@@ -178,6 +179,7 @@ def add_circuit(
         tool=tool,
         notes=notes,
     )
+    circ_data["qec_id"] = next_qec_id(data_dir)
 
     # Collect files to write
     code_slug = code["slug"]
