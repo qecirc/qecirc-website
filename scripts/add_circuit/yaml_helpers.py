@@ -1,5 +1,7 @@
 """YAML formatting helpers for code and circuit data."""
 
+import os
+import tempfile
 from pathlib import Path
 
 import yaml
@@ -102,10 +104,27 @@ def _convert_matrices(data):
 
 
 def write_file(fpath, content, quiet=False):
-    """Write a file, creating parent directories as needed."""
+    """Write a file atomically as UTF-8, creating parent directories as needed.
+
+    Writes to a temp file in the same directory and renames on success, so a
+    crash mid-write leaves the destination untouched.
+    """
     fpath = Path(fpath)
     fpath.parent.mkdir(parents=True, exist_ok=True)
     if not quiet:
         action = "Overwriting" if fpath.exists() else "Creating"
         print(f"  {action}: {fpath}")
-    fpath.write_text(content)
+
+    tmp_fd, tmp_name = tempfile.mkstemp(prefix=f".{fpath.name}.", suffix=".tmp", dir=fpath.parent)
+    try:
+        with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
+            f.write(content)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_name, fpath)
+    except Exception:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise
