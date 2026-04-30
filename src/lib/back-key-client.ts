@@ -5,15 +5,7 @@
 // history.back() keeps the destination predictable when a user landed
 // on the page via a direct URL.
 
-function isInputFocused(): boolean {
-  const a = document.activeElement;
-  return (
-    a instanceof HTMLInputElement ||
-    a instanceof HTMLTextAreaElement ||
-    a instanceof HTMLSelectElement ||
-    (a instanceof HTMLElement && a.isContentEditable)
-  );
-}
+import { isInputFocused } from "./dom-helpers";
 
 export function initBackKey(backHref: string): () => void {
   function onKeydown(e: KeyboardEvent) {

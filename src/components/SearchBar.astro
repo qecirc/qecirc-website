@@ -10,17 +10,25 @@
     autocomplete="off"
   />
   <kbd aria-hidden="true" class="search-hint pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] text-gray-400 dark:text-gray-500 font-sans">/</kbd>
-  <ul class="search-results absolute right-0 top-full mt-1 w-96 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg hidden z-50 max-h-80 overflow-y-auto">
+  <ul
+    class="search-results absolute right-0 top-full mt-1 w-96 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg hidden z-50 max-h-80 overflow-y-auto"
+    role="listbox"
+    aria-live="polite"
+    aria-label="Search results"
+  >
   </ul>
 </div>
 
 <script>
+  import { isInputFocused } from "../lib/dom-helpers";
+
   const container = document.getElementById("search-bar") as HTMLElement;
   const input = container.querySelector("input") as HTMLInputElement;
   const resultsList = container.querySelector("ul") as HTMLUListElement;
 
   let debounceTimer: ReturnType<typeof setTimeout>;
   let activeIndex = -1;
+  let cachedItems: NodeListOf<HTMLLIElement> | HTMLLIElement[] = [];
 
   function show() {
     resultsList.classList.remove("hidden");
@@ -29,17 +37,25 @@
   function hide() {
     resultsList.classList.add("hidden");
     activeIndex = -1;
+    input.removeAttribute("aria-activedescendant");
   }
 
   function updateActive() {
     const items = resultsList.querySelectorAll("li");
     items.forEach(function (item, i) {
-      if (i === activeIndex) {
+      const active = i === activeIndex;
+      item.setAttribute("aria-selected", active ? "true" : "false");
+      if (active) {
         item.classList.add("bg-gray-100", "dark:bg-gray-800");
       } else {
         item.classList.remove("bg-gray-100", "dark:bg-gray-800");
       }
     });
+    if (activeIndex >= 0 && items[activeIndex]) {
+      input.setAttribute("aria-activedescendant", (items[activeIndex] as HTMLElement).id);
+    } else {
+      input.removeAttribute("aria-activedescendant");
+    }
   }
 
   function navigateTo(href: string) {
@@ -57,6 +73,7 @@
 
     resultsList.innerHTML = "";
     activeIndex = -1;
+    cachedItems = [];
 
     if (results.length === 0) {
       resultsList.innerHTML = '<li class="px-3 py-2 text-sm text-gray-400">No results</li>';
@@ -64,9 +81,12 @@
       return;
     }
 
-    results.forEach(function (item) {
+    results.forEach(function (item, i) {
       const li = document.createElement("li");
       li.className = "px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800";
+      li.id = `search-result-${i}`;
+      li.setAttribute("role", "option");
+      li.setAttribute("aria-selected", "false");
       li.dataset.slug = item.slug;
       li.dataset.href = item.href;
 
@@ -103,6 +123,7 @@
       resultsList.appendChild(li);
     });
 
+    cachedItems = resultsList.querySelectorAll<HTMLLIElement>("li[data-href]");
     show();
   }
 
@@ -115,7 +136,7 @@
   });
 
   input.addEventListener("keydown", function (e) {
-    const items = resultsList.querySelectorAll("li[data-href]");
+    const items = cachedItems;
     if (items.length === 0) return;
 
     if (e.key === "ArrowDown") {
@@ -155,8 +176,7 @@
     w.__searchShortcutBound = true;
     document.addEventListener("keydown", function (e) {
       if (e.key !== "/") return;
-      const active = document.activeElement;
-      if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement || (active instanceof HTMLElement && active.isContentEditable)) return;
+      if (isInputFocused()) return;
       e.preventDefault();
       const allInputs = document.querySelectorAll<HTMLInputElement>(".search-input");
       const visible = Array.from(allInputs).find(function (inp) { return inp.offsetParent !== null; });

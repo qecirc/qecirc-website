@@ -60,6 +60,8 @@ const formatted = lines
 </div>
 
 <script>
+  import { copyToClipboard } from "../lib/dom-helpers";
+
   document.querySelectorAll<HTMLElement>("[data-code-block]:not([data-initialized])").forEach(function (block) {
     block.setAttribute("data-initialized", "");
 
@@ -78,9 +80,10 @@ const formatted = lines
     }
 
     block.querySelectorAll(".copy-btn").forEach(function (btn) {
-      btn.addEventListener("click", function () {
+      btn.addEventListener("click", async function () {
         const code = (btn as HTMLElement).dataset.code || "";
-        navigator.clipboard.writeText(code);
+        const ok = await copyToClipboard(code);
+        if (!ok) return;
         const label = btn.querySelector(".copy-label") as HTMLElement | null;
         if (label) {
           const original = label.textContent;

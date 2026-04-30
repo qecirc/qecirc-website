@@ -189,6 +189,8 @@ const stimFilename = buildStimFilename({
 </div>
 
 <script>
+  import { copyToClipboard, setFavState } from "../lib/dom-helpers";
+
   function initCircuitRows() {
     document.querySelectorAll(".circuit-toggle").forEach(function (btn) {
       if ((btn as HTMLElement).dataset.initialized) return;
@@ -286,11 +288,8 @@ const stimFilename = buildStimFilename({
       btn.addEventListener("click", async function () {
         const qecId = btn.dataset.qecId;
         const url = location.origin + location.pathname + "#" + qecId;
-        try {
-          await navigator.clipboard.writeText(url);
-        } catch {
-          return;
-        }
+        const ok = await copyToClipboard(url);
+        if (!ok) return;
         showCopyCheck(btn, ".permalink-label", ".permalink-check");
       });
     });
@@ -303,11 +302,8 @@ const stimFilename = buildStimFilename({
 
       btn.addEventListener("click", async function () {
         const qecId = btn.dataset.qecId;
-        try {
-          await navigator.clipboard.writeText("#" + qecId);
-        } catch {
-          return;
-        }
+        const ok = await copyToClipboard("#" + qecId);
+        if (!ok) return;
         showCopyCheck(btn, ".id-label", ".id-check");
       });
     });
@@ -321,24 +317,13 @@ const stimFilename = buildStimFilename({
         btn.dataset.favInit = "1";
 
         const qecId = Number(btn.dataset.qecId);
-        const outline = btn.querySelector(".fav-outline") as HTMLElement;
-        const filled = btn.querySelector(".fav-filled") as HTMLElement;
-
-        function setFavState(isFav: boolean) {
-          outline.classList.toggle("hidden", isFav);
-          filled.classList.toggle("hidden", !isFav);
-          btn.classList.toggle("text-red-400", isFav);
-          btn.classList.toggle("dark:text-red-400", isFav);
-          btn.classList.toggle("text-gray-300", !isFav);
-          btn.classList.toggle("dark:text-gray-600", !isFav);
-        }
 
         if (favSet.has(qecId)) {
-          setFavState(true);
+          setFavState(btn, true);
         }
 
         btn.addEventListener("click", function () {
-          setFavState(toggleFavorite(qecId));
+          setFavState(btn, toggleFavorite(qecId));
         });
       });
     });

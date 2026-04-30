@@ -12,6 +12,8 @@
 // All bindings reuse the existing click handlers on the underlying buttons,
 // so no copy/download/format logic is duplicated here.
 
+import { isInputFocused } from "./dom-helpers";
+
 export interface CircuitActionsConfig {
   // Container selector in which to find the active code-block. Omit to
   // disable 1/2/3 + c/y + d (e.g. on `/favorites`, where rows aren't expanded).
@@ -21,16 +23,6 @@ export interface CircuitActionsConfig {
   // Page-level "favorite this circuit" button selector — bound to `f`. Used
   // on the circuit detail page where there is no list-keynav handling f.
   favoriteSelector?: string;
-}
-
-function isInputFocused(): boolean {
-  const a = document.activeElement;
-  return (
-    a instanceof HTMLInputElement ||
-    a instanceof HTMLTextAreaElement ||
-    a instanceof HTMLSelectElement ||
-    (a instanceof HTMLElement && a.isContentEditable)
-  );
 }
 
 export function initCircuitActions(config: CircuitActionsConfig): () => void {
