@@ -37,17 +37,25 @@
   function hide() {
     resultsList.classList.add("hidden");
     activeIndex = -1;
+    input.removeAttribute("aria-activedescendant");
   }
 
   function updateActive() {
     const items = resultsList.querySelectorAll("li");
     items.forEach(function (item, i) {
-      if (i === activeIndex) {
+      const active = i === activeIndex;
+      item.setAttribute("aria-selected", active ? "true" : "false");
+      if (active) {
         item.classList.add("bg-gray-100", "dark:bg-gray-800");
       } else {
         item.classList.remove("bg-gray-100", "dark:bg-gray-800");
       }
     });
+    if (activeIndex >= 0 && items[activeIndex]) {
+      input.setAttribute("aria-activedescendant", (items[activeIndex] as HTMLElement).id);
+    } else {
+      input.removeAttribute("aria-activedescendant");
+    }
   }
 
   function navigateTo(href: string) {
@@ -73,9 +81,12 @@
       return;
     }
 
-    results.forEach(function (item) {
+    results.forEach(function (item, i) {
       const li = document.createElement("li");
       li.className = "px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800";
+      li.id = `search-result-${i}`;
+      li.setAttribute("role", "option");
+      li.setAttribute("aria-selected", "false");
       li.dataset.slug = item.slug;
       li.dataset.href = item.href;
 
