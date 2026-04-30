@@ -115,11 +115,14 @@ const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubi
         type="button"
         id="fav-filter-toggle"
         class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 aria-pressed:text-red-500 dark:aria-pressed:text-red-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 rounded-md cursor-pointer"
-        title="Show favorites only"
+        title="Show favorites only — Shift+F"
         aria-pressed="false"
       >
         <HeartIcon class="w-3.5 h-3.5" />
         <span>Favorites</span>
+        <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+          ⇧F
+        </kbd>
       </button>
     </div>
   </div>
@@ -184,6 +187,7 @@ const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubi
     expandSelfClick: true,
     favoritable: true,
     favoriteSelector: "[data-list-fav]",
+    favoriteFilterSelector: "#fav-filter-toggle",
   });
 
   // 1/2/3 + c/y + d target the currently expanded circuit row (if any);

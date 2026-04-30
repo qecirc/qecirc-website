@@ -18,6 +18,9 @@ export interface CircuitActionsConfig {
   activeContainerSelector?: string;
   // Page-level "download all" button selector. Omit to disable D.
   downloadAllSelector?: string;
+  // Page-level "favorite this circuit" button selector — bound to `f`. Used
+  // on the circuit detail page where there is no list-keynav handling f.
+  favoriteSelector?: string;
 }
 
 function isInputFocused(): boolean {
@@ -59,6 +62,15 @@ export function initCircuitActions(config: CircuitActionsConfig): () => void {
     if (e.key === "D" && config.downloadAllSelector) {
       const btn = document.querySelector<HTMLElement>(config.downloadAllSelector);
       if (btn && !btn.classList.contains("hidden")) {
+        e.preventDefault();
+        btn.click();
+      }
+      return;
+    }
+
+    if (e.key === "f" && config.favoriteSelector) {
+      const btn = document.querySelector<HTMLElement>(config.favoriteSelector);
+      if (btn) {
         e.preventDefault();
         btn.click();
       }

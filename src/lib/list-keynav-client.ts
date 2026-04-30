@@ -25,6 +25,8 @@ export interface ListKeynavConfig {
   // If true, f triggers a click on `favoriteSelector` inside the focused row.
   favoritable?: boolean;
   favoriteSelector?: string;
+  // Optional page-level "favorites filter" button — Shift+F clicks it.
+  favoriteFilterSelector?: string;
   // Attribute on the row used to match the URL fragment for initial focus
   // (so /codes/foo#42 focuses the row whose [hashAttr] === "42").
   // Default: "id".
@@ -163,6 +165,15 @@ export function initListKeynav(config: ListKeynavConfig): () => void {
         e.preventDefault();
         clickChild(rows[idx], config.favoriteSelector);
         break;
+      case "F": {
+        if (!config.favoriteFilterSelector) return;
+        const btn = document.querySelector<HTMLElement>(config.favoriteFilterSelector);
+        if (btn) {
+          e.preventDefault();
+          btn.click();
+        }
+        break;
+      }
     }
   }
 
