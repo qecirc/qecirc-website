@@ -97,12 +97,24 @@ export function initListKeynav(config: ListKeynavConfig): () => void {
     if (rows.length === 0) return;
     const idx = focusedIndex(rows);
 
+    // Caps Lock produces uppercase keys without Shift. Without this
+    // normalisation, capslock + d/f/g would falsely trigger Shift+D/F/G.
+    let key = e.key;
+    if (key.length === 1 && !e.shiftKey && key.toLowerCase() !== key) {
+      key = key.toLowerCase();
+    }
+
+    // Action keys must only fire when the row itself is focused — otherwise
+    // pressing Space/Enter on a focused child button or link (favorite,
+    // tag, permalink) would override its native behaviour.
+    const rowDirectlyFocused = idx >= 0 && document.activeElement === rows[idx];
+
     // The vim 'gg' two-key sequence: any key other than 'g' must reset the
     // pending state, otherwise `g`, j, g (within 500 ms) would still teleport
     // to the first row mid-navigation.
-    if (e.key !== "g") lastGTime = 0;
+    if (key !== "g") lastGTime = 0;
 
-    switch (e.key) {
+    switch (key) {
       case "j":
       case "ArrowDown":
         e.preventDefault();
@@ -134,20 +146,20 @@ export function initListKeynav(config: ListKeynavConfig): () => void {
         break;
       }
       case "Enter":
-        if (idx < 0) return;
+        if (idx < 0 || !rowDirectlyFocused) return;
         e.preventDefault();
         clickChild(rows[idx], config.enterSelector);
         break;
       case "l":
       case "ArrowRight":
       case " ":
-        if (!config.expandable || idx < 0) return;
+        if (!config.expandable || idx < 0 || !rowDirectlyFocused) return;
         e.preventDefault();
         toggleExpand(rows[idx]);
         break;
       case "h":
       case "ArrowLeft":
-        if (!config.expandable || idx < 0) return;
+        if (!config.expandable || idx < 0 || !rowDirectlyFocused) return;
         if (isExpanded(rows[idx])) {
           e.preventDefault();
           toggleExpand(rows[idx]);
@@ -161,12 +173,12 @@ export function initListKeynav(config: ListKeynavConfig): () => void {
         }
         break;
       case "f":
-        if (!config.favoritable || idx < 0) return;
+        if (!config.favoritable || idx < 0 || !rowDirectlyFocused) return;
         e.preventDefault();
         clickChild(rows[idx], config.favoriteSelector);
         break;
       case "F": {
-        if (!config.favoriteFilterSelector) return;
+        if (!e.shiftKey || !config.favoriteFilterSelector) return;
         const btn = document.querySelector<HTMLElement>(config.favoriteFilterSelector);
         if (btn) {
           e.preventDefault();

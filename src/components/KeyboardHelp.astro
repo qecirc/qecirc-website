@@ -78,18 +78,30 @@ const SHORTCUTS: { keys: string[]; action: string }[] = [
   const overlay = document.getElementById("keyboard-help");
   if (overlay) {
     const backdrop = overlay.querySelector(".kbd-help-backdrop");
-    const closeBtn = overlay.querySelector(".kbd-help-close");
+    const closeBtn = overlay.querySelector<HTMLButtonElement>(".kbd-help-close");
+    let previouslyFocused: HTMLElement | null = null;
 
     function isVisible(): boolean {
       return !overlay!.classList.contains("hidden");
     }
 
     function show(): void {
+      // Remember which element the user was on, then move focus into the
+      // dialog so it can be dismissed by keyboard and Tab is contained.
+      previouslyFocused = document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
       overlay!.classList.remove("hidden");
+      closeBtn?.focus();
     }
 
     function hide(): void {
       overlay!.classList.add("hidden");
+      // Restore focus to whatever the user was on before opening the help.
+      if (previouslyFocused && document.contains(previouslyFocused)) {
+        previouslyFocused.focus();
+      }
+      previouslyFocused = null;
     }
 
     function isInputFocused(): boolean {
@@ -113,6 +125,14 @@ const SHORTCUTS: { keys: string[]; action: string }[] = [
           // listener that pages register in their own <script>.
           e.stopImmediatePropagation();
           hide();
+          return;
+        }
+        // Trap Tab inside the modal — only the close button is interactive,
+        // so any Tab keeps focus on it rather than leaking to the page.
+        if (e.key === "Tab" && isVisible()) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          closeBtn?.focus();
           return;
         }
         if (e.key === "?" && !isInputFocused() && !e.metaKey && !e.ctrlKey && !e.altKey) {

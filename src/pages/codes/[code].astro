@@ -188,6 +188,11 @@ const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubi
     favoritable: true,
     favoriteSelector: "[data-list-fav]",
     favoriteFilterSelector: "#fav-filter-toggle",
+    // The id="<qec_id>" lives on the wrapping div, not on .circuit-toggle
+    // (= the focusable row). Match the hash via data-qec-id which IS on the
+    // toggle, so /codes/foo#42 focuses (and the existing expandFromHash
+    // handler expands) the right row.
+    hashAttr: "data-qec-id",
   });
 
   // 1/2/3 + c/y + d target the currently expanded circuit row (if any);

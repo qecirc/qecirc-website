@@ -59,7 +59,14 @@ export function initCircuitActions(config: CircuitActionsConfig): () => void {
     if (isInputFocused()) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
 
-    if (e.key === "D" && config.downloadAllSelector) {
+    // Normalise unshifted uppercase (Caps Lock) to lowercase so capslock + d
+    // doesn't falsely trigger Shift+D ("download all").
+    let key = e.key;
+    if (key.length === 1 && !e.shiftKey && key.toLowerCase() !== key) {
+      key = key.toLowerCase();
+    }
+
+    if (key === "D" && e.shiftKey && config.downloadAllSelector) {
       const btn = document.querySelector<HTMLElement>(config.downloadAllSelector);
       if (btn && !btn.classList.contains("hidden")) {
         e.preventDefault();
@@ -68,7 +75,7 @@ export function initCircuitActions(config: CircuitActionsConfig): () => void {
       return;
     }
 
-    if (e.key === "f" && config.favoriteSelector) {
+    if (key === "f" && config.favoriteSelector) {
       const btn = document.querySelector<HTMLElement>(config.favoriteSelector);
       if (btn) {
         e.preventDefault();
@@ -80,7 +87,7 @@ export function initCircuitActions(config: CircuitActionsConfig): () => void {
     const container = findActiveContainer();
     if (!container) return;
 
-    switch (e.key) {
+    switch (key) {
       case "1":
       case "2":
       case "3": {
