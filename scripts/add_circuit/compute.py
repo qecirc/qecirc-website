@@ -153,15 +153,16 @@ def compute_code_data_h(
     H has shape (m, 2n): the first n columns are the X-half, the last n the
     Z-half. Auto-detects CSS structure: if H is CSS-decomposable (every RREF
     row is purely X or purely Z), delegates to :func:`compute_code_data` with
-    the recovered (Hx, Hz) so the returned dict carries the full CSS view and
-    the `CSS` tag. Otherwise stores only the symplectic h/logical fields.
+    the recovered (Hx, Hz) so the result picks up the `CSS` tag and the
+    canonical CSS-form h/logical. Storage is always symplectic-only
+    (h, logical); the Hx/Hz/Lx/Lz view is derived in the UI at render time.
     """
     H = np.asarray(H, dtype=int) % 2
     if H.shape[1] != 2 * n:
         raise ValueError(f"Expected H with 2n={2 * n} columns, got {H.shape[1]}")
 
     # Try CSS detection first; if the row space is CSS-decomposable, route
-    # through the CSS path so we get hx/hz/lx/lz populated and the CSS tag.
+    # through the CSS path so we get the CSS tag and the canonical-form h.
     css_split = split_h_to_css(H, n)
     if css_split is not None:
         Hx, Hz = css_split
