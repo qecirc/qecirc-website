@@ -57,11 +57,11 @@ After any of these commands, run `npm run db:create` to restore data from YAML, 
 
 The `circuit_originals` table stores pre-canonicalization data for each circuit:
 
-| Column             | Description                                                |
-| ------------------ | ---------------------------------------------------------- |
-| `circuit_id`       | FK to `circuits` (unique — one row per circuit)            |
-| `original_stim`    | STIM circuit text as submitted                             |
-| `original_h`       | JSON-encoded symplectic stabilizer matrix as submitted     |
-| `original_logical` | JSON-encoded symplectic logical operators as submitted     |
+| Column             | Description                                            |
+| ------------------ | ------------------------------------------------------ |
+| `circuit_id`       | FK to `circuits` (unique — one row per circuit)        |
+| `original_stim`    | STIM circuit text as submitted                         |
+| `original_h`       | JSON-encoded symplectic stabilizer matrix as submitted |
+| `original_logical` | JSON-encoded symplectic logical operators as submitted |
 
 The Hx/Hz/Lx/Lz CSS view is derived from `original_h` / `original_logical` at render time; it is not stored. This data is populated from `data_yaml/circuits/originals/` during `npm run db:create` and displayed on the circuit detail page (`/circuits/[qec_id]`) under "Original submission (before canonicalization)".

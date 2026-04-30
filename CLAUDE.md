@@ -4,7 +4,7 @@
 
 **QECirc** is a community-driven web library for quantum error correction (QEC) circuits.
 Users can browse and discover circuits, and contribute new ones by opening a GitHub Issue.
-Circuits are stored in an extended STIM format (see `docs/circuit-format.md`).
+Circuits are stored in STIM format and converted to QASM/Cirq for display.
 
 ---
 
@@ -180,8 +180,8 @@ chore(deps): update astro to v5.5.0
 The project version lives in `package.json` and follows a pre-1.0 SemVer
 convention (currently `0.x.y`):
 
-| Bump         | When to use                                                                                               |
-| ------------ | --------------------------------------------------------------------------------------------------------- |
+| Bump                              | When to use                                                                                          |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | **minor** (`0.x.0` → `0.(x+1).0`) | Breaking changes — YAML schema changes, DB migrations that drop/rename columns, breaking API changes |
 | **patch** (`0.x.y` → `0.x.(y+1)`) | Bug fixes, cosmetic UI changes, doc updates, non-breaking refactors                                  |
 
