@@ -1,22 +1,22 @@
-// Regenerate the raster icons (apple-touch-icon, favicon-96) from a shared
-// SVG so they stay in sync.
+// Regenerate the apple-touch-icon (180×180 PNG).
 //
 // Usage: node scripts/icons/generate.mjs
 //
-// The design intentionally departs from `public/favicon.svg`'s
-// prefers-color-scheme switch: those colour-scheme media queries are
-// evaluated against the OS preference (not the page or tab-strip), so the
-// favicon often ends up rendered against a mismatched background. The
-// raster icons render in many third-party contexts (iOS home screen,
-// Google search results) where we have no control over the surrounding
-// surface, so we pick a single high-contrast design: dark gate + white "Q"
-// on a solid white background.
+// Why only this file? `apple-touch-icon.png` is what Google's search-result
+// favicon panel picks (largest available raster icon) and what iOS uses
+// for the home screen — both contexts render against an opaque background,
+// so we want a SOLID WHITE backdrop with the dark gate inside. The rest of
+// the icon set is hand-managed:
 //
-// The "Q" is rendered with a `<text>` element to match the typographic feel
-// of `public/favicon.svg`. Sharp/librsvg picks a system font for the family
-// listed below, so the rasterised output is technically host-dependent —
-// re-run on macOS for visual parity with the committed PNGs, and verify
-// before committing if regenerating on a different OS.
+//   - `favicon.svg` uses an inline `prefers-color-scheme` media query and
+//     adapts to dark / light browser themes; modern browsers prefer it.
+//   - `favicon.ico` is the legacy fallback.
+//
+// The "Q" is rendered with a `<text>` element to match the typographic
+// feel of `favicon.svg`. Sharp/librsvg picks a system font, so the
+// rasterised output is host-dependent — re-run on macOS for visual
+// parity with the committed PNG, and verify before committing if
+// regenerating on a different OS.
 
 import sharp from "sharp";
 import { Buffer } from "node:buffer";
@@ -36,10 +36,7 @@ const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="
   <text x="32" y="42" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-weight="700" font-size="36" fill="#ffffff">Q</text>
 </svg>`;
 
-const TARGETS = [
-  { file: "apple-touch-icon.png", size: 180 },
-  { file: "favicon-96.png", size: 96 },
-];
+const TARGETS = [{ file: "apple-touch-icon.png", size: 180 }];
 
 const svgBuffer = Buffer.from(SVG);
 
@@ -53,4 +50,4 @@ for (const { file, size } of TARGETS) {
   console.log(`  ${file}: ${size}×${size}, ${stat.size} bytes`);
 }
 
-console.log("\nDone. Commit `public/apple-touch-icon.png` and `public/favicon-96.png`.");
+console.log("\nDone. Commit `public/apple-touch-icon.png`.");
