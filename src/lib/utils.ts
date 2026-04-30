@@ -1,10 +1,32 @@
-export function safeParseMatrix(json: string | null): number[][] | null {
+/**
+ * Parse a JSON-encoded 2D integer matrix.
+ *
+ * Optional `expectedRows` / `expectedCols` enforce shape. Values are also
+ * checked to be finite numbers; symplectic matrices should additionally pass
+ * 0/1 — caller can verify post-parse.
+ */
+export function safeParseMatrix(
+  json: string | null | undefined,
+  expectedRows?: number,
+  expectedCols?: number,
+): number[][] | null {
   if (!json) return null;
+  let parsed: unknown;
   try {
-    return JSON.parse(json);
+    parsed = JSON.parse(json);
   } catch {
     return null;
   }
+  if (!Array.isArray(parsed)) return null;
+  if (expectedRows !== undefined && parsed.length !== expectedRows) return null;
+  for (const row of parsed) {
+    if (!Array.isArray(row)) return null;
+    if (expectedCols !== undefined && row.length !== expectedCols) return null;
+    for (const v of row) {
+      if (typeof v !== "number" || !Number.isFinite(v)) return null;
+    }
+  }
+  return parsed as number[][];
 }
 
 // Convert a symplectic stabilizer matrix (rows × 2n) to Pauli strings.
