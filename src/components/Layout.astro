@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import SearchBar from "./SearchBar.astro";
 import CiteToast from "./CiteToast.astro";
+import KeyboardHelp from "./KeyboardHelp.astro";
 import { HEART_PATH } from "../lib/constants";
 import { countAllCircuits } from "../lib/queries";
 import pkg from "../../package.json";
@@ -198,5 +199,6 @@ const sunIconSvg = `<svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" f
       }
     </script>
     <CiteToast />
+    <KeyboardHelp />
   </body>
 </html>

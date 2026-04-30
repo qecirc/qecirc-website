@@ -10,12 +10,17 @@ import Layout from "../components/Layout.astro";
     <button
       id="download-all-favs"
       class="hidden text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
-      title="Download all favorite circuits (.stim)"
+      title="Download all favorite circuits — Shift+D"
       aria-label="Download all favorite circuits"
     >
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-      </svg>
+      <span class="inline-flex items-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+        </svg>
+        <kbd class="inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+          ⇧D
+        </kbd>
+      </span>
     </button>
   </div>
 
@@ -54,6 +59,11 @@ import Layout from "../components/Layout.astro";
 
 <script>
   import { getFavorites, toggleFavorite, exportFavorites, importFavorites } from "../lib/favorites-client";
+  import { initListKeynav } from "../lib/list-keynav-client";
+  import { initCircuitActions } from "../lib/circuit-actions-client";
+
+  // No expandable bodies on this page; only Shift+D applies (download all).
+  initCircuitActions({ downloadAllSelector: "#download-all-favs" });
 
   interface FavCircuit {
     qec_id: number;
@@ -120,14 +130,17 @@ import Layout from "../components/Layout.astro";
 
           for (const circuit of codeCircuits) {
             const row = document.createElement("div");
-            row.className = "rounded border border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3 flex-wrap";
+            row.className = "rounded border border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3 flex-wrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
             row.dataset.qecId = String(circuit.qec_id);
+            row.tabIndex = 0;
+            row.setAttribute("data-list-row", "");
 
             // Unfavorite button
             const unfavBtn = document.createElement("button");
             unfavBtn.className = "text-red-400 hover:text-red-500 cursor-pointer shrink-0";
             unfavBtn.title = "Remove from favorites";
             unfavBtn.setAttribute("aria-label", "Remove from favorites");
+            unfavBtn.setAttribute("data-list-fav", "");
             unfavBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="currentColor" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" /></svg>`;
             unfavBtn.addEventListener("click", function () {
               toggleFavorite(circuit.qec_id);
@@ -173,6 +186,7 @@ import Layout from "../components/Layout.astro";
             link.href = `/circuits/${circuit.qec_id}`;
             link.className = "font-medium text-sm hover:underline inline-flex items-center gap-1";
             link.textContent = circuit.name;
+            link.setAttribute("data-list-link", "");
             const arrow = document.createElement("svg");
             arrow.setAttribute("class", "w-3 h-3 shrink-0 text-gray-400");
             arrow.setAttribute("fill", "none");
@@ -205,6 +219,13 @@ import Layout from "../components/Layout.astro";
 
         content.classList.remove("hidden");
         downloadBtn.classList.remove("hidden");
+
+        initListKeynav({
+          rowSelector: "[data-list-row]",
+          enterSelector: "[data-list-link]",
+          favoritable: true,
+          favoriteSelector: "[data-list-fav]",
+        });
       })
       .catch((err) => {
         console.error("favorites: fetch failed", err);
