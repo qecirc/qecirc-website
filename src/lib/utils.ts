@@ -1,9 +1,9 @@
 /**
- * Parse a JSON-encoded 2D integer matrix.
+ * Parse a JSON-encoded 2D numeric matrix.
  *
  * Optional `expectedRows` / `expectedCols` enforce shape. Values are also
- * checked to be finite numbers; symplectic matrices should additionally pass
- * 0/1 — caller can verify post-parse.
+ * checked to be finite numbers; callers that require integers or symplectic
+ * 0/1 entries should verify those constraints post-parse.
  */
 export function safeParseMatrix(
   json: string | null | undefined,
