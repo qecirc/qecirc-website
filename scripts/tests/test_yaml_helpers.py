@@ -9,7 +9,10 @@ def test_write_file_explicit_utf8(tmp_path: Path) -> None:
     """write_file must write UTF-8 regardless of platform default encoding."""
     target = tmp_path / "ünïcödé.yaml"
     write_file(target, "name: étoilé\n", quiet=True)
-    assert target.read_bytes() == b"name: \xc3\xa9toil\xc3\xa9\n"
+    # Substring check (rather than exact-bytes) avoids platform newline
+    # translation differences while still proving UTF-8 encoding of "étoilé".
+    raw = target.read_bytes()
+    assert b"\xc3\xa9toil\xc3\xa9" in raw, f"Expected UTF-8 'étoilé' in: {raw!r}"
 
 
 def test_write_file_atomic_no_partial(tmp_path: Path, monkeypatch) -> None:

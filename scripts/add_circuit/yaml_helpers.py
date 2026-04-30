@@ -116,8 +116,9 @@ def write_file(fpath, content, quiet=False):
         print(f"  {action}: {fpath}")
 
     tmp_fd, tmp_name = tempfile.mkstemp(prefix=f".{fpath.name}.", suffix=".tmp", dir=fpath.parent)
+    os.close(tmp_fd)
     try:
-        with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
+        with open(tmp_name, "w", encoding="utf-8") as f:
             f.write(content)
             f.flush()
             os.fsync(f.fileno())
