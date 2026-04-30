@@ -36,7 +36,7 @@ def test_add_circuit_allocates_qec_id(tmp_path: Path) -> None:
     circ_yaml_path = next(
         p
         for p in result.files_written
-        if p.endswith(".yaml") and "/circuits/" in p and "originals" not in p
+        if p.endswith(".yaml") and "circuits" in Path(p).parts and "originals" not in Path(p).parts
     )
     data = yaml.safe_load(Path(circ_yaml_path).read_text(encoding="utf-8"))
 
@@ -68,12 +68,12 @@ def test_add_circuit_qec_id_increments(tmp_path: Path) -> None:
     p1 = next(
         p
         for p in r1.files_written
-        if p.endswith(".yaml") and "/circuits/" in p and "originals" not in p
+        if p.endswith(".yaml") and "circuits" in Path(p).parts and "originals" not in Path(p).parts
     )
     p2 = next(
         p
         for p in r2.files_written
-        if p.endswith(".yaml") and "/circuits/" in p and "originals" not in p
+        if p.endswith(".yaml") and "circuits" in Path(p).parts and "originals" not in Path(p).parts
     )
     id1 = yaml.safe_load(Path(p1).read_text(encoding="utf-8"))["qec_id"]
     id2 = yaml.safe_load(Path(p2).read_text(encoding="utf-8"))["qec_id"]
