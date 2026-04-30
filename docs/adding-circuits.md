@@ -238,7 +238,7 @@ npm run db:create && npm run dev  # Rebuild database and restart
 - Compact STIM, QASM, and Cirq format conversions
 - Crumble and Quirk visualization URLs
 - **Circuit ID (`qec_id`)**: auto-assigned as `max(existing IDs) + 1` — permanent, never reused
-- **Original submission data**: the pipeline always preserves the original (pre-canonicalization) STIM circuit and contributor-provided check matrices in `data_yaml/circuits/originals/`. These are displayed on the circuit detail page under "Original submission (before canonicalization)".
+- **Original submission data**: the pipeline always preserves the original (pre-canonicalization) STIM circuit and the contributor-provided symplectic stabilizer / logical matrices in `data_yaml/circuits/originals/`. These are displayed on the circuit detail page under "Original submission (before canonicalization)"; the Hx/Hz/Lx/Lz view is derived in the UI.
 - Dedup: if the code already exists, the pipeline detects qubit ordering differences and relabels the circuit to match. Check `AddCircuitResult.qubit_permutation` to see if relabeling was applied (`None` = no relabeling, `list` = permutation applied)
 - Use `find_existing_code_full()` to check for qubit permutations before generating files
 
@@ -253,12 +253,20 @@ k: 1
 d: 3
 zoo_url: https://errorcorrectionzoo.org/c/steane
 canonical_hash: d326fbcca125a5c717a7d4d1d0b4acc8da8e3b9d3ad123bfc705bc14d85f9ca4
-hx: [[1, 1, 0, 0, 1, 1, 0], [1, 0, 1, 0, 1, 0, 1], [0, 0, 0, 1, 1, 1, 1]]
-hz: [[1, 1, 0, 0, 1, 1, 0], [1, 0, 1, 0, 1, 0, 1], [0, 0, 0, 1, 1, 1, 1]]
-logical_x: [[1, 1, 1, 1, 1, 1, 1]]
-logical_z: [[1, 1, 1, 1, 1, 1, 1]]
+h:
+  - [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+  - [0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0]
+  - [0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0]
+  - [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1]
+  - [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1]
+  - [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
+logical:
+  - [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0]
+  - [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]
 tags: [CSS, stabilizer, color-code]
 ```
+
+`h` is the symplectic stabilizer matrix of shape `(n−k) × 2n`: columns `0..n-1` are the X-half, columns `n..2n-1` are the Z-half. `logical` has shape `2k × 2n`; for CSS codes the top `k` rows are X-bar logicals (Z-half zero) and the bottom `k` rows are Z-bar logicals (X-half zero). The Hx/Hz/Lx/Lz view shown in the UI is derived from `h` and `logical` at render time.
 
 ### Circuit (`data_yaml/circuits/<code-slug>--<circuit-slug>.yaml`)
 
@@ -285,13 +293,15 @@ Body files (`.stim`, `.qasm`, `.cirq`) share the same stem as the circuit YAML.
 For each circuit, the pipeline generates two files preserving the original (pre-canonicalization) data:
 
 - `<code-slug>--<circuit-slug>.original.stim` — the STIM circuit as submitted
-- `<code-slug>--<circuit-slug>.original.yaml` — the contributor-provided check matrices:
+- `<code-slug>--<circuit-slug>.original.yaml` — the contributor's symplectic stabilizer / logical matrices, before any canonicalization or qubit relabeling:
 
 ```yaml
-hx: [[1, 0, 1, 0, 1, 0, 1], ...]
-hz: [[1, 0, 1, 0, 1, 0, 1], ...]
-logical_x: [[1, 1, 1, 1, 1, 1, 1]]
-logical_z: [[1, 1, 1, 1, 1, 1, 1]]
+h:
+  - [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+  - ...
+logical:
+  - [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0]
+  - [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]
 ```
 
 These files are loaded into the `circuit_originals` database table during `npm run db:create` and displayed on the circuit detail page (`/circuits/[qec_id]`).

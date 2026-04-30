@@ -34,10 +34,12 @@ Circuits also have numeric **metrics** for filtering: `gate_count`, `depth`, `qu
 ```
 codes
   id, name, slug, n, k, d, zoo_url,
-  hx, hz, logical_x, logical_z, canonical_hash, created_at
+  h, logical, canonical_hash, created_at
   -- n, k, d: code parameters [[n,k,d]] for direct querying/sorting
   -- zoo_url: optional link to QEC Zoo
-  -- hx, hz, logical_x, logical_z: JSON-encoded matrices (e.g. [[1,0],[0,1]])
+  -- h: symplectic stabilizer matrix, shape (n−k) × 2n, JSON-encoded
+  -- logical: symplectic logical operators, shape 2k × 2n, JSON-encoded
+  -- For CSS codes, the Hx/Hz/Lx/Lz view is derived in the UI via splitHToCss
   -- canonical_hash: SHA256 of canonical form for dedup (indexed)
 
 tools
@@ -61,9 +63,9 @@ circuit_bodies
 
 circuit_originals
   id, circuit_id → circuits (UNIQUE),
-  original_stim, original_hx, original_hz, original_logical_x, original_logical_z
+  original_stim, original_h, original_logical
   -- pre-canonicalization data as submitted by contributors
-  -- matrix fields are JSON-encoded (same format as codes.hx/hz)
+  -- matrix fields are JSON-encoded (same format as codes.h / codes.logical)
   -- populated from data_yaml/circuits/originals/
 
 tags
@@ -78,8 +80,9 @@ taggings
 
 ## Circuit Format
 
-Circuits use an extended STIM format.
-See `docs/circuit-format.md` for supported instructions and any extensions.
+Circuits are stored in STIM format and converted to QASM/Cirq for display.
+The STIM body is the canonical source; QASM/Cirq are generated as alternate
+views in `circuit_bodies`.
 
 ---
 
@@ -118,7 +121,7 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 ├── src/
 │   ├── pages/             # Astro pages (routes)
 │   ├── components/        # Reusable Astro/UI components
-│   ├── lib/               # DB client, STIM parser, helpers
+│   ├── lib/               # DB client, helpers, client-side scripts
 │   │   └── queries/       # Domain-specific DB query modules
 │   └── types/             # Shared TypeScript types
 ├── data/
@@ -132,9 +135,9 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 ├── .github/
 │   └── ISSUE_TEMPLATE/    # Circuit submission issue template
 ├── docs/
-│   ├── database.md        # Database & dev server management
-│   ├── adding-circuits.md # Circuit ingestion workflow + YAML format reference
-│   └── circuit-format.md  # Extended STIM format spec (extensions beyond tsim only)
+│   ├── adding-circuits-agent.md # Agent-assisted ingestion workflow (/add-circuit)
+│   ├── adding-circuits.md       # Manual ingestion workflow + YAML format reference
+│   └── database.md              # Database & dev server management
 ├── scripts/
 │   ├── add_circuit/       # Circuit ingestion modules (Python)
 │   ├── db/                # DB creation, migration, and reset scripts (Node)
@@ -172,6 +175,20 @@ chore(deps): update astro to v5.5.0
 
 ---
 
+## Versioning
+
+The project version lives in `package.json` and follows a pre-1.0 SemVer
+convention (currently `0.x.y`):
+
+| Bump         | When to use                                                                                               |
+| ------------ | --------------------------------------------------------------------------------------------------------- |
+| **minor** (`0.x.0` → `0.(x+1).0`) | Breaking changes — YAML schema changes, DB migrations that drop/rename columns, breaking API changes |
+| **patch** (`0.x.y` → `0.x.(y+1)`) | Bug fixes, cosmetic UI changes, doc updates, non-breaking refactors                                  |
+
+Bump the version in the same PR that ships the change.
+
+---
+
 ## Licensing
 
 This project uses a dual-license model:
@@ -203,7 +220,7 @@ npm run lint                        # ESLint
 npm run format:check                # Check Prettier formatting
 npm run format                      # Auto-format with Prettier
 npm run validate:yaml               # Validate data_yaml/ schemas
-npm run validate:circuits           # Validate encoding/state-prep circuits against stored Hx/Hz
+npm run validate:circuits           # Validate encoding/state-prep circuits against the code's check matrices (derived from h)
 uv run ruff check scripts/          # Lint Python code
 uv run ruff format scripts/          # Format Python code
 npm run db:create                   # Build database from data_yaml/ (restart dev server after)
@@ -232,6 +249,5 @@ After editing YAML files: `npm run db:create && npm run dev` (dev server caches 
 - Add npm dependencies without explicit justification in the PR description
 - Use platform-specific deployment APIs
 - Implement user authentication — submission is via GitHub Issues only
-- Modify the STIM parser without updating `docs/circuit-format.md`
 - Commit directly to `main` — all changes go through a pull request
 - Store secrets or API tokens in code or committed `.env` files

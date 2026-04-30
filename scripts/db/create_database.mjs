@@ -35,8 +35,8 @@ const stmts = {
     INSERT INTO tools (name, slug, description, homepage_url, github_url)
     VALUES (?, ?, ?, ?, ?)`),
   insertCode: db.prepare(`
-    INSERT INTO codes (name, slug, n, k, d, zoo_url, hx, hz, logical_x, logical_z, h, logical, canonical_hash)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+    INSERT INTO codes (name, slug, n, k, d, zoo_url, h, logical, canonical_hash)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertCircuit: db.prepare(`
     INSERT INTO circuits (qec_id, code_id, name, slug, notes, source, gate_count, two_qubit_gate_count, depth, qubit_count, crumble_url, quirk_url, tool_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
@@ -44,8 +44,8 @@ const stmts = {
     INSERT INTO circuit_bodies (circuit_id, format, body)
     VALUES (?, ?, ?)`),
   insertOriginal: db.prepare(`
-    INSERT INTO circuit_originals (circuit_id, original_stim, original_hx, original_hz, original_logical_x, original_logical_z, original_h, original_logical)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`),
+    INSERT INTO circuit_originals (circuit_id, original_stim, original_h, original_logical)
+    VALUES (?, ?, ?, ?)`),
   insertTag: db.prepare(`INSERT OR IGNORE INTO tags (name) VALUES (?)`),
   getTagId: db.prepare(`SELECT id FROM tags WHERE name = ?`),
   insertTagging: db.prepare(`
@@ -138,10 +138,6 @@ try {
         data.k,
         data.d || null,
         data.zoo_url || null,
-        data.hx == null ? null : JSON.stringify(data.hx),
-        data.hz == null ? null : JSON.stringify(data.hz),
-        data.logical_x == null ? null : JSON.stringify(data.logical_x),
-        data.logical_z == null ? null : JSON.stringify(data.logical_z),
         data.h == null ? null : JSON.stringify(data.h),
         data.logical == null ? null : JSON.stringify(data.logical),
         data.canonical_hash || null,
@@ -260,10 +256,6 @@ try {
         stmts.insertOriginal.run(
           circuitId,
           origStim,
-          origData.hx == null ? null : JSON.stringify(origData.hx),
-          origData.hz == null ? null : JSON.stringify(origData.hz),
-          origData.logical_x == null ? null : JSON.stringify(origData.logical_x),
-          origData.logical_z == null ? null : JSON.stringify(origData.logical_z),
           origData.h == null ? null : JSON.stringify(origData.h),
           origData.logical == null ? null : JSON.stringify(origData.logical),
         );

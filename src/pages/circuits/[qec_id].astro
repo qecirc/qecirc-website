@@ -45,10 +45,6 @@ const stimFilename = buildStimFilename({
   qubitCount: circuit.qubit_count,
 });
 
-const origHx = original ? safeParseMatrix(original.original_hx) : null;
-const origHz = original ? safeParseMatrix(original.original_hz) : null;
-const origLx = original ? safeParseMatrix(original.original_logical_x) : null;
-const origLz = original ? safeParseMatrix(original.original_logical_z) : null;
 const origH = original ? safeParseMatrix(original.original_h) : null;
 const origLogical = original ? safeParseMatrix(original.original_logical) : null;
 const hasOriginalMatrices = !!(origH && origLogical);
@@ -157,12 +153,9 @@ const hasOriginalMatrices = !!(origH && origLogical);
             <CodeMatrices
               id="original-matrices"
               n={circuit.code_n}
+              k={circuit.code_k}
               h={origH}
               logical={origLogical}
-              hx={origHx}
-              hz={origHz}
-              logicalX={origLx}
-              logicalZ={origLz}
               prefix="Original "
             />
           )}

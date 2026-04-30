@@ -31,10 +31,6 @@ if (!code) {
 const tags = getTagsFor("code", code.id);
 const params = formatCodeParams(code);
 
-const hx = safeParseMatrix(code.hx);
-const hz = safeParseMatrix(code.hz);
-const logicalX = safeParseMatrix(code.logical_x);
-const logicalZ = safeParseMatrix(code.logical_z);
 const h = safeParseMatrix(code.h);
 const logical = safeParseMatrix(code.logical);
 const hasMatrices = !!(h && logical);
@@ -84,12 +80,9 @@ const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubi
         <CodeMatrices
           id="code-matrices"
           n={code.n}
+          k={code.k}
           h={h}
           logical={logical}
-          hx={hx}
-          hz={hz}
-          logicalX={logicalX}
-          logicalZ={logicalZ}
         />
       </CollapsibleSection>
     </div>

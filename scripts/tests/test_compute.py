@@ -68,13 +68,9 @@ class TestComputeCodeData:
     def test_logicals_shape(self, steane_H):
         result = compute_code_data(steane_H, steane_H, d=3)
         code = result["code"]
-        Lx = np.array(code["logical_x"])
-        Lz = np.array(code["logical_z"])
-        # k=1, so 1 logical operator each
-        assert Lx.shape[0] == 1
-        assert Lz.shape[0] == 1
-        assert Lx.shape[1] == 7
-        assert Lz.shape[1] == 7
+        # k=1, n=7, so symplectic logical has shape (2k, 2n) = (2, 14).
+        logical = np.array(code["logical"])
+        assert logical.shape == (2, 14)
 
     def test_canonical_hash_present(self, steane_H):
         result = compute_code_data(steane_H, steane_H, d=3)
@@ -125,13 +121,14 @@ class TestComputeCodeData:
     def test_original_matrices_returned(self, steane_H):
         result = compute_code_data(steane_H, steane_H, d=3)
         om = result["original_matrices"]
-        assert "hx" in om
-        assert "hz" in om
-        assert "logical_x" in om
-        assert "logical_z" in om
-        # Original matrices should match input (steane is self-dual)
-        assert np.array_equal(om["hx"], steane_H.tolist())
-        assert np.array_equal(om["hz"], steane_H.tolist())
+        # Originals carry only the symplectic h/logical; the CSS view is
+        # derived in the UI via splitHToCss.
+        assert set(om.keys()) == {"h", "logical"}
+        # h is the block-stack of the input Hx, Hz (Steane is self-dual).
+        from scripts.add_circuit.code_identify import build_symplectic_h
+
+        expected_h = build_symplectic_h(steane_H, steane_H).tolist()
+        assert om["h"] == expected_h
 
     def test_original_logicals_from_pre_canonicalization(self):
         """Original logicals are computed from input matrices, not canonical ones."""
@@ -155,11 +152,9 @@ class TestComputeCodeData:
         H = np.hstack([Hx, Hz])
         result = compute_code_data_h(H, n=5, d=3)
         om = result["original_matrices"]
-        # Non-CSS originals: hx/hz/logical_x/logical_z are all None;
-        # h equals the submitted H exactly, and logical commutes with H
-        # symplectically.
-        assert om["hx"] is None and om["hz"] is None
-        assert om["logical_x"] is None and om["logical_z"] is None
+        # Non-CSS originals carry only h/logical (no CSS view): h equals the
+        # submitted H exactly, and logical commutes with H symplectically.
+        assert set(om.keys()) == {"h", "logical"}
         assert np.array_equal(om["h"], H.tolist())
         orig_logical = np.array(om["logical"])
         # logical · Λ · Hᵀ = 0 mod 2  (commutes with all stabilizers)
@@ -208,9 +203,10 @@ class TestComputeCodeData:
 
     def test_yaml_dedup_existing(self, steane_H):
         """When code exists in data_yaml/codes/, status is 'existing'."""
-        from scripts.add_circuit.code_identify import canonical_hash
+        from scripts.add_circuit.code_identify import build_symplectic_h, canonical_hash
 
         c_hash = canonical_hash(steane_H, steane_H)
+        h = build_symplectic_h(steane_H, steane_H).tolist()
 
         with tempfile.TemporaryDirectory() as tmpdir:
             codes_dir = Path(tmpdir) / "codes"
@@ -221,8 +217,7 @@ class TestComputeCodeData:
                 "k": 1,
                 "d": 3,
                 "canonical_hash": c_hash,
-                "hx": steane_H.tolist(),
-                "hz": steane_H.tolist(),
+                "h": h,
             }
             (codes_dir / "steane-code.yaml").write_text(yaml.dump(code_yaml))
 

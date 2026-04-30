@@ -105,12 +105,13 @@ def add_circuit(
     """
     Add a circuit to the QECirc library by writing YAML files to data_yaml/.
 
-    Two ways to specify the code:
-      * CSS path: pass ``Hx`` and ``Hz`` (must satisfy Hx · Hzᵀ = 0 mod 2).
+    Two ways to specify the code (convenience only — both paths reduce to the
+    symplectic ``h`` and ``logical`` matrices that are persisted to YAML):
+      * CSS path: pass ``Hx`` and ``Hz`` (must satisfy Hx · Hzᵀ = 0 mod 2). The
+        pipeline builds h via :func:`build_symplectic_h` before storage.
       * General path: pass ``H`` (symplectic stabilizer matrix of shape
         ``(m, 2n)``) along with ``n``. CSS-decomposable H is auto-detected
-        and routed through the CSS path so the ``CSS`` tag and Hx/Hz view
-        are populated.
+        and the ``CSS`` tag is set; the Hx/Hz view is reconstructed in the UI.
 
     Args:
         circuit: STIM circuit (stim.Circuit object or string).

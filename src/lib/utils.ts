@@ -29,3 +29,50 @@ export function formatMatrixRows(matrix: number[][]): string[] {
   const colWidth = flat.length > 0 ? Math.max(...flat.map((v) => String(v).length)) : 1;
   return matrix.map((row) => `[ ${row.map((v) => String(v).padStart(colWidth, " ")).join("  ")} ]`);
 }
+
+// Split a symplectic h (rows × 2n) into (Hx, Hz) when every row is pure-X or
+// pure-Z. Returns null if any row mixes X and Z (= not row-CSS). Zero rows are
+// dropped. Preserves contributor row order — the ingestion pipeline always
+// produces row-CSS h for CSS codes via build_symplectic_h's block stacking.
+export function splitHToCss(h: number[][], n: number): { hx: number[][]; hz: number[][] } | null {
+  const hx: number[][] = [];
+  const hz: number[][] = [];
+  for (const row of h) {
+    if (row.length !== 2 * n) return null;
+    const xPart = row.slice(0, n);
+    const zPart = row.slice(n, 2 * n);
+    const xZero = xPart.every((v) => v === 0);
+    const zZero = zPart.every((v) => v === 0);
+    if (xZero && zZero) continue;
+    if (zZero) hx.push(xPart);
+    else if (xZero) hz.push(zPart);
+    else return null;
+  }
+  return { hx, hz };
+}
+
+// Split a 2k × 2n logical matrix produced by build_symplectic_logical into
+// (Lx, Lz). Top k rows must be pure-X, bottom k must be pure-Z; returns null
+// otherwise (e.g. for non-CSS codes whose logicals carry mixed support).
+export function splitLogicalToCss(
+  logical: number[][],
+  n: number,
+  k: number,
+): { logicalX: number[][]; logicalZ: number[][] } | null {
+  if (logical.length !== 2 * k) return null;
+  const logicalX: number[][] = [];
+  const logicalZ: number[][] = [];
+  for (let i = 0; i < k; i++) {
+    const row = logical[i];
+    if (row.length !== 2 * n) return null;
+    if (!row.slice(n, 2 * n).every((v) => v === 0)) return null;
+    logicalX.push(row.slice(0, n));
+  }
+  for (let i = k; i < 2 * k; i++) {
+    const row = logical[i];
+    if (row.length !== 2 * n) return null;
+    if (!row.slice(0, n).every((v) => v === 0)) return null;
+    logicalZ.push(row.slice(n, 2 * n));
+  }
+  return { logicalX, logicalZ };
+}
