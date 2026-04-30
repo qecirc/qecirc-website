@@ -83,10 +83,7 @@ const formatted = lines
       btn.addEventListener("click", async function () {
         const code = (btn as HTMLElement).dataset.code || "";
         const ok = await copyToClipboard(code);
-        if (!ok) {
-          console.warn("Clipboard write failed");
-          return;
-        }
+        if (!ok) return;
         const label = btn.querySelector(".copy-label") as HTMLElement | null;
         if (label) {
           const original = label.textContent;

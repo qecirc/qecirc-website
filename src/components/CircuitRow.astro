@@ -289,10 +289,7 @@ const stimFilename = buildStimFilename({
         const qecId = btn.dataset.qecId;
         const url = location.origin + location.pathname + "#" + qecId;
         const ok = await copyToClipboard(url);
-        if (!ok) {
-          console.warn("Clipboard write failed");
-          return;
-        }
+        if (!ok) return;
         showCopyCheck(btn, ".permalink-label", ".permalink-check");
       });
     });
@@ -306,10 +303,7 @@ const stimFilename = buildStimFilename({
       btn.addEventListener("click", async function () {
         const qecId = btn.dataset.qecId;
         const ok = await copyToClipboard("#" + qecId);
-        if (!ok) {
-          console.warn("Clipboard write failed");
-          return;
-        }
+        if (!ok) return;
         showCopyCheck(btn, ".id-label", ".id-check");
       });
     });
