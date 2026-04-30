@@ -96,13 +96,16 @@ const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubi
           id="download-all-btn"
           class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 rounded-md cursor-pointer"
           data-code-slug={codeSlug}
-          title="Download all visible circuits (.stim)"
+          title="Download all visible circuits — Shift+D"
           aria-label="Download all visible circuits"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
           </svg>
           <span>{countLabel}</span>
+          <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+            ⇧D
+          </kbd>
         </button>
       )}
       {circuits.length === 0 && (
@@ -168,6 +171,28 @@ const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubi
 
 <script>
   import { getFavorites } from "../../lib/favorites-client";
+  import { initListKeynav } from "../../lib/list-keynav-client";
+  import { initCircuitActions } from "../../lib/circuit-actions-client";
+  import { initBackKey } from "../../lib/back-key-client";
+
+  initBackKey("/");
+
+  initListKeynav({
+    rowSelector: "[data-list-row]",
+    enterSelector: "[data-list-detail-link]",
+    expandable: true,
+    expandSelfClick: true,
+    favoritable: true,
+    favoriteSelector: "[data-list-fav]",
+  });
+
+  // 1/2/3 + c/y + d target the currently expanded circuit row (if any);
+  // Shift+D triggers the page-level "download all visible" button.
+  initCircuitActions({
+    activeContainerSelector:
+      '[id] > .circuit-toggle[aria-expanded="true"] + .circuit-detail',
+    downloadAllSelector: "#download-all-btn",
+  });
 
   const FAV_FILTER_LS_KEY = "qecirc:fav-filter-active";
 

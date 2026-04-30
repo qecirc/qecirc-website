@@ -29,23 +29,30 @@ const formatted = lines
           class="download-btn flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
           data-download-name={downloadName}
           aria-label="Download file"
-          title={`Download ${downloadName}`}
+          title={`Download ${downloadName} (d)`}
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
           </svg>
           <span>Download</span>
+          <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+            d
+          </kbd>
         </button>
       )}
       <button
         class="copy-btn flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
         data-code={code.trimEnd()}
         aria-label="Copy to clipboard"
+        title="Copy to clipboard (c)"
       >
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
         <span class="copy-label">Copy</span>
+        <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+          c
+        </kbd>
       </button>
     </div>
   </div>

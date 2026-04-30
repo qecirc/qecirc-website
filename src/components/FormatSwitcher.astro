@@ -28,8 +28,14 @@ const TAB_BASE_CLASS =
         <button
           class:list={[TAB_BASE_CLASS, i === 0 ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS]}
           data-format={b.format}
+          title={`Switch to ${b.format.toUpperCase()} (${i + 1})`}
         >
           {b.format.toUpperCase()}
+          {i < 3 && (
+            <kbd class="ml-1.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-300 dark:border-gray-700 bg-white/60 dark:bg-gray-900/60 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+              {i + 1}
+            </kbd>
+          )}
         </button>
       ))}
     </div>

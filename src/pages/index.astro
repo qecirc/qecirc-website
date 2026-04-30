@@ -47,3 +47,12 @@ const totalCount = active ? countAllCodes() : codes.length;
     </div>
   )}
 </Layout>
+
+<script>
+  import { initListKeynav } from "../lib/list-keynav-client";
+
+  initListKeynav({
+    rowSelector: "[data-list-row]",
+    enterSelector: "[data-list-link]",
+  });
+</script>

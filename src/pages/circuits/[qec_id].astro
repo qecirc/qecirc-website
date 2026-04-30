@@ -53,12 +53,17 @@ const hasOriginalMatrices = !!(origH && origLogical);
 <Layout title={`${circuit.name} ${displayId}`} description={`Circuit ${displayId} for ${circuit.code_name}`}>
   <a
     href={`/codes/${circuit.code_slug}`}
-    class="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"
+    class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"
+    title={`Back to ${circuit.code_name} — Backspace or b`}
+    data-back-link
   >
     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M15 19l-7-7 7-7" />
     </svg>
     {circuit.code_name}
+    <kbd class="inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+      ⌫
+    </kbd>
   </a>
 
   <div class="flex flex-wrap items-baseline gap-3 mb-4">
@@ -166,6 +171,15 @@ const hasOriginalMatrices = !!(origH && origLogical);
 </Layout>
 
 <script>
+  import { initCircuitActions } from "../../lib/circuit-actions-client";
+  import { initBackKey } from "../../lib/back-key-client";
+
+  // The page contains exactly one circuit body; main is the natural container.
+  initCircuitActions({ activeContainerSelector: "main" });
+
+  const backLink = document.querySelector<HTMLAnchorElement>("a[data-back-link]");
+  if (backLink) initBackKey(backLink.getAttribute("href") || "/");
+
   // Favorite toggle
   const favBtn = document.getElementById("detail-fav") as HTMLButtonElement;
   if (favBtn) {

@@ -1,5 +1,8 @@
 ---
 import Layout from "../components/Layout.astro";
+
+const kbdCls =
+  "inline-block min-w-[1.25rem] text-center px-1 py-0.5 font-mono text-xs border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800";
 ---
 
 <Layout title="About" description="About the QECirc project — goals, data model, and how to contribute">
@@ -21,6 +24,28 @@ import Layout from "../components/Layout.astro";
     <ul class="list-disc pl-5 text-gray-600 dark:text-gray-400 mb-6 space-y-1">
       <li>A replacement for the <a href="https://errorcorrectionzoo.org/" class="prose-link" target="_blank" rel="noopener">QEC Zoo</a> — detailed code properties belong there</li>
       <li>An archive for highly specific circuit constructions — those are better stored on platforms like Zenodo, with a link from the Zoo</li>
+    </ul>
+
+    <h2 class="text-xl font-semibold mb-3">Keyboard shortcuts</h2>
+    <p class="text-gray-600 dark:text-gray-400 mb-3">
+      Listing pages support keyboard navigation. Press <kbd class="inline-block min-w-[1.25rem] text-center px-1 py-0.5 font-mono text-xs border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800">?</kbd> anywhere to open the full reference.
+    </p>
+    <ul class="list-disc pl-5 text-gray-600 dark:text-gray-400 mb-6 space-y-1 text-sm">
+      <li>
+        <kbd class={kbdCls}>j</kbd> / <kbd class={kbdCls}>k</kbd> or arrow keys to move; <kbd class={kbdCls}>gg</kbd> / <kbd class={kbdCls}>G</kbd> for first / last
+      </li>
+      <li>
+        <kbd class={kbdCls}>l</kbd> / <kbd class={kbdCls}>→</kbd> or <kbd class={kbdCls}>Space</kbd> toggle a circuit row; <kbd class={kbdCls}>h</kbd> / <kbd class={kbdCls}>←</kbd> collapse; <kbd class={kbdCls}>Enter</kbd> opens the detail page
+      </li>
+      <li>
+        <kbd class={kbdCls}>f</kbd> to toggle favorite, <kbd class={kbdCls}>/</kbd> to focus search, <kbd class={kbdCls}>Esc</kbd> to collapse the open row
+      </li>
+      <li>
+        <kbd class={kbdCls}>1</kbd> / <kbd class={kbdCls}>2</kbd> / <kbd class={kbdCls}>3</kbd> switch format on the open circuit; <kbd class={kbdCls}>c</kbd> or <kbd class={kbdCls}>y</kbd> copy, <kbd class={kbdCls}>d</kbd> download; <kbd class={kbdCls}>⇧D</kbd> downloads all on the page
+      </li>
+      <li>
+        <kbd class={kbdCls}>Backspace</kbd> or <kbd class={kbdCls}>b</kbd> goes back to the parent page (from a circuit to its code, from a code page to home)
+      </li>
     </ul>
 
     <h2 id="alpha" class="text-xl font-semibold mb-3">Alpha Status</h2>

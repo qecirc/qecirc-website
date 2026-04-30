@@ -36,12 +36,13 @@ const stimFilename = buildStimFilename({
 
 <div id={anchorId} class="rounded border border-gray-200 dark:border-gray-800 overflow-x-auto">
   <div
-    class="circuit-toggle w-full text-left px-4 py-3 grid min-w-max items-center gap-x-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+    class="circuit-toggle w-full text-left px-4 py-3 grid min-w-max items-center gap-x-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-inset"
     style="grid-template-columns: var(--circuit-grid);"
     role="button"
     tabindex="0"
     data-qec-id={anchorId}
     aria-expanded="false"
+    data-list-row
   >
     <svg
       class="chevron w-4 h-4 shrink-0 text-gray-400 transition-transform duration-200"
@@ -71,6 +72,7 @@ const stimFilename = buildStimFilename({
       data-qec-id={anchorId}
       aria-label="Toggle favorite"
       title="Toggle favorite"
+      data-list-fav
     >
       <HeartIcon class="fav-outline w-3.5 h-3.5" />
       <HeartIcon filled class="fav-filled w-3.5 h-3.5 hidden" />
@@ -90,7 +92,7 @@ const stimFilename = buildStimFilename({
     </span>
 
     <span></span>
-    <a href={`/circuits/${circuit.qec_id}`} class="circuit-detail-link font-medium text-sm truncate hover:underline inline-flex items-center gap-1 w-fit">
+    <a href={`/circuits/${circuit.qec_id}`} class="circuit-detail-link font-medium text-sm truncate hover:underline inline-flex items-center gap-1 w-fit" data-list-detail-link>
       {circuit.name}
       <svg class="w-3 h-3 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M9 5l7 7-7 7" />
