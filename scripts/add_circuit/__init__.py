@@ -34,7 +34,6 @@ from .circuit_validate import (  # noqa: F401
 )
 from .compute import compute_code_data, compute_code_data_h
 from .compute_circuit import compute_circuit_data
-from .ids import next_qec_id
 from .helpers import (  # noqa: F401
     ExistingCodeMatch,
     check_code,
@@ -45,6 +44,7 @@ from .helpers import (  # noqa: F401
     preview_circuit,
     summarize_circuit,
 )
+from .ids import next_qec_id
 from .models import ExtractedCode  # noqa: F401
 from .yaml_helpers import (
     build_circuit_yaml,

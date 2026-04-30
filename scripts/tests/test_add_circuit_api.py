@@ -7,7 +7,6 @@ import yaml
 
 from scripts.add_circuit import add_circuit
 
-
 # Steane [[7,1,3]] CSS code — minimal valid input
 _STEANE_HX = np.array(
     [
@@ -35,7 +34,8 @@ def test_add_circuit_allocates_qec_id(tmp_path: Path) -> None:
     )
 
     circ_yaml_path = next(
-        p for p in result.files_written
+        p
+        for p in result.files_written
         if p.endswith(".yaml") and "/circuits/" in p and "originals" not in p
     )
     data = yaml.safe_load(Path(circ_yaml_path).read_text(encoding="utf-8"))
@@ -48,21 +48,31 @@ def test_add_circuit_allocates_qec_id(tmp_path: Path) -> None:
 def test_add_circuit_qec_id_increments(tmp_path: Path) -> None:
     """Adding two circuits must assign distinct, increasing qec_ids."""
     r1 = add_circuit(
-        circuit=_TRIVIAL_STIM, circuit_name="First", d=3,
-        Hx=_STEANE_HX, Hz=_STEANE_HZ, code_name="Steane Code",
+        circuit=_TRIVIAL_STIM,
+        circuit_name="First",
+        d=3,
+        Hx=_STEANE_HX,
+        Hz=_STEANE_HZ,
+        code_name="Steane Code",
         data_dir=tmp_path,
     )
     r2 = add_circuit(
-        circuit=_TRIVIAL_STIM + "X 0\n", circuit_name="Second", d=3,
-        Hx=_STEANE_HX, Hz=_STEANE_HZ, code_name="Steane Code",
+        circuit=_TRIVIAL_STIM + "X 0\n",
+        circuit_name="Second",
+        d=3,
+        Hx=_STEANE_HX,
+        Hz=_STEANE_HZ,
+        code_name="Steane Code",
         data_dir=tmp_path,
     )
     p1 = next(
-        p for p in r1.files_written
+        p
+        for p in r1.files_written
         if p.endswith(".yaml") and "/circuits/" in p and "originals" not in p
     )
     p2 = next(
-        p for p in r2.files_written
+        p
+        for p in r2.files_written
         if p.endswith(".yaml") and "/circuits/" in p and "originals" not in p
     )
     id1 = yaml.safe_load(Path(p1).read_text(encoding="utf-8"))["qec_id"]
