@@ -44,6 +44,7 @@ from .helpers import (  # noqa: F401
     preview_circuit,
     summarize_circuit,
 )
+from .ids import next_qec_id
 from .models import ExtractedCode  # noqa: F401
 from .yaml_helpers import (
     build_circuit_yaml,
@@ -178,6 +179,7 @@ def add_circuit(
         tool=tool,
         notes=notes,
     )
+    circ_data["qec_id"] = next_qec_id(data_dir)
 
     # Collect files to write
     code_slug = code["slug"]
