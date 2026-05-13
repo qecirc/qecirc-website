@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 
 from scripts.add_circuit.code_identify import (
+    build_symplectic_h,
     canonical_form,
     canonical_hash,
     extract_params,
@@ -21,6 +22,7 @@ from scripts.add_circuit.code_identify import (
     gf2_rref,
     gf2_rref_pivots,
     is_css,
+    is_permutation_equivalent,
 )
 
 # ---------------------------------------------------------------------------
@@ -335,3 +337,100 @@ class TestFindQubitPermutation:
         assert perm is not None
         assert np.array_equal(gf2_rref(Hx_p[:, perm]), gf2_rref(Hx))
         assert np.array_equal(gf2_rref(Hz_p[:, perm]), gf2_rref(Hz))
+
+    def test_redundant_rows_in_input(self, code_713):
+        """Hx_new with linearly dependent rows must still find the perm against
+        a clean reference (post split_h_to_css). Previously the verification
+        compared full-shape RREFs and failed on shape mismatch."""
+        Hx, Hz = code_713
+        Hx_pad = np.vstack([Hx, Hx[[0]]])  # duplicate row 0 → rank 3, 4 rows
+        Hz_pad = np.vstack([Hz, Hz[[0]]])
+        perm = find_qubit_permutation(Hx_pad, Hz_pad, Hx, Hz)
+        assert perm is not None
+        assert np.array_equal(gf2_rref(Hx_pad[:, perm])[: Hx.shape[0]], gf2_rref(Hx))
+
+    def test_match_against_canonical_reference(self, code_713):
+        """When (Hx_ref, Hz_ref) is the canonical form of (Hx_new, Hz_new),
+        find_qubit_permutation must succeed. The composition path can fail
+        on codes where canonical_form is non-idempotent (e.g. [[108,8,10]]);
+        the fast path against perm_new is what makes this case work."""
+        Hx, Hz = code_713
+        canon_Hx, canon_Hz, _ = canonical_form(Hx, Hz)
+        perm = find_qubit_permutation(Hx, Hz, canon_Hx, canon_Hz)
+        assert perm is not None
+        assert np.array_equal(gf2_rref(Hx[:, perm])[: canon_Hx.shape[0]], canon_Hx)
+
+
+# ---------------------------------------------------------------------------
+# is_permutation_equivalent
+# ---------------------------------------------------------------------------
+
+
+def _verify_sigma(H1: np.ndarray, H2: np.ndarray, sigma: list[int], n: int) -> bool:
+    cols = list(sigma) + [s + n for s in sigma]
+    return np.array_equal(gf2_row_basis(H1[:, cols]), gf2_row_basis(H2))
+
+
+class TestIsPermutationEquivalent:
+    def test_identity_pair_equivalent(self, code_713):
+        Hx, Hz = code_713
+        H = build_symplectic_h(Hx, Hz)
+        status, sigma = is_permutation_equivalent(H, H, 7)
+        assert status == "equivalent"
+        assert sigma == list(range(7))
+
+    def test_column_permutation_equivalent(self, code_713):
+        Hx, Hz = code_713
+        H = build_symplectic_h(Hx, Hz)
+        p = [3, 1, 5, 0, 6, 2, 4]
+        H_p = H[:, list(p) + [s + 7 for s in p]]
+        status, sigma = is_permutation_equivalent(H, H_p, 7)
+        assert status == "equivalent"
+        assert _verify_sigma(H, H_p, sigma, 7)
+
+    def test_different_codes_inequivalent(self, code_713, code_513):
+        Hx1, Hz1 = code_713
+        Hx2, Hz2 = code_513
+        H1 = build_symplectic_h(Hx1, Hz1)
+        H2 = np.hstack([Hx2, Hz2])
+        # Different n → caught by shape mismatch.
+        status, _ = is_permutation_equivalent(H1, H2, 7)
+        assert status == "inequivalent"
+
+    def test_different_ranks_inequivalent(self, code_713):
+        """Two codes with the same n but different rank cannot be equivalent."""
+        Hx, Hz = code_713
+        H1 = build_symplectic_h(Hx, Hz)
+        # Drop one Z stabilizer → different rank.
+        H2 = np.delete(H1, 5, axis=0)
+        status, _ = is_permutation_equivalent(H1, H2, 7)
+        assert status == "inequivalent"
+
+    def test_redundant_rows_in_input(self, code_713):
+        """Linearly dependent rows in the input shouldn't fool the algorithm —
+        gf2_row_basis strips them before comparison."""
+        Hx, Hz = code_713
+        H = build_symplectic_h(Hx, Hz)
+        H_padded = np.vstack([H, H[[0]]])  # duplicate row 0
+        status, sigma = is_permutation_equivalent(H_padded, H, 7)
+        assert status == "equivalent"
+        assert _verify_sigma(H_padded, H, sigma, 7)
+
+    def test_uncertain_within_tight_budget(self):
+        """A code with rich symmetry plus a tight budget must produce
+        ('uncertain', None) — the algorithm must not lie about equivalence."""
+        from pathlib import Path
+
+        fixture = Path(__file__).parent / "fixtures" / "108_8_10.txt"
+        blocks = [b for b in fixture.read_text().split("\n\n") if b.strip()]
+        Hx = np.array([[int(x) for x in line.split()] for line in blocks[0].strip().split("\n")])
+        Hz = np.array([[int(x) for x in line.split()] for line in blocks[1].strip().split("\n")])
+        H = build_symplectic_h(Hx, Hz)
+        # Swap qubits 0 and 1.
+        p = list(range(108))
+        p[0], p[1] = p[1], p[0]
+        H_p = H[:, list(p) + [s + 108 for s in p]]
+        status, sigma = is_permutation_equivalent(H, H_p, 108, budget_seconds=0.01)
+        # With a tiny budget, must time out → uncertain. Sigma must be None.
+        assert status == "uncertain"
+        assert sigma is None
