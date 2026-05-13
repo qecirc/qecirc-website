@@ -1,9 +1,22 @@
 """Tests for the non-CSS ingestion path (compute_code_data_h)."""
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
 from scripts.add_circuit.compute import compute_code_data, compute_code_data_h
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def _load_108_8_10() -> tuple[np.ndarray, np.ndarray]:
+    """Parse the [[108,8,10]] Hx/Hz blocks from the test fixture."""
+    text = (FIXTURES / "108_8_10.txt").read_text()
+    blocks = [b for b in text.split("\n\n") if b.strip()]
+    Hx = np.array([[int(x) for x in line.split()] for line in blocks[0].strip().split("\n")])
+    Hz = np.array([[int(x) for x in line.split()] for line in blocks[1].strip().split("\n")])
+    return Hx, Hz
 
 
 def _five_qubit_matrices():
@@ -177,6 +190,133 @@ class TestYamlDedupH:
             assert match.qubit_permutation is None
         else:
             assert match.qubit_permutation == expected_perm
+
+
+class TestUncertainDedup:
+    """Tests for the new uncertain-dedup path (Phase 2 of _check_yaml_dedup)."""
+
+    @pytest.fixture(autouse=True)
+    def _shrink_budget(self, monkeypatch):
+        """Use a short budget so tests don't sit at the 10-second default."""
+        from scripts.add_circuit import compute as _compute
+
+        monkeypatch.setattr(_compute, "DEDUP_BUDGET_SECONDS", 0.5)
+
+    @staticmethod
+    def _seed_108_8_10(tmp_path):
+        """Write the [[108,8,10]] code to data_yaml/codes/."""
+        from scripts.add_circuit.yaml_helpers import build_code_yaml, dump_yaml
+
+        Hx, Hz = _load_108_8_10()
+        (tmp_path / "codes").mkdir(parents=True, exist_ok=True)
+        (tmp_path / "circuits" / "originals").mkdir(parents=True, exist_ok=True)
+        result = compute_code_data(Hx, Hz, d=10, code_name="[[108,8,10]]", data_dir=str(tmp_path))
+        (tmp_path / "codes" / "108-8-10.yaml").write_text(
+            dump_yaml(build_code_yaml(result["code"]))
+        )
+        return Hx, Hz
+
+    def test_phase2_recovers_after_forced_hash_miss(self, tmp_path):
+        """Forces a Phase-1 hash miss against a seeded Steane (by writing a
+        deliberately wrong canonical_hash into the YAML) and verifies that the
+        Phase-2 permutation-equivalence scan still recovers the match with a
+        valid σ. Steane is small enough that backtracking finishes well within
+        the budget — this proves the Phase-2 code path is exercised."""
+        from scripts.add_circuit import find_existing_code_full
+        from scripts.add_circuit.code_identify import build_symplectic_h, gf2_row_basis
+        from scripts.add_circuit.yaml_helpers import build_code_yaml, dump_yaml
+
+        Hx = np.array(
+            [
+                [1, 0, 1, 0, 1, 0, 1],
+                [0, 1, 1, 0, 0, 1, 1],
+                [0, 0, 0, 1, 1, 1, 1],
+            ]
+        )
+        Hz = Hx.copy()
+        (tmp_path / "codes").mkdir(parents=True, exist_ok=True)
+        seed = compute_code_data(Hx, Hz, d=3, code_name="Steane", data_dir=str(tmp_path))
+        # Corrupt the stored canonical_hash so Phase 1 misses; the actual h
+        # matrix is unchanged, so Phase 2 should still match.
+        seed["code"]["canonical_hash"] = "0" * 64
+        (tmp_path / "codes" / "steane.yaml").write_text(dump_yaml(build_code_yaml(seed["code"])))
+
+        p = [3, 1, 5, 0, 6, 2, 4]
+        Hx_p, Hz_p = Hx[:, p], Hz[:, p]
+        match = find_existing_code_full(Hx_p, Hz_p, data_dir=str(tmp_path))
+        assert match is not None
+        assert match.status == "match"
+        assert match.slug == "steane"
+        # Verify the returned σ actually relabels the submission to match the
+        # stored code's row space.
+        sigma = match.qubit_permutation
+        assert sigma is not None
+        cols = list(sigma) + [s + 7 for s in sigma]
+        H_user = build_symplectic_h(Hx_p, Hz_p)
+        H_stored = build_symplectic_h(Hx, Hz)
+        assert np.array_equal(gf2_row_basis(H_user[:, cols]), gf2_row_basis(H_stored))
+
+    def test_108_8_10_permuted_raises_uncertain(self, tmp_path):
+        """[[108,8,10]] under a non-trivial qubit perm: cheap invariants match
+        but backtracking times out → add_circuit must raise UncertainDedupError."""
+        from scripts.add_circuit import UncertainDedupError, add_circuit
+
+        Hx, Hz = self._seed_108_8_10(tmp_path)
+
+        p = list(range(108))
+        p[0], p[1] = p[1], p[0]
+        with pytest.raises(UncertainDedupError) as exc:
+            add_circuit(
+                circuit="I 0",
+                circuit_name="permuted",
+                d=10,
+                Hx=Hx[:, p],
+                Hz=Hz[:, p],
+                code_name="[[108,8,10]] permuted",
+                data_dir=str(tmp_path),
+                source="test",
+            )
+        assert "108-8-10" in exc.value.candidates
+        assert exc.value.n == 108
+        assert exc.value.k == 8
+
+    def test_108_8_10_assume_new_overrides(self, tmp_path):
+        """`assume_new=True` must suppress the uncertain error and add as new."""
+        from scripts.add_circuit import add_circuit
+
+        Hx, Hz = self._seed_108_8_10(tmp_path)
+        p = list(range(108))
+        p[0], p[1] = p[1], p[0]
+
+        result = add_circuit(
+            circuit="I 0",
+            circuit_name="permuted-as-new",
+            d=10,
+            Hx=Hx[:, p],
+            Hz=Hz[:, p],
+            code_name="[[108,8,10]]-perm",
+            data_dir=str(tmp_path),
+            source="test",
+            assume_new=True,
+        )
+        assert result.code_status == "new"
+        assert result.code_slug == "108-8-10-perm"
+
+    def test_find_existing_code_full_surfaces_uncertain(self, tmp_path):
+        """find_existing_code_full must report status='uncertain' and list the
+        candidate slug rather than swallowing it as 'no match'."""
+        from scripts.add_circuit import find_existing_code_full
+
+        Hx, Hz = self._seed_108_8_10(tmp_path)
+        p = list(range(108))
+        p[0], p[1] = p[1], p[0]
+
+        match = find_existing_code_full(Hx[:, p], Hz[:, p], data_dir=str(tmp_path))
+        assert match is not None
+        assert match.status == "uncertain"
+        assert match.slug is None  # do not leak a confirmed-looking slug
+        assert match.uncertain_candidates == ["108-8-10"]
+        assert match.qubit_permutation is None
 
 
 class TestAddCircuitH:

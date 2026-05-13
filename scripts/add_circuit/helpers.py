@@ -2,8 +2,8 @@
 Notebook-friendly helper functions for inspecting codes and circuits.
 """
 
-from dataclasses import dataclass
-from typing import Optional, Union
+from dataclasses import dataclass, field
+from typing import Literal, Optional, Union
 
 import numpy as np
 import stim
@@ -24,17 +24,22 @@ from .compute import _check_yaml_dedup, _check_yaml_dedup_h, _is_self_dual
 class ExistingCodeMatch:
     """Result of matching a code against the existing library.
 
-    Attributes:
-        slug: Code slug in the library (e.g. 'steane-code').
-        qubit_permutation: Column-reindexing array such that
-            ``Hx_user[:, perm]`` is row-equivalent to the stored Hx
-            (and likewise for Hz). None when orderings already match.
-            When not None, ``add_circuit()`` relabels the circuit
-            to align with the stored qubit ordering.
+    Branch on ``status`` first:
+
+    - ``"match"`` — confirmed equivalent. ``slug`` is the matched code's slug,
+      ``qubit_permutation`` is the relabeling (None when orderings already
+      match), and ``uncertain_candidates`` is empty.
+    - ``"uncertain"`` — invariants align with one or more stored codes but a
+      witness permutation could not be confirmed within the search budget.
+      ``slug`` is ``None`` (do not treat as a confirmed match) and
+      ``uncertain_candidates`` lists the possible slugs for the caller to
+      surface to the user.
     """
 
-    slug: str
+    slug: Optional[str]
     qubit_permutation: list[int] | None
+    status: Literal["match", "uncertain"] = "match"
+    uncertain_candidates: list[str] = field(default_factory=list)
 
 
 def check_code(Hx: np.ndarray, Hz: np.ndarray, d: Optional[int] = None) -> dict:
@@ -69,24 +74,26 @@ def find_existing_code_full(
 ) -> Optional[ExistingCodeMatch]:
     """Check if this code already exists in data_yaml/, with permutation info.
 
-    Args:
-        Hx: X-check matrix.
-        Hz: Z-check matrix.
-        data_dir: Path to data_yaml directory.
-
-    Returns:
-        ExistingCodeMatch with slug and qubit_permutation, or None if not found.
-        qubit_permutation is None when orderings match, or a list when the
-        circuit will need relabeling to match the stored code.
+    Returns ``None`` when the submission is plausibly new (no signature
+    overlap with any stored code). Returns ``ExistingCodeMatch`` for both
+    confirmed matches and uncertain candidates — the caller distinguishes via
+    the ``status`` field.
     """
     Hx = np.asarray(Hx, dtype=int)
     Hz = np.asarray(Hz, dtype=int)
 
     c_hash = canonical_hash(Hx, Hz)
-    slug, perm = _check_yaml_dedup(data_dir, c_hash, Hx, Hz)
-    if slug is None:
-        return None
-    return ExistingCodeMatch(slug=slug, qubit_permutation=perm)
+    result = _check_yaml_dedup(data_dir, c_hash, Hx, Hz)
+    if result.status == "match":
+        return ExistingCodeMatch(slug=result.slug, qubit_permutation=result.qubit_permutation)
+    if result.status == "uncertain":
+        return ExistingCodeMatch(
+            slug=None,
+            qubit_permutation=None,
+            status="uncertain",
+            uncertain_candidates=list(result.uncertain_candidates),
+        )
+    return None
 
 
 def find_existing_code(
@@ -100,10 +107,14 @@ def find_existing_code(
         data_dir: Path to data_yaml directory.
 
     Returns:
-        The code slug if found, None otherwise.
+        The code slug for a confirmed match, otherwise None. Uncertain
+        candidates are not surfaced here — use :func:`find_existing_code_full`
+        if you need to distinguish "uncertain" from "no match".
     """
     match = find_existing_code_full(Hx, Hz, data_dir)
-    return match.slug if match else None
+    if match is None or match.status != "match":
+        return None
+    return match.slug
 
 
 def check_code_h(H: np.ndarray, n: int, d: Optional[int] = None) -> dict:
@@ -155,7 +166,9 @@ def find_existing_code_h(
     For CSS-decomposable H this delegates to :func:`find_existing_code_full`
     after recovering (Hx, Hz). For genuinely non-CSS H it matches by
     ``canonical_hash_h`` and verifies via canonical form, returning the
-    qubit_permutation from :func:`canonical_form_h`.
+    qubit_permutation from :func:`canonical_form_h`. May also return an
+    ``uncertain`` match when invariants align with a stored code but a
+    permutation witness can't be found within the search budget.
     """
     H = np.asarray(H, dtype=int) % 2
     css_split = split_h_to_css(H, n)
@@ -164,10 +177,17 @@ def find_existing_code_h(
         return find_existing_code_full(Hx, Hz, data_dir)
 
     c_hash = canonical_hash_h(H, n)
-    slug, perm = _check_yaml_dedup_h(data_dir, c_hash, H, n)
-    if slug is None:
-        return None
-    return ExistingCodeMatch(slug=slug, qubit_permutation=perm)
+    result = _check_yaml_dedup_h(data_dir, c_hash, H, n)
+    if result.status == "match":
+        return ExistingCodeMatch(slug=result.slug, qubit_permutation=result.qubit_permutation)
+    if result.status == "uncertain":
+        return ExistingCodeMatch(
+            slug=None,
+            qubit_permutation=None,
+            status="uncertain",
+            uncertain_candidates=list(result.uncertain_candidates),
+        )
+    return None
 
 
 def summarize_circuit(circuit: Union[stim.Circuit, str]) -> dict:

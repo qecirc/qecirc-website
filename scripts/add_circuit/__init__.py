@@ -55,6 +55,30 @@ from .yaml_helpers import (
 )
 
 
+class UncertainDedupError(Exception):
+    """Raised by :func:`add_circuit` when the submission's invariants match
+    one or more stored codes but permutation-equivalence could not be
+    confirmed within the search budget.
+
+    To proceed, the caller can either:
+      - pass ``assume_new=True`` to add the submission as a new code, or
+      - reformulate Hx/Hz (or H) to match the stored form of one of the
+        candidate slugs.
+    """
+
+    def __init__(self, candidates: list[str], n: int, k: int):
+        self.candidates = list(candidates)
+        self.n = n
+        self.k = k
+        super().__init__(
+            f"Submission has [[{n},{k}]] parameters and invariants matching "
+            f"stored code(s) {self.candidates}, but a qubit permutation could "
+            f"not be confirmed within the search budget. Either pass "
+            f"`assume_new=True` to add as a new code, or reformulate the "
+            f"matrices to match the stored form of one of the candidates."
+        )
+
+
 @dataclass
 class AddCircuitResult:
     """Result of adding a circuit to the library."""
@@ -102,6 +126,7 @@ def add_circuit(
     notes: str = "",
     data_dir: Union[str, Path] = "data_yaml",
     dry_run: bool = False,
+    assume_new: bool = False,
 ) -> AddCircuitResult:
     """
     Add a circuit to the QECirc library by writing YAML files to data_yaml/.
@@ -129,9 +154,16 @@ def add_circuit(
         notes: Circuit notes.
         data_dir: Path to data_yaml directory.
         dry_run: If True, report what would be written without writing.
+        assume_new: If True, suppress :exc:`UncertainDedupError` and add as a
+            new code even when invariants align with stored candidates.
 
     Returns:
         AddCircuitResult with code/circuit info and list of files written.
+
+    Raises:
+        UncertainDedupError: when invariants match one or more stored codes
+            but a qubit permutation cannot be confirmed within the search
+            budget, and ``assume_new`` is False.
     """
     css_path = Hx is not None and Hz is not None
     h_path = H is not None and n is not None
@@ -164,6 +196,14 @@ def add_circuit(
             code_name=code_name,
             zoo_url=zoo_url,
             data_dir=data_dir_arg,
+        )
+
+    # Surface uncertain dedup to the caller before doing any further work.
+    if code_result.get("dedup_status") == "uncertain" and not assume_new:
+        raise UncertainDedupError(
+            candidates=code_result.get("uncertain_candidates", []),
+            n=code_result["code"]["n"],
+            k=code_result["code"]["k"],
         )
 
     code = code_result["code"]

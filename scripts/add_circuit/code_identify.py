@@ -6,7 +6,8 @@ replaced or mocked independently.
 """
 
 import hashlib
-from typing import Optional
+import time
+from typing import Literal, Optional
 
 import numpy as np
 
@@ -213,8 +214,16 @@ def canonical_form(Hx: np.ndarray, Hz: np.ndarray) -> tuple[np.ndarray, np.ndarr
 
 def canonical_hash(Hx: np.ndarray, Hz: np.ndarray) -> str:
     """
-    Stable hash for code identity. Invariant under row operations and column
-    (qubit) permutations, so equivalent codes always produce the same hash.
+    Deterministic fingerprint of the (Hx, Hz) representation after RREF and
+    sorting columns by joint column profile.
+
+    Invariant under row operations and under **joint** row permutation of
+    (Hx, Hz). Approximately invariant under qubit permutations for codes
+    without non-trivial automorphisms, but **not** a true permutation
+    invariant in general — codes with non-trivial qubit symmetries (e.g.
+    bicycle-style LDPC codes like [[108,8,10]]) can yield different hashes
+    for two qubit-permuted forms of the same code. Use
+    :func:`is_permutation_equivalent` when you need a true equivalence test.
 
     Includes Hx/Hz row counts in the hash input to avoid collisions between
     codes with different generator splits but same concatenated bytes.
@@ -261,11 +270,13 @@ def canonical_form_h(H: np.ndarray, n: int) -> tuple[np.ndarray, list[int]]:
 
 
 def canonical_hash_h(H: np.ndarray, n: int) -> str:
-    """Stable hash for any stabilizer code given by a single symplectic H matrix.
+    """Deterministic fingerprint of a symplectic stabilizer matrix H.
 
-    Hashes the output of :func:`canonical_form_h`, which preserves the row
-    pairing between X and Z parts (unlike halves-canonicalization) and works
-    when X-half and Z-half row spaces have different ranks.
+    Hashes the output of :func:`canonical_form_h`. Like :func:`canonical_hash`,
+    this is a stable fingerprint of the canonicalized representation, not a
+    true permutation invariant — equivalent codes under different qubit
+    orderings may hash differently when the code has non-trivial automorphisms.
+    Use :func:`is_permutation_equivalent` for a real equivalence test.
 
     Prefixed with ``sym:<n>:`` so it cannot collide with the CSS hash format
     (``<m_x>:<m_z>:``).
@@ -303,28 +314,271 @@ def find_qubit_permutation(
     if Hx_ref.shape[1] != n:
         return None
 
-    _, _, perm_new = canonical_form(Hx_new, Hz_new)
-    _, _, perm_ref = canonical_form(Hx_ref, Hz_ref)
+    # Use gf2_row_basis (RREF with zero rows dropped) rather than gf2_rref so
+    # the comparison works when Hx_new/Hz_new carry linearly dependent rows
+    # that the stored reference matrices (post split_h_to_css) have already
+    # shed.
+    def _matches(perm: list[int]) -> bool:
+        return np.array_equal(
+            gf2_row_basis(Hx_new[:, perm]), gf2_row_basis(Hx_ref)
+        ) and np.array_equal(gf2_row_basis(Hz_new[:, perm]), gf2_row_basis(Hz_ref))
 
-    # perm_new maps canonical position -> original new qubit
-    # perm_ref maps canonical position -> original ref qubit
-    # We want p such that new[:, p] ~ ref, i.e. for each ref qubit position j,
-    # find which new qubit maps to the same canonical position.
-    # inv_perm_ref[ref_qubit] = canonical_position
+    # Prefer identity when the orderings already match — callers rely on this
+    # to skip circuit relabeling.
+    identity = list(range(n))
+    if _matches(identity):
+        return identity
+
+    _, _, perm_new = canonical_form(Hx_new, Hz_new)
+
+    # When (Hx_ref, Hz_ref) is already in canonical form (how _check_yaml_dedup
+    # builds it from the stored canonical h), perm_new alone is the relabeling
+    # we want. This also sidesteps non-idempotency of canonical_form on its own
+    # output for high-symmetry codes (e.g. [[108,8,10]]).
+    if _matches(perm_new):
+        return perm_new
+
+    # General path: compose perm_new with the inverse of canonical_form(ref).
+    # Required when ref is not in canonical form (e.g. test inputs that pass
+    # the original textbook matrices as the reference).
+    _, _, perm_ref = canonical_form(Hx_ref, Hz_ref)
     inv_perm_ref = [0] * n
     for canon_pos, ref_qubit in enumerate(perm_ref):
         inv_perm_ref[ref_qubit] = canon_pos
+    result = [perm_new[inv_perm_ref[r]] for r in range(n)]
+    if _matches(result):
+        return result
 
-    # result[ref_qubit_j] = new_qubit that maps to same canonical position
-    result = [0] * n
-    for ref_qubit in range(n):
-        canon_pos = inv_perm_ref[ref_qubit]
-        result[ref_qubit] = perm_new[canon_pos]
+    return None
 
-    # Verify the permutation actually works (RREF equivalence)
-    if not np.array_equal(gf2_rref(Hx_new[:, result]), gf2_rref(Hx_ref)):
+
+# ---------------------------------------------------------------------------
+# Permutation equivalence with bounded search
+# ---------------------------------------------------------------------------
+
+
+PermEquivStatus = Literal["equivalent", "uncertain", "inequivalent"]
+
+
+def _apply_qubit_perm_symplectic(H: np.ndarray, sigma: list[int], n: int) -> np.ndarray:
+    """Apply qubit permutation σ to both X and Z halves of a symplectic H."""
+    cols = list(sigma) + [s + n for s in sigma]
+    return H[:, cols]
+
+
+def _symplectic_self_orthogonal(H: np.ndarray, n: int) -> bool:
+    """Check H · Λ · Hᵀ ≡ 0 (mod 2) where Λ = [[0, I_n], [I_n, 0]]."""
+    H = H.astype(int) % 2
+    # H · Λ swaps the X and Z halves of each row.
+    H_lambda = np.hstack([H[:, n:], H[:, :n]])
+    return bool(np.all((H_lambda @ H.T) % 2 == 0))
+
+
+def _pauli_subspace_signature(B: np.ndarray, n: int) -> list[tuple]:
+    """Per-qubit signature invariant under both row operations and column
+    permutation (when paired with the same column permutation on j and j+n).
+
+    For each qubit j, the row-space projected onto coords (j, j+n) is a
+    subspace of F_2^2 — one of {0}, ⟨X⟩, ⟨Z⟩, ⟨Y⟩, or F_2^2. The sorted
+    tuple of its non-zero elements uniquely identifies it.
+    """
+    sigs: list[tuple] = []
+    for j in range(n):
+        # The row-span is at most 4 vectors; enumerate by closure.
+        seen: set[tuple[int, int]] = {(0, 0)}
+        for r in range(B.shape[0]):
+            v = (int(B[r, j]), int(B[r, j + n]))
+            if v == (0, 0):
+                continue
+            seen = seen | {(a ^ v[0], b ^ v[1]) for (a, b) in seen}
+            if len(seen) == 4:
+                break
+        sigs.append(tuple(sorted(v for v in seen if v != (0, 0))))
+    return sigs
+
+
+def _refine_partition(
+    B1: np.ndarray, B2: np.ndarray, n: int
+) -> Optional[tuple[list[list[int]], list[list[int]]]]:
+    """Partition qubits by a column-permutation-invariant signature.
+
+    Initial signature: per-qubit Pauli subspace of the row space (which Paulis
+    appear at qubit j across all codewords). One refinement round using
+    sorted pair-signatures with other qubits is applied to break symmetries.
+
+    Returns (classes_1, classes_2) where classes_k[i] is the list of qubits
+    in code k that share colour i, paired across the two codes. Returns None
+    if the multisets of colours differ — codes are inequivalent.
+    """
+    sig1 = _pauli_subspace_signature(B1, n)
+    sig2 = _pauli_subspace_signature(B2, n)
+    if sorted(sig1) != sorted(sig2):
         return None
-    if not np.array_equal(gf2_rref(Hz_new[:, result]), gf2_rref(Hz_ref)):
+
+    # One-round pair refinement: for each qubit q, augment its colour with the
+    # sorted multiset of pair-signatures (sig(q), sig(p), joint-dim(q, p)) for
+    # all other qubits p. Joint-dim is the dimension of the row-space
+    # projection onto (q, q+n, p, p+n) — a column-perm-invariant.
+    def _joint_dim(B: np.ndarray, q: int, p: int) -> int:
+        cols = np.stack([B[:, q], B[:, q + n], B[:, p], B[:, p + n]], axis=1).astype(int) % 2
+        return gf2_rank(cols)
+
+    def _augment(B: np.ndarray, base_sig: list[tuple]) -> list[tuple]:
+        out = []
+        for q in range(n):
+            joint = sorted((base_sig[p], _joint_dim(B, q, p)) for p in range(n) if p != q)
+            out.append((base_sig[q], tuple(joint)))
+        return out
+
+    aug1 = _augment(B1, sig1)
+    aug2 = _augment(B2, sig2)
+    if sorted(aug1) != sorted(aug2):
         return None
 
-    return result
+    colours = sorted(set(aug1) | set(aug2))
+    classes_1 = [[q for q in range(n) if aug1[q] == c] for c in colours]
+    classes_2 = [[q for q in range(n) if aug2[q] == c] for c in colours]
+    # Drop empty classes (a colour might exist in one but not the other if the
+    # multisets only differ in cardinality — but we already checked sorted equality).
+    classes_1 = [cls for cls in classes_1 if cls]
+    classes_2 = [cls for cls in classes_2 if cls]
+    if any(len(a) != len(b) for a, b in zip(classes_1, classes_2)):
+        return None
+    return classes_1, classes_2
+
+
+def is_permutation_equivalent(
+    H1: np.ndarray,
+    H2: np.ndarray,
+    n: int,
+    *,
+    budget_seconds: float = 10.0,
+) -> tuple[PermEquivStatus, Optional[list[int]]]:
+    """Test whether two symplectic stabilizer matrices describe the same code
+    up to qubit permutation σ ∈ S_n.
+
+    Returns:
+        ("equivalent", σ)     — H1 with qubits permuted by σ has the same row
+                                space as H2 (σ applied to both X and Z halves).
+        ("uncertain", None)   — cheap invariants agree but the search exhausted
+                                its wall-clock budget. The codes may or may not
+                                be equivalent.
+        ("inequivalent", None) — cheap invariants prove inequivalence.
+    """
+    H1 = np.asarray(H1, dtype=int) % 2
+    H2 = np.asarray(H2, dtype=int) % 2
+    if H1.shape[1] != 2 * n or H2.shape[1] != 2 * n:
+        return ("inequivalent", None)
+
+    # Cheap rejection 1: rank (= n - k).
+    if gf2_rank(H1) != gf2_rank(H2):
+        return ("inequivalent", None)
+    # Cheap rejection 2: symplectic self-orthogonality on both inputs.
+    if not _symplectic_self_orthogonal(H1, n) or not _symplectic_self_orthogonal(H2, n):
+        return ("inequivalent", None)
+
+    # Reduce row-op ambiguity once: same row space ⇔ same matrix (for fixed
+    # qubit ordering) after this normalization.
+    B1 = gf2_row_basis(H1)
+    B2 = gf2_row_basis(H2)
+    if B1.shape != B2.shape:
+        return ("inequivalent", None)
+
+    # Identity shortcut.
+    if np.array_equal(B1, B2):
+        return ("equivalent", list(range(n)))
+
+    # Cheap rejection via column-perm-invariant per-qubit signatures + one-round
+    # pair refinement. _refine_partition returns None on multiset mismatch.
+    parts = _refine_partition(B1, B2, n)
+    if parts is None:
+        return ("inequivalent", None)
+    classes_1, classes_2 = parts
+
+    # Backtracking: assign each qubit q1 in code 1 to a qubit q2 in code 2
+    # within the same paired colour class. Order classes smallest-first so
+    # forced assignments fire early.
+    order = sorted(range(len(classes_1)), key=lambda i: len(classes_1[i]))
+    classes_1 = [classes_1[i] for i in order]
+    classes_2 = [classes_2[i] for i in order]
+
+    # Precompute joint-dim tables: joint_dim_k[a][b] = dim of the projection
+    # of code k's row space onto coords (a, a+n, b, b+n). This is a
+    # column-perm-invariant pair signature, used to prune the backtracking.
+    def _joint_dims(B: np.ndarray) -> np.ndarray:
+        table = np.zeros((n, n), dtype=int)
+        for a in range(n):
+            for b in range(a, n):
+                cols = (
+                    np.stack([B[:, a], B[:, a + n], B[:, b], B[:, b + n]], axis=1).astype(int) % 2
+                )
+                d = gf2_rank(cols)
+                table[a, b] = d
+                table[b, a] = d
+        return table
+
+    jd1 = _joint_dims(B1)
+    jd2 = _joint_dims(B2)
+
+    # Flatten: for each qubit in code 1, what's its allowed set in code 2?
+    allowed: list[list[int]] = [list() for _ in range(n)]
+    qubit_order: list[int] = []  # order in which we assign qubits-of-code-1
+    for c1, c2 in zip(classes_1, classes_2):
+        for q1 in c1:
+            allowed[q1] = list(c2)
+            qubit_order.append(q1)
+
+    sigma_1_to_2: list[int] = [-1] * n  # sigma_1_to_2[q1] = q2
+    used: list[bool] = [False] * n
+    assigned: list[int] = []  # ordered list of q1's already assigned
+    start = time.monotonic()
+
+    def _final_check() -> Optional[list[int]]:
+        # σ_for_return[j] = qubit of code 1 that maps to position j in code 2,
+        # i.e. inverse of sigma_1_to_2.
+        sigma_for_return = [0] * n
+        for q1, q2 in enumerate(sigma_1_to_2):
+            sigma_for_return[q2] = q1
+        permuted = _apply_qubit_perm_symplectic(B1, sigma_for_return, n)
+        if np.array_equal(gf2_row_basis(permuted), B2):
+            return list(sigma_for_return)
+        return None
+
+    def _recurse(idx: int) -> Optional[list[int]]:
+        if time.monotonic() - start > budget_seconds:
+            return None
+        if idx == n:
+            return _final_check()
+        q1 = qubit_order[idx]
+        for q2 in allowed[q1]:
+            if used[q2]:
+                continue
+            # Pair-consistency prune: joint-dim with every already-assigned
+            # qubit must match across the two codes.
+            consistent = True
+            for q1p in assigned:
+                if jd1[q1, q1p] != jd2[q2, sigma_1_to_2[q1p]]:
+                    consistent = False
+                    break
+            if not consistent:
+                continue
+            sigma_1_to_2[q1] = q2
+            used[q2] = True
+            assigned.append(q1)
+            got = _recurse(idx + 1)
+            if got is not None:
+                return got
+            assigned.pop()
+            if time.monotonic() - start > budget_seconds:
+                return None
+            used[q2] = False
+            sigma_1_to_2[q1] = -1
+        return None
+
+    found = _recurse(0)
+    if found is not None:
+        return ("equivalent", found)
+    if time.monotonic() - start > budget_seconds:
+        return ("uncertain", None)
+    # Exhausted search → codes are inequivalent despite signatures matching.
+    return ("inequivalent", None)

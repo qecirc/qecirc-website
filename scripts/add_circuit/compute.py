@@ -4,7 +4,7 @@ Code-level computation: parameters, logicals, canonicalization, tags, YAML dedup
 
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Literal, NamedTuple, Optional
 
 import numpy as np
 import yaml
@@ -24,10 +24,37 @@ from .code_identify import (
     gf2_rref,
     gf2_rref_pivots,
     is_css,
+    is_permutation_equivalent,
     split_h_to_css,
 )
 from .models import CodeParams, TagEntry
 from .tag_suggest import suggest_code_tags
+
+# Wall-clock budget (seconds) for the Phase-2 permutation-equivalence scan
+# against each candidate code in the library. Surfaced as a constant so tests
+# can override via monkeypatch when needed.
+DEDUP_BUDGET_SECONDS = 10.0
+
+
+class DedupResult(NamedTuple):
+    """Result of YAML-based dedup against the stored library.
+
+    status:
+        "match"     — an existing code matched (hash or permutation-equivalent).
+        "uncertain" — invariants agree with one or more stored codes but
+                      permutation-equivalence could not be confirmed within
+                      DEDUP_BUDGET_SECONDS. The caller should surface this to
+                      the user rather than silently adding a duplicate.
+        "new"       — no match.
+    slug, qubit_permutation: set when status == "match".
+    uncertain_candidates: stored slugs that look like possible matches but
+        could not be confirmed; populated when status == "uncertain".
+    """
+
+    status: Literal["match", "uncertain", "new"]
+    slug: Optional[str]
+    qubit_permutation: Optional[list[int]]
+    uncertain_candidates: list[str]
 
 
 def compute_code_data(
@@ -93,15 +120,19 @@ def compute_code_data(
 
     # 6. YAML dedup
     code_status = "new"
-    existing_slug = None
-    yaml_qubit_perm = None
+    dedup_status: Literal["match", "uncertain", "new"] = "new"
+    uncertain_candidates: list[str] = []
+    yaml_qubit_perm: Optional[list[int]] = None
     if data_dir:
-        existing_slug, yaml_qubit_perm = _check_yaml_dedup(data_dir, c_hash, Hx, Hz)
-        if existing_slug is not None:
+        dedup = _check_yaml_dedup(data_dir, c_hash, Hx, Hz)
+        dedup_status = dedup.status
+        uncertain_candidates = dedup.uncertain_candidates
+        if dedup.status == "match":
             code_status = "existing"
+            yaml_qubit_perm = dedup.qubit_permutation
             # Use existing slug if no name was provided
             if not slug:
-                slug = existing_slug
+                slug = dedup.slug
 
     # For existing codes, use the yaml dedup permutation (maps user qubits to
     # the stored canonical form). For new codes, use the canonical_form
@@ -136,6 +167,8 @@ def compute_code_data(
             "h": orig_h.tolist(),
             "logical": orig_logical.tolist(),
         },
+        "dedup_status": dedup_status,
+        "uncertain_candidates": uncertain_candidates,
     }
 
 
@@ -191,14 +224,18 @@ def compute_code_data_h(
     slug = slugify(code_name) if code_name else ""
 
     code_status = "new"
-    existing_slug = None
+    dedup_status: Literal["match", "uncertain", "new"] = "new"
+    uncertain_candidates: list[str] = []
     existing_perm: Optional[list[int]] = None
     if data_dir:
-        existing_slug, existing_perm = _check_yaml_dedup_h(data_dir, c_hash, H, n)
-        if existing_slug is not None:
+        dedup = _check_yaml_dedup_h(data_dir, c_hash, H, n)
+        dedup_status = dedup.status
+        uncertain_candidates = dedup.uncertain_candidates
+        if dedup.status == "match":
             code_status = "existing"
+            existing_perm = dedup.qubit_permutation
             if not slug:
-                slug = existing_slug
+                slug = dedup.slug
 
     if code_status == "existing":
         # Use the perm from _check_yaml_dedup_h (already normalized to None for
@@ -232,6 +269,8 @@ def compute_code_data_h(
             "h": H.tolist(),
             "logical": orig_logical.tolist(),
         },
+        "dedup_status": dedup_status,
+        "uncertain_candidates": uncertain_candidates,
     }
 
 
@@ -394,79 +433,126 @@ def _is_self_dual(Hx, Hz):
     return np.array_equal(rref_x, rref_z)
 
 
-def _check_yaml_dedup(data_dir, c_hash, Hx, Hz):
-    """Check data_yaml/codes/ for existing CSS code. Returns (slug, permutation) or (None, None).
+def _check_yaml_dedup(data_dir, c_hash, Hx, Hz) -> DedupResult:
+    """Two-phase dedup against data_yaml/codes/ for a CSS submission.
 
-    The stored YAML carries only ``h`` and ``logical``; we recover the reference
-    Hx/Hz via :func:`split_h_to_css` before matching qubit orderings.
+    Phase 1 — fast: scan for canonical_hash match. On hit, run
+    find_qubit_permutation to recover the relabeling σ.
+
+    Phase 2 — slower fallback: on hash miss, scan stored codes with matching
+    (n, k, rank) and run is_permutation_equivalent. Returns "match" on a
+    confirmed permutation, "uncertain" when invariants agree but the search
+    times out, or "new" when nothing plausibly matches.
     """
     codes_dir = Path(data_dir) / "codes"
     if not codes_dir.exists():
-        return None, None
+        return DedupResult("new", None, None, [])
+
+    n = Hx.shape[1]
+    H_user = build_symplectic_h(Hx, Hz)
+    rank_user = gf2_rank(H_user)
+
+    # Pre-parse YAMLs once so we don't reload them between phases.
+    stored: list[tuple[str, dict]] = []
     for code_file in sorted(codes_dir.glob("*.yaml")):
-        data = yaml.safe_load(code_file.read_text(encoding="utf-8"))
-        if data.get("canonical_hash") == c_hash:
-            slug = code_file.stem
-            if data.get("h") is None:
-                raise ValueError(f"Code '{slug}' has CSS-format canonical_hash but missing h")
-            n_stored = data.get("n")
-            if n_stored is None:
-                raise ValueError(f"Code '{slug}' is missing required field 'n'")
-            H_stored = np.array(data["h"], dtype=int)
-            css_split = split_h_to_css(H_stored, n_stored)
-            if css_split is None:
-                raise ValueError(
-                    f"Code '{slug}' has CSS-format canonical_hash but stored h is not "
-                    f"row-CSS decomposable"
-                )
-            ref_Hx, ref_Hz = css_split
-            perm = find_qubit_permutation(Hx, Hz, ref_Hx, ref_Hz)
-            if perm is None:
-                raise ValueError(
-                    f"Code '{slug}' has matching canonical hash but no valid qubit "
-                    f"permutation could be found. This indicates a hash collision or "
-                    f"a bug in canonical_form."
-                )
-            # Normalize identity permutation to None (no relabeling needed)
-            if perm == list(range(len(perm))):
-                perm = None
-            return slug, perm
-    return None, None
+        stored.append((code_file.stem, yaml.safe_load(code_file.read_text(encoding="utf-8"))))
 
-
-def _check_yaml_dedup_h(data_dir, c_hash, H, n):
-    """Returns ``(slug, qubit_permutation)`` or ``(None, None)``.
-
-    Look up a non-CSS code by ``canonical_hash_h`` and verify by canonical
-    form. Hash collisions are astronomically unlikely with the new
-    SHA256-of-canonical hash, but we still verify the stored canonical form
-    matches the user's to rule out malformed YAML or future hash bugs.
-
-    The returned ``qubit_permutation`` is the relabeling from user qubits to
-    the canonical (= stored) ordering, normalized to None when it is the
-    identity.
-    """
-    codes_dir = Path(data_dir) / "codes"
-    if not codes_dir.exists():
-        return None, None
-    canon_user, perm = canonical_form_h(H, n)
-    for code_file in sorted(codes_dir.glob("*.yaml")):
-        data = yaml.safe_load(code_file.read_text(encoding="utf-8"))
+    # Phase 1: hash match.
+    for slug, data in stored:
         if data.get("canonical_hash") != c_hash:
             continue
         if data.get("h") is None:
-            raise ValueError(f"Code '{code_file.stem}' matches non-CSS hash but has no 'h' field")
+            raise ValueError(f"Code '{slug}' has CSS-format canonical_hash but missing h")
+        n_stored = data.get("n")
+        if n_stored is None:
+            raise ValueError(f"Code '{slug}' is missing required field 'n'")
+        H_stored = np.array(data["h"], dtype=int)
+        css_split = split_h_to_css(H_stored, n_stored)
+        if css_split is None:
+            raise ValueError(
+                f"Code '{slug}' has CSS-format canonical_hash but stored h is not "
+                f"row-CSS decomposable"
+            )
+        ref_Hx, ref_Hz = css_split
+        perm = find_qubit_permutation(Hx, Hz, ref_Hx, ref_Hz)
+        if perm is None:
+            raise ValueError(
+                f"Code '{slug}' has matching canonical hash but no valid qubit "
+                f"permutation could be found. This indicates a hash collision or "
+                f"a bug in canonical_form."
+            )
+        if perm == list(range(len(perm))):
+            perm = None
+        return DedupResult("match", slug, perm, [])
+
+    return _phase2_permutation_scan(stored, H_user, n, rank_user)
+
+
+def _phase2_permutation_scan(
+    stored: list[tuple[str, dict]],
+    H_user: np.ndarray,
+    n: int,
+    rank_user: int,
+) -> DedupResult:
+    """Common Phase-2 scan shared by the CSS and non-CSS dedup paths.
+
+    For each stored code with matching (n, rank), run is_permutation_equivalent
+    against the user's symplectic H. Returns "match" on the first equivalent,
+    "uncertain" if any candidate timed out and none matched, else "new".
+    """
+    uncertain: list[str] = []
+    for slug, data in stored:
+        if data.get("n") != n or data.get("h") is None:
+            continue
+        H_stored = np.array(data["h"], dtype=int) % 2
+        if H_stored.shape[1] != 2 * n or gf2_rank(H_stored) != rank_user:
+            continue
+        status, sigma = is_permutation_equivalent(
+            H_user, H_stored, n, budget_seconds=DEDUP_BUDGET_SECONDS
+        )
+        if status == "equivalent":
+            perm = sigma if sigma != list(range(n)) else None
+            return DedupResult("match", slug, perm, [])
+        if status == "uncertain":
+            uncertain.append(slug)
+    if uncertain:
+        return DedupResult("uncertain", None, None, uncertain)
+    return DedupResult("new", None, None, [])
+
+
+def _check_yaml_dedup_h(data_dir, c_hash, H, n) -> DedupResult:
+    """Two-phase dedup against data_yaml/codes/ for a non-CSS submission.
+
+    Same shape as :func:`_check_yaml_dedup`: hash lookup, then a permutation-
+    equivalence scan against same-shape candidates.
+    """
+    codes_dir = Path(data_dir) / "codes"
+    if not codes_dir.exists():
+        return DedupResult("new", None, None, [])
+
+    canon_user, perm_to_canon = canonical_form_h(H, n)
+    rank_user = gf2_rank(H)
+    H = np.asarray(H, dtype=int) % 2
+
+    stored: list[tuple[str, dict]] = []
+    for code_file in sorted(codes_dir.glob("*.yaml")):
+        stored.append((code_file.stem, yaml.safe_load(code_file.read_text(encoding="utf-8"))))
+
+    # Phase 1: hash match.
+    for slug, data in stored:
+        if data.get("canonical_hash") != c_hash:
+            continue
+        if data.get("h") is None:
+            raise ValueError(f"Code '{slug}' matches non-CSS hash but has no 'h' field")
         canon_stored = np.array(data["h"], dtype=int) % 2
         if canon_stored.shape == canon_user.shape and np.array_equal(canon_stored, canon_user):
-            slug = code_file.stem
-            if perm == list(range(len(perm))):
-                perm = None
-            return slug, perm
+            perm = perm_to_canon if perm_to_canon != list(range(n)) else None
+            return DedupResult("match", slug, perm, [])
         raise ValueError(
-            f"Hash collision: code '{code_file.stem}' has matching canonical_hash "
-            f"but different canonical H."
+            f"Hash collision: code '{slug}' has matching canonical_hash but different canonical H."
         )
-    return None, None
+
+    return _phase2_permutation_scan(stored, H, n, rank_user)
 
 
 def slugify(name: str) -> str:

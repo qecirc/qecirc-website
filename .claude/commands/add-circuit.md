@@ -58,9 +58,11 @@ match = find_existing_code_full(Hx, Hz)
 # Returns ExistingCodeMatch(slug, qubit_permutation) or None
 ```
 
-If found, tell the user: "This code already exists as `<slug>`. The new circuit will be added to it."
+If found with `match.status == "match"`, tell the user: "This code already exists as `<slug>`. The new circuit will be added to it."
 
 If `match.qubit_permutation` is not None, inform the user: "Your qubit ordering differs from the stored code. The circuit will be relabeled to match (permutation: `[...]`)." This is handled automatically by `add_circuit()` — validation still uses the user's original matrices (same source as the circuit).
+
+If `match.status == "uncertain"`, the submission has invariants matching one or more stored codes but the permutation-equivalence search timed out. List `match.uncertain_candidates` to the user and ask: "This looks like it might be the same as `<slug>` but I couldn't confirm a qubit permutation. Two options: (a) reformulate your Hx/Hz to match the stored form of one of the candidates and resubmit, or (b) add it as a separate code (`assume_new=True`)." Do not silently proceed — wait for the user's choice. Calling `add_circuit()` without `assume_new=True` will raise `UncertainDedupError` in this case.
 
 ### 2b. Inspect the circuit
 
@@ -222,16 +224,17 @@ npm run db:create && npm run dev
 
 ## Error handling
 
-| Condition                             | Action                                                           |
-| ------------------------------------- | ---------------------------------------------------------------- |
-| Source missing                        | Hard stop — ask the user to provide it                           |
-| Distance missing                      | Hard stop — ask the user to provide it                           |
-| Matrices have different column counts | Hard stop — report the mismatch                                  |
-| Circuit validation fails              | Stop — report details, suggest checking qubit ordering           |
-| Non-trivial qubit permutation         | Inform user, show permutation, proceed (relabeling is automatic) |
-| Tool slug not in `data_yaml/tools/`   | Ask user to confirm; note a new tool YAML may be needed          |
-| Zoo URL not found                     | Continue without it — not required                               |
-| Zoo page fetch fails                  | Continue — tag manually with user input                          |
+| Condition                               | Action                                                                                                                                        |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Source missing                          | Hard stop — ask the user to provide it                                                                                                        |
+| Distance missing                        | Hard stop — ask the user to provide it                                                                                                        |
+| Matrices have different column counts   | Hard stop — report the mismatch                                                                                                               |
+| Circuit validation fails                | Stop — report details, suggest checking qubit ordering                                                                                        |
+| Non-trivial qubit permutation           | Inform user, show permutation, proceed (relabeling is automatic)                                                                              |
+| `UncertainDedupError` / uncertain match | List candidate slugs to the user, ask whether to reformulate to match a stored code or add as new (`assume_new=True`); never silently proceed |
+| Tool slug not in `data_yaml/tools/`     | Ask user to confirm; note a new tool YAML may be needed                                                                                       |
+| Zoo URL not found                       | Continue without it — not required                                                                                                            |
+| Zoo page fetch fails                    | Continue — tag manually with user input                                                                                                       |
 
 ---
 
