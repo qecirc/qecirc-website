@@ -1,0 +1,10 @@
+qec_id: 43
+name: Plus State Preparation
+notes: Created using the `synthesize_encoding_circuit` function in mqt.qecc
+source: https://github.com/munich-quantum-toolkit/qecc
+gate_count: 27
+two_qubit_gate_count: 27
+depth: 4
+qubit_count: 19
+crumble_url: https://algassert.com/crumble#circuit=R_11_6_5_4_3_18_10_13_8;RX_9_2_17_14_1_0_16_7_12_15;CX_7_4_1_5_2_11_12_18_15_6_7_8_0_1_17_4_5_11_12_10_15_2_6_3_8_13_16_0_18_1_14_17_5_4_9_11_16_13_11_10_14_3_4_15_0_7_2_18_1_8_17_6_9_12_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["XDetectControlReset","XDetectControlReset","XDetectControlReset","ZDetectControlReset","ZDetectControlReset","ZDetectControlReset","ZDetectControlReset","XDetectControlReset","ZDetectControlReset","XDetectControlReset","ZDetectControlReset","ZDetectControlReset","XDetectControlReset","ZDetectControlReset","XDetectControlReset","XDetectControlReset","XDetectControlReset","XDetectControlReset","ZDetectControlReset"],["H","H","H",1,1,1,1,"H",1,"H",1,1,"H",1,"H","H","H","H"],[1,1,1,1,"X",1,1,"•"],[1,"•",1,1,1,"X"],[1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,"•","X"],["•","X"],[1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,"X",1,1,"•"],[1,1,1,1,1,1,1,1,"•",1,1,1,1,"X"],["X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,"•"],[1,1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,"X",1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"•",1,1,"X"]]}

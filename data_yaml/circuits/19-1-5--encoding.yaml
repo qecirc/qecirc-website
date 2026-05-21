@@ -1,0 +1,10 @@
+qec_id: 45
+name: Encoding
+notes: Created using the `synthesize_encoding_circuit` function in mqt.qecc
+source: https://github.com/munich-quantum-toolkit/qecc
+gate_count: 29
+two_qubit_gate_count: 29
+depth: 5
+qubit_count: 19
+crumble_url: https://algassert.com/crumble#circuit=R_3_2_18_17_14_16_7_12_8;RX_11_9_6_5_1_0_10_15_13;CX_4_3_5_7_6_14_0_16_11_2_1_8_9_12_4_18_5_14_6_3_13_16_15_6_7_4_0_18_11_5_13_8_10_11_0_5_1_7_9_18_2_15_4_17_10_12_15_4_7_0_16_1_6_17_11_9_18_2_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["XDetectControlReset","XDetectControlReset","ZDetectControlReset","ZDetectControlReset",1,"XDetectControlReset","XDetectControlReset","ZDetectControlReset","ZDetectControlReset","XDetectControlReset","XDetectControlReset","XDetectControlReset","ZDetectControlReset","XDetectControlReset","ZDetectControlReset","XDetectControlReset","ZDetectControlReset","ZDetectControlReset","ZDetectControlReset"],["H","H",1,1,1,"H","H",1,1,"H","H","H",1,"H",1,"H"],[1,1,1,"X","•"],[1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,"•",1,1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,"X",1,1,1,1,1,1,1,1,"•"],[1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,"X",1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"X",1,1,"•"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"X",1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,"X",1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,"•","X"],["•",1,1,1,1,"X"],[1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,"•"],[1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"]]}
