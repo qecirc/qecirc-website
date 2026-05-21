@@ -53,10 +53,11 @@ const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubi
   circuitSortToggleUrl(Astro.url, sort, field, basePath);
 ---
 
-<Layout title={code.name} description={`Circuits for ${code.name}${params ? ` ${params}` : ""}`}>
+<Layout title={code.name} description={`Circuits for ${code.name}${params && code.name !== params ? ` ${params}` : ""}`}>
   <div class="flex items-baseline flex-wrap gap-x-3.5 gap-y-1 mb-2">
     <h1 class="text-2xl font-bold">
-      {code.name} <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>
+      {code.name}
+      {code.name !== params && <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>}
     </h1>
     {code.zoo_url && (
       <a

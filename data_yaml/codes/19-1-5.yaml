@@ -1,4 +1,4 @@
-name: "[[19,1,5]] 6.6.6 Color Code"
+name: "6.6.6 Color Code"
 n: 19
 k: 1
 d: 5
@@ -806,4 +806,4 @@ logical:
       0,
       0,
     ]
-tags: [CSS, self-dual]
+tags: [CSS, self-dual, color-code]
