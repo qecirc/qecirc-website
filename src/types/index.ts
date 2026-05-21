@@ -96,5 +96,13 @@ export interface TagWithCount {
   count: number;
 }
 
-export type CodeWithMeta = Code & { tags: string[]; circuit_count: number };
+/**
+ * Narrower view of Code without the large `h` / `logical` JSON columns.
+ * Use this for list and search results — anything that does not render the
+ * stabilizer / logical matrices. The detail page (`getCodeBySlug`) returns
+ * the full Code, including h/logical.
+ */
+export type CodeListItem = Omit<Code, "h" | "logical">;
+
+export type CodeWithMeta = CodeListItem & { tags: string[]; circuit_count: number };
 export type ToolWithMeta = Tool & { tags: string[]; circuit_count: number };

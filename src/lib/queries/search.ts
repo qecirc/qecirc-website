@@ -1,5 +1,5 @@
 import { getDb } from "../db";
-import type { Code, Circuit, Tool } from "../../types";
+import type { Circuit, CodeListItem, Tool } from "../../types";
 import { withTags } from "./shared";
 
 function rawTokenize(query: string): string[] {
@@ -18,6 +18,7 @@ function searchByType<T extends { id: number }>(
   taggableType: "code" | "circuit" | "tool",
   query: string,
   limit: number,
+  columns: string = "c.*",
 ): (T & { tags: string[] })[] {
   const patterns = tokenize(query);
   if (patterns.length === 0) return [];
@@ -35,7 +36,7 @@ function searchByType<T extends { id: number }>(
 
   const rows = db
     .prepare(
-      `SELECT c.* FROM ${table} c
+      `SELECT ${columns} FROM ${table} c
        WHERE ${tokenClauses.join(" AND ")}
        ORDER BY c.name
        LIMIT ?`,
@@ -44,8 +45,12 @@ function searchByType<T extends { id: number }>(
   return withTags(rows, taggableType);
 }
 
-export function searchCodes(query: string): (Code & { tags: string[] })[] {
-  return searchByType<Code>("codes", "code", query, 20);
+// Match CODE_LIST_COLUMNS in queries/codes.ts — skip the large h/logical
+// JSON blobs since the search dropdown never renders matrices.
+const CODE_SEARCH_COLUMNS = "c.id, c.name, c.slug, c.n, c.k, c.d, c.zoo_url, c.canonical_hash";
+
+export function searchCodes(query: string): (CodeListItem & { tags: string[] })[] {
+  return searchByType<CodeListItem>("codes", "code", query, 20, CODE_SEARCH_COLUMNS);
 }
 
 export function searchCircuits(

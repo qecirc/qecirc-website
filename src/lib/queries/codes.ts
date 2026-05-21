@@ -1,5 +1,5 @@
 import { getDb } from "../db";
-import type { Code, CodeFilters, CodeSort, CodeWithMeta } from "../../types";
+import type { Code, CodeFilters, CodeListItem, CodeSort, CodeWithMeta } from "../../types";
 import {
   withTags,
   withCircuitCounts,
@@ -8,13 +8,20 @@ import {
   buildCodeOrderBy,
 } from "./shared";
 
-export function formatCodeParams(code: Code): string {
+// Columns to select for list/search views. Excludes `h` and `logical` which
+// can be multi-MB JSON blobs for large codes (e.g. [[144,12,12]] BB codes).
+// Pages that need the matrices use getCodeBySlug, which selects everything.
+const CODE_LIST_COLUMNS = "c.id, c.name, c.slug, c.n, c.k, c.d, c.zoo_url, c.canonical_hash";
+
+export function formatCodeParams(code: Pick<Code, "n" | "k" | "d">): string {
   return code.d != null ? `[[${code.n},${code.k},${code.d}]]` : `[[${code.n},${code.k}]]`;
 }
 
 export function getAllCodes(): CodeWithMeta[] {
   const db = getDb();
-  const codes = db.prepare("SELECT * FROM codes ORDER BY name").all() as Code[];
+  const codes = db
+    .prepare(`SELECT ${CODE_LIST_COLUMNS} FROM codes c ORDER BY c.name`)
+    .all() as CodeListItem[];
   return withCircuitCounts(withTags(codes, "code"), "code_id");
 }
 
@@ -35,7 +42,9 @@ export function filterCodes(filters: CodeFilters, sort?: CodeSort): CodeWithMeta
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const orderBy = buildCodeOrderBy(sort);
-  const codes = db.prepare(`SELECT * FROM codes c ${where} ${orderBy}`).all(...params) as Code[];
+  const codes = db
+    .prepare(`SELECT ${CODE_LIST_COLUMNS} FROM codes c ${where} ${orderBy}`)
+    .all(...params) as CodeListItem[];
   return withCircuitCounts(withTags(codes, "code"), "code_id");
 }
 
