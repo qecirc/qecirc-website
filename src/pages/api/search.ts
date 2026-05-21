@@ -18,14 +18,17 @@ export const GET: APIRoute = ({ url }) => {
     });
   }
 
-  const codes = searchCodes(q).map((c) => ({
-    type: "code" as const,
-    name: c.name,
-    slug: c.slug,
-    params: formatCodeParams(c),
-    tags: c.tags,
-    href: `/codes/${c.slug}`,
-  }));
+  const codes = searchCodes(q).map((c) => {
+    const params = formatCodeParams(c);
+    return {
+      type: "code" as const,
+      name: c.name,
+      slug: c.slug,
+      params: c.name === params ? "" : params,
+      tags: c.tags,
+      href: `/codes/${c.slug}`,
+    };
+  });
 
   const circuits = searchCircuits(q).map((ci) => ({
     type: "circuit" as const,

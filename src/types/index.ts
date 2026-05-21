@@ -76,6 +76,13 @@ export interface CircuitSort {
   dir: SortDir;
 }
 
+export type CodeSortField = "n" | "k" | "d";
+
+export interface CodeSort {
+  field: CodeSortField;
+  dir: SortDir;
+}
+
 export interface CircuitFilters {
   gate_count?: FilterCondition[];
   two_qubit_gate_count?: FilterCondition[];

@@ -11,6 +11,7 @@ interface Props {
 const { code, baseUrl } = Astro.props;
 const { name, slug, tags, circuit_count } = code;
 const params = formatCodeParams(code);
+const showParams = name !== params;
 ---
 
 <div
@@ -21,7 +22,7 @@ const params = formatCodeParams(code);
   <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
     <a href={`/codes/${slug}`} class="flex items-baseline gap-2" data-list-link>
       <h3 class="font-medium">{name}</h3>
-      <span class="text-sm text-gray-500 dark:text-gray-400">{params}</span>
+      {showParams && <span class="text-sm text-gray-500 dark:text-gray-400">{params}</span>}
       <span class="text-xs text-gray-400 dark:text-gray-500">{circuit_count} {circuit_count === 1 ? "circuit" : "circuits"}</span>
     </a>
     <div class="ml-auto">

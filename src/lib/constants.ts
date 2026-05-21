@@ -1,4 +1,4 @@
-import type { CircuitSortField } from "../types";
+import type { CircuitSortField, CodeSortField } from "../types";
 
 export const CIRCUIT_SORT_FIELDS: readonly CircuitSortField[] = [
   "qubit_count",
@@ -6,6 +6,8 @@ export const CIRCUIT_SORT_FIELDS: readonly CircuitSortField[] = [
   "gate_count",
   "two_qubit_gate_count",
 ];
+
+export const CODE_SORT_FIELDS: readonly CodeSortField[] = ["n", "k", "d"];
 
 export const FILTER_PART_REGEX = /^(!=|>=|<=|>|<|=)?\s*(\d+)$/;
 

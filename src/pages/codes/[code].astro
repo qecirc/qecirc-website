@@ -53,10 +53,26 @@ const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubi
   circuitSortToggleUrl(Astro.url, sort, field, basePath);
 ---
 
-<Layout title={code.name} description={`Circuits for ${code.name}${params ? ` ${params}` : ""}`}>
+<Layout title={code.name} description={`Circuits for ${code.name}${params && code.name !== params ? ` ${params}` : ""}`}>
+  <a
+    href="/"
+    class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"
+    title="Back to Codes — Backspace or b"
+    data-back-link
+  >
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M15 19l-7-7 7-7" />
+    </svg>
+    Codes
+    <kbd class="inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+      ⌫
+    </kbd>
+  </a>
+
   <div class="flex items-baseline flex-wrap gap-x-3.5 gap-y-1 mb-2">
     <h1 class="text-2xl font-bold">
-      {code.name} <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>
+      {code.name}
+      {code.name !== params && <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>}
     </h1>
     {code.zoo_url && (
       <a
