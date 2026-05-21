@@ -132,7 +132,7 @@ const isPauli = (v: typeof view) => v === "pauli";
             <button
               type="button"
               class:list={[
-                "code-matrix-toggle px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500",
+                "code-matrix-toggle px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500",
                 view === tab.view ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS,
               ]}
               data-target={id}
@@ -147,7 +147,7 @@ const isPauli = (v: typeof view) => v === "pauli";
     <button
       type="button"
       class:list={[
-        "code-matrix-numpy px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500",
+        "code-matrix-numpy px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500",
         format === "numpy" ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS,
       ]}
       data-target={id}
@@ -262,7 +262,7 @@ const isPauli = (v: typeof view) => v === "pauli";
   // Component-specific class names (`code-matrix-toggle`, `code-matrix-numpy`)
   // are appended in setClass() at the call site; only the shared tab styling
   // lives here so it stays in lockstep with FormatSwitcher.
-  const BASE_TAB_CLASS = "px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const BASE_TAB_CLASS = "px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500";
   const ACTIVE_CLASS = `${BASE_TAB_CLASS} ${TAB_ACTIVE_CLASS}`;
   const INACTIVE_CLASS = `${BASE_TAB_CLASS} ${TAB_INACTIVE_CLASS}`;
 
