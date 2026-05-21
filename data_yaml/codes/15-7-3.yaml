@@ -1,7 +1,8 @@
-name: "[[15,7,3]]"
+name: "[[15,7,3]] Quantum Hamming Code"
 n: 15
 k: 7
 d: 3
+zoo_url: https://errorcorrectionzoo.org/c/stab_15_7_3
 canonical_hash: 95454b1cf4f619fb39101bc98c57cff33e39786ba83460ae691c30ab4d3053a5
 h:
   - [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

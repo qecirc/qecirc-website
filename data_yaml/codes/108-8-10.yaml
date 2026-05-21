@@ -1,7 +1,8 @@
-name: "[[108,8,10]]"
+name: "[[108,8,10]] BB6 Code"
 n: 108
 k: 8
 d: 10
+zoo_url: https://errorcorrectionzoo.org/c/bb108
 canonical_hash: d9ceb7eca9ef02594d2b6d4ea59342226a4ee7664aa8af0c51e8470144cd656e
 h:
   - [

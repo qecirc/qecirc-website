@@ -1,7 +1,8 @@
-name: "[[72,12,6]]"
+name: "[[72,12,6]] BB6 Code"
 n: 72
 k: 12
 d: 6
+zoo_url: https://errorcorrectionzoo.org/c/bb72
 canonical_hash: 6c063cd873cc43fdeb309d3a8184f897e5c713e2dd1b947f48d80dbf4e0189ca
 h:
   - [
