@@ -3,7 +3,7 @@ import type {
   Circuit,
   CircuitBody,
   CircuitFilters,
-  CircuitOriginal,
+  CircuitOriginalLight,
   CircuitSort,
   TagWithCount,
 } from "../../types";
@@ -185,14 +185,15 @@ export function getCircuitsByQecIds(
   })[];
 }
 
-export function getOriginalForCircuit(circuitId: number): CircuitOriginal | null {
+export function getOriginalForCircuit(circuitId: number): CircuitOriginalLight | null {
   const db = getDb();
   return (
     (db
       .prepare(
-        `SELECT original_stim, original_h, original_logical
-       FROM circuit_originals WHERE circuit_id = ?`,
+        `SELECT original_stim,
+                (original_h IS NOT NULL AND original_logical IS NOT NULL) AS has_original_matrices
+         FROM circuit_originals WHERE circuit_id = ?`,
       )
-      .get(circuitId) as CircuitOriginal | undefined) ?? null
+      .get(circuitId) as CircuitOriginalLight | undefined) ?? null
   );
 }
