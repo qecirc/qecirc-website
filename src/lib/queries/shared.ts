@@ -3,13 +3,14 @@ import type {
   CircuitFilters,
   CircuitSort,
   CodeFilters,
+  CodeSort,
   FilterCondition,
   FilterOp,
   TaggableType,
   TagWithCount,
   ToolFilters,
 } from "../../types";
-import { CIRCUIT_SORT_FIELDS, FILTER_PART_REGEX } from "../constants";
+import { CIRCUIT_SORT_FIELDS, CODE_SORT_FIELDS, FILTER_PART_REGEX } from "../constants";
 
 export function getTagsFor(taggableType: TaggableType, taggableId: number): string[] {
   const db = getDb();
@@ -122,6 +123,15 @@ export function buildOrderBy(sort?: CircuitSort): string {
   }
   const dir = sort.dir === "asc" ? "ASC" : "DESC";
   // safe: field validated against VALID_SORT_FIELDS allowlist; NULLs always last
+  return `ORDER BY CASE WHEN c.${sort.field} IS NULL THEN 1 ELSE 0 END, c.${sort.field} ${dir}, c.name`;
+}
+
+export function buildCodeOrderBy(sort?: CodeSort): string {
+  if (!sort || !CODE_SORT_FIELDS.includes(sort.field)) {
+    return "ORDER BY c.n, c.k, c.d, c.name";
+  }
+  const dir = sort.dir === "asc" ? "ASC" : "DESC";
+  // safe: field validated against CODE_SORT_FIELDS allowlist; NULLs always last
   return `ORDER BY CASE WHEN c.${sort.field} IS NULL THEN 1 ELSE 0 END, c.${sort.field} ${dir}, c.name`;
 }
 
