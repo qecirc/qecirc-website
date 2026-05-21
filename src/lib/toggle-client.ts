@@ -15,6 +15,9 @@ export function initToggle(buttonId: string, detailId: string): void {
       detail.style.maxHeight = detail.scrollHeight + "px";
       chevron?.classList.add("rotate-90");
       toggle.setAttribute("aria-expanded", "true");
+      // Notify in-section listeners (e.g. lazy-loaders) that the section
+      // opened. Per-instance dedup is the listener's responsibility.
+      detail.dispatchEvent(new CustomEvent("collapsible-open"));
     }
   });
 }

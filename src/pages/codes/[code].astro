@@ -19,7 +19,6 @@ import {
   getToolsForCircuits,
 } from "../../lib/queries";
 import { parseCircuitParams, circuitSortToggleUrl } from "../../lib/url";
-import { safeParseMatrix } from "../../lib/utils";
 
 const { code: codeSlug } = Astro.params;
 const code = getCodeBySlug(codeSlug!);
@@ -31,9 +30,9 @@ if (!code) {
 const tags = getTagsFor("code", code.id);
 const params = formatCodeParams(code);
 
-const h = safeParseMatrix(code.h, code.n - code.k, 2 * code.n);
-const logical = safeParseMatrix(code.logical, 2 * code.k, 2 * code.n);
-const hasMatrices = !!(h && logical);
+const matricesUrl = code.canonical_hash
+  ? `/api/codes/${codeSlug}/matrices?v=${code.canonical_hash}`
+  : `/api/codes/${codeSlug}/matrices`;
 
 // Parse circuit filter and sort params
 const { raw, errors, tags: selectedTags, focus, filters, sort } = parseCircuitParams(Astro.url);
@@ -90,16 +89,10 @@ const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubi
     <TagList tags={tags} />
   </div>
 
-  {hasMatrices && h && logical && (
+  {code.has_matrices === 1 && (
     <div class="mb-6">
       <CollapsibleSection id="matrices" label="Check Matrices & Logical Operators">
-        <CodeMatrices
-          id="code-matrices"
-          n={code.n}
-          k={code.k}
-          h={h}
-          logical={logical}
-        />
+        <CodeMatrices id="code-matrices" dataUrl={matricesUrl} />
       </CollapsibleSection>
     </div>
   )}

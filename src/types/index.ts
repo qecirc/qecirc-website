@@ -96,5 +96,30 @@ export interface TagWithCount {
   count: number;
 }
 
-export type CodeWithMeta = Code & { tags: string[]; circuit_count: number };
+/**
+ * Narrower view of Code without the large `h` / `logical` JSON columns.
+ * Use this for list and search results — anything that does not render the
+ * stabilizer / logical matrices. The detail page (`getCodeBySlug`) returns
+ * `CodeDetail` (same shape plus a `has_matrices` flag); the matrices
+ * themselves are fetched lazily from `/api/codes/[slug]/matrices`.
+ */
+export type CodeListItem = Omit<Code, "h" | "logical">;
+
+/**
+ * Shape returned by `getCodeBySlug`. Same as `CodeListItem` plus a boolean
+ * (better-sqlite3 returns SQLite booleans as 0 or 1) indicating whether the
+ * code has stabilizer / logical matrices available for lazy loading.
+ */
+export type CodeDetail = CodeListItem & { has_matrices: 0 | 1 };
+
+export type CodeWithMeta = CodeListItem & { tags: string[]; circuit_count: number };
 export type ToolWithMeta = Tool & { tags: string[]; circuit_count: number };
+
+/**
+ * Narrower view of CircuitOriginal without the large `original_h` /
+ * `original_logical` JSON columns. The matrices themselves are fetched
+ * lazily from `/api/circuits/[qec_id]/originals`.
+ */
+export type CircuitOriginalLight = Pick<CircuitOriginal, "original_stim"> & {
+  has_original_matrices: 0 | 1;
+};
