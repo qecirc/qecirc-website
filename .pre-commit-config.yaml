@@ -21,12 +21,12 @@ repos:
       - id: check-github-workflows
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.17
+    rev: 0.11.19
     hooks:
       - id: uv-lock
 
   - repo: https://github.com/adhtruong/mirrors-typos
-    rev: v1.47.0
+    rev: v1.47.2
     hooks:
       - id: typos
 
@@ -39,7 +39,7 @@ repos:
         files: \.(astro|ts|tsx|js|jsx|css|json|md|yml|yaml)$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.15
+    rev: v0.15.16
     hooks:
       - id: ruff
         args: ["--fix"]
