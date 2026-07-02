@@ -54,6 +54,15 @@ class CircuitResult:
             c.status == "passed" for c in self.checks
         )
 
+    @property
+    def is_skipped(self) -> bool:
+        # Skipped = no runnable validation for this circuit: either it lacks a
+        # functionality tag, or every check was skipped (e.g. non-CSS codes,
+        # which have no CSS validator yet). These must not count as failures.
+        return self.circuit_type == "skipped" or (
+            bool(self.checks) and all(c.status == "skipped" for c in self.checks)
+        )
+
 
 def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
     data_path = Path(data_dir)
@@ -173,8 +182,8 @@ def _check_state_prep(
 
 
 def print_results(results: list[CircuitResult]) -> None:
-    checked = [r for r in results if r.circuit_type != "skipped"]
-    skipped = [r for r in results if r.circuit_type == "skipped"]
+    checked = [r for r in results if not r.is_skipped]
+    skipped = [r for r in results if r.is_skipped]
     passed = [r for r in checked if r.passed]
     failed = [r for r in checked if not r.passed]
 
@@ -205,7 +214,7 @@ def main():
     results = validate_all(args.data_dir)
     print_results(results)
 
-    failed = [r for r in results if r.circuit_type != "skipped" and not r.passed]
+    failed = [r for r in results if not r.is_skipped and not r.passed]
     sys.exit(1 if failed else 0)
 
 

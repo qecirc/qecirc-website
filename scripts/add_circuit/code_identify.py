@@ -179,6 +179,29 @@ def extract_params(Hx: np.ndarray, Hz: np.ndarray) -> CodeParams:
 # ---------------------------------------------------------------------------
 
 
+def _pad_to_equal_rows(A: np.ndarray, B: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Zero-pad the row-shorter of two equal-width matrices so both have the
+    same row count.
+
+    A no-op when the row counts already match, so symmetric / self-dual CSS
+    codes (``rank(Hx) == rank(Hz)``) are byte-for-byte unchanged and keep their
+    existing :func:`canonical_hash`. For asymmetric CSS codes
+    (``rank(Hx) != rank(Hz)``, e.g. the Shor code's 2 X- vs 6 Z-generators) it
+    makes the ``np.hstack`` below well-defined; the padding rows are all-zero
+    and are stripped again by the RREF zero-row removal, so they don't affect
+    the canonicalization.
+    """
+    ra, rb = A.shape[0], B.shape[0]
+    if ra == rb:
+        return A, B
+    r = max(ra, rb)
+    if ra < r:
+        A = np.vstack([A, np.zeros((r - ra, A.shape[1]), dtype=A.dtype)])
+    if rb < r:
+        B = np.vstack([B, np.zeros((r - rb, B.shape[1]), dtype=B.dtype)])
+    return A, B
+
+
 def canonical_form(Hx: np.ndarray, Hz: np.ndarray) -> tuple[np.ndarray, np.ndarray, list[int]]:
     """
     Compute the canonical representation of a code given by (Hx, Hz).
@@ -190,8 +213,14 @@ def canonical_form(Hx: np.ndarray, Hz: np.ndarray) -> tuple[np.ndarray, np.ndarr
 
     Returns (canon_Hx, canon_Hz, column_permutation) where the permutation
     maps canonical column index -> original column index.
+
+    ``Hx`` and ``Hz`` may have different row counts (CSS codes with
+    ``rank(Hx) != rank(Hz)``); they are zero-padded to a common height before
+    the joint RREF (a no-op for symmetric codes — see
+    :func:`_pad_to_equal_rows`).
     """
     n = Hx.shape[1]
+    Hx, Hz = _pad_to_equal_rows(Hx, Hz)
     symplectic = np.hstack([Hx, Hz])
     rref = gf2_rref(symplectic)
     # Remove all-zero rows
@@ -229,7 +258,11 @@ def canonical_hash(Hx: np.ndarray, Hz: np.ndarray) -> str:
     codes with different generator splits but same concatenated bytes.
     """
     canon_Hx, canon_Hz, _ = canonical_form(Hx, Hz)
+    # Row counts (before padding) go in the prefix so asymmetric codes keep a
+    # distinct fingerprint; padding to equal heights makes the hstack valid and
+    # is a no-op for symmetric codes (preserving their existing hash).
     prefix = f"{canon_Hx.shape[0]}:{canon_Hz.shape[0]}:".encode()
+    canon_Hx, canon_Hz = _pad_to_equal_rows(canon_Hx, canon_Hz)
     combined = np.hstack([canon_Hx, canon_Hz])
     return hashlib.sha256(prefix + combined.tobytes()).hexdigest()
 

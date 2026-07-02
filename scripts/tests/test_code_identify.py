@@ -284,6 +284,36 @@ class TestCanonicalHash:
         p = [4, 2, 0, 3, 1]
         assert canonical_hash(Hx, Hz) == canonical_hash(Hx[:, p], Hz[:, p])
 
+    def test_asymmetric_css_shor(self):
+        """Asymmetric CSS code (rank(Hx) != rank(Hz)) must hash without error.
+
+        The Shor [[9,1,3]] code has 2 X-generators and 6 Z-generators; the
+        earlier ``np.hstack([Hx, Hz])`` assumed equal row counts and raised.
+        """
+        Hx = np.array(
+            [
+                [1, 1, 1, 1, 1, 1, 0, 0, 0],
+                [0, 0, 0, 1, 1, 1, 1, 1, 1],
+            ]
+        )
+        Hz = np.array(
+            [
+                [1, 1, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 1, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 1, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 1, 1],
+            ]
+        )
+        h = canonical_hash(Hx, Hz)
+        assert isinstance(h, str) and len(h) == 64
+        # deterministic and invariant under (independent) row permutations
+        assert h == canonical_hash(Hx, Hz)
+        assert h == canonical_hash(Hx[[1, 0], :], Hz[[5, 0, 3, 1, 4, 2], :])
+        # a genuinely different code hashes differently
+        assert h != canonical_hash(Hz, Hx)
+
 
 # ---------------------------------------------------------------------------
 # find_qubit_permutation

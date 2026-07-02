@@ -130,9 +130,14 @@ def compute_code_data(
         if dedup.status == "match":
             code_status = "existing"
             yaml_qubit_perm = dedup.qubit_permutation
-            # Use existing slug if no name was provided
-            if not slug:
-                slug = dedup.slug
+            # The existing code's stored slug is authoritative. A circuit for an
+            # existing code must file under that slug (e.g. `23-1-7`) regardless
+            # of any `code_name` passed in — otherwise it lands under
+            # `slugify(code_name)`, which has no matching code YAML and is
+            # rejected by the DB build ("code '<slug>' not found"). This is why
+            # you may omit `code_name` for existing codes: it is ignored for
+            # slug purposes on a match either way.
+            slug = dedup.slug
 
     # For existing codes, use the yaml dedup permutation (maps user qubits to
     # the stored canonical form). For new codes, use the canonical_form

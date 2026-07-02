@@ -58,6 +58,9 @@ def build_circuit_yaml(circ):
     if circ.get("quirk_url"):
         data["quirk_url"] = circ["quirk_url"]
 
+    if circ.get("tags"):
+        data["tags"] = list(circ["tags"])
+
     return data
 
 

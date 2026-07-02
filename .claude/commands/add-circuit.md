@@ -193,10 +193,12 @@ Circuit tags require user input. Ask explicitly:
 
 ### 4e. Apply tags
 
-Edit the generated YAML files to add the `tags:` field:
+Add the `tags:` field:
 
-- `data_yaml/codes/<slug>.yaml` — code-level tags
-- `data_yaml/circuits/<code-slug>--<circuit-slug>.yaml` — circuit-level tags
+- `data_yaml/codes/<slug>.yaml` — code-level tags (edit the YAML)
+- `data_yaml/circuits/<code-slug>--<circuit-slug>.yaml` — circuit-level tags.
+  Prefer passing these up front via `add_circuit(..., tags=[...])` (Phase 3) so
+  no manual edit is needed; otherwise edit the YAML here.
 
 ### Tag rules
 
@@ -212,9 +214,11 @@ Edit the generated YAML files to add the `tags:` field:
 1. Read and show the final YAML files to the user (code YAML + circuit YAML).
 2. Ask: "Does everything look correct? You can edit anything before we rebuild."
 3. Let the user make manual corrections if needed.
-4. Once approved, rebuild:
+4. Once approved, Prettier-format the generated YAML (the ingestion writes plain
+   YAML, which is **not** Prettier-styled; CI runs `format:check`), then rebuild:
 
 ```bash
+npm run format                    # required — CI gate; do not skip
 npm run db:create && npm run dev
 ```
 
@@ -235,6 +239,8 @@ npm run db:create && npm run dev
 | Tool slug not in `data_yaml/tools/`     | Ask user to confirm; note a new tool YAML may be needed                                                                                       |
 | Zoo URL not found                       | Continue without it — not required                                                                                                            |
 | Zoo page fetch fails                    | Continue — tag manually with user input                                                                                                       |
+| Code already exists (dedup match)       | Omit `code_name` — the stored slug is used automatically. A `code_name` passed here is ignored for the slug (do not rely on it)               |
+| `FileExistsError` (circuit slug exists) | A circuit with that `<code>--<circuit>` slug already exists. Use a distinct `circuit_name`, or pass `overwrite=True` to replace it in place   |
 
 ---
 

@@ -187,7 +187,7 @@ Add `--dry-run` to preview without writing. Multiple circuits per code: pass mul
 
 ## Step 3: Add tags
 
-The pipeline only auto-assigns mathematically verified code tags (`CSS`, `self-dual`). All other tags must be added manually by editing the generated YAML files.
+The pipeline only auto-assigns mathematically verified code tags (`CSS`, `self-dual`). All other tags must be added — either by passing them to `add_circuit(..., tags=[...])` up front (circuit tags only), or by editing the generated YAML files afterwards. Fault tolerance (`ft` / `non-ft`) is never inferred, so always set it explicitly.
 
 ### Code tags (`data_yaml/codes/<slug>.yaml`)
 
@@ -222,9 +222,14 @@ Prefer reusing existing tags over inventing new ones.
 ## Step 4: Rebuild
 
 ```bash
+npm run format                    # Prettier-format the generated YAML (CI gate)
 git diff                          # Review changes
 npm run db:create && npm run dev  # Rebuild database and restart
 ```
+
+> The ingestion writes plain YAML, which is **not** Prettier-formatted. CI runs
+> `format:check`, so run `npm run format` after generating (or editing) any
+> `data_yaml/` files or the build will fail.
 
 ---
 
@@ -323,3 +328,5 @@ Tools must be added manually before circuits can reference them.
 - **Restart the dev server** after `db:create` — the Astro process caches the DB connection.
 - Running generate twice for the same code detects the existing entry via canonical hash.
 - To edit existing data, modify the YAML files directly and run `npm run db:create`.
+- **Existing codes: omit `code_name`.** On a dedup match the circuit files under the code's _stored_ slug (e.g. `23-1-7`); any `code_name` you pass is ignored for the slug. Passing a name that _doesn't_ resolve to the stored slug would otherwise orphan the circuit.
+- **Overwrites are refused by default.** If a circuit with the same `<code>--<circuit>` slug already exists, `add_circuit` raises `FileExistsError`. Pass `overwrite=True` to replace it in place (the existing `qec_id` is preserved), or choose a distinct `circuit_name`.
