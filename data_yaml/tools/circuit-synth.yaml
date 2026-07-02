@@ -1,0 +1,3 @@
+name: Circuit-Synth
+description: Clifford and CNOT circuit synthesis via greedy elimination with rollout search, minimizing two-qubit gate count or depth.
+tags: [Python, encoding, state-preparation]

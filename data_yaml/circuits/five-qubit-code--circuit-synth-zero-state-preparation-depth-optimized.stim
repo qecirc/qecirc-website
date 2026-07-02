@@ -1,0 +1,30 @@
+Y 4
+H 0 1
+S 2
+Y 3
+H 4
+S_DAG 0
+S 1
+H 2 1
+S_DAG 2
+SWAP 4 0
+S_DAG 0
+SWAP 4 1 1 2 4 3
+S_DAG 2
+H 1 3 4
+S_DAG 1 3
+S 4
+CZ 2 0
+H 4 0
+S 0
+CZ 1 4
+H 0 4
+S_DAG 1
+CZ 3 0
+Y 0
+S 3
+S_DAG 0
+H 3 0
+CZ 3 4 1 0
+H 3 0 1
+S 3

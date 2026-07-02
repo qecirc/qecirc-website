@@ -1,0 +1,11 @@
+qec_id: 93
+name: Circuit-Synth Zero State Preparation (Depth-Optimized)
+tool: circuit-synth
+source: circuit-synth
+gate_count: 11
+two_qubit_gate_count: 9
+depth: 4
+qubit_count: 9
+crumble_url: https://algassert.com/crumble#circuit=H_0_2;CX_2_6_0_3_6_8_3_4_2_0_6_7_4_5_3_2_0_1_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H",1,"H"],[1,1,"•",1,1,1,"X"],["•",1,1,"X"],[1,1,1,1,1,1,"•",1,"X"],[1,1,1,"•","X"],["X",1,"•"],[1,1,1,1,1,1,"•","X"],[1,1,1,1,"•","X"],[1,1,"X","•"],["•","X"]]}
+tags: [state-preparation, non-ft]
