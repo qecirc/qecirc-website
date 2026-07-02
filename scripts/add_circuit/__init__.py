@@ -124,9 +124,11 @@ def add_circuit(
     zoo_url: str = "",
     tool: str = "",
     notes: str = "",
+    tags: Optional[list[str]] = None,
     data_dir: Union[str, Path] = "data_yaml",
     dry_run: bool = False,
     assume_new: bool = False,
+    overwrite: bool = False,
 ) -> AddCircuitResult:
     """
     Add a circuit to the QECirc library by writing YAML files to data_yaml/.
@@ -152,10 +154,18 @@ def add_circuit(
         zoo_url: QEC Zoo URL for the code.
         tool: Tool slug (e.g. "mqt-qecc").
         notes: Circuit notes.
+        tags: Circuit tags written to the YAML (e.g. ``["encoding", "non-ft"]``).
+            The functionality tag (``encoding`` / ``state-preparation``) drives
+            circuit-type routing in ``validate:circuits``; fault tolerance
+            (``ft`` / ``non-ft``) is never inferred, so pass it explicitly.
         data_dir: Path to data_yaml directory.
         dry_run: If True, report what would be written without writing.
         assume_new: If True, suppress :exc:`UncertainDedupError` and add as a
             new code even when invariants align with stored candidates.
+        overwrite: If a circuit with the same ``<code>--<circuit>`` slug already
+            exists, ``False`` (the default) raises :exc:`FileExistsError` rather
+            than silently clobbering it; ``True`` replaces it in place, keeping
+            the existing ``qec_id`` so the public ``#N`` identifier is stable.
 
     Returns:
         AddCircuitResult with code/circuit info and list of files written.
@@ -218,12 +228,34 @@ def add_circuit(
         source=source,
         tool=tool,
         notes=notes,
+        tags=tags,
     )
-    circ_data["qec_id"] = next_qec_id(data_dir)
 
     # Collect files to write
     code_slug = code["slug"]
     circ_slug = circ_data["slug"]
+    circ_yaml_path = data_dir / "circuits" / f"{code_slug}--{circ_slug}.yaml"
+
+    # Guard against silently overwriting a different circuit that shares the
+    # same <code>--<circuit> slug (e.g. two distinct constructions of the same
+    # code submitted under the same circuit name). On a real write we refuse
+    # unless `overwrite=True`; when overwriting we reuse the existing qec_id so
+    # the public #N identifier is stable rather than being reallocated.
+    existing_qec_id = None
+    if circ_yaml_path.exists():
+        if not dry_run and not overwrite:
+            raise FileExistsError(
+                f"circuit '{code_slug}--{circ_slug}' already exists at "
+                f"{circ_yaml_path}. Pass overwrite=True to replace it, or use a "
+                f"distinct circuit_name."
+            )
+        import yaml as _yaml
+
+        prev = _yaml.safe_load(circ_yaml_path.read_text())
+        if prev and isinstance(prev.get("qec_id"), int):
+            existing_qec_id = prev["qec_id"]
+    circ_data["qec_id"] = existing_qec_id or next_qec_id(data_dir)
+
     files_to_write: list[tuple[Path, str]] = []
 
     if code.get("status") == "new":

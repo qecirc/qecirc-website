@@ -18,6 +18,7 @@ def compute_circuit_data(
     source: str = "",
     tool: str = "",
     notes: str = "",
+    tags: Optional[list[str]] = None,
 ) -> dict:
     """
     Compute all circuit-level data.
@@ -70,6 +71,7 @@ def compute_circuit_data(
         "quirk_url": quirk_url,
         "original_stim": original_stim,
         "bodies": bodies,
+        "tags": list(tags) if tags else [],
     }
 
 
