@@ -79,6 +79,12 @@ function validate(file, data, schema) {
       errors.push(
         `${file}: field "${key}" should be ${schema.required[key]}, got ${typeof data[key]}`,
       );
+    } else if (schema.required[key] === "string" && data[key].trim() === "") {
+      // Required string fields must be non-empty. The DB build
+      // (create_database.mjs) treats an empty string as missing (falsy), so
+      // rejecting it here keeps the two validators consistent and catches it in
+      // CI before the build (e.g. an empty `source` — provenance is required).
+      errors.push(`${file}: required field "${key}" must not be empty`);
     }
   }
 
