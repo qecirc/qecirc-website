@@ -177,6 +177,19 @@ class TestValidateEncoding:
         result = validate_encoding(bad_circuit, STEANE_H, STEANE_H)
         assert result.startswith("failed:")
 
+    def test_reset_encoder_passes_via_simulation(self):
+        # Ancilla-initialising encoders contain resets and have no unitary
+        # tableau; validate_encoding must fall back to simulation. Prepending
+        # a reset of all qubits is a no-op on |0...0> but forces that path.
+        reset_encoder = "R 0 1 2 3 4 5 6\n" + STEANE_STIM
+        assert validate_encoding(reset_encoder, STEANE_H, STEANE_H) == "passed"
+
+    def test_reset_encoder_bad_fails(self):
+        # A reset-containing circuit that does not prepare a codeword must
+        # still be reported as failed (not error out) via the fallback.
+        result = validate_encoding("R 0 1 2 3 4 5 6\nH 0\n", STEANE_H, STEANE_H)
+        assert result.startswith("failed:")
+
 
 # ---------------------------------------------------------------------------
 # validate_state_prep

@@ -138,16 +138,62 @@ def _to_stim_circuit(circuit: Union[stim.Circuit, str]) -> stim.Circuit:
     return stim.Circuit(circuit)
 
 
+def _check_codespace_on_zero_input(circ: stim.Circuit, Hx: np.ndarray, Hz: np.ndarray) -> str:
+    """Simulate ``circ`` on ``|0...0>`` and check every code stabilizer is +1.
+
+    Reset-tolerant: uses a ``TableauSimulator`` (which supports ``R``/``RX``)
+    rather than ``to_tableau``, so it works for ancilla-initialising circuits.
+    Shared by :func:`validate_state_prep` and by :func:`validate_encoding`'s
+    non-unitary fallback.
+
+    Returns 'passed' or 'failed: <reason>'.
+    """
+    sim = stim.TableauSimulator()
+    sim.do_circuit(circ)
+    n = Hx.shape[1]
+
+    for row in Hz:
+        ps = stim.PauliString(n)
+        for i, v in enumerate(row):
+            if v:
+                ps[i] = 3  # Z
+        if sim.peek_observable_expectation(ps) != 1:
+            return "failed: Z-stabilizer not satisfied"
+
+    for row in Hx:
+        ps = stim.PauliString(n)
+        for i, v in enumerate(row):
+            if v:
+                ps[i] = 1  # X
+        if sim.peek_observable_expectation(ps) != 1:
+            return "failed: X-stabilizer not satisfied"
+
+    return "passed"
+
+
 def validate_encoding(circuit: Union[stim.Circuit, str], Hx: np.ndarray, Hz: np.ndarray) -> str:
     """Verify encoding circuit maps |0...0> to the code space.
 
     An encoding circuit U should satisfy: for every stabilizer S of the code,
     U^dag S U stabilizes |0...0> (only Z and I components, no X or Y).
 
+    Ancilla-initialising encoders contain reset instructions (``R``/``RX`` on
+    the ancilla qubits) and so have no unitary tableau. For those we fall back
+    to simulating on |0...0>: the encoder then prepares |0_L>, so every code
+    stabilizer must be a +1 eigenstate of the output — the same
+    ``|0...0> -> codespace`` property the unitary path checks, just evaluated by
+    simulation instead of by pulling the stabilizers back through U.
+
     Returns 'passed' or 'failed: <reason>'.
     """
     circ = _to_stim_circuit(circuit)
-    tableau = circ.to_tableau()
+    try:
+        tableau = circ.to_tableau()
+    except ValueError:
+        # Non-unitary (contains resets/measurements) — use the reset-tolerant
+        # simulation check.
+        return _check_codespace_on_zero_input(circ, Hx, Hz)
+
     num_qubits = len(tableau)
     inv = tableau.inverse()
 
@@ -174,28 +220,7 @@ def validate_state_prep(circuit: Union[stim.Circuit, str], Hx: np.ndarray, Hz: n
 
     Returns 'passed' or 'failed: <reason>'.
     """
-    circ = _to_stim_circuit(circuit)
-    sim = stim.TableauSimulator()
-    sim.do_circuit(circ)
-    n = Hx.shape[1]
-
-    for row in Hz:
-        ps = stim.PauliString(n)
-        for i, v in enumerate(row):
-            if v:
-                ps[i] = 3  # Z
-        if sim.peek_observable_expectation(ps) != 1:
-            return "failed: Z-stabilizer not satisfied"
-
-    for row in Hx:
-        ps = stim.PauliString(n)
-        for i, v in enumerate(row):
-            if v:
-                ps[i] = 1  # X
-        if sim.peek_observable_expectation(ps) != 1:
-            return "failed: X-stabilizer not satisfied"
-
-    return "passed"
+    return _check_codespace_on_zero_input(_to_stim_circuit(circuit), Hx, Hz)
 
 
 def validate_syndrome_extraction(
