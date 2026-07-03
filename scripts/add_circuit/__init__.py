@@ -308,3 +308,52 @@ def add_circuit(
         dry_run=dry_run,
         qubit_permutation=perm,
     )
+
+
+# State-preparation ingestion helpers (derive/validate/fit a code from a prep
+# circuit). Imported at the end so `add_circuit` is already defined for the
+# lazy import inside `import_state_prep`.
+from .state_prep import (  # noqa: E402
+    FitResult,
+    anchor_h_in_circuit_labeling,
+    derive_matrices_self_dual,
+    derive_matrices_two_circuit,
+    fit_circuit_to_anchor,
+    fit_circuit_to_anchor_h,
+    import_state_prep,
+    logical_basis_of,
+    logical_state_of,
+    strip_flags,
+    symplectic_validate,
+)
+
+__all__ = [  # noqa: F822  (names defined above / re-exported)
+    "add_circuit",
+    "AddCircuitResult",
+    "UncertainDedupError",
+    "check_code",
+    "check_code_h",
+    "find_existing_code",
+    "find_existing_code_full",
+    "find_existing_code_h",
+    "preview_circuit",
+    "summarize_circuit",
+    "validate_encoding",
+    "validate_state_prep",
+    "validate_syndrome_extraction",
+    "extract_code",
+    "ExtractedCode",
+    "ExistingCodeMatch",
+    # state_prep re-exports
+    "strip_flags",
+    "derive_matrices_self_dual",
+    "derive_matrices_two_circuit",
+    "symplectic_validate",
+    "logical_state_of",
+    "logical_basis_of",
+    "fit_circuit_to_anchor",
+    "fit_circuit_to_anchor_h",
+    "anchor_h_in_circuit_labeling",
+    "FitResult",
+    "import_state_prep",
+]

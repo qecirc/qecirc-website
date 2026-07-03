@@ -76,10 +76,18 @@ def compute_circuit_data(
 
 
 def _relabel_qubits(circ, permutation):
-    """Relabel qubits using MQT QECC."""
+    """Relabel qubits using MQT QECC.
+
+    ``permutation`` covers the ``n`` code (data) qubits. Circuits may carry
+    extra flag / ancilla qubits at indices ``>= n`` (e.g. fault-tolerant
+    state-prep) that are not part of the code and so are absent from the
+    permutation — those pass through unchanged rather than raising a KeyError.
+    """
     from mqt.qecc.circuit_synthesis.circuit_utils import relabel_qubits
 
     mapping = {old: new for new, old in enumerate(permutation)}
+    for q in range(circ.num_qubits):
+        mapping.setdefault(q, q)
     return relabel_qubits(circ, mapping)
 
 

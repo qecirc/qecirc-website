@@ -1,0 +1,555 @@
+"""
+State-preparation circuit tooling: derive a code from a prep circuit, validate
+it (CSS or non-CSS), identify the prepared logical state, and fit a circuit to an
+existing code by qubit permutation.
+
+These are general, source-agnostic primitives for ingesting *state-preparation*
+circuits — circuits that prepare a logical basis state (|0_L>, |+_L>, ...) rather
+than carrying explicit check matrices. They complement :mod:`scripts.add_circuit`:
+where ``add_circuit`` needs the code's matrices up front, the helpers here recover
+those matrices (and the qubit labeling) from the circuit itself.
+
+Core facts these tools are built around:
+
+* Propagating Z through a prep circuit's tableau yields the stabilizers of the
+  prepared state. For |0_L> the **pure-X** generators are exactly ``Hx`` (logical
+  X flips |0_L>, so it is excluded); for |+_L> the **pure-Z** generators are
+  exactly ``Hz``. A *single* basis state cannot separate the stabilizer ``Hz``
+  from the logical ``Z`` (the state is stabilized by both), so the code is
+  recovered by one of:
+
+  - :func:`derive_matrices_two_circuit` — ``Hx`` from |0_L> + ``Hz`` from |+_L>;
+    fully determines a CSS code with no external definition.
+  - :func:`derive_matrices_self_dual` — for self-dual CSS codes ``Hz == Hx``, so a
+    single |0_L> circuit suffices.
+  - :func:`fit_circuit_to_anchor` / :func:`fit_circuit_to_anchor_h` — fit the
+    circuit against a trusted (stored) code by a validation-driven qubit
+    permutation search. Required for non-CSS or non-self-dual codes.
+
+* Flag / ancilla qubits occupy qubit indices ``>= n``. :func:`strip_flags`
+  removes them so the code can be derived from the data qubits alone, while the
+  *full* circuit is what a caller stores.
+
+* :func:`import_state_prep` ties these together: derive/anchor the matrices in the
+  circuit's own labeling, verify the logical state, then hand the untouched
+  circuit to ``add_circuit`` (which dedups to the canonical code, applies the
+  permutation, and preserves the original circuit + matrices in ``originals/``),
+  folding otherwise-unschema'd provenance into ``notes`` + ``tags``.
+"""
+
+from __future__ import annotations
+
+import itertools
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Optional, Union
+
+import numpy as np
+import stim
+
+from .circuit_validate import _classify_generators, _propagate_z, validate_state_prep
+from .code_identify import is_css
+
+if TYPE_CHECKING:
+    from . import AddCircuitResult
+
+
+# ---------------------------------------------------------------------------
+# Flag handling
+# ---------------------------------------------------------------------------
+
+
+def strip_flags(circuit: Union[str, stim.Circuit], n_data: int) -> stim.Circuit:
+    """Return the sub-circuit acting only on data qubits ``0 .. n_data-1``.
+
+    Gates that touch any qubit with index ``>= n_data`` (flag / ancilla qubits)
+    are dropped. TICKs are dropped too. Used to recover the bare state-prep from
+    a fault-tolerant circuit so the code can be derived without flag noise.
+    """
+    circ = circuit if isinstance(circuit, stim.Circuit) else stim.Circuit(circuit)
+    out = stim.Circuit()
+    for instr in circ:
+        if instr.name == "TICK":
+            continue
+        for group in instr.target_groups():
+            if all(t.value < n_data for t in group if t.is_qubit_target):
+                out.append(instr.name, group, instr.gate_args_copy())
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Matrix derivation from state-prep circuits (in the circuit's own labeling)
+# ---------------------------------------------------------------------------
+
+
+def _clean_pure_x(zero_circuit: stim.Circuit) -> np.ndarray:
+    """Hx = pure-X stabilizer generators of the |0_L> the circuit prepares."""
+    tab = zero_circuit.to_tableau()
+    n = len(tab)
+    x_rows, z_rows = _propagate_z(tab, n, range(n))
+    css, Hx, _Hz = _classify_generators(x_rows, z_rows, n)
+    if not css:
+        raise ValueError("Circuit does not prepare a CSS |0_L> (non-CSS stabilizers).")
+    return Hx
+
+
+def _clean_pure_z(plus_circuit: stim.Circuit) -> np.ndarray:
+    """Hz = pure-Z stabilizer generators of the |+_L> the circuit prepares."""
+    tab = plus_circuit.to_tableau()
+    n = len(tab)
+    x_rows, z_rows = _propagate_z(tab, n, range(n))
+    css, _Hx, Hz = _classify_generators(x_rows, z_rows, n)
+    if not css:
+        raise ValueError("Circuit does not prepare a CSS |+_L> (non-CSS stabilizers).")
+    return Hz
+
+
+def derive_matrices_two_circuit(
+    zero_circuit: Union[str, stim.Circuit],
+    plus_circuit: Union[str, stim.Circuit],
+    n: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Method A: Hx from |0_L>, Hz from |+_L>. Requires shared qubit labeling."""
+    Hx = _clean_pure_x(strip_flags(zero_circuit, n))
+    Hz = _clean_pure_z(strip_flags(plus_circuit, n))
+    if not is_css(Hx, Hz):
+        raise ValueError(
+            "Hx (from |0>) and Hz (from |+>) are not CSS-compatible "
+            "(Hx*Hz^T != 0). The two circuits likely use different qubit "
+            "labelings; align them or use a stored anchor."
+        )
+    return Hx, Hz
+
+
+def derive_matrices_self_dual(
+    zero_circuit: Union[str, stim.Circuit],
+    n: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Method B: self-dual CSS code, Hz == Hx, from a single |0_L> circuit."""
+    Hx = _clean_pure_x(strip_flags(zero_circuit, n))
+    Hz = Hx.copy()
+    if not is_css(Hx, Hz):
+        raise ValueError("Hx is not self-orthogonal; the code is not self-dual.")
+    return Hx, Hz
+
+
+# ---------------------------------------------------------------------------
+# Validation and logical-state identification
+# ---------------------------------------------------------------------------
+
+
+def _relabel(circ: stim.Circuit, new_of_old: dict[int, int]) -> stim.Circuit:
+    out = stim.Circuit()
+    for instr in circ:
+        targs = [
+            stim.GateTarget(new_of_old[t.value]) if t.is_qubit_target else t
+            for t in instr.targets_copy()
+        ]
+        out.append(instr.name, targs, instr.gate_args_copy())
+    return out
+
+
+_XZ_TO_PAULI = {(0, 0): 0, (1, 0): 1, (1, 1): 2, (0, 1): 3}  # (x,z) -> stim pauli
+
+
+def _row_to_pauli(row: np.ndarray, n: int) -> stim.PauliString:
+    ps = stim.PauliString(n)
+    for i in range(n):
+        ps[i] = _XZ_TO_PAULI[(int(row[i]), int(row[i + n]))]
+    return ps
+
+
+def symplectic_validate(circuit: Union[str, stim.Circuit], H: np.ndarray, n: int) -> str:
+    """Check every stabilizer row of a symplectic ``H`` (shape ``(m, 2n)``) is a
+    ``+1`` eigenvalue of the state the circuit prepares. Works for non-CSS codes
+    (the CSS-only counterpart is :func:`scripts.add_circuit.validate_state_prep`).
+
+    Row layout: columns ``0..n-1`` are the X-half, ``n..2n-1`` the Z-half.
+    """
+    circ = circuit if isinstance(circuit, stim.Circuit) else stim.Circuit(circuit)
+    sim = stim.TableauSimulator()
+    sim.do_circuit(circ)
+    for row in H:
+        if sim.peek_observable_expectation(_row_to_pauli(row, n)) != 1:
+            return f"failed: stabilizer {row.tolist()} not +1"
+    return "passed"
+
+
+def logical_state_of(
+    circuit: Union[str, stim.Circuit],
+    n: int,
+    d: int,
+    *,
+    Hx: Optional[np.ndarray] = None,
+    Hz: Optional[np.ndarray] = None,
+    H: Optional[np.ndarray] = None,
+) -> str:
+    """Identify which logical basis state a ``k=1`` state-prep circuit prepares.
+
+    Stabilizers alone cannot tell |0_L> from |1_L> (both are +1 eigenstates of
+    every stabilizer), so we evaluate the *logical* operator expectations on the
+    prepared state. The logical operators are computed from the code matrices in
+    the **circuit's own labeling** (so no permutation is needed).
+
+    Returns one of ``'zero' | 'one' | 'plus' | 'minus'`` for the six-o'clock
+    Pauli-basis states, or ``'unknown'`` for anything else (e.g. magic states, or
+    k != 1).
+
+    Caveat on sign: the logical operators are recomputed from binary (sign-free)
+    matrices, so the *basis* (Z vs X) is robust but the absolute 0/1 (resp. +/-)
+    label is only defined relative to the recomputed Z-bar (resp. X-bar) sign.
+    Two labelings of the same code can disagree on which eigenstate is |0>. Use
+    :func:`logical_basis_of` when only the basis matters (the reliable part).
+    """
+    from .code_identify import build_symplectic_logical
+    from .compute import _compute_logicals_css, _compute_symplectic_logicals
+
+    if Hx is not None and Hz is not None:
+        Lx, Lz = _compute_logicals_css(np.asarray(Hx), np.asarray(Hz), d)
+        logical = build_symplectic_logical(Lx, Lz, n=n, k=1)
+    elif H is not None:
+        k = n - np.asarray(H).shape[0]
+        if k != 1:
+            return "unknown"
+        logical = _compute_symplectic_logicals(np.asarray(H), n, k)
+    else:
+        raise ValueError("Provide (Hx, Hz) or H.")
+
+    if logical.shape[0] != 2:  # not k=1
+        return "unknown"
+
+    sim = stim.TableauSimulator()
+    sim.do_circuit(strip_flags(circuit, n))
+    x_exp = sim.peek_observable_expectation(_row_to_pauli(logical[0], n))  # X-bar
+    z_exp = sim.peek_observable_expectation(_row_to_pauli(logical[1], n))  # Z-bar
+    return {
+        (1, 0): "zero",
+        (-1, 0): "one",
+        (0, 1): "plus",
+        (0, -1): "minus",
+    }.get((z_exp, x_exp), "unknown")
+
+
+_STATE_BASIS = {"zero": "z", "one": "z", "plus": "x", "minus": "x"}
+
+
+def logical_basis_of(
+    circuit: Union[str, stim.Circuit],
+    n: int,
+    d: int,
+    *,
+    Hx: Optional[np.ndarray] = None,
+    Hz: Optional[np.ndarray] = None,
+    H: Optional[np.ndarray] = None,
+) -> str:
+    """Sign-convention-free part of :func:`logical_state_of`: returns ``'z'``
+    (a Z-basis eigenstate, |0>/|1>), ``'x'`` (an X-basis eigenstate, |+>/|->),
+    or ``'unknown'``."""
+    return _STATE_BASIS.get(logical_state_of(circuit, n, d, Hx=Hx, Hz=Hz, H=H), "unknown")
+
+
+# ---------------------------------------------------------------------------
+# Fit a circuit to an existing (anchor) code by permutation search
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class FitResult:
+    permutation: Optional[list[int]]  # perm[new] = old  (add_circuit convention)
+    status: str  # 'identity' | 'found' | 'not_found'
+
+
+def fit_circuit_to_anchor(
+    zero_circuit: Union[str, stim.Circuit],
+    Hx: np.ndarray,
+    Hz: np.ndarray,
+    n: int,
+    max_perms: int = 200_000,
+) -> FitResult:
+    """Find a data-qubit permutation making the |0_L> circuit validate against
+    the anchor (Hx, Hz).
+
+    Returns ``perm`` in ``add_circuit`` convention: ``perm[new] = old`` (so the
+    circuit map is ``old -> new``). Identity is tried first. The search is pruned
+    by only permuting data qubits (flag qubits ``>= n`` are held fixed).
+
+    Scaling: the fallback is brute force over ``n!`` permutations (capped at
+    ``max_perms``), so it only resolves non-identity fits for small ``n`` (roughly
+    ``n <= 10``). Larger codes need a structural matcher (e.g. Tanner-graph
+    isomorphism); when identity fails there, prefer letting ``add_circuit``'s
+    canonical-form dedup find the permutation instead.
+    """
+    data = strip_flags(zero_circuit, n)
+
+    # Identity first — the common case when a circuit is already in canonical form.
+    if validate_state_prep(data, Hx, Hz) == "passed":
+        return FitResult(permutation=None, status="identity")
+
+    # Fall back to a permutation search over data qubits.
+    tried = 0
+    for perm in itertools.permutations(range(n)):
+        tried += 1
+        if tried > max_perms:
+            break
+        new_of_old = {old: new for new, old in enumerate(perm)}
+        if validate_state_prep(_relabel(data, new_of_old), Hx, Hz) == "passed":
+            return FitResult(permutation=list(perm), status="found")
+    return FitResult(permutation=None, status="not_found")
+
+
+def fit_circuit_to_anchor_h(
+    zero_circuit: Union[str, stim.Circuit],
+    H: np.ndarray,
+    n: int,
+    max_perms: int = 200_000,
+) -> FitResult:
+    """Symplectic (non-CSS-capable) analogue of :func:`fit_circuit_to_anchor`.
+
+    Finds a data-qubit permutation so the circuit validates against anchor ``H``.
+    """
+    data = strip_flags(zero_circuit, n)
+    if symplectic_validate(data, H, n) == "passed":
+        return FitResult(permutation=None, status="identity")
+    tried = 0
+    for perm in itertools.permutations(range(n)):
+        tried += 1
+        if tried > max_perms:
+            break
+        new_of_old = {old: new for new, old in enumerate(perm)}
+        if symplectic_validate(_relabel(data, new_of_old), H, n) == "passed":
+            return FitResult(permutation=list(perm), status="found")
+    return FitResult(permutation=None, status="not_found")
+
+
+def anchor_h_in_circuit_labeling(H: np.ndarray, n: int, fit: FitResult) -> np.ndarray:
+    """Express canonical anchor ``H`` in the circuit's own qubit labeling.
+
+    Given a ``fit`` (``perm[new] = old``) that relabels the circuit *into* the
+    canonical frame, permute the columns of ``H`` the opposite way so the result
+    describes the same code in the circuit's original labeling. Feeding this to
+    ``add_circuit`` lets it re-derive and apply the permutation itself (keeping
+    the untouched original circuit + matrices in ``originals/``).
+    """
+    if fit.permutation is None:
+        return H.copy()
+    # perm[new] = old  =>  circuit qubit `old` plays canonical role `new`.
+    # Canonical column `new` must move to circuit column `old`.
+    old_of_new = fit.permutation
+    Hc = np.zeros_like(H)
+    for new, old in enumerate(old_of_new):
+        Hc[:, old] = H[:, new]  # X-half
+        Hc[:, old + n] = H[:, new + n]  # Z-half
+    return Hc
+
+
+# ---------------------------------------------------------------------------
+# High-level driver: derive/anchor -> verify -> add_circuit -> capture provenance
+# ---------------------------------------------------------------------------
+
+
+def import_state_prep(
+    *,
+    circuit: Union[str, stim.Circuit],
+    n: int,
+    d: int,
+    code_name: str,
+    circuit_name: str,
+    method: str,
+    plus_circuit: Union[str, stim.Circuit, None] = None,
+    anchor_H: Optional[np.ndarray] = None,
+    source: str = "",
+    tool: str = "",
+    tags: Optional[list[str]] = None,
+    notes: Optional[str] = None,
+    source_file: Optional[str] = None,
+    logical_state: Optional[str] = None,
+    connectivity: Optional[str] = None,
+    gate_set: Optional[str] = None,
+    device: Optional[str] = None,
+    qubit_placement: Optional[str] = None,
+    data_dir: str = "data_yaml",
+    dry_run: bool = False,
+) -> "AddCircuitResult":
+    """Import one state-preparation circuit, fitting it to a single canonical code.
+
+    ``method`` selects how the code's check matrices are obtained *in the
+    circuit's own labeling* before handing off to :func:`add_circuit`:
+
+    * ``"self_dual"`` — CSS self-dual code, ``Hz == Hx`` from a single |0_L>
+      circuit.
+    * ``"two_circuit"`` — ``Hx`` from |0_L> (``circuit``) and ``Hz`` from |+_L>
+      (``plus_circuit``). Both must share a qubit labeling.
+    * ``"anchor"`` — fit against a trusted symplectic ``anchor_H``. Required for
+      non-CSS / non-self-dual codes, and for importing non-|0> states of a known
+      code (the fit validates codespace membership for any logical state).
+
+    The untouched ``circuit`` (flags included) is what gets stored; ``add_circuit``
+    dedups it to the canonical code, applies the permutation, and preserves the
+    original circuit + matrices in ``originals/``.
+
+    Provenance / hardware metadata that has no dedicated schema field
+    (``source_file``, ``logical_state``, ``connectivity``, ``gate_set``,
+    ``device``, ``qubit_placement``) is recorded in the circuit ``notes`` and, for
+    the categorical ones, as ``key:value`` tags — so nothing on the source side is
+    silently dropped. The qubit permutation applied during canonicalization is
+    appended to ``notes`` when non-trivial (it is otherwise only recoverable by
+    diffing the ``originals/`` circuit against the stored body).
+    """
+    from . import add_circuit
+
+    # 1. Derive the code matrices in the circuit's own labeling.
+    code_kwargs: dict = {}
+    if method == "self_dual":
+        Hx, Hz = derive_matrices_self_dual(circuit, n)
+        fit = fit_circuit_to_anchor(circuit, Hx, Hz, n)
+        code_kwargs = {"Hx": Hx, "Hz": Hz}
+    elif method == "two_circuit":
+        if plus_circuit is None:
+            raise ValueError("method='two_circuit' requires plus_circuit.")
+        Hx, Hz = derive_matrices_two_circuit(circuit, plus_circuit, n)
+        fit = fit_circuit_to_anchor(circuit, Hx, Hz, n)
+        code_kwargs = {"Hx": Hx, "Hz": Hz}
+    elif method == "anchor":
+        if anchor_H is None:
+            raise ValueError("method='anchor' requires anchor_H.")
+        fit = fit_circuit_to_anchor_h(circuit, anchor_H, n)
+        code_kwargs = {"H": anchor_h_in_circuit_labeling(anchor_H, n, fit), "n": n}
+    else:
+        raise ValueError(f"Unknown method {method!r}. Use 'self_dual', 'two_circuit', or 'anchor'.")
+    _require_fit(fit, circuit_name)
+
+    # 1b. Verify the logical state against the code's logical operators. Only the
+    #     *basis* (Z vs X) is sign-convention-free, so we check that (it catches a
+    #     |+> mislabeled as |0>) and otherwise trust the caller's label for the
+    #     0/1 (resp. +/-) sign. For k=1 codes only; higher k -> 'unknown', skipped.
+    matrices = _code_kwargs_matrices(code_kwargs)
+    detected_state = logical_state_of(circuit, n, d, **matrices)
+    detected_basis = _STATE_BASIS.get(detected_state, "unknown")
+    if logical_state is None:
+        logical_state = detected_state if detected_state != "unknown" else None
+    elif detected_basis != "unknown" and detected_basis != _STATE_BASIS.get(logical_state):
+        raise ValueError(
+            f"Logical-basis mismatch for {circuit_name!r}: caller said "
+            f"{logical_state!r} (basis {_STATE_BASIS.get(logical_state)!r}) but the "
+            f"circuit prepares a {detected_basis!r}-basis state. Check the source label."
+        )
+
+    circuit_text = _as_text(circuit)
+    common = dict(
+        circuit=circuit_text,
+        circuit_name=circuit_name,
+        d=d,
+        code_name=code_name,
+        source=source,
+        tool=tool,
+        data_dir=data_dir,
+        **code_kwargs,
+    )
+
+    # 2. Dry run to learn the permutation add_circuit will apply (canonical<-orig).
+    preview = add_circuit(**common, tags=tags, dry_run=True)
+
+    # 3. Assemble notes + structured tags capturing everything else.
+    flag_qubits = list(range(n, stim.Circuit(circuit_text).num_qubits))
+    notes = _build_notes(
+        base_notes=notes,
+        source_file=source_file,
+        logical_state=logical_state,
+        connectivity=connectivity,
+        gate_set=gate_set,
+        device=device,
+        flag_qubits=flag_qubits,
+        qubit_placement=qubit_placement,
+        permutation=preview.qubit_permutation,
+    )
+    full_tags = _augment_tags(
+        tags,
+        connectivity=connectivity,
+        device=device,
+        logical_state=logical_state,
+        has_flags=bool(flag_qubits),
+    )
+
+    # 4. Real write with the enriched metadata.
+    return add_circuit(**common, tags=full_tags, notes=notes, dry_run=dry_run)
+
+
+def _build_notes(
+    *,
+    base_notes: Optional[str],
+    source_file: Optional[str],
+    logical_state: Optional[str],
+    connectivity: Optional[str],
+    gate_set: Optional[str],
+    device: Optional[str],
+    flag_qubits: list[int],
+    qubit_placement: Optional[str],
+    permutation: Optional[list[int]],
+) -> str:
+    """Fold otherwise-unschema'd provenance into a single ``notes`` string."""
+    parts: list[str] = []
+    if base_notes:
+        parts.append(base_notes)
+    if source_file:
+        parts.append(f"Source file: {source_file}")
+    if logical_state:
+        parts.append(f"Logical state: {logical_state}")
+    if connectivity:
+        parts.append(f"Connectivity: {connectivity}")
+    if gate_set:
+        parts.append(f"Gate set: {gate_set}")
+    if device:
+        parts.append(f"Device: {device}")
+    if flag_qubits:
+        parts.append(f"Flag/ancilla qubits: {flag_qubits}")
+    if qubit_placement:
+        parts.append(f"Device qubit placement (Qiskit indices): {qubit_placement}")
+    if permutation is not None:
+        parts.append(
+            "Canonicalization qubit permutation "
+            f"(stored qubit i = original qubit permutation[i]): {permutation}"
+        )
+    return ". ".join(parts)
+
+
+def _augment_tags(
+    tags: Optional[list[str]],
+    *,
+    connectivity: Optional[str],
+    device: Optional[str],
+    logical_state: Optional[str],
+    has_flags: bool,
+) -> list[str]:
+    """Add categorical metadata as ``key:value`` tags (deduped, order-stable)."""
+    out = list(tags) if tags else []
+    extra = []
+    if connectivity:
+        extra.append(f"connectivity:{connectivity}")
+    if device:
+        extra.append(f"device:{device}")
+    if logical_state:
+        extra.append(f"logical-state:{logical_state}")
+    if has_flags and "flag" not in out:
+        extra.append("flag")
+    for t in extra:
+        if t not in out:
+            out.append(t)
+    return out
+
+
+def _code_kwargs_matrices(code_kwargs: dict) -> dict:
+    """Extract just the matrix args (Hx/Hz or H) for :func:`logical_state_of`,
+    dropping ``n`` which that function already takes positionally."""
+    return {k: v for k, v in code_kwargs.items() if k in ("Hx", "Hz", "H")}
+
+
+def _as_text(circuit: Union[str, stim.Circuit]) -> str:
+    return str(circuit) if isinstance(circuit, stim.Circuit) else circuit
+
+
+def _require_fit(fit: FitResult, circuit_name: str) -> None:
+    if fit.status == "not_found":
+        raise ValueError(
+            f"Could not fit circuit {circuit_name!r} to the code within the "
+            f"permutation search budget. The circuit may prepare a different "
+            f"code, or need a larger/aligned search."
+        )
