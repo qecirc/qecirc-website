@@ -2,9 +2,9 @@ qec_id: 128
 name: Circuit-Synth Zero State Preparation (Gate-Optimized)
 tool: circuit-synth
 source: circuit-synth
-gate_count: 39
-two_qubit_gate_count: 7
-depth: 16
+gate_count: 37
+two_qubit_gate_count: 5
+depth: 3
 qubit_count: 5
 crumble_url: https://algassert.com/crumble#circuit=H_4_0;X_1_2;Z_3;S_4;H_2_3_4;S_DAG_3;SWAP_4_1;H_4;SWAP_1_2;S_DAG_4;H_2_1;S_DAG_2;S_1;H_1;CZ_3_2_1_4;S_2;Y_3;S_4;H_1_2;S_DAG_3;H_4;S_1;H_3;CZ_0_4;H_4;S_DAG_0;CZ_3_0_2_4;H_0_3_2;S_2_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","X","X","Z","H"],[1,1,"H","H","Z^½"],[1,1,1,"Z^-½","H"],[1,"Swap",1,1,"Swap"],[1,1,1,1,1],[1,1,1,1,"H"],[1,"Swap","Swap"],[1,1,1],[1,"H","H",1,"Z^-½"],[1,"Z^½","Z^-½"],[1,"H"],[1,1,"Z","•"],[1,"•",1,1,"Z"],[1,"H","Z^½","Y","Z^½"],[1,"Z^½","H","Z^-½","H"],[1,1,1,"H"],["•",1,1,1,"Z"],["Z^-½",1,1,1,"H"],["Z",1,1,"•"],[1,1,"•",1,"Z"],["H",1,"H","H"],[1,1,"Z^½"]]}

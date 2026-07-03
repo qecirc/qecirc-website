@@ -4,7 +4,7 @@ tool: circuit-synth
 source: circuit-synth
 gate_count: 13
 two_qubit_gate_count: 9
-depth: 4
+depth: 3
 qubit_count: 9
 crumble_url: https://algassert.com/crumble#circuit=H_2_1_0_7;CX_7_3_0_5_2_8_7_5_3_8_0_2_1_7_5_6_3_4_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H","H",1,1,1,1,"H"],[1,1,1,"X",1,1,1,"•"],["•",1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,"X",1,"•"],[1,1,1,"•",1,1,1,1,"X"],["•",1,"X"],[1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,"•","X"],[1,1,1,"•","X"]]}
