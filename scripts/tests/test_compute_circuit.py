@@ -106,3 +106,13 @@ def test_ticked_circuit_skips_compaction():
     stim_body = next(b["body"] for b in data["bodies"] if b["format"] == "stim")
     assert stim_body.count("TICK") == 2
     assert data["depth"] == 2  # TICK layers authoritative
+
+
+def test_relabel_preserves_measurement_record_targets():
+    """Classically-controlled Paulis (CX rec[-k] q) must survive relabeling."""
+    from scripts.add_circuit.compute_circuit import _relabel_qubits
+    import stim
+
+    circ = stim.Circuit("H 0\nCX 0 1\nMR 2\nCX rec[-1] 1")
+    out = _relabel_qubits(circ, [1, 0])  # swap qubits 0 and 1
+    assert str(out).splitlines() == ["H 1", "CX 1 0", "MR 2", "CX rec[-1] 0"]
