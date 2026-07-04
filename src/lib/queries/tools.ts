@@ -2,8 +2,14 @@ import { getDb } from "../db";
 import type { Tool, ToolFilters, ToolWithMeta } from "../../types";
 import { withTags, withCircuitCounts, addTagConditions } from "./shared";
 
-function enrichTools(tools: Tool[]): ToolWithMeta[] {
-  return withCircuitCounts(withTags(tools, "tool"), "tool_id");
+type ToolRow = Omit<Tool, "paper_urls"> & { paper_urls: string | null };
+
+function parseToolRow(row: ToolRow): Tool {
+  return { ...row, paper_urls: row.paper_urls ? (JSON.parse(row.paper_urls) as string[]) : null };
+}
+
+function enrichTools(rows: ToolRow[]): ToolWithMeta[] {
+  return withCircuitCounts(withTags(rows.map(parseToolRow), "tool"), "tool_id");
 }
 
 export function getAllTools(): ToolWithMeta[] {
@@ -15,13 +21,14 @@ export function getAllTools(): ToolWithMeta[] {
        GROUP BY t.id
        ORDER BY COUNT(c.id) DESC, t.name`,
     )
-    .all() as Tool[];
+    .all() as ToolRow[];
   return enrichTools(tools);
 }
 
 export function getToolById(id: number): Tool | undefined {
   const db = getDb();
-  return db.prepare("SELECT * FROM tools WHERE id = ?").get(id) as Tool | undefined;
+  const row = db.prepare("SELECT * FROM tools WHERE id = ?").get(id) as ToolRow | undefined;
+  return row ? parseToolRow(row) : undefined;
 }
 
 export function filterTools(filters: ToolFilters): ToolWithMeta[] {
@@ -40,7 +47,7 @@ export function filterTools(filters: ToolFilters): ToolWithMeta[] {
        GROUP BY c.id
        ORDER BY COUNT(ci.id) DESC, c.name`,
     )
-    .all(...params) as Tool[];
+    .all(...params) as ToolRow[];
   return enrichTools(tools);
 }
 
@@ -56,7 +63,7 @@ export function getToolsForCircuits(circuitIds: number[]): Map<number, Tool> {
        JOIN tools t ON t.id = c.tool_id
        WHERE c.id IN (${placeholders}) AND c.tool_id IS NOT NULL`,
     )
-    .all(...circuitIds) as (Tool & { circuit_id: number })[];
+    .all(...circuitIds) as (ToolRow & { circuit_id: number })[];
 
   for (const row of rows) {
     result.set(row.circuit_id, {
@@ -66,6 +73,7 @@ export function getToolsForCircuits(circuitIds: number[]): Map<number, Tool> {
       description: row.description,
       homepage_url: row.homepage_url,
       github_url: row.github_url,
+      paper_urls: row.paper_urls ? (JSON.parse(row.paper_urls) as string[]) : null,
     });
   }
   return result;
