@@ -16,8 +16,7 @@ export const GET: APIRoute = ({ params }) => {
 
   const db = getDb();
   const row = db.prepare("SELECT n, k, h, logical FROM codes WHERE slug = ?").get(slug) as
-    | Row
-    | undefined;
+    Row | undefined;
 
   if (!row || !row.h || !row.logical) {
     return new Response("Not found", { status: 404 });
