@@ -41,8 +41,7 @@ export function getAllCodes(): CodeWithMeta[] {
 export function getCodeBySlug(slug: string): CodeDetail | undefined {
   const db = getDb();
   return db.prepare(`SELECT ${CODE_DETAIL_COLUMNS} FROM codes c WHERE c.slug = ?`).get(slug) as
-    | CodeDetail
-    | undefined;
+    CodeDetail | undefined;
 }
 
 export function filterCodes(filters: CodeFilters, sort?: CodeSort): CodeWithMeta[] {
