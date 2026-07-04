@@ -9,12 +9,11 @@ round-2 stabs in the layer's own basis and correct with X (Z-stab layer) or Z
 (X-stab layer); hook-flag branches use the OPPOSITE basis for both.
 
 The stored body linearizes the WORST branch per layer (max round-2 CNOTs,
-tie-break max correction weight, hook branches included). The correction is
-appended as Stim classically-controlled Paulis (CX/CZ rec[...]) conditioned on
-the measurement bit that triggers it (the round-2 bit for corrections keyed on
-a non-trivial round-2 outcome, else the round-1 trigger bit) — so a noiseless
-run stays in the codespace (validation passes) while the gates still represent
-the worst-case work.
+tie-break max correction weight, hook branches included) — but only its
+measurements: the outcome-dependent Pauli correction is NOT part of the stored
+circuit (in practice it is absorbed into the Pauli frame; the full correction
+tables live in the notes). Bodies therefore contain only H/CX/MR, so QASM and
+Cirq views can be generated.
 
 Verification measurement sub-circuit ordering is ported verbatim from
 simulation_det.py::_create_stab_measurement_circuit:
@@ -207,39 +206,15 @@ def build_worst_case_body(
         wb = worst_branch(layer)
         if wb is None:
             continue
-        stabs2, corr, o1, o2, flip, hook = wb
+        stabs2, _corr, _o1, _o2, flip, _hook = wb
         branch_z = (not z_stabs) if flip else z_stabs
-        n_meas = len(stabs2)
         if stabs2:
-            blk, width = _measure_block(stabs2, [False] * n_meas, branch_z, n)
+            # Only the branch's measurements enter the body; its Pauli
+            # correction is a Pauli-frame update, documented in the notes.
+            blk, width = _measure_block(stabs2, [False] * len(stabs2), branch_z, n)
             body += blk
             stats["max_width"] = max(stats["max_width"], width)
             stats["cnots"] += sum(len(_support(s)) for s in stabs2)
-        sup = _support(corr)
-        if sup:
-            # Condition the correction on the measurement bit that triggers it
-            # (MSB-first outcome convention, ascending-ancilla measurement
-            # order; noiseless outcomes are 0, so the body stays in the
-            # codespace). Corrections keyed on a non-trivial round-2 outcome
-            # use that round-2 bit; corrections on round-2 outcome 0 fire when
-            # the branch itself was taken, so they condition on the round-1
-            # trigger bit (verification bit for det branches, the hook's flag
-            # bit for hook branches).
-            m1 = len(layer.stabs)
-            h1 = sum(layer.flagged)
-            if o2 != 0 and n_meas:
-                bits = format(o2, f"0{n_meas}b")
-                rec = stim.target_rec(-(n_meas - bits.index("1")))
-            elif hook is None:
-                bits = format(o1, f"0{m1}b")
-                rec = stim.target_rec(-(n_meas + m1 + h1 - bits.index("1")))
-            else:
-                rec = stim.target_rec(-(n_meas + h1 - hook))
-            # det branches on a Z-stab layer correct X errors (and vice
-            # versa); hook branches are already basis-flipped via branch_z.
-            gate = "CX" if branch_z else "CZ"
-            for q in sup:
-                body.append(gate, [rec, q])
     return body, stats
 
 
@@ -265,8 +240,9 @@ def render_notes(proto: DetProtocol, zero_state: bool, source_file: str) -> str:
         f"Deterministic FT state preparation (arXiv:2501.05527); verification variant: "
         f"{proto.variant}. Body and metrics show the worst-case branch of the adaptive "
         "protocol: prep, round-1 verification (always measured), then the most expensive "
-        "branch's round-2 measurements and classically-controlled Pauli correction. "
-        "Full branch tables (outcome bits MSB-first in measurement order):",
+        "branch's round-2 measurements. The outcome-dependent Pauli correction is not "
+        "part of the circuit (Pauli-frame update); apply it per the branch tables below "
+        "(outcome bits MSB-first in measurement order):",
     ]
     for idx, layer in enumerate(proto.layers):
         z = zero_state if idx == 0 else not zero_state

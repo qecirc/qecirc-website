@@ -82,11 +82,12 @@ verification + correction protocol lives in `results.csv`
 of the adaptive protocol — prep, then per layer the always-measured round-1
 verification (with hook flags, ancilla/CX ordering ported verbatim from
 `simulation_det.py::_create_stab_measurement_circuit`) and the most expensive
-outcome branch (round-2 measurements, then the branch's Pauli correction as
-Stim classically-controlled gates `CX/CZ rec[...]`). Metrics are therefore an
-honest upper bound, and the noiseless body stays in the codespace (validation
-passes). The complete adaptive protocol (all branches) is rendered into each
-circuit's notes.
+outcome branch's round-2 measurements. The outcome-dependent Pauli correction
+is **not** part of the stored circuit — in practice it is absorbed into the
+Pauli frame; the complete correction tables (all branches) are rendered into
+each circuit's notes. Metrics are therefore an honest upper bound on the
+quantum operations, the noiseless body stays in the codespace (validation
+passes), and bodies contain only H/CX/MR so QASM and Cirq views generate.
 
 - One entry per file; verification variant preference **global → optimal →
   heuristic** (only `carbon zero_heuristic` lacks a global row → optimal).
@@ -95,8 +96,6 @@ circuit's notes.
   there is vestigial — the files are bare encoders).
 - Consistency gate: every constructed body must `symplectic_validate` against
   the code in MQT's own labeling before import; mismatches defer.
-- Bodies are stim-only (OpenQASM 2 / Cirq cannot express the classical
-  control; those view conversions are skipped with a warning).
 
 ### New codes seeded (matrices from `eval_det/eval.py`, Hx = Hz)
 

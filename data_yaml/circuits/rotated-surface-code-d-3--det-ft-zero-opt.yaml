@@ -2,18 +2,18 @@ qec_id: 513
 name: Det FT zero (opt)
 tool: mqt-qecc
 notes: |-
-  Deterministic FT state preparation (arXiv:2501.05527); verification variant: global. Body and metrics show the worst-case branch of the adaptive protocol: prep, round-1 verification (always measured), then the most expensive branch's round-2 measurements and classically-controlled Pauli correction. Full branch tables (outcome bits MSB-first in measurement order):
+  Deterministic FT state preparation (arXiv:2501.05527); verification variant: global. Body and metrics show the worst-case branch of the adaptive protocol: prep, round-1 verification (always measured), then the most expensive branch's round-2 measurements. The outcome-dependent Pauli correction is not part of the circuit (Pauli-frame update); apply it per the branch tables below (outcome bits MSB-first in measurement order):
   Layer 0 (Z): round-1 measure Z[1,4,7]* (* = hook flag)
     outcome 1: measure Z[0,4,7]; 0 -> X[1], 1 -> X[7,8]
     hook of stab 0 (outcome 1): 0 -> Z[8], 1 -> none
   Layer 1 (X): trivial, no verification. Source file: scripts/ft_stateprep/eval_det/circuits/surface_3/zero_opt.qasm. Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla qubits: [9, 10]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]): [4, 3, 2, 1, 0, 7, 8, 6, 5]
 source: https://arxiv.org/abs/2501.05527
-gate_count: 24
-two_qubit_gate_count: 18
-depth: 12
+gate_count: 22
+two_qubit_gate_count: 16
+depth: 11
 qubit_count: 11
-crumble_url: https://algassert.com/crumble#circuit=H_1_0_8_6;CX_6_4_4_3_1_7_8_2_0_6_6_8_3_1_6_5_3_9;H_10;CX_10_9_0_9_10_9;H_10;CX_5_9;MR_9_10;CX_4_9_0_9_5_9;MR_9;CX_rec[-1]_5_rec[-1]_6_
-quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H",1,1,1,1,"H",1,"H"],[1,1,1,1,"X",1,"•"],[1,1,1,"X","•"],[1,"•",1,1,1,1,1,"X"],[1,1,"X",1,1,1,1,1,"•"],["•",1,1,1,1,1,"X"],[1,1,1,1,1,1,"•",1,"X"],[1,"X",1,"•"],[1,1,1,1,1,"X","•"],[1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,1,1,1,1,"X","•"],["•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"ZDetectControlReset","ZDetectControlReset"],[1,1,1,1,"•",1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"ZDetectControlReset"]]}
+crumble_url: https://algassert.com/crumble#circuit=H_1_0_8_6_10;CX_6_4_1_7_8_2_4_3_0_6_6_8_3_1_6_5_3_9_10_9_0_9_10_9;H_10;CX_5_9;MR_9_10;CX_4_9_0_9_5_9;MR_9_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H",1,1,1,1,"H",1,"H",1,"H"],[1,1,1,1,"X",1,"•"],[1,"•",1,1,1,1,1,"X"],[1,1,"X",1,1,1,1,1,"•"],[1,1,1,"X","•"],["•",1,1,1,1,1,"X"],[1,1,1,1,1,1,"•",1,"X"],[1,"X",1,"•"],[1,1,1,1,1,"X","•"],[1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"X","•"],["•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"ZDetectControlReset","ZDetectControlReset"],[1,1,1,1,"•",1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"ZDetectControlReset"]]}
 tags:
   [
     state-preparation,
