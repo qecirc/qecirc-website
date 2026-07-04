@@ -73,10 +73,44 @@ CODES: dict[str, Code] = {
     "15-1-3": Code(
         15, 3, "tetrahedral-code", known_perms=((7, 3, 11, 1, 9, 5, 13, 0, 8, 4, 12, 2, 10, 6, 14),)
     ),
-    # [[25,1,5]] rotated surface: n=25 is too large to brute-search and
-    # find_qubit_permutation can't confirm the σ to main's labeling — its single
-    # circuit is deferred until a structural permutation-finder exists.
-    "25-1-5": Code(25, 5, "rotated-surface-code-d-5"),
+    # [[25,1,5]] rotated surface: σ found with the structural permutation
+    # finder (scripts.add_circuit.find_code_permutation, issue #80). The RL
+    # circuit uses the MQT rotated_surface_d5 labeling; this maps it onto the
+    # stored code.
+    "25-1-5": Code(
+        25,
+        5,
+        "rotated-surface-code-d-5",
+        known_perms=(
+            (
+                8,
+                18,
+                24,
+                2,
+                12,
+                21,
+                6,
+                16,
+                22,
+                17,
+                13,
+                0,
+                10,
+                5,
+                1,
+                20,
+                15,
+                9,
+                4,
+                19,
+                14,
+                23,
+                11,
+                7,
+                3,
+            ),
+        ),
+    ),
 }
 
 
@@ -232,6 +266,7 @@ def run(write: bool, data_dir: Path) -> None:
                 circuit_name=short_name(fam, m, name_counter),
                 method=method,
                 source=SOURCE,
+                tool="rlftqc",
                 source_file=rel,
                 logical_state=m["state"],
                 connectivity=m["connectivity"],

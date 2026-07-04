@@ -58,21 +58,23 @@ upstream in **#78** (`shor-code`, `tetrahedral-code`, `rotated-surface-code-d-3`
 fitted by a qubit permutation (`identity` → a supplied `known_perms` σ →
 exhaustive search for `n ≤ 9`).
 
-| Dataset folder  | Anchored to (slug)         | Fit                             | Status                 |
-| --------------- | -------------------------- | ------------------------------- | ---------------------- |
-| `5-1-3`         | `five-qubit-code`          | identity                        | ✅ 56                  |
-| `7-1-3`         | `steane-code`              | identity / self-dual auto-dedup | ✅ 58                  |
-| `17-1-5`        | `17-1-5`                   | supplied σ (4) + auto-dedup (1) | ✅ 5                   |
-| `19-1-5`        | `19-1-5`                   | self-dual auto-dedup            | ✅ 4                   |
-| `23-1-7`        | `23-1-7`                   | self-dual auto-dedup            | ✅ 1                   |
-| `15-1-3`        | `tetrahedral-code`         | identity                        | ✅ 40                  |
-| `9-1-3-shor`    | `shor-code`                | identity                        | ✅ 41                  |
-| `9-1-3-surface` | `rotated-surface-code-d-3` | n≤9 search                      | ✅ 33                  |
-| `25-1-5`        | `rotated-surface-code-d-5` | —                               | ⏳ 1 deferred (n=25 σ) |
+| Dataset folder  | Anchored to (slug)         | Fit                             | Status |
+| --------------- | -------------------------- | ------------------------------- | ------ |
+| `5-1-3`         | `five-qubit-code`          | identity                        | ✅ 56  |
+| `7-1-3`         | `steane-code`              | identity / self-dual auto-dedup | ✅ 58  |
+| `17-1-5`        | `17-1-5`                   | supplied σ (4) + auto-dedup (1) | ✅ 5   |
+| `19-1-5`        | `19-1-5`                   | self-dual auto-dedup            | ✅ 4   |
+| `23-1-7`        | `23-1-7`                   | self-dual auto-dedup            | ✅ 1   |
+| `15-1-3`        | `tetrahedral-code`         | identity                        | ✅ 40  |
+| `9-1-3-shor`    | `shor-code`                | identity                        | ✅ 41  |
+| `9-1-3-surface` | `rotated-surface-code-d-3` | n≤9 search                      | ✅ 33  |
+| `25-1-5`        | `rotated-surface-code-d-5` | supplied σ (perm finder)        | ✅ 1   |
 
-**238 / 239 import.** The single `[[25,1,5]]` circuit is deferred: n=25 is too
-large to brute-search and `find_qubit_permutation` can't confirm the σ into main's
-labeling — it needs the structural permutation-finder (see below).
+**239 / 239 import.** The single `[[25,1,5]]` circuit was originally deferred
+(n=25 is too large to brute-search); its σ is now supplied via
+`scripts.add_circuit.find_code_permutation` (the structural permutation finder,
+built for the mqt-ftsp import) — see issue #80. The RL circuit uses the MQT
+`rotated_surface_d5` labeling, so the σ is found from the MQT code matrices.
 
 ### `17-1-5` (qubit-permutation search) — RESOLVED
 
@@ -96,8 +98,8 @@ permutation for the 4 paper-labeled `17-1-5` circuits is
 
 The 5th circuit (`distance-5/17-1-5/17_3_5_combined.stim`) is already in the
 stored labeling and dedups automatically (no permutation needed). All 5 import
-and validate. A general structural permutation-finder (Tanner-graph isomorphism)
-would remove the need to supply σ by hand, but is no longer blocking.
+and validate. The structural permutation finder that removes the need to find σ
+by hand now exists: `scripts.add_circuit.find_code_permutation`.
 
 ## Decisions baked in
 
@@ -123,9 +125,9 @@ originals/` so any fitting error can be corrected later.
 
 ## Status
 
-**238 / 239 circuits import** (`rebuild_all.py --write`) in ~80s, anchored to the
-codes already in `data_yaml` (no new codes seeded — all 9 are present, the 4
+**239 / 239 circuits import** (`rebuild_all.py --write`), anchored to the codes
+already in `data_yaml` (no new codes seeded — all 9 are present, the 4
 formerly-missing ones via #78). Validator: all circuits pass, non-CSS circuits
-skipped (the CSS validator can't check them). The one deferred circuit is the
-`[[25,1,5]]` rotated surface (n=25 permutation into main's labeling — needs the
-structural finder). See `TODO.md` for the apply-to-real + commit steps.
+skipped (the CSS validator can't check them). The formerly-deferred `[[25,1,5]]`
+rotated surface imports via a σ from the structural permutation finder
+(issue #80).
