@@ -91,6 +91,9 @@ passes), and bodies contain only H/CX/MR so QASM and Cirq views generate.
 
 - One entry per file; verification variant preference **global → optimal →
   heuristic** (only `carbon zero_heuristic` lacks a global row → optimal).
+  Tagging: the library-default `global` variant gets no `verification:*` tag,
+  and `optimal` is tagged `verification:opt` (matching the eval/rlftqc
+  spelling); the chosen variant is always named in the notes.
 - Procedure parsed with eval.py's rule: `"heuristic" in name` → heuristic,
   else opt (covers `hamming/zero_ft_heuristic_opt.qasm` etc.; the `ft_` infix
   there is vestigial — the files are bare encoders).

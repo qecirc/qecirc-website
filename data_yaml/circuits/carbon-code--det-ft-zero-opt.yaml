@@ -21,7 +21,6 @@ tags:
     ft,
     deterministic,
     "prep:opt",
-    "verification:global",
     "connectivity:fully-connected",
     "logical-state:zero",
     flag,

@@ -23,7 +23,6 @@ tags:
     ft,
     deterministic,
     "prep:heuristic",
-    "verification:global",
     "connectivity:fully-connected",
     "logical-state:zero",
     flag,

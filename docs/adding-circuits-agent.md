@@ -46,7 +46,7 @@ The agent enriches the generated YAML with tags:
 - **Auto-tags** (already applied): `CSS`, `self-dual` — mathematically verified
 - **Zoo lookup**: if a Zoo URL is available, the agent fetches the page and proposes tags based on the code's properties (family, structure). It only suggests tags that already exist in the library.
 - **Circuit tags**: the agent asks you about functionality (`encoding`, `syndrome-extraction`, etc.) and fault tolerance (`ft`/`non-ft`). It never guesses these.
-- **No optimality claims**: tags like `gate-optimal` or `depth-optimal` are only added if you or the source paper explicitly claim them.
+- **No optimality claims**: method tags like `prep:opt` or `verification:opt` are only added if you or the source paper explicitly claim them.
 
 ### Phase 5: Final review
 

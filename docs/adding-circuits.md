@@ -203,11 +203,12 @@ Add a `tags:` list. Common code tags:
 
 Add a `tags:` list. Common circuit tags:
 
-| Category        | Examples                                               |
-| --------------- | ------------------------------------------------------ |
-| Functionality   | `encoding`, `state-preparation`, `syndrome-extraction` |
-| Fault tolerance | `ft`, `non-ft`                                         |
-| Properties      | `gate-optimal`, `depth-optimal`, `flag`                |
+| Category        | Examples                                                                      |
+| --------------- | ----------------------------------------------------------------------------- |
+| Circuit type    | `encoding`, `state-preparation`, `syndrome-extraction`, `logical-state:zero`  |
+| Fault tolerance | `ft`, `non-ft`, `flag`, `deterministic`                                       |
+| Hardware        | `connectivity:fully-connected`, `device:tokyo`, `1D-AOD`                      |
+| Method          | `prep:opt`, `prep:heuristic`, `verification:opt`                              |
 
 Check existing tags with:
 
