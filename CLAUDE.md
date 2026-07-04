@@ -100,12 +100,12 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 
 | Layer     | Choice                      | Rationale                                      |
 | --------- | --------------------------- | ---------------------------------------------- |
-| Framework | Astro v6 (TypeScript)       | Static-first with SSR opt-in for dynamic pages |
+| Framework | Astro v7 (TypeScript)       | Static-first with SSR opt-in for dynamic pages |
 | Database  | SQLite via `better-sqlite3` | Zero external services, file-based, simple     |
 | Styling   | Tailwind CSS                | Standard utility-first, minimal custom CSS     |
 | Hosting   | Self-hosted (agnostic)      | Avoid platform lock-in                         |
 
-**Rendering strategy — Astro v6 (static default, SSR opt-in):**
+**Rendering strategy — Astro v7 (static default, SSR opt-in):**
 
 - Static pages: landing page, 404 (pre-rendered at build time)
 - SSR pages (`prerender = false`): all `/codes/...` and `/circuits/...` routes, `/api/search` (rendered on request, read from SQLite)
