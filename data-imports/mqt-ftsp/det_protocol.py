@@ -251,7 +251,8 @@ def render_notes(proto: DetProtocol, zero_state: bool, source_file: str) -> str:
             flag = " [hook flag]" if layer.flagged[i] else ""
             lines.append(f"  round-1 stab {i}: {_fmt_stab(s, z)}{flag}")
         for outcome, (stabs2, recs) in sorted(layer.corrections.items()):
-            lines.append(f"  round-1 outcome {outcome:b}: measure " + ", ".join(_fmt_stab(s, z) for s in stabs2))
+            measured = ", ".join(_fmt_stab(s, z) for s in stabs2)
+            lines.append(f"  round-1 outcome {outcome:b}: measure {measured}")
             for o2, corr in sorted(recs.items()):
                 sup = _support(corr)
                 act = f"apply {'X' if z else 'Z'}{sup}" if sup else "no correction"
