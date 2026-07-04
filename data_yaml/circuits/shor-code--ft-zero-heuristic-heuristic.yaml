@@ -14,12 +14,4 @@ qubit_count: 11
 crumble_url: https://algassert.com/crumble#circuit=H_0_2;CX_0_3_2_6_2_0_3_4_6_8_0_1_3_2_4_5_6_7_3_9_1_10_4_9_3_10_7_10;MR_9_10_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H",1,"H"],["•",1,1,"X"],[1,1,"•",1,1,1,"X"],["X",1,"•"],[1,1,1,"•","X"],[1,1,1,1,1,1,"•",1,"X"],["•","X"],[1,1,"X","•"],[1,1,1,1,"•","X"],[1,1,1,1,1,1,"•","X"],[1,1,1,"•",1,1,1,1,1,"X"],[1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,"X"],[1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,1,1,1,1,"ZDetectControlReset","ZDetectControlReset"]]}
 tags:
-  [
-    state-preparation,
-    ft,
-    "prep:heuristic",
-    "verification:heuristic",
-    "connectivity:fully-connected",
-    "logical-state:zero",
-    flag,
-  ]
+  [state-preparation, ft, "prep:heuristic", "verification:heuristic", "logical-state:zero", flag]

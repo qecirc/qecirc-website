@@ -1,7 +1,8 @@
-name: Rotated Surface Code (d=5)
+name: Rotated Surface Code
 n: 25
 k: 1
 d: 5
+zoo_url: https://errorcorrectionzoo.org/c/rotated_surface
 canonical_hash: b5827bf49d685907afebdf420860c19230763aa93ab642c53cf0dcb9b35c4dbc
 h:
   - [
@@ -1357,4 +1358,4 @@ logical:
       0,
       0,
     ]
-tags: [CSS]
+tags: [CSS, surface-code, topological]

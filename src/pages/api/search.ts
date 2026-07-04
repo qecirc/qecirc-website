@@ -52,7 +52,7 @@ export const GET: APIRoute = ({ url }) => {
     slug: t.slug,
     params: "",
     tags: t.tags,
-    href: `/tools`,
+    href: `/tools#${t.slug}`,
   }));
 
   return new Response(JSON.stringify([...codes, ...circuits, ...tools]), {

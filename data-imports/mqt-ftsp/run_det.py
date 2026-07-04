@@ -30,6 +30,9 @@ from scripts.add_circuit import import_state_prep  # noqa: E402
 from scripts.add_circuit.code_identify import build_symplectic_h  # noqa: E402
 from scripts.add_circuit.state_prep import symplectic_validate  # noqa: E402
 
+# CSV variant -> library tag suffix ("global" gets no tag at all).
+VARIANT_TAG = {"optimal": "opt", "heuristic": "heuristic"}
+
 # Hx = Hz matrices copied verbatim from eval_det/eval.py (MIT).
 MATRIX_11_1_3 = np.array(
     [
@@ -146,13 +149,20 @@ def run_det(write: bool, data_dir: Path) -> tuple[int, int]:
                 logical_state=state,
                 connectivity="fully-connected",
                 gate_set=rebuild_all.gate_set_of(body),
+                # Variant tag conventions: "global" is dropped (jointly-optimized
+                # two-layer solution, the library default) and "optimal" is
+                # spelled "opt" to match the eval/rlftqc imports.
                 tags=[
                     "state-preparation",
                     "ft",
                     "deterministic",
                     f"prep:{proc}",
-                    f"verification:{proto.variant}",
-                ],
+                ]
+                + (
+                    []
+                    if proto.variant == "global"
+                    else [f"verification:{VARIANT_TAG[proto.variant]}"]
+                ),
                 notes=render_notes(proto, state_zero, rel),
                 data_dir=str(data_dir),
             )

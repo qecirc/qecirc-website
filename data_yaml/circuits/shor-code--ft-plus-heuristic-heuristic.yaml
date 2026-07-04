@@ -13,12 +13,4 @@ depth: 2
 qubit_count: 9
 crumble_url: https://algassert.com/crumble#circuit=H_2_5_8;CX_2_0_5_3_8_6_0_1_3_4_6_7_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"H",1,1,"H",1,1,"H"],["X",1,"•"],[1,1,1,"X",1,"•"],[1,1,1,1,1,1,"X",1,"•"],["•","X"],[1,1,1,"•","X"],[1,1,1,1,1,1,"•","X"]]}
-tags:
-  [
-    state-preparation,
-    ft,
-    "prep:heuristic",
-    "verification:heuristic",
-    "connectivity:fully-connected",
-    "logical-state:plus",
-  ]
+tags: [state-preparation, ft, "prep:heuristic", "verification:heuristic", "logical-state:plus"]

@@ -2,9 +2,9 @@ import { getDb } from "../db";
 import type { Tool, ToolFilters, ToolWithMeta } from "../../types";
 import { withTags, withCircuitCounts, addTagConditions } from "./shared";
 
-type ToolRow = Omit<Tool, "paper_urls"> & { paper_urls: string | null };
+export type ToolRow = Omit<Tool, "paper_urls"> & { paper_urls: string | null };
 
-function parseToolRow(row: ToolRow): Tool {
+export function parseToolRow(row: ToolRow): Tool {
   return { ...row, paper_urls: row.paper_urls ? (JSON.parse(row.paper_urls) as string[]) : null };
 }
 
@@ -23,12 +23,6 @@ export function getAllTools(): ToolWithMeta[] {
     )
     .all() as ToolRow[];
   return enrichTools(tools);
-}
-
-export function getToolById(id: number): Tool | undefined {
-  const db = getDb();
-  const row = db.prepare("SELECT * FROM tools WHERE id = ?").get(id) as ToolRow | undefined;
-  return row ? parseToolRow(row) : undefined;
 }
 
 export function filterTools(filters: ToolFilters): ToolWithMeta[] {

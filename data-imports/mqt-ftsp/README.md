@@ -91,6 +91,9 @@ passes), and bodies contain only H/CX/MR so QASM and Cirq views generate.
 
 - One entry per file; verification variant preference **global → optimal →
   heuristic** (only `carbon zero_heuristic` lacks a global row → optimal).
+  Tagging: the library-default `global` variant gets no `verification:*` tag,
+  and `optimal` is tagged `verification:opt` (matching the eval/rlftqc
+  spelling); the chosen variant is always named in the notes.
 - Procedure parsed with eval.py's rule: `"heuristic" in name` → heuristic,
   else opt (covers `hamming/zero_ft_heuristic_opt.qasm` etc.; the `ft_` infix
   there is vestigial — the files are bare encoders).
@@ -110,3 +113,15 @@ passes), and bodies contain only H/CX/MR so QASM and Cirq views generate.
 `scripts/add_circuit/perm_find.py` (built for this import) can also unblock
 the rlftqc importer's deferred `[[25,1,5]]` circuit
 (`data-imports/rlftqc/README.md`).
+
+## Deduplication (post-import)
+
+The library keeps one entry per distinct circuit body. Nine eval entries were
+removed as byte-identical to a kept sibling: in several published pairs the
+`heuristic` and `opt` variants coincide (e.g. `tetrahedral Non-FT zero`), and
+some `ft` files contain no verification and equal their `non_ft` sibling
+(e.g. shor `plus` — its |+> preparation needs no verification). Two
+`Circuit-Synth` entries (steane / 19-1-5 zero depth-optimized) were removed in
+favor of the byte-identical MQT `Non-FT zero (heuristic)` entries.
+`import_state_prep` now rejects originals that are byte-identical to a stored
+circuit, so re-runs report these files as duplicates instead of re-adding them.

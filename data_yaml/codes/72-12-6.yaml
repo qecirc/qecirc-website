@@ -1,4 +1,4 @@
-name: "BB6 Code"
+name: Bivariate Bicycle Code
 n: 72
 k: 12
 d: 6
@@ -12270,4 +12270,4 @@ logical:
       0,
       0,
     ]
-tags: [CSS, bivariate-bicycle-code]
+tags: [CSS, bivariate-bicycle-code, LDPC]

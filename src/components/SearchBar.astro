@@ -1,7 +1,7 @@
 ---
 ---
 
-<div id="search-bar" class="relative">
+<div class="search-bar relative">
   <input
     type="text"
     class="search-input w-48 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 pr-8 text-sm placeholder-gray-400 focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none"
@@ -22,7 +22,11 @@
 <script>
   import { isInputFocused } from "../lib/dom-helpers";
 
-  const container = document.getElementById("search-bar") as HTMLElement;
+  // The layout renders one SearchBar for desktop and one for mobile; Astro
+  // runs this script once, so each instance is wired up individually.
+  document.querySelectorAll<HTMLElement>(".search-bar").forEach(initSearchBar);
+
+  function initSearchBar(container: HTMLElement, instance: number) {
   const input = container.querySelector("input") as HTMLInputElement;
   const resultsList = container.querySelector("ul") as HTMLUListElement;
 
@@ -84,7 +88,7 @@
     results.forEach(function (item, i) {
       const li = document.createElement("li");
       li.className = "px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800";
-      li.id = `search-result-${i}`;
+      li.id = `search-result-${instance}-${i}`;
       li.setAttribute("role", "option");
       li.setAttribute("aria-selected", "false");
       li.dataset.slug = item.slug;
@@ -170,6 +174,7 @@
 
   input.addEventListener("focus", updateHint);
   input.addEventListener("blur", updateHint);
+  }
 
   const w = window as unknown as Record<string, boolean>;
   if (!w.__searchShortcutBound) {

@@ -23,8 +23,7 @@ tags:
     ft,
     deterministic,
     "prep:heuristic",
-    "verification:optimal",
-    "connectivity:fully-connected",
+    "verification:opt",
     "logical-state:zero",
     flag,
   ]

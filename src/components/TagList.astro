@@ -42,12 +42,10 @@ function tagCount(tag: string | TagWithCount): number | undefined {
         <a
           href={tagUrl(name)}
           class:list={[
-            "inline-block rounded px-2 py-0.5 text-xs transition-colors",
-            selectedSet
-              ? isSelected
-                ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700",
+            "inline-block rounded px-1.5 py-0.5 text-xs transition-colors",
+            selectedSet && isSelected
+              ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
           ]}
         >
           {name}{showCount && count != null ? ` (${count})` : ""}

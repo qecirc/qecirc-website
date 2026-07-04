@@ -11,7 +11,8 @@ export {
   getBodiesForCircuits,
   getCircuitByQecId,
   getCircuitsByQecIds,
+  getAllCircuitQecIds,
   getOriginalForCircuit,
 } from "./circuits";
-export { getAllTools, getToolById, filterTools, getToolsForCircuits } from "./tools";
+export { getAllTools, filterTools, getToolsForCircuits } from "./tools";
 export { searchCodes, searchCircuits, searchTools } from "./search";

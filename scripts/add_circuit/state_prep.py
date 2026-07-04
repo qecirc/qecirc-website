@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import itertools
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
@@ -566,7 +567,17 @@ def import_state_prep(
         has_flags=bool(flag_qubits),
     )
 
-    # 4. Real write with the enriched metadata.
+    # 4. Duplicate guard: published datasets contain byte-identical circuits
+    #    (e.g. independent RL runs converging to the same circuit). The library
+    #    keeps one entry per distinct circuit, so an import whose original text
+    #    matches an already-stored original is rejected (drivers report it).
+    originals_dir = Path(data_dir) / "circuits" / "originals"
+    if not dry_run and originals_dir.is_dir():
+        for p in sorted(originals_dir.glob("*.original.stim")):
+            if p.read_text() == circuit_text:
+                raise ValueError(f"byte-identical duplicate of stored circuit {p.stem}")
+
+    # 5. Real write with the enriched metadata.
     return add_circuit(**common, tags=full_tags, notes=notes, dry_run=dry_run)
 
 
@@ -625,7 +636,9 @@ def _augment_tags(
     """Add categorical metadata as ``key:value`` tags (deduped, order-stable)."""
     out = list(tags) if tags else []
     extra = []
-    if connectivity:
+    # Full connectivity is the default assumption for a circuit, so only
+    # limited-connectivity targets are tagged (it still appears in the notes).
+    if connectivity and connectivity != "fully-connected":
         extra.append(f"connectivity:{connectivity}")
     if device:
         extra.append(f"device:{device}")

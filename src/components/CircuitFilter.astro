@@ -1,7 +1,8 @@
 ---
 import type { TagWithCount, CircuitSort, CircuitSortField } from "../types";
 import { circuitSortToggleUrl } from "../lib/url";
-import TagList from "./TagList.astro";
+import { TAG_CATEGORIES, categorizeTag } from "../lib/tag-categories";
+import TagFilterDropdowns from "./TagFilterDropdowns.astro";
 
 interface Props {
   rawGateCount: string;
@@ -43,9 +44,14 @@ const gateSort = labelInfo("gate_count");
 const twoQubitGateSort = labelInfo("two_qubit_gate_count");
 const depthSort = labelInfo("depth");
 const qubitSort = labelInfo("qubit_count");
+
+const tagGroups = TAG_CATEGORIES.map((c) => ({
+  label: c.label,
+  tags: allTags.filter((t) => categorizeTag(t.name) === c.key),
+}));
 ---
 
-<form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2 sm:sticky sm:top-0 sm:z-10 bg-white dark:bg-gray-950 sm:border-b sm:border-gray-200 sm:dark:border-gray-800 sm:pb-4 sm:-mb-2"
+<form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2 sm:sticky sm:top-0 sm:z-20 bg-white dark:bg-gray-950 sm:border-b sm:border-gray-200 sm:dark:border-gray-800 sm:pb-4 sm:-mb-2"
   data-filter-fields="gate_count,two_qubit_gate_count,depth,qubit_count" data-filter-focus={focus} data-base-path={basePath} data-preserve-sort>
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
@@ -91,7 +97,15 @@ const qubitSort = labelInfo("qubit_count");
     </div>
   </div>
 
-  <TagList tags={allTags} selectedTags={selectedTags} showCount baseUrl={currentUrl} basePath={basePath} />
+  <TagFilterDropdowns
+    allTags={allTags}
+    selectedTags={selectedTags}
+    currentUrl={currentUrl}
+    basePath={basePath}
+    groups={tagGroups}
+    defaultView="grouped"
+    storageKey="qecirc:tag-view"
+  />
 </form>
 
 <script>

@@ -115,7 +115,8 @@ originals/` so any fitting error can be corrected later.
   connectivity, gate set, device, flag-qubit indices, device qubit placement, and
   the applied canonicalization permutation go into the circuit `notes`; the
   categorical ones also become `key:value` tags (`connectivity:*`, `device:*`,
-  `logical-state:*`, `flag`).
+  `logical-state:*`, `flag`). Full connectivity is the library default and gets
+  no `connectivity:*` tag (it is still stated in the notes).
 - **Logical-state label.** For CSS codes the _basis_ (Z vs X) is derived from the
   check matrices: the source's exact label is kept when its basis agrees, else the
   library basis is used (Z→`zero`, X→`plus`) and the source label recorded in a
@@ -131,3 +132,11 @@ formerly-missing ones via #78). Validator: all circuits pass, non-CSS circuits
 skipped (the CSS validator can't check them). The formerly-deferred `[[25,1,5]]`
 rotated surface imports via a σ from the structural permutation finder
 (issue #80).
+
+**Deduplication (post-import).** The published dataset contains byte-identical
+circuits (independent RL runs converging to the same circuit). The library
+keeps one entry per distinct circuit: 32 RL duplicates were removed, keeping
+the lowest-numbered member of each identical group (e.g. steane
+`RL fully-connected zero 15–23` collapse onto `zero 14`). `import_state_prep` now rejects
+an original circuit that is byte-identical to a stored one, so a full re-run
+reports these files as duplicates instead of re-adding them.

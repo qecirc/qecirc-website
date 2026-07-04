@@ -1,7 +1,8 @@
-name: "[[31,21,3]]"
+name: Quantum Hamming Code
 n: 31
 k: 21
 d: 3
+zoo_url: https://errorcorrectionzoo.org/c/quantum_hamming_css
 canonical_hash: 3263a7e064d77cb5ec2eea2111aeb27e76c85f416e20ad6b62cb68a17eb0b196
 h:
   - [
@@ -3333,4 +3334,4 @@ logical:
       0,
       0,
     ]
-tags: [CSS, self-dual]
+tags: [CSS, self-dual, hamming-code]
