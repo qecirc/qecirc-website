@@ -433,6 +433,7 @@ def add_circuit(
 # State-preparation ingestion helpers (derive/validate/fit a code from a prep
 # circuit). Imported at the end so `add_circuit` is already defined for the
 # lazy import inside `import_state_prep`.
+from .perm_find import find_code_permutation  # noqa: E402
 from .state_prep import (  # noqa: E402
     FitResult,
     anchor_h_in_circuit_labeling,
@@ -478,4 +479,6 @@ __all__ = [  # noqa: F822  (names defined above / re-exported)
     "anchor_h_in_circuit_labeling",
     "FitResult",
     "import_state_prep",
+    # perm_find re-exports
+    "find_code_permutation",
 ]
