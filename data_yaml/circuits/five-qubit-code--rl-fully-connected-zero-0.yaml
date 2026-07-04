@@ -1,0 +1,13 @@
+qec_id: 320
+name: RL fully-connected zero 0
+notes: "Source file: logical-state-preparation/fully-connected/5-1-3/5_0.stim. Logical
+  state: zero. Connectivity: fully-connected. Gate set: CX,H,S. Canonicalization qubit
+  permutation (stored qubit i = original qubit permutation[i]): [0, 1, 2, 3, 4]"
+source: https://arxiv.org/abs/2402.17761
+gate_count: 14
+two_qubit_gate_count: 6
+depth: 4
+qubit_count: 5
+crumble_url: https://algassert.com/crumble#circuit=H_0_1;CX_0_4_1_3;H_1;CX_4_2;S_0;CX_3_4;H_2;S_0;CX_1_4_2_3;S_3_3_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H"],["•",1,1,1,"X"],[1,"•",1,"X"],[1,"H"],[1,1,"X",1,"•"],["Z^½"],[1,1,1,"•","X"],["Z^½",1,"H"],[1,"•",1,1,"X"],[1,1,"•","X"],[1,1,1,"Z^½"],[1,1,1,"Z^½"]]}
+tags: [state-preparation, non-ft, "connectivity:fully-connected", "logical-state:zero"]

@@ -1,0 +1,14 @@
+qec_id: 372
+name: RL ibm manila zero 4
+notes: "Source file: logical-state-preparation/ibm/5-1-3-manila/5_4.stim. Logical
+  state: zero. Connectivity: ibm. Gate set: CX,S,SQRT_X,X. Device: manila. Device
+  qubit placement (Qiskit indices): 4,3,0,2,1. Canonicalization qubit permutation
+  (stored qubit i = original qubit permutation[i]): [0, 1, 2, 3, 4]"
+source: https://arxiv.org/abs/2402.17761
+gate_count: 16
+two_qubit_gate_count: 6
+depth: 5
+qubit_count: 5
+crumble_url: https://algassert.com/crumble#circuit=SQRT_X_3_2;CX_3_4;SQRT_X_4;CX_3_1_1_0;SQRT_X_3;CX_4_2_3_1;SQRT_X_0;S_0;SQRT_X_1_3;CX_3_4;SQRT_X_4;X_4_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"X^½","X^½"],[1,1,1,"•","X"],[1,1,1,1,"X^½"],[1,"X",1,"•"],["X","•"],[1,1,1,"X^½"],[1,1,"X",1,"•"],[1,"X",1,"•"],["X^½"],["Z^½","X^½",1,"X^½"],[1,1,1,"•","X"],[1,1,1,1,"X^½"],[1,1,1,1,"X"]]}
+tags: [state-preparation, non-ft, "connectivity:ibm", "device:manila", "logical-state:zero"]

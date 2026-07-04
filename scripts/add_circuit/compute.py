@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Literal, NamedTuple, Optional
 
 import numpy as np
-import yaml
 
 from .code_identify import (
     build_symplectic_h,
@@ -29,6 +28,7 @@ from .code_identify import (
 )
 from .models import CodeParams, TagEntry
 from .tag_suggest import suggest_code_tags
+from .yaml_helpers import load_yaml
 
 # Wall-clock budget (seconds) for the Phase-2 permutation-equivalence scan
 # against each candidate code in the library. Surfaced as a constant so tests
@@ -64,6 +64,8 @@ def compute_code_data(
     code_name: str = "",
     zoo_url: str = "",
     data_dir: Optional[str] = None,
+    code_slug: str = "",
+    code_tags: Optional[list[str]] = None,
 ) -> dict:
     """
     Compute all code-level data from Hx, Hz matrices.
@@ -106,6 +108,10 @@ def compute_code_data(
     tags = suggest_code_tags(params_with_d)
     if _is_self_dual(Hx, Hz):
         tags.append(TagEntry(name="self-dual", status="confirmed"))
+    # Caller-supplied family tags (e.g. "surface-code") — the pipeline only
+    # auto-derives the mathematically verified ones (CSS, self-dual).
+    for name in code_tags or []:
+        tags.append(TagEntry(name=name, status="provided"))
     # Deduplicate by name (suggest_code_tags already adds CSS)
     seen = set()
     unique_tags = []
@@ -115,8 +121,10 @@ def compute_code_data(
             unique_tags.append(t)
     tags = unique_tags
 
-    # 5. Slug
-    slug = slugify(code_name) if code_name else ""
+    # 5. Slug — an explicit code_slug wins so new codes can use the numeric
+    # `n-k-d` convention (decoupled from the display name, which may repeat
+    # across sizes, e.g. multiple "Color Code" entries).
+    slug = code_slug or (slugify(code_name) if code_name else "")
 
     # 6. YAML dedup
     code_status = "new"
@@ -184,6 +192,8 @@ def compute_code_data_h(
     code_name: str = "",
     zoo_url: str = "",
     data_dir: Optional[str] = None,
+    code_slug: str = "",
+    code_tags: Optional[list[str]] = None,
 ) -> dict:
     """
     Compute all code-level data from a single symplectic stabilizer matrix H.
@@ -205,7 +215,14 @@ def compute_code_data_h(
     if css_split is not None:
         Hx, Hz = css_split
         return compute_code_data(
-            Hx, Hz, d=d, code_name=code_name, zoo_url=zoo_url, data_dir=data_dir
+            Hx,
+            Hz,
+            d=d,
+            code_name=code_name,
+            zoo_url=zoo_url,
+            data_dir=data_dir,
+            code_slug=code_slug,
+            code_tags=code_tags,
         )
 
     # Non-CSS path
@@ -218,6 +235,8 @@ def compute_code_data_h(
 
     params_with_d = CodeParams(n=n, k=k, is_css=False, d=d)
     tags = suggest_code_tags(params_with_d)
+    # Caller-supplied family tags (only CSS/self-dual are auto-derived).
+    tags += [TagEntry(name=name, status="provided") for name in code_tags or []]
     seen = set()
     unique_tags: list[TagEntry] = []
     for t in tags:
@@ -226,7 +245,7 @@ def compute_code_data_h(
             unique_tags.append(t)
     tags = unique_tags
 
-    slug = slugify(code_name) if code_name else ""
+    slug = code_slug or (slugify(code_name) if code_name else "")
 
     code_status = "new"
     dedup_status: Literal["match", "uncertain", "new"] = "new"
@@ -326,7 +345,9 @@ def _reduce_logical_weight(L: np.ndarray, H: np.ndarray, n: int) -> np.ndarray:
     return reduced
 
 
-def _compute_symplectic_logicals(H: np.ndarray, n: int, k: int) -> np.ndarray:
+def _compute_symplectic_logicals(
+    H: np.ndarray, n: int, k: int, minimize: bool = True
+) -> np.ndarray:
     """Compute logical operators for any stabilizer code in symplectic form.
 
     Returns shape (2k, 2n). Rows 0..k-1 are X-bar logicals, rows k..2k-1 are
@@ -338,6 +359,11 @@ def _compute_symplectic_logicals(H: np.ndarray, n: int, k: int) -> np.ndarray:
        (Λ is the symplectic form: swaps X and Z halves).
     2. Mod out rowspace(H) → 2k logical generators.
     3. Symplectic Gram-Schmidt to pair them into k X-bar / Z-bar pairs.
+
+    ``minimize`` (default True) reduces each logical to a minimum-weight
+    representative — a brute-force over ``2^m`` stabilizer combinations that is
+    purely cosmetic. Pass ``minimize=False`` when any valid logical suffices
+    (adding a circuit to an existing code, or a logical expectation) to skip it.
     """
     if k == 0:
         return np.zeros((0, 2 * n), dtype=int)
@@ -362,7 +388,7 @@ def _compute_symplectic_logicals(H: np.ndarray, n: int, k: int) -> np.ndarray:
         )
     L = stacked[indep_indices]
     paired = _symplectic_pair_basis(L, n)
-    return _reduce_logical_weight(paired, H, n)
+    return _reduce_logical_weight(paired, H, n) if minimize else paired
 
 
 def _symplectic_inner(u: np.ndarray, v: np.ndarray, n: int) -> int:
@@ -460,7 +486,7 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz) -> DedupResult:
     # Pre-parse YAMLs once so we don't reload them between phases.
     stored: list[tuple[str, dict]] = []
     for code_file in sorted(codes_dir.glob("*.yaml")):
-        stored.append((code_file.stem, yaml.safe_load(code_file.read_text(encoding="utf-8"))))
+        stored.append((code_file.stem, load_yaml(code_file.read_text(encoding="utf-8"))))
 
     # Phase 1: hash match.
     for slug, data in stored:
@@ -541,7 +567,7 @@ def _check_yaml_dedup_h(data_dir, c_hash, H, n) -> DedupResult:
 
     stored: list[tuple[str, dict]] = []
     for code_file in sorted(codes_dir.glob("*.yaml")):
-        stored.append((code_file.stem, yaml.safe_load(code_file.read_text(encoding="utf-8"))))
+        stored.append((code_file.stem, load_yaml(code_file.read_text(encoding="utf-8"))))
 
     # Phase 1: hash match.
     for slug, data in stored:
