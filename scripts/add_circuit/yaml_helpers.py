@@ -86,6 +86,17 @@ def _flow_list_representer(dumper, data):
 yaml.add_representer(_FlowList, _flow_list_representer)
 
 
+def _str_representer(dumper, data):
+    """Multi-line strings (e.g. structured circuit notes) dump as readable
+    block scalars (``|-``) instead of quoted strings with ``\\n`` escapes."""
+    if "\n" in data:
+        return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
+    return dumper.represent_scalar("tag:yaml.org,2002:str", data)
+
+
+yaml.add_representer(str, _str_representer)
+
+
 def dump_yaml(data):
     """Dump dict to YAML string with matrices as flow-style lists."""
     data = _convert_matrices(data)

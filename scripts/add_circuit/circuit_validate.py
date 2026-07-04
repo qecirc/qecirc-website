@@ -44,13 +44,23 @@ def _count_gates(instr: stim.CircuitInstruction) -> int:
     return len(instr.target_groups())
 
 
-def _entangling_depth(circ: stim.Circuit) -> int:
-    """Two-qubit (entangling) circuit depth by greedy layering.
+def has_ticks(circ: stim.Circuit) -> bool:
+    """True when the circuit (or any nested REPEAT block) contains a TICK."""
+    for item in circ:
+        if isinstance(item, stim.CircuitRepeatBlock):
+            if has_ticks(item.body_copy()):
+                return True
+        elif item.name == "TICK":
+            return True
+    return False
+
+
+def _entangling_depth_greedy(circ: stim.Circuit) -> int:
+    """Two-qubit (entangling) circuit depth by greedy (ASAP) layering.
 
     Only entangling two-qubit gates open layers; single-qubit gates and free
-    SWAPs are ignored. This is the neutral-atom-relevant depth and matches the
-    convention circuit-synth and the QEC literature report (TICK annotations are
-    not used — parallelism is derived from qubit usage). A ``REPEAT n`` block
+    SWAPs are ignored. Used for circuits without TICK annotations, where
+    parallelism must be derived from qubit usage. A ``REPEAT n`` block
     contributes ``n ×`` the entangling depth of its body.
     """
     depth = 0
@@ -59,7 +69,7 @@ def _entangling_depth(circ: stim.Circuit) -> int:
 
     for item in circ:
         if isinstance(item, stim.CircuitRepeatBlock):
-            depth += item.repeat_count * _entangling_depth(item.body_copy())
+            depth += item.repeat_count * _entangling_depth_greedy(item.body_copy())
         elif _is_entangling(item.name):
             for group in item.target_groups():
                 qubits = [t.value for t in group if t.is_qubit_target]
@@ -73,6 +83,40 @@ def _entangling_depth(circ: stim.Circuit) -> int:
                     depth = layer
 
     return depth
+
+
+def _entangling_depth_from_ticks(circ: stim.Circuit) -> int:
+    """Two-qubit (entangling) depth from the circuit's own TICK schedule.
+
+    The TICK-separated layers are treated as authoritative (the submitter's
+    schedule — e.g. the layers a hardware constraint was enforced on), so the
+    depth is the number of TICK layers containing at least one entangling
+    gate. No re-packing. A ``REPEAT n`` block contributes ``n ×`` the
+    tick-depth of its body.
+    """
+    depth = 0
+    layer_has_entangling = False
+    for item in circ:
+        if isinstance(item, stim.CircuitRepeatBlock):
+            depth += item.repeat_count * _entangling_depth_from_ticks(item.body_copy())
+        elif item.name == "TICK":
+            depth += layer_has_entangling
+            layer_has_entangling = False
+        elif _is_entangling(item.name):
+            layer_has_entangling = True
+    return depth + layer_has_entangling
+
+
+def _entangling_depth(circ: stim.Circuit) -> int:
+    """Two-qubit (entangling) circuit depth.
+
+    Circuits **with** TICKs keep their given schedule (TICK layers are
+    authoritative — re-packing could break per-layer guarantees such as AOD
+    non-nesting); circuits without TICKs get greedy (ASAP) layering.
+    """
+    if has_ticks(circ):
+        return _entangling_depth_from_ticks(circ)
+    return _entangling_depth_greedy(circ)
 
 
 def _compute_depth_and_gates(

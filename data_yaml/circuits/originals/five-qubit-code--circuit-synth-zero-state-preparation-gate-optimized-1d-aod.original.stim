@@ -1,0 +1,43 @@
+X 2
+TICK
+H 4
+S 4
+H 4
+X 1
+H 1
+TICK
+SWAP 4 2
+TICK
+SWAP 2 1
+TICK
+H 4
+S_DAG 4
+H 2
+S 2
+H 2
+CZ 2 4
+H 2
+S 2
+TICK
+H 3
+Z 0
+H 0
+S_DAG 0
+H 1
+S_DAG 1
+S 4
+H 4
+CZ 3 4 0 1
+TICK
+H 4
+S_DAG 3
+S 1
+H 1
+Y 0
+S_DAG 0
+H 0
+CZ 0 3
+H 3 0
+CZ 1 4
+H 1
+S 1

@@ -269,3 +269,21 @@ class TestExtractCode:
     def test_encoding_wrong_k(self):
         with pytest.raises(ValueError, match="k=.*must satisfy"):
             extract_code(STEANE_STIM, circuit_type="encoding", k=8)
+
+
+class TestTickAuthoritativeDepth:
+    def test_tick_layers_not_repacked(self):
+        """Two CNOTs on disjoint qubits in separate TICK layers: the given
+        schedule is authoritative (depth 2), even though ASAP packing would
+        merge them into one layer."""
+        props = circuit_properties("CX 0 1\nTICK\nCX 2 3\n")
+        assert props.depth == 2
+
+    def test_same_circuit_without_ticks_is_repacked(self):
+        props = circuit_properties("CX 0 1\nCX 2 3\n")
+        assert props.depth == 1
+
+    def test_single_qubit_only_tick_layers_dont_count(self):
+        """TICK layers with no entangling gate contribute no depth."""
+        props = circuit_properties("H 0\nTICK\nCX 0 1\nTICK\nS 1\n")
+        assert props.depth == 1
