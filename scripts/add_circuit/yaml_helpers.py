@@ -6,6 +6,16 @@ from pathlib import Path
 
 import yaml
 
+# Prefer the libyaml-backed C loader — ~7x faster on the large check-matrix code
+# YAMLs, which are re-parsed on every dedup scan during bulk imports.
+_FastLoader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
+
+def load_yaml(text: str):
+    """Parse YAML with the fast C loader when available (same result as
+    ``yaml.safe_load``)."""
+    return yaml.load(text, Loader=_FastLoader)
+
 
 def build_code_yaml(code):
     """Build clean code YAML dict from computed code data."""

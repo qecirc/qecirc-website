@@ -32,6 +32,7 @@ from .circuit_validate import (  # noqa: F401
     validate_state_prep,
     validate_syndrome_extraction,
 )
+from .code_identify import gf2_row_basis
 from .compute import compute_code_data, compute_code_data_h
 from .compute_circuit import compute_circuit_data
 from .helpers import (  # noqa: F401
@@ -51,6 +52,7 @@ from .yaml_helpers import (
     build_code_yaml,
     build_original_yaml,
     dump_yaml,
+    load_yaml,
     write_file,
 )
 
@@ -77,6 +79,85 @@ class UncertainDedupError(Exception):
             f"`assume_new=True` to add as a new code, or reformulate the "
             f"matrices to match the stored form of one of the candidates."
         )
+
+
+def _rowspace(M: np.ndarray) -> np.ndarray:
+    return gf2_row_basis(np.asarray(M, dtype=int) % 2)
+
+
+def _find_code_by_matrices(data_dir: Optional[str], n: int, H_perm: np.ndarray) -> Optional[str]:
+    """Return the slug of the stored ``[[n,...]]`` code whose stabilizer group has
+    the same GF(2) row space as ``H_perm`` (a symplectic ``(m, 2n)`` matrix in the
+    stored labeling), or ``None``. A direct code-equality test in a fixed
+    labeling — no permutation search, and independent of how the stored
+    ``canonical_hash`` was computed."""
+    if not data_dir:
+        return None
+
+    target = _rowspace(H_perm)
+    for path in sorted((Path(data_dir) / "codes").glob("*.yaml")):
+        doc = load_yaml(path.read_text())
+        if not doc or doc.get("n") != n:
+            continue
+        stored_h = np.asarray(doc["h"], dtype=int)
+        if stored_h.shape[1] != 2 * n:
+            continue
+        if target.shape == _rowspace(stored_h).shape and np.array_equal(
+            target, _rowspace(stored_h)
+        ):
+            return path.stem
+    return None
+
+
+def _resolve_with_permutation(
+    code_result: dict,
+    sigma: list[int],
+    *,
+    css_path: bool,
+    Hx,
+    Hz,
+    H,
+    n: Optional[int],
+    data_dir: Optional[str],
+) -> None:
+    """Adopt a caller-supplied qubit permutation ``sigma`` (convention
+    ``sigma[new] = old``) instead of the dedup search.
+
+    Relabels the submission's columns by ``sigma`` and checks the result is the
+    same stabilizer code (equal GF(2) row space) as a stored code — a direct
+    equality test in the fixed stored labeling, so it works even for
+    automorphism-rich codes whose ``canonical_hash`` is not a true permutation
+    invariant. Rewrites ``code_result`` in place to a confirmed match under that
+    code's slug. Raises ``ValueError`` if ``sigma`` is not a valid permutation or
+    does not land on any stored code.
+    """
+    nn = code_result["code"]["n"]
+    if sorted(sigma) != list(range(nn)):
+        raise ValueError(f"qubit_permutation must be a permutation of 0..{nn - 1}, got {sigma!r}.")
+
+    if css_path:
+        pHx = np.asarray(Hx, dtype=int)[:, sigma]
+        pHz = np.asarray(Hz, dtype=int)[:, sigma]
+        from .code_identify import build_symplectic_h
+
+        H_perm = build_symplectic_h(pHx, pHz)
+    else:
+        cols = list(sigma) + [s + nn for s in sigma]
+        H_perm = np.asarray(H, dtype=int)[:, cols]
+
+    slug = _find_code_by_matrices(data_dir, nn, H_perm)
+    if slug is None:
+        raise ValueError(
+            "supplied qubit_permutation does not map the submission onto any "
+            "stored code. Check the permutation, its orientation (sigma[new] = "
+            "old), or seed the code."
+        )
+
+    code_result["code"]["status"] = "existing"
+    code_result["code"]["slug"] = slug
+    code_result["qubit_permutation"] = sigma
+    code_result["dedup_status"] = "match"
+    code_result["uncertain_candidates"] = []
 
 
 @dataclass
@@ -129,6 +210,9 @@ def add_circuit(
     dry_run: bool = False,
     assume_new: bool = False,
     overwrite: bool = False,
+    qubit_permutation: Optional[list[int]] = None,
+    code_slug: str = "",
+    code_tags: Optional[list[str]] = None,
 ) -> AddCircuitResult:
     """
     Add a circuit to the QECirc library by writing YAML files to data_yaml/.
@@ -166,6 +250,21 @@ def add_circuit(
             exists, ``False`` (the default) raises :exc:`FileExistsError` rather
             than silently clobbering it; ``True`` replaces it in place, keeping
             the existing ``qec_id`` so the public ``#N`` identifier is stable.
+        code_slug: Explicit slug for a *new* code, overriding
+            ``slugify(code_name)``. Lets new codes follow the numeric ``n-k-d``
+            convention (e.g. ``9-1-3-surface``) while the display ``name`` may
+            repeat across sizes. Ignored for existing codes (the stored slug is
+            authoritative).
+        code_tags: Family tags for a *new* code (e.g. ``["surface-code"]``),
+            merged with the auto-derived ``CSS`` / ``self-dual`` tags. Ignored for
+            existing codes.
+        qubit_permutation: A caller-supplied permutation (convention
+            ``sigma[new] = old``) that relabels the submission onto a stored
+            code. When given, it replaces the automatic dedup search: the
+            permutation is verified by row-space equality against the stored code
+            (so it works for automorphism-rich codes where the search times out)
+            and applied to the circuit. Raises :exc:`ValueError` if it is not a
+            valid permutation or does not land on a stored code.
 
     Returns:
         AddCircuitResult with code/circuit info and list of files written.
@@ -187,6 +286,9 @@ def add_circuit(
 
     data_dir = Path(data_dir)
     data_dir_arg = str(data_dir) if data_dir.exists() else None
+    # When a permutation is supplied, _resolve_with_permutation does its own
+    # (single) code scan, so skip compute_code_data's dedup scan entirely.
+    dedup_dir = None if qubit_permutation is not None else data_dir_arg
 
     # Compute code data
     if css_path:
@@ -196,7 +298,9 @@ def add_circuit(
             d=d,
             code_name=code_name,
             zoo_url=zoo_url,
-            data_dir=data_dir_arg,
+            data_dir=dedup_dir,
+            code_slug=code_slug,
+            code_tags=code_tags,
         )
     else:
         code_result = compute_code_data_h(
@@ -205,6 +309,24 @@ def add_circuit(
             d=d,
             code_name=code_name,
             zoo_url=zoo_url,
+            data_dir=dedup_dir,
+            code_slug=code_slug,
+            code_tags=code_tags,
+        )
+
+    # A caller-supplied qubit permutation short-circuits the (possibly
+    # budget-limited) automatic dedup search: verify it maps the submission onto
+    # a stored code and adopt it directly. Useful for automorphism-rich codes
+    # where find_qubit_permutation cannot confirm equivalence in time.
+    if qubit_permutation is not None:
+        _resolve_with_permutation(
+            code_result,
+            list(qubit_permutation),
+            css_path=css_path,
+            Hx=Hx,
+            Hz=Hz,
+            H=H,
+            n=n,
             data_dir=data_dir_arg,
         )
 
@@ -249,9 +371,7 @@ def add_circuit(
                 f"{circ_yaml_path}. Pass overwrite=True to replace it, or use a "
                 f"distinct circuit_name."
             )
-        import yaml as _yaml
-
-        prev = _yaml.safe_load(circ_yaml_path.read_text())
+        prev = load_yaml(circ_yaml_path.read_text())
         if prev and isinstance(prev.get("qec_id"), int):
             existing_qec_id = prev["qec_id"]
     circ_data["qec_id"] = existing_qec_id or next_qec_id(data_dir)
