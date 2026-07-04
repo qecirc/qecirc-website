@@ -98,13 +98,10 @@ def _relabel_qubits(circ, permutation):
     out = stim.Circuit()
     for op in circ:
         if isinstance(op, stim.CircuitRepeatBlock):
-            out.append(
-                stim.CircuitRepeatBlock(op.repeat_count, _relabel_qubits(op.body_copy(), permutation))
-            )
+            body = _relabel_qubits(op.body_copy(), permutation)
+            out.append(stim.CircuitRepeatBlock(op.repeat_count, body))
             continue
-        targets = [
-            mapping[t.value] if t.is_qubit_target else t for t in op.targets_copy()
-        ]
+        targets = [mapping[t.value] if t.is_qubit_target else t for t in op.targets_copy()]
         out.append(op.name, targets, op.gate_args_copy())
     return out
 
