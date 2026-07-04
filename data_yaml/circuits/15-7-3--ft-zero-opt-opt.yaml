@@ -1,0 +1,25 @@
+qec_id: 476
+name: FT zero (opt/opt)
+tool: mqt-qecc
+notes: "FT state preparation (prep synthesis: opt, verification synthesis: opt); verification
+  measurements included, post-selection protocol. Source file: scripts/ft_stateprep/eval/circuits/hamming/zero_ft_opt_opt.stim.
+  Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla
+  qubits: [15, 16]. Canonicalization qubit permutation (stored qubit i = original
+  qubit permutation[i]): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+source: https://arxiv.org/abs/2408.11894
+gate_count: 32
+two_qubit_gate_count: 28
+depth: 11
+qubit_count: 17
+crumble_url: https://algassert.com/crumble#circuit=H_0_1_11_12;CX_0_10_12_3_11_4_1_0_10_6_3_11_1_7_11_13_0_14_12_10_6_5_1_8_11_0_8_9_1_3_0_6_0_7_10_1_4_9_1_11_4_2_0_15_5_4_9_15_10_15_4_16_8_16;MR_15;CX_11_16;MR_16_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H",1,1,1,1,1,1,1,1,1,"H","H"],["•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,"X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"X",1,1,1,1,1,1,"•"],["X","•"],[1,1,1,1,1,1,"X",1,1,1,"•"],[1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,"X"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,"X","•"],[1,"•",1,1,1,1,1,1,"X"],["X",1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,"•","X"],[1,"•",1,"X"],["•",1,1,1,1,1,"X"],["•",1,1,1,1,1,1,"X"],[1,"X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"•",1,1,1,1,"X"],[1,"•",1,1,1,1,1,1,1,1,1,"X"],[1,1,"X",1,"•"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset"]]}
+tags:
+  [
+    state-preparation,
+    ft,
+    "prep:opt",
+    "verification:opt",
+    "connectivity:fully-connected",
+    "logical-state:zero",
+    flag,
+  ]

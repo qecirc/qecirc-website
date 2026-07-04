@@ -1,0 +1,25 @@
+qec_id: 465
+name: FT zero (opt/opt)
+tool: mqt-qecc
+notes: "FT state preparation (prep synthesis: opt, verification synthesis: opt); verification
+  measurements included, post-selection protocol. Source file: scripts/ft_stateprep/eval/circuits/rotated_surface_d3/zero_ft_opt_opt.stim.
+  Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla
+  qubits: [9]. Canonicalization qubit permutation (stored qubit i = original qubit
+  permutation[i]): [4, 3, 2, 1, 0, 7, 8, 6, 5]"
+source: https://arxiv.org/abs/2408.11894
+gate_count: 15
+two_qubit_gate_count: 11
+depth: 6
+qubit_count: 10
+crumble_url: https://algassert.com/crumble#circuit=H_1_0_8_6;CX_6_4_1_7_8_2_4_3_0_6_6_8_3_1_6_5_3_9_0_9_5_9;MR_9_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H",1,1,1,1,"H",1,"H"],[1,1,1,1,"X",1,"•"],[1,"•",1,1,1,1,1,"X"],[1,1,"X",1,1,1,1,1,"•"],[1,1,1,"X","•"],["•",1,1,1,1,1,"X"],[1,1,1,1,1,1,"•",1,"X"],[1,"X",1,"•"],[1,1,1,1,1,"X","•"],[1,1,1,"•",1,1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"ZDetectControlReset"]]}
+tags:
+  [
+    state-preparation,
+    ft,
+    "prep:opt",
+    "verification:opt",
+    "connectivity:fully-connected",
+    "logical-state:zero",
+    flag,
+  ]

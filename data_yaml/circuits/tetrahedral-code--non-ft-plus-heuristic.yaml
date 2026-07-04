@@ -1,0 +1,23 @@
+qec_id: 481
+name: Non-FT plus (heuristic)
+tool: mqt-qecc
+notes:
+  "Non-FT state preparation, synthesis method: heuristic. Source file: scripts/ft_stateprep/eval/circuits/tetrahedral/plus_non_ft_heuristic.stim.
+  Logical state: plus. Connectivity: fully-connected. Gate set: CX,H. Canonicalization
+  qubit permutation (stored qubit i = original qubit permutation[i]): [0, 1, 8, 2,
+  9, 10, 3, 4, 12, 14, 7, 13, 6, 5, 11]"
+source: https://arxiv.org/abs/2408.11894
+gate_count: 28
+two_qubit_gate_count: 23
+depth: 5
+qubit_count: 15
+crumble_url: https://algassert.com/crumble#circuit=H_3_7_12_5_11;CX_7_1_12_13_5_6_11_14_3_1_6_13_7_10_14_8_12_11_6_0_13_7_14_4_8_2_10_9_12_10_1_2_3_4_13_14_7_8_11_9_1_0_3_6_4_5_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,"H",1,"H",1,"H",1,1,1,"H","H"],[1,"X",1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,"X",1,"•"],[1,1,1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,1,1,1,"X",1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,"X","•"],["X",1,1,1,1,1,"•"],[1,1,1,1,1,1,1,"X",1,1,1,1,1,"•"],[1,1,1,1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,"•","X"],[1,1,1,"•","X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,1,1,"X",1,"•"],["X","•"],[1,1,1,"•",1,1,"X"],[1,1,1,1,"•","X"]]}
+tags:
+  [
+    state-preparation,
+    non-ft,
+    "prep:heuristic",
+    "connectivity:fully-connected",
+    "logical-state:plus",
+  ]

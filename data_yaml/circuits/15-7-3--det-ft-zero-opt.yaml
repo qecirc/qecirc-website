@@ -1,0 +1,48 @@
+qec_id: 504
+name: Det FT zero (opt)
+tool: mqt-qecc
+notes: |-
+  Deterministic FT state preparation (arXiv:2501.05527). The stored
+  body and metrics show the WORST-CASE branch of an adaptive protocol
+  (fair-comparison convention): prep, then per layer the always-measured
+  round-1 verification and the most expensive outcome branch (round-2
+  measurements + classically-controlled Pauli correction). The actual
+  protocol branches on measurement outcomes as tabulated below
+  (round-1 outcome bits are MSB-first in measurement order).
+  Verification variant: global. Source file: hamming/zero_ft_opt.qasm
+  --- Layer 0 (Z-stabilizer verification) ---
+    round-1 stab 0: Z[5, 8, 14]
+    round-1 stab 1: Z[0, 1, 2]
+    round-1 outcome 1: measure Z[4, 8, 11], Z[0, 11, 12]
+      round-2 outcome 0: no correction
+      round-2 outcome 1: apply X[0, 7]
+      round-2 outcome 10: apply X[2, 4, 9]
+      round-2 outcome 11: apply X[1, 11]
+    round-1 outcome 10: measure Z[3, 10, 14], Z[1, 3, 5]
+      round-2 outcome 0: apply X[8]
+      round-2 outcome 1: apply X[4, 5]
+      round-2 outcome 10: apply X[1, 14]
+      round-2 outcome 11: apply X[2, 11, 13, 14]
+    round-1 outcome 11: measure Z[]
+      round-2 outcome 0: apply X[0, 6, 7, 14]
+      round-2 outcome 1: no correction
+  --- Layer 1 (X-stabilizer verification) ---
+    (trivial: no verification measurements). Source file: scripts/ft_stateprep/eval_det/circuits/hamming/zero_ft_opt.qasm. Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla qubits: [15, 16]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+source: https://arxiv.org/abs/2501.05527
+gate_count: 42
+two_qubit_gate_count: 38
+depth: 15
+qubit_count: 17
+crumble_url: https://algassert.com/crumble#circuit=H_0_1_11_12;CX_0_10_1_0_1_7_12_3_10_6_1_8_11_4_3_11_11_13_8_9_0_14_12_10_1_3_6_5_11_0_0_6_0_7_10_1_1_11_4_9_4_2_5_4_5_15_8_15_14_15_0_16_1_16_2_16;MR_15_16;CX_3_15_10_15_14_15_1_16_3_16_5_16;MR_15_16;CX_rec[-2]_2_rec[-2]_11_rec[-2]_13_rec[-2]_14_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H",1,1,1,1,1,1,1,1,1,"H","H"],["•",1,1,1,1,1,1,1,1,1,"X"],["X","•"],[1,"•",1,1,1,1,1,"X"],[1,1,1,"X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,"X",1,1,1,"•"],[1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,"X",1,1,1,1,1,1,"•"],[1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,1,1,"•","X"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,"•",1,"X"],[1,1,1,1,1,"X","•"],["X",1,1,1,1,1,1,1,1,1,1,"•"],["•",1,1,1,1,1,"X"],["•",1,1,1,1,1,1,"X"],[1,"X",1,1,1,1,1,1,1,1,"•"],[1,"•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,"X"],[1,1,"X",1,"•"],[1,1,1,1,"X","•"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset","ZDetectControlReset"],[1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],[1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset","ZDetectControlReset"]]}
+tags:
+  [
+    state-preparation,
+    ft,
+    deterministic,
+    "prep:opt",
+    "verification:global",
+    "connectivity:fully-connected",
+    "logical-state:zero",
+    flag,
+  ]

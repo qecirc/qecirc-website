@@ -1,0 +1,40 @@
+qec_id: 513
+name: Det FT zero (opt)
+tool: mqt-qecc
+notes: |-
+  Deterministic FT state preparation (arXiv:2501.05527). The stored
+  body and metrics show the WORST-CASE branch of an adaptive protocol
+  (fair-comparison convention): prep, then per layer the always-measured
+  round-1 verification and the most expensive outcome branch (round-2
+  measurements + classically-controlled Pauli correction). The actual
+  protocol branches on measurement outcomes as tabulated below
+  (round-1 outcome bits are MSB-first in measurement order).
+  Verification variant: global. Source file: surface_3/zero_opt.qasm
+  --- Layer 0 (Z-stabilizer verification) ---
+    round-1 stab 0: Z[1, 4, 7] [hook flag]
+    round-1 outcome 1: measure Z[0, 4, 7]
+      round-2 outcome 0: apply X[1]
+      round-2 outcome 1: apply X[7, 8]
+    hook flag of stab 0 (outcome 1): measure X[]
+      round-2 outcome 0: apply Z[8]
+      round-2 outcome 1: no correction
+  --- Layer 1 (X-stabilizer verification) ---
+    (trivial: no verification measurements). Source file: scripts/ft_stateprep/eval_det/circuits/surface_3/zero_opt.qasm. Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla qubits: [9, 10]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]): [4, 3, 2, 1, 0, 7, 8, 6, 5]
+source: https://arxiv.org/abs/2501.05527
+gate_count: 24
+two_qubit_gate_count: 18
+depth: 12
+qubit_count: 11
+crumble_url: https://algassert.com/crumble#circuit=H_1_0_8_6;CX_6_4_4_3_1_7_8_2_0_6_6_8_3_1_6_5_3_9;H_10;CX_10_9_0_9_10_9;H_10;CX_5_9;MR_9_10;CX_4_9_0_9_5_9;MR_9;CX_rec[-1]_5_rec[-1]_6_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H",1,1,1,1,"H",1,"H"],[1,1,1,1,"X",1,"•"],[1,1,1,"X","•"],[1,"•",1,1,1,1,1,"X"],[1,1,"X",1,1,1,1,1,"•"],["•",1,1,1,1,1,"X"],[1,1,1,1,1,1,"•",1,"X"],[1,"X",1,"•"],[1,1,1,1,1,"X","•"],[1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,1,1,1,1,"X","•"],["•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"ZDetectControlReset","ZDetectControlReset"],[1,1,1,1,"•",1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"ZDetectControlReset"]]}
+tags:
+  [
+    state-preparation,
+    ft,
+    deterministic,
+    "prep:opt",
+    "verification:global",
+    "connectivity:fully-connected",
+    "logical-state:zero",
+    flag,
+  ]

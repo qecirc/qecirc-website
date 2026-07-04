@@ -1,0 +1,25 @@
+qec_id: 487
+name: FT zero (heuristic/heuristic)
+tool: mqt-qecc
+notes: "FT state preparation (prep synthesis: heuristic, verification synthesis: heuristic);
+  verification measurements included, post-selection protocol. Source file: scripts/ft_stateprep/eval/circuits/carbon/zero_ft_heuristic_heuristic.stim.
+  Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla
+  qubits: [12, 13, 14, 15]. Canonicalization qubit permutation (stored qubit i = original
+  qubit permutation[i]): [0, 3, 1, 4, 2, 5, 6, 9, 7, 10, 8, 11]"
+source: https://arxiv.org/abs/2408.11894
+gate_count: 42
+two_qubit_gate_count: 35
+depth: 13
+qubit_count: 16
+crumble_url: https://algassert.com/crumble#circuit=H_0_2_4_3_8_14;CX_8_11_2_5_3_9_4_10_0_6_8_7_2_1_6_11_0_5_9_7_10_8_3_1_4_2_11_9_7_10_8_6_5_3_1_4_2_0_2_12_14_0_3_12_2_13_14_15_8_12_4_13_9_12_8_13_14_4_10_13;MR_12;CX_14_3;MR_13;CX_14_6_14_10_14_15;MR_15;CX_14_9;H_14;MR_14_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H",1,"H","H","H",1,1,1,"H",1,1,1,1,1,"H"],[1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,"•",1,1,"X"],[1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,"X"],["•",1,1,1,1,1,"X"],[1,1,1,1,1,1,1,"X","•"],[1,"X","•"],[1,1,1,1,1,1,"•",1,1,1,1,"X"],["•",1,1,1,1,"X"],[1,1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,1,1,1,"X",1,"•"],[1,"X",1,"•"],[1,1,"X",1,"•"],[1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,1,"X",1,"•"],[1,1,1,"X",1,"•"],[1,"•",1,1,"X"],["X",1,"•"],[1,1,"•",1,1,1,1,1,1,1,1,1,"X"],["X",1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,1,1,1,"•",1,1,1,1,"X"],[1,1,1,1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset"],[1,1,1,"X",1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,"X",1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset"],[1,1,1,1,1,1,1,1,1,"X",1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset"]]}
+tags:
+  [
+    state-preparation,
+    ft,
+    "prep:heuristic",
+    "verification:heuristic",
+    "connectivity:fully-connected",
+    "logical-state:zero",
+    flag,
+  ]
