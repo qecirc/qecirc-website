@@ -12,4 +12,4 @@ depth: 4
 qubit_count: 7
 crumble_url: https://algassert.com/crumble#circuit=H_4_2_6;CX_2_1_4_3_1_5_6_4_2_0_5_3_6_0_4_2_3_1_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"H",1,"H",1,"H"],[1,"X","•"],[1,1,1,"X","•"],[1,"•",1,1,1,"X"],[1,1,1,1,"X",1,"•"],["X",1,"•"],[1,1,1,"X",1,"•"],["X",1,1,1,1,1,"•"],[1,1,"X",1,"•"],[1,"X",1,"•"]]}
-tags: [encoding]
+tags: [encoding, non-ft]

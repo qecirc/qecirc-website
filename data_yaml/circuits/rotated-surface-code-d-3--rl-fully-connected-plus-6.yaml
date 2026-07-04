@@ -13,4 +13,4 @@ depth: 6
 qubit_count: 10
 crumble_url: https://algassert.com/crumble#circuit=H_3_7_0_2_6_9;CX_3_8_6_1_0_8_3_4_6_5_0_1_2_8_7_1_9_2_9_7_9_0;H_9_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H",1,"H","H",1,1,"H","H",1,"H"],[1,1,1,"•",1,1,1,1,"X"],[1,"X",1,1,1,1,"•"],["•",1,1,1,1,1,1,1,"X"],[1,1,1,"•","X"],[1,1,1,1,1,"X","•"],["•","X"],[1,1,"•",1,1,1,1,1,"X"],[1,"X",1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,"X",1,"•"],["X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"H"]]}
-tags: [state-preparation, ft, "connectivity:fully-connected", "logical-state:plus", flag]
+tags: [state-preparation, ft, "logical-state:plus", flag]
