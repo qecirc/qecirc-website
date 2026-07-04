@@ -1,0 +1,7 @@
+H 2 3 4 6
+TICK
+CX 6 0 4 7 2 5
+TICK
+CX 6 7 0 5
+TICK
+CX 4 2 3 6 7 8 0 1

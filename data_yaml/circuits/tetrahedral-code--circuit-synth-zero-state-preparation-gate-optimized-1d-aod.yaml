@@ -1,0 +1,12 @@
+qec_id: 199
+name: Circuit-Synth Zero State Preparation (Gate-Optimized, 1D-AOD)
+tool: circuit-synth
+notes: "Neutral-atom (AOD) compatible on a 1D chain: every TICK-separated layer is non-nesting in physical coordinates. Placement: qubit i sits at 1D site placement[i], placement = [6, 7, 2, 0, 12, 11, 5, 10, 14, 9, 13, 4, 8, 3, 1]. Do not re-schedule across TICKs."
+source: circuit-synth
+gate_count: 26
+two_qubit_gate_count: 22
+depth: 5
+qubit_count: 15
+crumble_url: https://algassert.com/crumble#circuit=H_3_6_10_14;TICK;CX_6_7_3_0_14_12_10_9;TICK;CX_3_13_12_4_0_11_9_1_7_8;TICK;CX_10_12_8_5_6_9_4_0_3_2;TICK;CX_10_11_0_8_9_3;TICK;CX_13_5_14_6_12_2_9_4_8_10_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,"H",1,1,"H",1,1,1,"H",1,1,1,"H"],[1,1,1,1,1,1,"•","X"],["X",1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,"•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,"X",1,1,1,1,1,1,1,"•"],["•",1,1,1,1,1,1,1,1,1,1,"X"],[1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,"X",1,1,"•"],[1,1,1,1,1,1,"•",1,1,"X"],["X",1,1,1,"•"],[1,1,"X","•"],[1,1,1,1,1,1,1,1,1,1,"•","X"],["•",1,1,1,1,1,1,1,"X"],[1,1,1,"X",1,1,1,1,1,"•"],[1,1,1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"X",1,1,1,1,"•"],[1,1,1,1,1,1,1,1,"•",1,"X"]]}
+tags: [state-preparation, non-ft, 1D-AOD]
