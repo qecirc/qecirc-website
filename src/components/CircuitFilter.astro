@@ -1,8 +1,8 @@
 ---
 import type { TagWithCount, CircuitSort, CircuitSortField } from "../types";
-import { circuitSortToggleUrl, tagToggleUrl } from "../lib/url";
+import { circuitSortToggleUrl } from "../lib/url";
 import { TAG_CATEGORIES, categorizeTag } from "../lib/tag-categories";
-import TagList from "./TagList.astro";
+import TagFilterDropdowns from "./TagFilterDropdowns.astro";
 
 interface Props {
   rawGateCount: string;
@@ -45,14 +45,10 @@ const twoQubitGateSort = labelInfo("two_qubit_gate_count");
 const depthSort = labelInfo("depth");
 const qubitSort = labelInfo("qubit_count");
 
-const selectedSet = new Set(selectedTags);
-const tagUrl = (tag: string) => tagToggleUrl(currentUrl.search, selectedTags, tag, basePath);
 const tagGroups = TAG_CATEGORIES.map((c) => ({
-  ...c,
+  label: c.label,
   tags: allTags.filter((t) => categorizeTag(t.name) === c.key),
-})).filter((g) => g.tags.length > 0);
-const selectedCount = (g: (typeof tagGroups)[number]) =>
-  g.tags.filter((t) => selectedSet.has(t.name)).length;
+}));
 ---
 
 <form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2 sm:sticky sm:top-0 sm:z-20 bg-white dark:bg-gray-950 sm:border-b sm:border-gray-200 sm:dark:border-gray-800 sm:pb-4 sm:-mb-2"
@@ -101,86 +97,20 @@ const selectedCount = (g: (typeof tagGroups)[number]) =>
     </div>
   </div>
 
-  {allTags.length > 0 && (
-    <>
-    <div data-tag-grouped class="flex flex-wrap items-center gap-2">
-      <span class="inline-flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400" title="Filter circuits by tag">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V5a2 2 0 012-2z" />
-        </svg>
-        Tags:
-      </span>
-      {tagGroups.map((g) => {
-        const nSelected = selectedCount(g);
-        return (
-          <details data-tag-dropdown class="relative">
-            <summary
-              class:list={[
-                "flex items-center gap-1.5 rounded px-2.5 py-1 text-xs cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden transition-colors",
-                nSelected > 0
-                  ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 font-semibold"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium",
-              ]}
-            >
-              {g.label}
-              {nSelected > 0 && <span>({nSelected})</span>}
-              <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M19 9l-7 7-7-7" />
-              </svg>
-            </summary>
-            <div data-tag-popover class="absolute left-0 top-full mt-1 z-20 min-w-max rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg p-1.5 flex flex-col gap-0.5">
-              {g.tags.map((t) => (
-                <a
-                  href={tagUrl(t.name)}
-                  class:list={[
-                    "flex items-center justify-between gap-4 rounded px-2 py-1 text-xs transition-colors",
-                    selectedSet.has(t.name)
-                      ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
-                  ]}
-                >
-                  {t.name}
-                  <span class:list={[selectedSet.has(t.name) ? "opacity-70" : "text-gray-400 dark:text-gray-500"]}>{t.count}</span>
-                </a>
-              ))}
-            </div>
-          </details>
-        );
-      })}
-      {selectedTags.map((tag) => (
-        <a
-          href={tagUrl(tag)}
-          class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 transition-colors"
-          title={`Remove tag filter "${tag}"`}
-        >
-          {tag}
-          <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </a>
-      ))}
-      <button type="button" data-tag-view-toggle class="text-xs text-gray-400 dark:text-gray-500 underline hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
-        all tags
-      </button>
-    </div>
-    <div data-tag-cloud class="hidden">
-      <TagList tags={allTags} selectedTags={selectedTags} showCount baseUrl={currentUrl} basePath={basePath}>
-        <button type="button" data-tag-view-toggle class="text-xs text-gray-400 dark:text-gray-500 underline hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
-          by category
-        </button>
-      </TagList>
-    </div>
-    </>
-  )}
+  <TagFilterDropdowns
+    allTags={allTags}
+    selectedTags={selectedTags}
+    currentUrl={currentUrl}
+    basePath={basePath}
+    groups={tagGroups}
+    defaultView="grouped"
+    storageKey="qecirc:tag-view"
+  />
 </form>
 
 <script>
   import { initFilterForm } from "../lib/filter-client";
-  import { initTagDropdowns } from "../lib/tag-dropdowns-client";
 
   const form = document.getElementById("circuit-filter") as HTMLFormElement;
-  if (form) {
-    initFilterForm(form);
-    initTagDropdowns(form);
-  }
+  if (form) initFilterForm(form);
 </script>

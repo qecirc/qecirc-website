@@ -1,9 +1,11 @@
-const VIEW_LS_KEY = "qecirc:tag-view"; // "grouped" (default) | "all"
-
 /**
- * Behavior for the category tag dropdowns in the circuit filter:
- * one dropdown open at a time, close on outside click / Escape, and a
- * persisted toggle between the grouped view and the flat all-tags cloud.
+ * Behavior for a tag filter block rendered by TagFilterDropdowns.astro:
+ * one category dropdown open at a time, close on outside click / Escape, and
+ * a persisted toggle between the grouped view and the flat all-tags cloud.
+ *
+ * The root element configures each instance via data attributes:
+ *   data-storage-key   localStorage key for the persisted view choice
+ *   data-default-view  "grouped" | "all" — used when nothing is persisted
  */
 export function initTagDropdowns(root: HTMLElement): void {
   const dropdowns = Array.from(root.querySelectorAll<HTMLDetailsElement>("[data-tag-dropdown]"));
@@ -45,17 +47,21 @@ export function initTagDropdowns(root: HTMLElement): void {
   const toggles = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-tag-view-toggle]"));
   if (!grouped || !cloud || toggles.length === 0) return;
 
+  const storageKey = root.dataset.storageKey ?? "qecirc:tag-view";
+  const defaultView = root.dataset.defaultView === "all" ? "all" : "grouped";
+
   function applyView(view: string): void {
     grouped!.classList.toggle("hidden", view === "all");
     cloud!.classList.toggle("hidden", view !== "all");
   }
 
-  if (localStorage.getItem(VIEW_LS_KEY) === "all") applyView("all");
+  const stored = localStorage.getItem(storageKey);
+  applyView(stored === "all" || stored === "grouped" ? stored : defaultView);
 
   toggles.forEach(function (btn) {
     btn.addEventListener("click", function () {
       const view = grouped!.classList.contains("hidden") ? "grouped" : "all";
-      localStorage.setItem(VIEW_LS_KEY, view);
+      localStorage.setItem(storageKey, view);
       applyView(view);
     });
   });

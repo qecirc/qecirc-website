@@ -1,7 +1,8 @@
 ---
 import type { TagWithCount, CodeSort, CodeSortField } from "../types";
 import { codeSortToggleUrl } from "../lib/url";
-import TagList from "./TagList.astro";
+import { CODE_TAG_CATEGORIES, categorizeCodeTag } from "../lib/tag-categories";
+import TagFilterDropdowns from "./TagFilterDropdowns.astro";
 
 interface Props {
   rawN: string;
@@ -37,6 +38,11 @@ const sortToggleUrl = (field: CodeSortField) => codeSortToggleUrl(currentUrl, so
 const nSort = labelInfo("n");
 const kSort = labelInfo("k");
 const dSort = labelInfo("d");
+
+const tagGroups = CODE_TAG_CATEGORIES.map((c) => ({
+  label: c.label,
+  tags: allTags.filter((t) => categorizeCodeTag(t.name) === c.key),
+}));
 ---
 
 <form id="code-filter" method="GET" action="/" class="mb-6 space-y-2"
@@ -70,7 +76,15 @@ const dSort = labelInfo("d");
     </div>
   </div>
 
-  <TagList tags={allTags} selectedTags={selectedTags} showCount baseUrl={currentUrl} basePath="/" />
+  <TagFilterDropdowns
+    allTags={allTags}
+    selectedTags={selectedTags}
+    currentUrl={currentUrl}
+    basePath="/"
+    groups={tagGroups}
+    defaultView="all"
+    storageKey="qecirc:code-tag-view"
+  />
 </form>
 
 <script>

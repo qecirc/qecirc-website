@@ -26,3 +26,20 @@ export function categorizeTag(name: string): TagCategoryKey {
   if (name.startsWith("prep:") || name.startsWith("verification:")) return "method";
   return "other";
 }
+
+// --- code tags ---------------------------------------------------------------
+
+export type CodeTagCategoryKey = "family" | "properties";
+
+export const CODE_TAG_CATEGORIES: readonly { key: CodeTagCategoryKey; label: string }[] = [
+  { key: "family", label: "Code family" },
+  { key: "properties", label: "Properties" },
+];
+
+// Family tags conventionally end in "-code"; the set covers the exceptions.
+const FAMILY_TAGS = new Set(["LDPC", "topological", "bosonic"]);
+
+export function categorizeCodeTag(name: string): CodeTagCategoryKey {
+  if (name.endsWith("-code") || FAMILY_TAGS.has(name)) return "family";
+  return "properties";
+}
