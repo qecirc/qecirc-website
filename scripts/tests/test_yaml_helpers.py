@@ -38,3 +38,13 @@ def test_write_file_atomic_no_partial(tmp_path: Path, monkeypatch) -> None:
 
     # Original content preserved; no partial write
     assert target.read_text(encoding="utf-8") == "original\n"
+
+
+def test_multiline_strings_dump_as_block_scalars():
+    """Multi-line notes serialize as readable |- block scalars, not quoted
+    strings with escaped newlines; single-line strings stay plain."""
+    from scripts.add_circuit.yaml_helpers import dump_yaml
+
+    out = dump_yaml({"name": "X", "notes": "line one\nline two"})
+    assert "notes: |-\n  line one\n  line two" in out
+    assert "\\n" not in out

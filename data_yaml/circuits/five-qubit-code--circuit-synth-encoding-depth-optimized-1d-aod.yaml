@@ -1,7 +1,11 @@
 qec_id: 180
 name: Circuit-Synth Encoding (Depth-Optimized, 1D-AOD)
 tool: circuit-synth
-notes: "Neutral-atom (AOD) compatible on a 1D chain: every TICK-separated layer is non-nesting in physical coordinates. Placement: qubit i sits at 1D site placement[i], placement = [0, 1, 2, 3, 4]. Do not re-schedule across TICKs."
+notes: |-
+  Neutral-atom (AOD) compatible on a 1D chain:
+  every TICK-separated layer is non-nesting in physical coordinates.
+  Placement: qubit i sits at 1D site placement[i] = [0, 1, 2, 3, 4].
+  Do not re-schedule across TICKs.
 source: circuit-synth
 gate_count: 35
 two_qubit_gate_count: 6

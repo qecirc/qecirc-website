@@ -1,7 +1,11 @@
 qec_id: 174
 name: Circuit-Synth Zero State Preparation (Depth-Optimized, 1D-AOD)
 tool: circuit-synth
-notes: "Neutral-atom (AOD) compatible on a 1D chain: every TICK-separated layer is non-nesting in physical coordinates. Placement: qubit i sits at 1D site placement[i], placement = [7, 0, 2, 3, 4, 5, 1, 6]. Do not re-schedule across TICKs."
+notes: |-
+  Neutral-atom (AOD) compatible on a 1D chain:
+  every TICK-separated layer is non-nesting in physical coordinates.
+  Placement: qubit i sits at 1D site placement[i] = [7, 0, 2, 3, 4, 5, 1, 6].
+  Do not re-schedule across TICKs.
 source: circuit-synth
 gate_count: 63
 two_qubit_gate_count: 10
