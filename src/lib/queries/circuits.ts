@@ -131,34 +131,24 @@ export function getBodiesForCircuits(circuitIds: number[]): Map<number, CircuitB
   return result;
 }
 
-export function getCircuitByQecId(qecId: number):
-  | (Circuit & {
-      tags: string[];
-      code_slug: string;
-      code_name: string;
-      code_n: number;
-      code_k: number;
-    })
-  | null {
+export function getCircuitByQecId(
+  qecId: number,
+): (Circuit & { tags: string[]; code_slug: string; code_name: string }) | null {
   const db = getDb();
   const row = db
     .prepare(
-      `SELECT c.*, co.slug AS code_slug, co.name AS code_name, co.n AS code_n, co.k AS code_k
+      `SELECT c.*, co.slug AS code_slug, co.name AS code_name
        FROM circuits c
        JOIN codes co ON co.id = c.code_id
        WHERE c.qec_id = ?`,
     )
-    .get(qecId) as
-    | (Circuit & { code_slug: string; code_name: string; code_n: number; code_k: number })
-    | undefined;
+    .get(qecId) as (Circuit & { code_slug: string; code_name: string }) | undefined;
   if (!row) return null;
   const [enriched] = withTags([row], "circuit");
   return {
     ...enriched,
     code_slug: row.code_slug,
     code_name: row.code_name,
-    code_n: row.code_n,
-    code_k: row.code_k,
   };
 }
 
@@ -183,6 +173,14 @@ export function getCircuitsByQecIds(
     code_slug: string;
     code_name: string;
   })[];
+}
+
+export function getAllCircuitQecIds(): number[] {
+  const db = getDb();
+  const rows = db.prepare(`SELECT qec_id FROM circuits ORDER BY qec_id`).all() as {
+    qec_id: number;
+  }[];
+  return rows.map((r) => r.qec_id);
 }
 
 export function getOriginalForCircuit(circuitId: number): CircuitOriginalLight | null {

@@ -38,13 +38,11 @@ export function initFilterForm(form: HTMLFormElement): void {
   function isValidFilter(value: string): boolean {
     const trimmed = value.trim();
     if (trimmed === "") return true;
-    const parts = trimmed.split(",");
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i].trim();
-      if (part === "") continue;
-      if (!FILTER_PART_REGEX.test(part)) return false;
-    }
-    return true;
+    // Mirror the server's parseFilterString: at least one non-empty part,
+    // and every non-empty part must match (a bare "," is invalid there too).
+    const parts = trimmed.split(",").map((p) => p.trim());
+    if (parts.every((p) => p === "")) return false;
+    return parts.every((p) => p === "" || FILTER_PART_REGEX.test(p));
   }
 
   function validateAndUpdate(): boolean {

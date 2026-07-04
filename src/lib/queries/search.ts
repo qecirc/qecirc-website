@@ -1,6 +1,7 @@
 import { getDb } from "../db";
 import type { Circuit, CodeListItem, Tool } from "../../types";
 import { withTags } from "./shared";
+import { parseToolRow, type ToolRow } from "./tools";
 
 function rawTokenize(query: string): string[] {
   return query
@@ -114,5 +115,8 @@ export function searchCircuits(
 }
 
 export function searchTools(query: string): (Tool & { tags: string[] })[] {
-  return searchByType<Tool>("tools", "tool", query, 10);
+  return searchByType<ToolRow & { id: number }>("tools", "tool", query, 10).map((row) => ({
+    ...parseToolRow(row),
+    tags: row.tags,
+  }));
 }

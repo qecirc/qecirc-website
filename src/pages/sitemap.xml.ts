@@ -1,9 +1,9 @@
 import type { APIRoute } from "astro";
-import { getAllCodes } from "../lib/queries";
+import { getAllCodes, getAllCircuitQecIds } from "../lib/queries";
 
 export const prerender = false;
 
-const STATIC_PATHS = ["/", "/about", "/contribute", "/tools"];
+const STATIC_PATHS = ["/", "/about", "/contribute", "/tools", "/privacy", "/legal"];
 
 export const GET: APIRoute = ({ site }) => {
   const codes = getAllCodes();
@@ -12,6 +12,7 @@ export const GET: APIRoute = ({ site }) => {
   const urls = [
     ...STATIC_PATHS.map((path) => `  <url><loc>${base}${path}</loc></url>`),
     ...codes.map((c) => `  <url><loc>${base}/codes/${c.slug}</loc></url>`),
+    ...getAllCircuitQecIds().map((id) => `  <url><loc>${base}/circuits/${id}</loc></url>`),
   ];
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>

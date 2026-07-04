@@ -39,7 +39,12 @@ export function initListKeynav(config: ListKeynavConfig): () => void {
   const expandedAttr = config.expandedAttr ?? "aria-expanded";
   const hashAttr = config.hashAttr ?? "id";
 
-  const getRows = () => Array.from(document.querySelectorAll<HTMLElement>(config.rowSelector));
+  // Skip rows hidden by page-level filters (e.g. the favorites filter sets
+  // display:none) — hidden rows are unfocusable and would swallow focus.
+  const getRows = () =>
+    Array.from(document.querySelectorAll<HTMLElement>(config.rowSelector)).filter(
+      (r) => r.offsetParent !== null,
+    );
 
   // Initial focus — defer to next frame so any same-tick scripts (like
   // CircuitRow's expandFromHash) can run first. Hash match wins over first-row.

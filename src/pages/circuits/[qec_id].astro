@@ -132,9 +132,13 @@ const originalsUrl = `/api/circuits/${qecId}/originals`;
   {circuit.tags.length > 0 && (
     <div class="flex flex-wrap gap-1 mb-6">
       {circuit.tags.map((tag) => (
-        <span class="inline-block rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 text-xs">
+        <a
+          href={`/codes/${circuit.code_slug}?tag=${encodeURIComponent(tag)}`}
+          class="inline-block rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 px-1.5 py-0.5 text-xs transition-colors"
+          title={`Show ${circuit.code_name} circuits tagged "${tag}"`}
+        >
           {tag}
-        </span>
+        </a>
       ))}
     </div>
   )}
