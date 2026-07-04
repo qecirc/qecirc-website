@@ -1,5 +1,6 @@
 qec_id: 359
 name: RL ibm lima zero 1
+tool: rlftqc
 notes: "Source file: logical-state-preparation/ibm/5-1-3-lima/5_1.stim. Logical state:
   zero. Connectivity: ibm. Gate set: CX,S,SQRT_X,X. Device: lima. Device qubit placement
   (Qiskit indices): 0,4,2,1,3. Canonicalization qubit permutation (stored qubit i

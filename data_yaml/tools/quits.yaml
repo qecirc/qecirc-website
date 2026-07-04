@@ -1,0 +1,5 @@
+name: QUITS
+description: Modular circuit-level simulator for qLDPC codes that constructs Stim syndrome-extraction circuits for hypergraph-product, lifted-product, balanced-product, and bivariate-bicycle codes.
+github_url: https://github.com/mkangquantum/quits
+paper_urls: [https://arxiv.org/abs/2504.02673]
+tags: [Python, syndrome-extraction, qLDPC]

@@ -1,0 +1,5 @@
+name: autqec
+description: Finds fault-tolerant logical Clifford gates of stabilizer codes from code automorphisms and converts them to physical Clifford circuits.
+github_url: https://github.com/hsayginel/autqec
+paper_urls: [https://arxiv.org/abs/2409.18175]
+tags: [Python, logical-gates, Clifford, fault-tolerant]

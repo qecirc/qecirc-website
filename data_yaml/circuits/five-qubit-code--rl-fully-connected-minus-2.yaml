@@ -1,5 +1,6 @@
 qec_id: 241
 name: RL fully-connected minus 2
+tool: rlftqc
 notes:
   "Source file: integrated-ft-logical-state-preparation/fully-connected/5-1-3/minus_logical/5_7_6.stim.
   Logical state: minus. Connectivity: fully-connected. Gate set: CX,CZ,H. Flag/ancilla

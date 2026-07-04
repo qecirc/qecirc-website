@@ -1,5 +1,6 @@
 qec_id: 373
 name: RL ibm manila zero 5
+tool: rlftqc
 notes: "Source file: logical-state-preparation/ibm/5-1-3-manila/5_5.stim. Logical
   state: zero. Connectivity: ibm. Gate set: CX,SQRT_X,X. Device: manila. Device qubit
   placement (Qiskit indices): 4,3,0,2,1. Canonicalization qubit permutation (stored

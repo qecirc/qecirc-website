@@ -1,5 +1,6 @@
 qec_id: 413
 name: RL fully-connected zero 18
+tool: rlftqc
 notes: "Source file: verification-circuit-synthesis/7-1-3/7_0_4_combined.stim. Logical
   state: zero. Connectivity: fully-connected. Gate set: CX,H. Flag/ancilla qubits:
   [7]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]):

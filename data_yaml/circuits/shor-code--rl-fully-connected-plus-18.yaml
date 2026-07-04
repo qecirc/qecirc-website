@@ -1,5 +1,6 @@
 qec_id: 424
 name: RL fully-connected plus 18
+tool: rlftqc
 notes: "Source file: verification-circuit-synthesis/9-1-3-shor/9_0_5_combined.stim.
   Logical state: zero. Original (source) logical state: plus. Connectivity: fully-connected.
   Gate set: CX,H. Flag/ancilla qubits: [9]. Canonicalization qubit permutation (stored

@@ -1,5 +1,6 @@
 qec_id: 297
 name: RL ibm guadalupe zero 4
+tool: rlftqc
 notes: "Source file: integrated-ft-logical-state-preparation/ibm/7-1-3-guadalupe/2/7_9.stim.
   Logical state: zero. Connectivity: ibm. Gate set: CX,H. Device: guadalupe. Flag/ancilla
   qubits: [7, 8]. Device qubit placement (Qiskit indices): 3,0,6,12,4,2,10,1,7. Canonicalization

@@ -1,0 +1,5 @@
+name: Stac
+description: Pedagogical library for constructing stabilizer codes that generates encoding, decoding, and syndrome-measurement circuits with export to QASM and Stim.
+homepage_url: https://abdullahkhalid.com/qecft/
+github_url: https://github.com/abdullahkhalids/stac
+tags: [Python, encoding, syndrome-extraction]
