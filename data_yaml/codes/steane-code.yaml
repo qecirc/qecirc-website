@@ -14,4 +14,4 @@ h:
 logical:
   - [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0]
   - [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]
-tags: [CSS, color-code]
+tags: [CSS, color-code, self-dual, hamming-code, topological]

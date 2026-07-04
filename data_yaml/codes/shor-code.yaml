@@ -2,6 +2,7 @@ name: Shor Code
 n: 9
 k: 1
 d: 3
+zoo_url: https://errorcorrectionzoo.org/c/shor_nine
 canonical_hash: 9d2910fada2d925f502df9e5fbf0cc2400fe0c676ae4a1efa3511280f671e050
 h:
   - [1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -15,4 +16,4 @@ h:
 logical:
   - [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   - [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]
-tags: [CSS]
+tags: [CSS, concatenated]

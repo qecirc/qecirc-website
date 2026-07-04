@@ -2,6 +2,7 @@ name: Tetrahedral Code
 n: 15
 k: 1
 d: 3
+zoo_url: https://errorcorrectionzoo.org/c/stab_15_1_3
 canonical_hash: cecd22de8d9e10f54835c518d8a468970de3abbd8a9e8d49e3d121d25d012dbe
 h:
   - [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -21,4 +22,4 @@ h:
 logical:
   - [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   - [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-tags: [CSS]
+tags: [CSS, color-code, topological]
