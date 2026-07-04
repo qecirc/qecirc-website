@@ -39,10 +39,10 @@ sys.path.insert(0, str(REPO))
 
 import stim  # noqa: E402
 
-from scripts.add_circuit import import_state_prep  # noqa: E402
-from scripts.add_circuit.state_prep import (  # noqa: E402
-    _XZ_TO_PAULI,
+from scripts.add_circuit import (  # noqa: E402
     fit_circuit_to_anchor_h,
+    fit_circuit_to_candidates,
+    import_state_prep,
 )
 
 SOURCE = "https://arxiv.org/abs/2402.17761"
@@ -63,14 +63,16 @@ class Code:
 CODES: dict[str, Code] = {
     "5-1-3": Code(5, 3, "five-qubit-code"),
     "7-1-3": Code(7, 3, "steane-code"),
-    "17-1-5": Code(17, 5, "17-1-5",
-                   known_perms=((0, 1, 4, 8, 12, 6, 7, 9, 13, 2, 3, 5, 16, 10, 11, 14, 15),)),
+    "17-1-5": Code(
+        17, 5, "17-1-5", known_perms=((0, 1, 4, 8, 12, 6, 7, 9, 13, 2, 3, 5, 16, 10, 11, 14, 15),)
+    ),
     "19-1-5": Code(19, 5, "19-1-5"),
     "23-1-7": Code(23, 7, "23-1-7"),
     "9-1-3-shor": Code(9, 3, "shor-code"),  # identity fits main's shor-code
     "9-1-3-surface": Code(9, 3, "rotated-surface-code-d-3"),  # n<=9 search finds σ
-    "15-1-3": Code(15, 3, "tetrahedral-code",
-                   known_perms=((7, 3, 11, 1, 9, 5, 13, 0, 8, 4, 12, 2, 10, 6, 14),)),
+    "15-1-3": Code(
+        15, 3, "tetrahedral-code", known_perms=((7, 3, 11, 1, 9, 5, 13, 0, 8, 4, 12, 2, 10, 6, 14),)
+    ),
     # [[25,1,5]] rotated surface: n=25 is too large to brute-search and
     # find_qubit_permutation can't confirm the σ to main's labeling — its single
     # circuit is deferred until a structural permutation-finder exists.
@@ -138,7 +140,7 @@ def meta_of(path: Path, n: int) -> dict:
     )
 
 
-def gate_set_of(circ: stim.Circuit, n: int) -> str:
+def gate_set_of(circ: stim.Circuit) -> str:
     names = sorted({i.name for i in circ if i.name not in ("TICK", "QUBIT_COORDS")})
     return ",".join(names)
 
@@ -149,41 +151,6 @@ def gate_set_of(circ: stim.Circuit, n: int) -> str:
 # db codes that are self-dual CSS: their non-identity circuits resolve via
 # add_circuit's canonical-hash dedup (method="self_dual"), no explicit sigma needed.
 SELF_DUAL = {"steane-code", "17-1-5", "19-1-5", "23-1-7"}
-
-
-def fast_sigma(circuit_text: str, H: np.ndarray, n: int, known: tuple) -> list[int] | None:
-    """Cheap fit: identity or one of the known permutations. None if neither.
-
-    Works on the full circuit (ancillas included) via a single simulation, so it
-    also fits routing-ancilla circuits (e.g. 2d-grid device layouts)."""
-    circ = stim.Circuit(circuit_text)
-    nq = max(circ.num_qubits, n)
-    sim = stim.TableauSimulator()
-    sim.do_circuit(circ)
-    rows = [
-        [
-            (j, _XZ_TO_PAULI[(int(r[j]), int(r[j + n]))])
-            for j in range(n)
-            if _XZ_TO_PAULI[(int(r[j]), int(r[j + n]))]
-        ]
-        for r in H
-    ]
-
-    def fits(sigma) -> bool:
-        for support in rows:
-            ps = stim.PauliString(nq)
-            for j, p in support:
-                ps[sigma[j]] = p
-            if sim.peek_observable_expectation(ps) != 1:
-                return False
-        return True
-
-    if fits(range(n)):
-        return list(range(n))
-    for sigma in known:
-        if fits(sigma):
-            return list(sigma)
-    return None
 
 
 def search_sigma(circuit_text: str, H: np.ndarray, n: int) -> list[int] | None:
@@ -232,8 +199,8 @@ def run(write: bool, data_dir: Path) -> None:
         H = anchors[fam]
         rel = str(p.relative_to(DATASET))
 
-        # Decide how to fit: fast sigma -> n<=9 search -> self-dual auto-dedup.
-        method, sigma = "anchor", fast_sigma(txt, H, code.n, code.known_perms)
+        # Decide how to fit: identity/known-σ -> n<=9 search -> self-dual auto-dedup.
+        method, sigma = "anchor", fit_circuit_to_candidates(txt, H, code.n, code.known_perms)
         if sigma is not None:
             if sigma == list(range(code.n)):
                 st.identity += 1
@@ -269,7 +236,7 @@ def run(write: bool, data_dir: Path) -> None:
                 logical_state=m["state"],
                 connectivity=m["connectivity"],
                 device=m["device"],
-                gate_set=gate_set_of(circ, code.n),
+                gate_set=gate_set_of(circ),
                 qubit_placement=m["placement"],
                 tags=["state-preparation", "ft" if m["ft"] else "non-ft"],
                 data_dir=str(data_dir),
