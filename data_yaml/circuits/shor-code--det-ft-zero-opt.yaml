@@ -1,0 +1,27 @@
+qec_id: 507
+name: Det FT zero (opt)
+tool: mqt-qecc
+notes: |-
+  Deterministic FT state preparation (arXiv:2501.05527); verification variant: global. Body and metrics show the worst-case branch of the adaptive protocol: prep, round-1 verification (always measured), then the most expensive branch's round-2 measurements. The outcome-dependent Pauli correction is not part of the circuit (Pauli-frame update); apply it per the branch tables below (outcome bits MSB-first in measurement order):
+  Layer 0 (Z): round-1 measure Z[1,4,7]* (* = hook flag)
+    outcome 1: measure Z[0,3,6]; 0 -> none, 1 -> X[3,4,5]
+    hook of stab 0 (outcome 1): 0 -> none, 1 -> none
+  Layer 1 (X): trivial, no verification. Source file: scripts/ft_stateprep/eval_det/circuits/shor/zero_opt.qasm. Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla qubits: [9, 10]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]): [0, 1, 2, 3, 4, 5, 6, 7, 8]
+source: https://arxiv.org/abs/2501.05527
+gate_count: 20
+two_qubit_gate_count: 16
+depth: 12
+qubit_count: 11
+crumble_url: https://algassert.com/crumble#circuit=H_2_7_10;CX_7_4_2_7_4_5_2_0_7_8_4_3_7_6_0_1_1_9_10_9_4_9_10_9;H_10;CX_7_9;MR_9_10;CX_0_9_3_9_6_9;MR_9_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"H",1,1,1,1,"H",1,1,"H"],[1,1,1,1,"X",1,1,"•"],[1,1,"•",1,1,1,1,"X"],[1,1,1,1,"•","X"],["X",1,"•"],[1,1,1,1,1,1,1,"•","X"],[1,1,1,"X","•"],[1,1,1,1,1,1,"X","•"],["•","X"],[1,"•",1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,"•",1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,1,1,1,"ZDetectControlReset","ZDetectControlReset"],["•",1,1,1,1,1,1,1,1,"X"],[1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,1,1,1,1,"ZDetectControlReset"]]}
+tags:
+  [
+    state-preparation,
+    ft,
+    deterministic,
+    "prep:opt",
+    "verification:global",
+    "connectivity:fully-connected",
+    "logical-state:zero",
+    flag,
+  ]

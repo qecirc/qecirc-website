@@ -1,0 +1,28 @@
+qec_id: 503
+name: Det FT zero (heuristic)
+tool: mqt-qecc
+notes: |-
+  Deterministic FT state preparation (arXiv:2501.05527); verification variant: global. Body and metrics show the worst-case branch of the adaptive protocol: prep, round-1 verification (always measured), then the most expensive branch's round-2 measurements. The outcome-dependent Pauli correction is not part of the circuit (Pauli-frame update); apply it per the branch tables below (outcome bits MSB-first in measurement order):
+  Layer 0 (Z): round-1 measure Z[2,5,8,11], Z[4,9,14]
+    outcome 1: measure Z[2,11,14], Z[5,9,11]; 0 -> X[4], 1 -> X[9], 10 -> X[14], 11 -> X[0,1,3,9,12]
+    outcome 10: measure Z[2,8,9], Z[2,4,5]; 0 -> X[11], 1 -> X[5,13], 10 -> X[8], 11 -> X[2,10]
+    outcome 11: measure Z[6,7,14], Z[0,13,14]; 0 -> X[3,4,11], 1 -> X[1,5,9], 10 -> X[11,12,13], 11 -> none
+  Layer 1 (X): trivial, no verification. Source file: scripts/ft_stateprep/eval_det/circuits/hamming/zero_ft_heuristic_opt.qasm. Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla qubits: [15, 16]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+source: https://arxiv.org/abs/2501.05527
+gate_count: 39
+two_qubit_gate_count: 35
+depth: 11
+qubit_count: 17
+crumble_url: https://algassert.com/crumble#circuit=H_0_1_3_7;CX_7_11_3_5_1_2_11_13_7_9_5_6_3_4_0_2_13_14_11_12_9_10_7_8_1_5_0_4_2_6_3_11_1_9_0_8_5_13_4_12_2_10_6_14_2_15_4_16_5_15_9_16_8_15_14_16_11_15;MR_16_15;CX_5_16_2_15_9_16_11_15_14_15_11_16;MR_15_16_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H",1,"H",1,1,1,"H"],[1,1,1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,"•",1,"X"],[1,"•","X"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,"•","X"],[1,1,1,"•","X"],["•",1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,"•","X"],[1,"•",1,1,1,"X"],["•",1,1,1,"X"],[1,1,"•",1,1,1,"X"],[1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,"•",1,1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset","ZDetectControlReset"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset","ZDetectControlReset"]]}
+tags:
+  [
+    state-preparation,
+    ft,
+    deterministic,
+    "prep:heuristic",
+    "verification:global",
+    "connectivity:fully-connected",
+    "logical-state:zero",
+    flag,
+  ]

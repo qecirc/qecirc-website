@@ -1,0 +1,25 @@
+qec_id: 470
+name: FT plus (heuristic/heuristic)
+tool: mqt-qecc
+notes: "FT state preparation (prep synthesis: heuristic, verification synthesis: heuristic);
+  verification measurements included, post-selection protocol. Source file: scripts/ft_stateprep/eval/circuits/hamming/plus_ft_heuristic_heuristic.stim.
+  Logical state: plus. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla
+  qubits: [15, 16]. Canonicalization qubit permutation (stored qubit i = original
+  qubit permutation[i]): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+source: https://arxiv.org/abs/2408.11894
+gate_count: 50
+two_qubit_gate_count: 35
+depth: 14
+qubit_count: 17
+crumble_url: https://algassert.com/crumble#circuit=H_2_4_5_6_8_9_10_11_12_13_14_15_16;CX_11_7_5_3_2_1_13_11_9_7_6_5_4_3_2_0_14_13_12_11_10_9_8_7_5_1_4_0_6_2_11_3_9_1_8_0_13_5_12_4_10_2_14_6_15_0_16_5_15_2_15_4_15_6_15_7_15_9_15_11_16_9_15_13_16_12;H_15;CX_16_13_16_14;MR_15;H_16;MR_16_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"H",1,"H","H","H",1,"H","H","H","H","H","H","H","H","H"],[1,1,1,1,1,1,1,"X",1,1,1,"•"],[1,1,1,"X",1,"•"],[1,"X","•"],[1,1,1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,"X","•"],[1,1,1,"X","•"],["X",1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,"X","•"],[1,"X",1,1,1,"•"],["X",1,1,1,"•"],[1,1,"X",1,1,1,"•"],[1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,"X",1,1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset"]]}
+tags:
+  [
+    state-preparation,
+    ft,
+    "prep:heuristic",
+    "verification:heuristic",
+    "connectivity:fully-connected",
+    "logical-state:plus",
+    flag,
+  ]

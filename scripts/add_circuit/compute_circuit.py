@@ -81,19 +81,29 @@ def compute_circuit_data(
 
 
 def _relabel_qubits(circ, permutation):
-    """Relabel qubits using MQT QECC.
+    """Relabel the qubit targets of a stim circuit.
 
     ``permutation`` covers the ``n`` code (data) qubits. Circuits may carry
     extra flag / ancilla qubits at indices ``>= n`` (e.g. fault-tolerant
     state-prep) that are not part of the code and so are absent from the
-    permutation — those pass through unchanged rather than raising a KeyError.
+    permutation — those pass through unchanged. Non-qubit targets
+    (measurement records for classically-controlled Paulis, sweep bits) are
+    preserved as-is, which MQT QECC's ``relabel_qubits`` cannot do.
     """
-    from mqt.qecc.circuit_synthesis.circuit_utils import relabel_qubits
+    import stim
 
     mapping = {old: new for new, old in enumerate(permutation)}
     for q in range(circ.num_qubits):
         mapping.setdefault(q, q)
-    return relabel_qubits(circ, mapping)
+    out = stim.Circuit()
+    for op in circ:
+        if isinstance(op, stim.CircuitRepeatBlock):
+            body = _relabel_qubits(op.body_copy(), permutation)
+            out.append(stim.CircuitRepeatBlock(op.repeat_count, body))
+            continue
+        targets = [mapping[t.value] if t.is_qubit_target else t for t in op.targets_copy()]
+        out.append(op.name, targets, op.gate_args_copy())
+    return out
 
 
 def _compact_circuit(circ):

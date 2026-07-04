@@ -202,16 +202,18 @@ def logical_state_of(
     Hz: Optional[np.ndarray] = None,
     H: Optional[np.ndarray] = None,
 ) -> str:
-    """Identify which logical basis state a ``k=1`` state-prep circuit prepares.
+    """Identify which logical basis state a state-prep circuit prepares.
 
     Stabilizers alone cannot tell |0_L> from |1_L> (both are +1 eigenstates of
     every stabilizer), so we evaluate the *logical* operator expectations on the
     prepared state. The logical operators are computed from the code matrices in
     the **circuit's own labeling** (so no permutation is needed).
 
-    Returns one of ``'zero' | 'one' | 'plus' | 'minus'`` for the six-o'clock
-    Pauli-basis states, or ``'unknown'`` for anything else (e.g. magic states, or
-    k != 1).
+    For CSS codes any ``k`` is supported: ``'zero'`` means the all-zeros state
+    |0...0_L> (every Z-bar at +1), ``'plus'`` the all-plus state, and so on.
+    Returns one of ``'zero' | 'one' | 'plus' | 'minus'``, or ``'unknown'`` for
+    anything else (e.g. magic states, mixed logical labels, or non-CSS codes
+    with k != 1).
 
     Caveat on sign: the logical operators are recomputed from binary (sign-free)
     matrices, so the *basis* (Z vs X) is robust but the absolute 0/1 (resp. +/-)
@@ -224,7 +226,7 @@ def logical_state_of(
 
     if Hx is not None and Hz is not None:
         Lx, Lz = _compute_logicals_css(np.asarray(Hx), np.asarray(Hz), d)
-        logical = build_symplectic_logical(Lx, Lz, n=n, k=1)
+        logical = build_symplectic_logical(Lx, Lz, n=n, k=Lx.shape[0])
     elif H is not None:
         k = n - np.asarray(H).shape[0]
         if k != 1:
@@ -235,18 +237,22 @@ def logical_state_of(
     else:
         raise ValueError("Provide (Hx, Hz) or H.")
 
-    if logical.shape[0] != 2:  # not k=1
-        return "unknown"
+    k = logical.shape[0] // 2  # rows 0..k-1 are X-bars, k..2k-1 Z-bars
 
     peek = _simulate(circuit, n)  # simulate in full; ancillas may route the data
-    x_exp = peek(_row_support(logical[0], n))  # X-bar
-    z_exp = peek(_row_support(logical[1], n))  # Z-bar
-    return {
-        (1, 0): "zero",
-        (-1, 0): "one",
-        (0, 1): "plus",
-        (0, -1): "minus",
-    }.get((z_exp, x_exp), "unknown")
+    x_exps = [peek(_row_support(logical[i], n)) for i in range(k)]
+    z_exps = [peek(_row_support(logical[k + i], n)) for i in range(k)]
+    if all(x == 0 for x in x_exps):
+        if all(z == 1 for z in z_exps):
+            return "zero"
+        if all(z == -1 for z in z_exps):
+            return "one"
+    if all(z == 0 for z in z_exps):
+        if all(x == 1 for x in x_exps):
+            return "plus"
+        if all(x == -1 for x in x_exps):
+            return "minus"
+    return "unknown"
 
 
 _STATE_BASIS = {"zero": "z", "one": "z", "plus": "x", "minus": "x"}

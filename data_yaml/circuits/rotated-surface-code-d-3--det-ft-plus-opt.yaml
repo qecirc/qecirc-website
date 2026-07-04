@@ -1,0 +1,27 @@
+qec_id: 511
+name: Det FT plus (opt)
+tool: mqt-qecc
+notes: |-
+  Deterministic FT state preparation (arXiv:2501.05527); verification variant: global. Body and metrics show the worst-case branch of the adaptive protocol: prep, round-1 verification (always measured), then the most expensive branch's round-2 measurements. The outcome-dependent Pauli correction is not part of the circuit (Pauli-frame update); apply it per the branch tables below (outcome bits MSB-first in measurement order):
+  Layer 0 (X): round-1 measure X[2,3,4]* (* = hook flag)
+    outcome 1: measure X[3,4,5]; 0 -> Z[2], 1 -> Z[3,7]
+    hook of stab 0 (outcome 1): 0 -> X[6], 1 -> none
+  Layer 1 (Z): trivial, no verification. Source file: scripts/ft_stateprep/eval_det/circuits/surface_3/plus_opt.qasm. Logical state: plus. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla qubits: [9, 10]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]): [4, 3, 2, 1, 0, 7, 8, 6, 5]
+source: https://arxiv.org/abs/2501.05527
+gate_count: 25
+two_qubit_gate_count: 16
+depth: 10
+qubit_count: 11
+crumble_url: https://algassert.com/crumble#circuit=H_4_1_0_8_5_9;CX_4_3_0_2_5_6_1_7_3_2_8_0_6_1_0_7_9_2_9_10_9_1_9_10_9_0;MR_10;H_9;MR_9;H_9;CX_9_1_9_0_9_8;H_9;MR_9_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H",1,1,"H","H",1,1,"H","H"],[1,1,1,"X","•"],["•",1,"X"],[1,1,1,1,1,"•","X"],[1,"•",1,1,1,1,1,"X"],[1,1,"X","•"],["X",1,1,1,1,1,1,1,"•"],[1,"X",1,1,1,1,"•"],["•",1,1,1,1,1,1,"X"],[1,1,"X",1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"•","X"],[1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"•","X"],["X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,"ZDetectControlReset"],[1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,1,1,1,1,"ZDetectControlReset"],[1,1,1,1,1,1,1,1,1,"H"],[1,"X",1,1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,1,1,1,1,"ZDetectControlReset"]]}
+tags:
+  [
+    state-preparation,
+    ft,
+    deterministic,
+    "prep:opt",
+    "verification:global",
+    "connectivity:fully-connected",
+    "logical-state:plus",
+    flag,
+  ]
