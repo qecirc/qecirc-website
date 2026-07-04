@@ -68,9 +68,9 @@ export function parseCircuitParams(
   const sort: CircuitSort = CIRCUIT_SORT_FIELDS.includes(rawSort as CircuitSortField)
     ? {
         field: rawSort as CircuitSortField,
-        dir: VALID_SORT_DIRS.has(rawSortDir as SortDir) ? (rawSortDir as SortDir) : "desc",
+        dir: VALID_SORT_DIRS.has(rawSortDir as SortDir) ? (rawSortDir as SortDir) : "asc",
       }
-    : { field: "gate_count", dir: "desc" };
+    : { field: "two_qubit_gate_count", dir: "asc" };
 
   const filters: CircuitFilters = {
     ...result.parsed,
@@ -103,7 +103,7 @@ export function tagToggleUrl(
 
 /**
  * Build the URL that toggles or activates a sort by `field`. Clicking again
- * with the same active field flips dir; otherwise activates with `desc`.
+ * with the same active field flips dir; otherwise activates with `asc`.
  */
 export function circuitSortToggleUrl(
   currentUrl: URL,
@@ -115,9 +115,9 @@ export function circuitSortToggleUrl(
   params.delete("focus");
   params.set("sort", field);
   if (sort.field === field) {
-    params.set("sort_dir", sort.dir === "desc" ? "asc" : "desc");
+    params.set("sort_dir", sort.dir === "asc" ? "desc" : "asc");
   } else {
-    params.set("sort_dir", "desc");
+    params.set("sort_dir", "asc");
   }
   const qs = params.toString();
   return basePath + (qs ? "?" + qs : "");
