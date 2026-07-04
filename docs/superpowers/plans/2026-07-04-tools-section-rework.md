@@ -17,6 +17,7 @@
 ### Task 1: `paper_urls` schema — validator, migration, DB build, docs
 
 **Files:**
+
 - Modify: `scripts/validate-yaml.mjs` (tools schema ~line 41, `checkType` ~line 54)
 - Create: `data/migrations/013_tool_paper_urls.sql`
 - Modify: `scripts/db/create_database.mjs` (`insertTool` statement ~line 34, tool insert loop ~line 99)
@@ -54,10 +55,10 @@ In `scripts/validate-yaml.mjs`, add to the `tools` schema's `optional` block:
 And add a `urls` type to `checkType` (after the `tags` case):
 
 ```js
-  if (type === "urls")
-    return (
-      Array.isArray(value) && value.every((v) => typeof v === "string" && /^https?:\/\//.test(v))
-    );
+if (type === "urls")
+  return (
+    Array.isArray(value) && value.every((v) => typeof v === "string" && /^https?:\/\//.test(v))
+  );
 ```
 
 Run: `npm run validate:yaml`
@@ -86,16 +87,16 @@ In `scripts/db/create_database.mjs`, change the `insertTool` prepared statement:
 and the tool insert call in the tools loop:
 
 ```js
-      const { lastInsertRowid } = stmts.insertTool.run(
-        data.name,
-        slug,
-        data.description || "",
-        data.homepage_url || null,
-        data.github_url || null,
-        Array.isArray(data.paper_urls) && data.paper_urls.length > 0
-          ? JSON.stringify(data.paper_urls)
-          : null,
-      );
+const { lastInsertRowid } = stmts.insertTool.run(
+  data.name,
+  slug,
+  data.description || "",
+  data.homepage_url || null,
+  data.github_url || null,
+  Array.isArray(data.paper_urls) && data.paper_urls.length > 0
+    ? JSON.stringify(data.paper_urls)
+    : null,
+);
 ```
 
 Run: `npm run db:create`
@@ -138,6 +139,7 @@ git commit -m "feat(tools): add paper_urls field to tool schema"
 ### Task 2: Type + query layer parsing
 
 **Files:**
+
 - Modify: `src/types/index.ts` (`Tool` interface ~line 42)
 - Modify: `src/lib/queries/tools.ts`
 
@@ -206,17 +208,17 @@ In `filterTools`, change the cast and keep `enrichTools`:
 In `getToolsForCircuits`, change the rows cast to `(ToolRow & { circuit_id: number })[]` and the map construction to:
 
 ```ts
-  for (const row of rows) {
-    result.set(row.circuit_id, {
-      id: row.id,
-      name: row.name,
-      slug: row.slug,
-      description: row.description,
-      homepage_url: row.homepage_url,
-      github_url: row.github_url,
-      paper_urls: row.paper_urls ? (JSON.parse(row.paper_urls) as string[]) : null,
-    });
-  }
+for (const row of rows) {
+  result.set(row.circuit_id, {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    homepage_url: row.homepage_url,
+    github_url: row.github_url,
+    paper_urls: row.paper_urls ? (JSON.parse(row.paper_urls) as string[]) : null,
+  });
+}
 ```
 
 - [ ] **Step 3: Verify types compile and site builds**
@@ -239,6 +241,7 @@ git commit -m "feat(tools): parse paper_urls into Tool objects in query layer"
 ### Task 3: ToolCard — paper links and "no circuits yet"
 
 **Files:**
+
 - Modify: `src/components/ToolCard.astro`
 
 - [ ] **Step 1: Update the circuit-count label**
@@ -282,6 +285,7 @@ git commit -m "feat(tools): show paper links and friendlier zero-circuit label o
 ### Task 4: Two-section /tools page with contribute CTA
 
 **Files:**
+
 - Modify: `src/pages/tools/index.astro`
 
 - [ ] **Step 1: Split the tool list**
@@ -356,6 +360,7 @@ git commit -m "feat(tools): split tools page into contributed and other tools, a
 ### Task 5: Update existing tool YAMLs (verified facts)
 
 **Files:**
+
 - Modify: `data_yaml/tools/circuit-synth.yaml`
 - Modify: `data_yaml/tools/cliffordopt.yaml`
 - Modify: `data_yaml/tools/flag-at-origin.yaml`
@@ -424,6 +429,7 @@ git commit -m "fix(tools): correct flag-at-origin description, add verified pape
 ### Task 6: Add six new tool YAMLs (verified facts)
 
 **Files:**
+
 - Create: `data_yaml/tools/rlftqc.yaml`
 - Create: `data_yaml/tools/qldpc.yaml`
 - Create: `data_yaml/tools/quits.yaml`
@@ -516,6 +522,7 @@ git commit -m "feat(tools): add rlftqc, qLDPC, QUITS, Rustiq, autqec, and Stac t
 ### Task 7: Version bump and final verification
 
 **Files:**
+
 - Modify: `package.json` (version 0.3.2 → 0.4.0)
 - Modify: `pyproject.toml` (version 0.3.2 → 0.4.0)
 - Modify: `uv.lock`, `package-lock.json` (regenerated)

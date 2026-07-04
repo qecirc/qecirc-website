@@ -46,14 +46,14 @@ document.
 
 ### New tool YAMLs (6)
 
-| Tool   | Repo                                   | Notes |
-| ------ | -------------------------------------- | ----- |
-| rlftqc | github.com/remmyzen/rlftqc             | RL-based FT logical state prep; Stim-native; circuits already in `data-imports/rlftqc/` |
-| qLDPC  | github.com/qLDPCOrg/qLDPC              | Encoding/SE/memory circuits from code objects; Stim-native |
-| QUITS  | github.com/mkangquantum/quits          | SE circuits for HGP/QLP/BPC qLDPC families; Stim-based |
-| Rustiq | github.com/smartiel/rustiq             | Clifford/stabilizer synthesis engine (Rust, Qiskit plugin) |
-| autqec | github.com/hsayginel/autqec            | Logical Cliffords from code automorphisms |
-| Stac   | github.com/abdullahkhalids/stac        | Pedagogical stabilizer-code circuits |
+| Tool   | Repo                            | Notes                                                                                   |
+| ------ | ------------------------------- | --------------------------------------------------------------------------------------- |
+| rlftqc | github.com/remmyzen/rlftqc      | RL-based FT logical state prep; Stim-native; circuits already in `data-imports/rlftqc/` |
+| qLDPC  | github.com/qLDPCOrg/qLDPC       | Encoding/SE/memory circuits from code objects; Stim-native                              |
+| QUITS  | github.com/mkangquantum/quits   | SE circuits for HGP/QLP/BPC qLDPC families; Stim-based                                  |
+| Rustiq | github.com/smartiel/rustiq      | Clifford/stabilizer synthesis engine (Rust, Qiskit plugin)                              |
+| autqec | github.com/hsayginel/autqec     | Logical Cliffords from code automorphisms                                               |
+| Stac   | github.com/abdullahkhalids/stac | Pedagogical stabilizer-code circuits                                                    |
 
 Each entry gets: `name`, `description` (what it produces), `homepage_url` where one
 exists, `github_url`, `paper_urls`, and tags following existing conventions
@@ -77,8 +77,8 @@ exists, `github_url`, `paper_urls`, and tags following existing conventions
 - **Section 2: "More circuit-synthesis tools"** — tools with `circuit_count === 0`,
   sorted alphabetically. Their cards show "no circuits yet" instead of "0 circuits".
 - Tag filters apply across both sections. A section with no tools hides its heading.
-- CTA under section 2: *"Built a tool that generates QEC circuits? We'd love to include
-  your circuits — see how to contribute."* linking to `/contribute`.
+- CTA under section 2: _"Built a tool that generates QEC circuits? We'd love to include
+  your circuits — see how to contribute."_ linking to `/contribute`.
 
 `src/components/ToolCard.astro`:
 
