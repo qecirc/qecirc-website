@@ -93,14 +93,15 @@ class TestCircuitProperties:
         assert props.qubit_count == 4
 
     def test_depth_from_ticks(self):
+        # 2q-entangling depth (TICKs ignored): CNOT(0,1) layer 1, CNOT(0,2) layer 2.
         props = circuit_properties(CIRCUIT_WITH_TICKS)
         assert props.depth == 2
 
     def test_depth_no_ticks(self):
         props = circuit_properties(ENCODING_CIRCUIT)
-        # No TICKs → layered depth: H(q0) layer 1, CNOT(q0,q1) layer 2,
-        # CNOT(q0,q2) layer 3, CNOT(q0,q3) layer 4
-        assert props.depth == 4
+        # 2q-entangling depth (single-qubit H ignored): CNOT(0,1) layer 1,
+        # CNOT(0,2) layer 2, CNOT(0,3) layer 3.
+        assert props.depth == 3
 
     def test_gate_count(self):
         props = circuit_properties(ENCODING_CIRCUIT)
@@ -130,8 +131,8 @@ class TestCircuitProperties:
 
     def test_repeat_depth(self):
         props = circuit_properties(CIRCUIT_WITH_REPEAT)
-        # 1 TICK before REPEAT + 10 * 2 TICKs inside = 21
-        assert props.depth == 21
+        # 2q-entangling depth: 10 * (CNOT(0,1) layer 1, CNOT(0,2) layer 2) = 20
+        assert props.depth == 20
 
     def test_repeat_qubit_count(self):
         props = circuit_properties(CIRCUIT_WITH_REPEAT)
@@ -150,8 +151,8 @@ class TestCircuitProperties:
 
     def test_nested_repeat_depth(self):
         props = circuit_properties(CIRCUIT_NESTED_REPEAT)
-        # 5*(1 TICK + 3*1 TICK) = 20
-        assert props.depth == 20
+        # 2q-entangling depth: 5 * (3 * CNOT(0,1) layer 1) = 15
+        assert props.depth == 15
 
 
 # ---------------------------------------------------------------------------
@@ -268,3 +269,21 @@ class TestExtractCode:
     def test_encoding_wrong_k(self):
         with pytest.raises(ValueError, match="k=.*must satisfy"):
             extract_code(STEANE_STIM, circuit_type="encoding", k=8)
+
+
+class TestTickAuthoritativeDepth:
+    def test_tick_layers_not_repacked(self):
+        """Two CNOTs on disjoint qubits in separate TICK layers: the given
+        schedule is authoritative (depth 2), even though ASAP packing would
+        merge them into one layer."""
+        props = circuit_properties("CX 0 1\nTICK\nCX 2 3\n")
+        assert props.depth == 2
+
+    def test_same_circuit_without_ticks_is_repacked(self):
+        props = circuit_properties("CX 0 1\nCX 2 3\n")
+        assert props.depth == 1
+
+    def test_single_qubit_only_tick_layers_dont_count(self):
+        """TICK layers with no entangling gate contribute no depth."""
+        props = circuit_properties("H 0\nTICK\nCX 0 1\nTICK\nS 1\n")
+        assert props.depth == 1

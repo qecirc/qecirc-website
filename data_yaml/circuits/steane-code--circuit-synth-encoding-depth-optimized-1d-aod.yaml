@@ -1,0 +1,16 @@
+qec_id: 188
+name: Circuit-Synth Encoding (Depth-Optimized, 1D-AOD)
+tool: circuit-synth
+notes: |-
+  Neutral-atom (AOD) compatible on a 1D chain:
+  every TICK-separated layer is non-nesting in physical coordinates.
+  Placement: qubit i sits at 1D site placement[i] = [6, 3, 5, 4, 0, 2, 1].
+  Do not re-schedule across TICKs.
+source: circuit-synth
+gate_count: 12
+two_qubit_gate_count: 9
+depth: 3
+qubit_count: 7
+crumble_url: https://algassert.com/crumble#circuit=H_0_4_6;TICK;CX_4_5_1_2_0_3;TICK;CX_6_3_4_1_0_2;TICK;CX_6_4_3_5_1_0_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H",1,1,1,"H",1,"H"],[1,1,1,1,"•","X"],[1,"•","X"],["•",1,1,"X"],[1,1,1,"X",1,1,"•"],[1,"X",1,1,"•"],["•",1,"X"],[1,1,1,1,"X",1,"•"],[1,1,1,"•",1,"X"],["X","•"]]}
+tags: [encoding, non-ft, 1D-AOD]

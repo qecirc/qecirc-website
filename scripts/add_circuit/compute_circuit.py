@@ -7,7 +7,7 @@ from typing import Optional
 
 import stim
 
-from .circuit_validate import circuit_properties
+from .circuit_validate import circuit_properties, has_ticks
 from .compute import slugify
 
 
@@ -32,8 +32,13 @@ def compute_circuit_data(
     if qubit_permutation is not None:
         circ = _relabel_qubits(circ, qubit_permutation)
 
-    # 2. Compact STIM
-    circ = _compact_circuit(circ)
+    # 2. Compact STIM — but only for circuits WITHOUT TICKs. A submitted TICK
+    # schedule is authoritative (e.g. AOD-compatible circuits guarantee
+    # non-nesting per TICK layer); compaction re-packs the gates and strips
+    # the TICKs, silently destroying such per-layer guarantees. The same TICK
+    # layers drive the stored depth metric (see circuit_validate).
+    if not has_ticks(circ):
+        circ = _compact_circuit(circ)
 
     # 3. Metrics
     props = circuit_properties(str(circ))

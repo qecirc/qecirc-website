@@ -1,0 +1,11 @@
+qec_id: 91
+name: Circuit-Synth Encoding (Depth-Optimized)
+tool: circuit-synth
+source: circuit-synth
+gate_count: 12
+two_qubit_gate_count: 9
+depth: 3
+qubit_count: 7
+crumble_url: https://algassert.com/crumble#circuit=H_0_4_6;CX_1_2_4_5_0_3_6_3_4_1_0_2_6_4_3_5_1_0_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H",1,1,1,"H",1,"H"],[1,"•","X"],[1,1,1,1,"•","X"],["•",1,1,"X"],[1,1,1,"X",1,1,"•"],[1,"X",1,1,"•"],["•",1,"X"],[1,1,1,1,"X",1,"•"],[1,1,1,"•",1,"X"],["X","•"]]}
+tags: [encoding, non-ft]

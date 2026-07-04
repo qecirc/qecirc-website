@@ -95,3 +95,14 @@ class TestComputeCircuitData:
         assert result["source"] == "doi:test"
         assert result["tool"] == "mqt-qecc"
         assert result["notes"] == "A test circuit"
+
+
+def test_ticked_circuit_skips_compaction():
+    """A submitted TICK schedule survives ingestion: compaction (which strips
+    TICKs and re-packs) is skipped for circuits containing TICKs."""
+    from scripts.add_circuit.compute_circuit import compute_circuit_data
+
+    data = compute_circuit_data("H 0\nTICK\nCX 0 1\nTICK\nCX 2 3\n")
+    stim_body = next(b["body"] for b in data["bodies"] if b["format"] == "stim")
+    assert stim_body.count("TICK") == 2
+    assert data["depth"] == 2  # TICK layers authoritative
