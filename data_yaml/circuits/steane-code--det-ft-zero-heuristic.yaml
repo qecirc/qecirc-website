@@ -2,21 +2,10 @@ qec_id: 508
 name: Det FT zero (heuristic)
 tool: mqt-qecc
 notes: |-
-  Deterministic FT state preparation (arXiv:2501.05527). The stored
-  body and metrics show the WORST-CASE branch of an adaptive protocol
-  (fair-comparison convention): prep, then per layer the always-measured
-  round-1 verification and the most expensive outcome branch (round-2
-  measurements + classically-controlled Pauli correction). The actual
-  protocol branches on measurement outcomes as tabulated below
-  (round-1 outcome bits are MSB-first in measurement order).
-  Verification variant: global. Source file: steane/zero_heuristic.qasm
-  --- Layer 0 (Z-stabilizer verification) ---
-    round-1 stab 0: Z[2, 4, 5]
-    round-1 outcome 1: measure Z[1, 4, 6]
-      round-2 outcome 0: no correction
-      round-2 outcome 1: apply X[4]
-  --- Layer 1 (X-stabilizer verification) ---
-    (trivial: no verification measurements). Source file: scripts/ft_stateprep/eval_det/circuits/steane/zero_heuristic.qasm. Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla qubits: [7]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]): [0, 1, 2, 3, 4, 5, 6]
+  Deterministic FT state preparation (arXiv:2501.05527); verification variant: global. Body and metrics show the worst-case branch of the adaptive protocol: prep, round-1 verification (always measured), then the most expensive branch's round-2 measurements and classically-controlled Pauli correction. Full branch tables (outcome bits MSB-first in measurement order):
+  Layer 0 (Z): round-1 measure Z[2,4,5]
+    outcome 1: measure Z[1,4,6]; 0 -> none, 1 -> X[4]
+  Layer 1 (X): trivial, no verification. Source file: scripts/ft_stateprep/eval_det/circuits/steane/zero_heuristic.qasm. Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla qubits: [7]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]): [0, 1, 2, 3, 4, 5, 6]
 source: https://arxiv.org/abs/2501.05527
 gate_count: 18
 two_qubit_gate_count: 15

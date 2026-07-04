@@ -11,9 +11,10 @@ round-2 stabs in the layer's own basis and correct with X (Z-stab layer) or Z
 The stored body linearizes the WORST branch per layer (max round-2 CNOTs,
 tie-break max correction weight, hook branches included). The correction is
 appended as Stim classically-controlled Paulis (CX/CZ rec[...]) conditioned on
-the round-2 measurement bit that triggers it — so a noiseless run stays in the
-codespace (validation passes) while the gates still represent the worst-case
-work.
+the measurement bit that triggers it (the round-2 bit for corrections keyed on
+a non-trivial round-2 outcome, else the round-1 trigger bit) — so a noiseless
+run stays in the codespace (validation passes) while the gates still represent
+the worst-case work.
 
 Verification measurement sub-circuit ordering is ported verbatim from
 simulation_det.py::_create_stab_measurement_circuit:
@@ -160,22 +161,29 @@ def _measure_block(stabs, flagged, z_stabs: bool, n: int) -> tuple[stim.Circuit,
 def worst_branch(layer: Layer):
     """Most expensive branch across det + hook correction tables.
 
-    Returns (round2_stabs, correction_vec, outcome2, flip_basis) or None.
-    Cost = (round-2 CNOT count, correction weight). Hook branches measure and
-    correct in the opposite basis (flip_basis=True).
+    Returns (round2_stabs, correction_vec, outcome1, outcome2, flip_basis,
+    hook_ordinal) or None. Cost = (round-2 CNOT count, correction weight).
+    Hook branches measure and correct in the opposite basis (flip_basis=True);
+    hook_ordinal is the branch's position among the layer's flagged stabs
+    (None for det branches).
     """
     best = None
-    tables = [(layer.corrections, False)] + [(h, True) for h in layer.hook_corrections if h]
-    for table, flip in tables:
-        for _outcome, (stabs2, recs) in table.items():
+    tables = [(layer.corrections, False, None)]
+    ordinal = 0
+    for h in layer.hook_corrections:
+        if h:
+            tables.append((h, True, ordinal))
+            ordinal += 1
+    for table, flip, hook in tables:
+        for o1, (stabs2, recs) in table.items():
             cnots = sum(len(_support(s)) for s in stabs2)
             for o2, corr in recs.items():
                 cost = (cnots, len(_support(corr)))
                 if best is None or cost > best[0]:
-                    best = (cost, list(stabs2), corr, int(o2), flip)
+                    best = (cost, list(stabs2), corr, int(o1), int(o2), flip, hook)
     if best is None:
         return None
-    return best[1], best[2], best[3], best[4]
+    return best[1], best[2], best[3], best[4], best[5], best[6]
 
 
 def build_worst_case_body(
@@ -199,7 +207,7 @@ def build_worst_case_body(
         wb = worst_branch(layer)
         if wb is None:
             continue
-        stabs2, corr, o2, flip = wb
+        stabs2, corr, o1, o2, flip, hook = wb
         branch_z = (not z_stabs) if flip else z_stabs
         n_meas = len(stabs2)
         if stabs2:
@@ -208,13 +216,25 @@ def build_worst_case_body(
             stats["max_width"] = max(stats["max_width"], width)
             stats["cnots"] += sum(len(_support(s)) for s in stabs2)
         sup = _support(corr)
-        if sup and n_meas:
-            # Condition the correction on the round-2 measurement bit that
-            # triggers it (MSB-first outcome convention, ascending-ancilla
-            # measurement order): noiseless outcome is 0 -> no correction.
-            bits = format(o2, f"0{n_meas}b")
-            bit_pos = bits.index("1") if "1" in bits else 0
-            rec = stim.target_rec(-(n_meas - bit_pos))
+        if sup:
+            # Condition the correction on the measurement bit that triggers it
+            # (MSB-first outcome convention, ascending-ancilla measurement
+            # order; noiseless outcomes are 0, so the body stays in the
+            # codespace). Corrections keyed on a non-trivial round-2 outcome
+            # use that round-2 bit; corrections on round-2 outcome 0 fire when
+            # the branch itself was taken, so they condition on the round-1
+            # trigger bit (verification bit for det branches, the hook's flag
+            # bit for hook branches).
+            m1 = len(layer.stabs)
+            h1 = sum(layer.flagged)
+            if o2 != 0 and n_meas:
+                bits = format(o2, f"0{n_meas}b")
+                rec = stim.target_rec(-(n_meas - bits.index("1")))
+            elif hook is None:
+                bits = format(o1, f"0{m1}b")
+                rec = stim.target_rec(-(n_meas + m1 + h1 - bits.index("1")))
+            else:
+                rec = stim.target_rec(-(n_meas + h1 - hook))
             # det branches on a Z-stab layer correct X errors (and vice
             # versa); hook branches are already basis-flipped via branch_z.
             gate = "CX" if branch_z else "CZ"
@@ -227,46 +247,47 @@ def build_worst_case_body(
 
 
 def _fmt_stab(vec, z_basis: bool) -> str:
-    return ("Z" if z_basis else "X") + str(_support(vec))
+    return ("Z" if z_basis else "X") + "[" + ",".join(str(q) for q in _support(vec)) + "]"
 
 
-def render_notes(proto: DetProtocol, zero_state: bool, source_file: str) -> str:
+def _fmt_recs(recs: dict, z_basis: bool) -> str:
+    """One-line round-2 outcome table: '0 -> none, 1 -> X[6], ...'."""
+    parts = []
+    for o2, corr in sorted(recs.items()):
+        sup = _support(corr)
+        pauli = ("X" if z_basis else "Z") + "[" + ",".join(str(q) for q in sup) + "]"
+        parts.append(f"{o2:b} -> {pauli if sup else 'none'}")
+    return ", ".join(parts)
+
+
+def render_notes(proto: DetProtocol, zero_state: bool, source_file: str) -> str:  # noqa: ARG001
     lines = [
-        "Deterministic FT state preparation (arXiv:2501.05527). The stored",
-        "body and metrics show the WORST-CASE branch of an adaptive protocol",
-        "(fair-comparison convention): prep, then per layer the always-measured",
-        "round-1 verification and the most expensive outcome branch (round-2",
-        "measurements + classically-controlled Pauli correction). The actual",
-        "protocol branches on measurement outcomes as tabulated below",
-        "(round-1 outcome bits are MSB-first in measurement order).",
-        f"Verification variant: {proto.variant}. Source file: {source_file}",
+        f"Deterministic FT state preparation (arXiv:2501.05527); verification variant: "
+        f"{proto.variant}. Body and metrics show the worst-case branch of the adaptive "
+        "protocol: prep, round-1 verification (always measured), then the most expensive "
+        "branch's round-2 measurements and classically-controlled Pauli correction. "
+        "Full branch tables (outcome bits MSB-first in measurement order):",
     ]
     for idx, layer in enumerate(proto.layers):
         z = zero_state if idx == 0 else not zero_state
-        lines.append(f"--- Layer {idx} ({'Z' if z else 'X'}-stabilizer verification) ---")
+        basis = "Z" if z else "X"
         if not layer.stabs:
-            lines.append("  (trivial: no verification measurements)")
+            lines.append(f"Layer {idx} ({basis}): trivial, no verification")
             continue
-        for i, s in enumerate(layer.stabs):
-            flag = " [hook flag]" if layer.flagged[i] else ""
-            lines.append(f"  round-1 stab {i}: {_fmt_stab(s, z)}{flag}")
+        stabs = ", ".join(
+            _fmt_stab(s, z) + ("*" if layer.flagged[i] else "") for i, s in enumerate(layer.stabs)
+        )
+        hooked = " (* = hook flag)" if any(layer.flagged) else ""
+        lines.append(f"Layer {idx} ({basis}): round-1 measure {stabs}{hooked}")
         for outcome, (stabs2, recs) in sorted(layer.corrections.items()):
-            measured = ", ".join(_fmt_stab(s, z) for s in stabs2)
-            lines.append(f"  round-1 outcome {outcome:b}: measure {measured}")
-            for o2, corr in sorted(recs.items()):
-                sup = _support(corr)
-                act = f"apply {'X' if z else 'Z'}{sup}" if sup else "no correction"
-                lines.append(f"    round-2 outcome {o2:b}: {act}")
+            measured = ", ".join(_fmt_stab(s, z) for s in stabs2 if _support(s))
+            step = f"measure {measured}; " if measured else ""
+            lines.append(f"  outcome {outcome:b}: {step}{_fmt_recs(recs, z)}")
         for i, hooks in enumerate(layer.hook_corrections):
-            if not hooks:
-                continue
-            for outcome, (stabs2, recs) in sorted(hooks.items()):
+            for outcome, (stabs2, recs) in sorted(hooks.items()) if hooks else []:
+                measured = ", ".join(_fmt_stab(s, not z) for s in stabs2 if _support(s))
+                step = f"measure {measured}; " if measured else ""
                 lines.append(
-                    f"  hook flag of stab {i} (outcome {outcome:b}): measure "
-                    + ", ".join(_fmt_stab(s, not z) for s in stabs2)
+                    f"  hook of stab {i} (outcome {outcome:b}): {step}{_fmt_recs(recs, not z)}"
                 )
-                for o2, corr in sorted(recs.items()):
-                    sup = _support(corr)
-                    act = f"apply {'X' if not z else 'Z'}{sup}" if sup else "no correction"
-                    lines.append(f"    round-2 outcome {o2:b}: {act}")
     return "\n".join(lines)

@@ -2,33 +2,12 @@ qec_id: 502
 name: Det FT zero (opt)
 tool: mqt-qecc
 notes: |-
-  Deterministic FT state preparation (arXiv:2501.05527). The stored
-  body and metrics show the WORST-CASE branch of an adaptive protocol
-  (fair-comparison convention): prep, then per layer the always-measured
-  round-1 verification and the most expensive outcome branch (round-2
-  measurements + classically-controlled Pauli correction). The actual
-  protocol branches on measurement outcomes as tabulated below
-  (round-1 outcome bits are MSB-first in measurement order).
-  Verification variant: global. Source file: carbon/zero_opt.qasm
-  --- Layer 0 (Z-stabilizer verification) ---
-    round-1 stab 0: Z[0, 2, 3, 4, 10, 11]
-    round-1 outcome 1: measure Z[2, 4, 8, 10], Z[2, 3, 6, 11], Z[0, 2, 9, 11]
-      round-2 outcome 0: apply X[3]
-      round-2 outcome 1: apply X[0]
-      round-2 outcome 10: apply X[3, 7]
-      round-2 outcome 11: apply X[2, 8]
-      round-2 outcome 100: apply X[4, 7]
-      round-2 outcome 101: apply X[2]
-      round-2 outcome 110: apply X[7]
-      round-2 outcome 111: apply X[2, 10]
-  --- Layer 1 (X-stabilizer verification) ---
-    round-1 stab 0: X[0, 1, 3, 4, 8, 11] [hook flag]
-    round-1 outcome 1: measure X[2, 5, 6, 7, 9, 10]
-      round-2 outcome 0: no correction
-      round-2 outcome 1: apply Z[2]
-    hook flag of stab 0 (outcome 1): measure Z[0, 4, 6, 10]
-      round-2 outcome 0: apply X[11]
-      round-2 outcome 1: apply X[0, 1]. Source file: scripts/ft_stateprep/eval_det/circuits/carbon/zero_opt.qasm. Logical state: zero. Connectivity: fully-connected. Gate set: CX,CZ,H,MR. Flag/ancilla qubits: [12, 13, 14]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]): [0, 3, 1, 4, 2, 5, 6, 9, 7, 10, 8, 11]
+  Deterministic FT state preparation (arXiv:2501.05527); verification variant: global. Body and metrics show the worst-case branch of the adaptive protocol: prep, round-1 verification (always measured), then the most expensive branch's round-2 measurements and classically-controlled Pauli correction. Full branch tables (outcome bits MSB-first in measurement order):
+  Layer 0 (Z): round-1 measure Z[0,2,3,4,10,11]
+    outcome 1: measure Z[2,4,8,10], Z[2,3,6,11], Z[0,2,9,11]; 0 -> X[3], 1 -> X[0], 10 -> X[3,7], 11 -> X[2,8], 100 -> X[4,7], 101 -> X[2], 110 -> X[7], 111 -> X[2,10]
+  Layer 1 (X): round-1 measure X[0,1,3,4,8,11]* (* = hook flag)
+    outcome 1: measure X[2,5,6,7,9,10]; 0 -> none, 1 -> Z[2]
+    hook of stab 0 (outcome 1): measure Z[0,4,6,10]; 0 -> X[11], 1 -> X[0,1]. Source file: scripts/ft_stateprep/eval_det/circuits/carbon/zero_opt.qasm. Logical state: zero. Connectivity: fully-connected. Gate set: CX,CZ,H,MR. Flag/ancilla qubits: [12, 13, 14]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]): [0, 3, 1, 4, 2, 5, 6, 9, 7, 10, 8, 11]
 source: https://arxiv.org/abs/2501.05527
 gate_count: 60
 two_qubit_gate_count: 51

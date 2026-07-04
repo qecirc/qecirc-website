@@ -2,34 +2,12 @@ qec_id: 503
 name: Det FT zero (heuristic)
 tool: mqt-qecc
 notes: |-
-  Deterministic FT state preparation (arXiv:2501.05527). The stored
-  body and metrics show the WORST-CASE branch of an adaptive protocol
-  (fair-comparison convention): prep, then per layer the always-measured
-  round-1 verification and the most expensive outcome branch (round-2
-  measurements + classically-controlled Pauli correction). The actual
-  protocol branches on measurement outcomes as tabulated below
-  (round-1 outcome bits are MSB-first in measurement order).
-  Verification variant: global. Source file: hamming/zero_ft_heuristic_opt.qasm
-  --- Layer 0 (Z-stabilizer verification) ---
-    round-1 stab 0: Z[2, 5, 8, 11]
-    round-1 stab 1: Z[4, 9, 14]
-    round-1 outcome 1: measure Z[2, 11, 14], Z[5, 9, 11]
-      round-2 outcome 0: apply X[4]
-      round-2 outcome 1: apply X[9]
-      round-2 outcome 10: apply X[14]
-      round-2 outcome 11: apply X[0, 1, 3, 9, 12]
-    round-1 outcome 10: measure Z[2, 8, 9], Z[2, 4, 5]
-      round-2 outcome 0: apply X[11]
-      round-2 outcome 1: apply X[5, 13]
-      round-2 outcome 10: apply X[8]
-      round-2 outcome 11: apply X[2, 10]
-    round-1 outcome 11: measure Z[6, 7, 14], Z[0, 13, 14]
-      round-2 outcome 0: apply X[3, 4, 11]
-      round-2 outcome 1: apply X[1, 5, 9]
-      round-2 outcome 10: apply X[11, 12, 13]
-      round-2 outcome 11: no correction
-  --- Layer 1 (X-stabilizer verification) ---
-    (trivial: no verification measurements). Source file: scripts/ft_stateprep/eval_det/circuits/hamming/zero_ft_heuristic_opt.qasm. Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla qubits: [15, 16]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+  Deterministic FT state preparation (arXiv:2501.05527); verification variant: global. Body and metrics show the worst-case branch of the adaptive protocol: prep, round-1 verification (always measured), then the most expensive branch's round-2 measurements and classically-controlled Pauli correction. Full branch tables (outcome bits MSB-first in measurement order):
+  Layer 0 (Z): round-1 measure Z[2,5,8,11], Z[4,9,14]
+    outcome 1: measure Z[2,11,14], Z[5,9,11]; 0 -> X[4], 1 -> X[9], 10 -> X[14], 11 -> X[0,1,3,9,12]
+    outcome 10: measure Z[2,8,9], Z[2,4,5]; 0 -> X[11], 1 -> X[5,13], 10 -> X[8], 11 -> X[2,10]
+    outcome 11: measure Z[6,7,14], Z[0,13,14]; 0 -> X[3,4,11], 1 -> X[1,5,9], 10 -> X[11,12,13], 11 -> none
+  Layer 1 (X): trivial, no verification. Source file: scripts/ft_stateprep/eval_det/circuits/hamming/zero_ft_heuristic_opt.qasm. Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,MR. Flag/ancilla qubits: [15, 16]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 source: https://arxiv.org/abs/2501.05527
 gate_count: 44
 two_qubit_gate_count: 40
