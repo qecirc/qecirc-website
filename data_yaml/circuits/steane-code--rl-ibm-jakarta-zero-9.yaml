@@ -1,0 +1,14 @@
+qec_id: 387
+name: RL ibm jakarta zero 9
+notes: "Source file: logical-state-preparation/ibm/7-1-3-jakarta/7_9.stim. Logical
+  state: zero. Connectivity: ibm. Gate set: CX,S,SQRT_X. Device: jakarta. Device qubit
+  placement (Qiskit indices): 1,0,2,3,6,5,4. Canonicalization qubit permutation (stored
+  qubit i = original qubit permutation[i]): [0, 1, 2, 3, 4, 5, 6]"
+source: https://arxiv.org/abs/2402.17761
+gate_count: 17
+two_qubit_gate_count: 11
+depth: 8
+qubit_count: 7
+crumble_url: https://algassert.com/crumble#circuit=SQRT_X_0_6;CX_0_2_6_5;S_6_0;CX_0_3_3_5_0_1_5_4;SQRT_X_3;CX_3_0_3_5_5_3_0_3_0_2;S_0_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["X^½",1,1,1,1,1,"X^½"],["•",1,"X"],[1,1,1,1,1,"X","•"],["Z^½",1,1,1,1,1,"Z^½"],["•",1,1,"X"],[1,1,1,"•",1,"X"],["•","X"],[1,1,1,1,"X","•"],[1,1,1,"X^½"],["X",1,1,"•"],[1,1,1,"•",1,"X"],[1,1,1,"X",1,"•"],["•",1,1,"X"],["•",1,"X"],["Z^½"]]}
+tags: [state-preparation, non-ft, "connectivity:ibm", "device:jakarta", "logical-state:zero"]

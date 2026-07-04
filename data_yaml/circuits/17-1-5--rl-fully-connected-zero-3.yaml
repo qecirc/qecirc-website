@@ -1,0 +1,14 @@
+qec_id: 315
+name: RL fully-connected zero 3
+notes: "Source file: logical-state-preparation/fully-connected/17-1-5/17_3.stim. Logical
+  state: zero. Connectivity: fully-connected. Gate set: CX,H. Canonicalization qubit
+  permutation (stored qubit i = original qubit permutation[i]): [0, 1, 4, 8, 12, 6,
+  7, 9, 13, 2, 3, 5, 16, 10, 11, 14, 15]"
+source: https://arxiv.org/abs/2402.17761
+gate_count: 31
+two_qubit_gate_count: 23
+depth: 4
+qubit_count: 17
+crumble_url: https://algassert.com/crumble#circuit=H_0_9_2_5_3_13_4_15;CX_0_7_4_1_5_14_15_6_13_16_0_12_4_8_7_10_14_6_2_1_15_12_10_11_13_14_0_16_7_4_3_2_9_1_16_15_6_13_2_11_1_10_3_7_9_0_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H",1,"H","H","H","H",1,1,1,"H",1,1,1,"H",1,"H"],["•",1,1,1,1,1,1,"X"],[1,"X",1,1,"•"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],["•",1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,"X","•"],[1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,"•"],[1,1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,"X",1,1,"•"],[1,1,"X","•"],[1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,"•",1,1,1,"X"],["X",1,1,1,1,1,1,1,1,"•"]]}
+tags: [state-preparation, non-ft, "connectivity:fully-connected", "logical-state:zero"]

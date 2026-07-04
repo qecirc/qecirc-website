@@ -1,0 +1,15 @@
+qec_id: 258
+name: RL fully-connected zero 3
+notes:
+  "Source file: integrated-ft-logical-state-preparation/fully-connected/7-1-3/zero-logical/7_4.stim.
+  Logical state: zero. Connectivity: fully-connected. Gate set: CX,H. Flag/ancilla
+  qubits: [7]. Canonicalization qubit permutation (stored qubit i = original qubit
+  permutation[i]): [0, 1, 2, 3, 4, 5, 6]"
+source: https://arxiv.org/abs/2402.17761
+gate_count: 14
+two_qubit_gate_count: 11
+depth: 8
+qubit_count: 8
+crumble_url: https://algassert.com/crumble#circuit=H_5_0_3;CX_0_6_5_1_0_4_3_4_0_2_3_5_1_2_5_6_5_7_2_7_4_7_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H",1,1,"H",1,"H"],["•",1,1,1,1,1,"X"],[1,"X",1,1,1,"•"],["•",1,1,1,"X"],[1,1,1,"•","X"],["•",1,"X"],[1,1,1,"•",1,"X"],[1,"•","X"],[1,1,1,1,1,"•","X"],[1,1,1,1,1,"•",1,"X"],[1,1,"•",1,1,1,1,"X"],[1,1,1,1,"•",1,1,"X"]]}
+tags: [state-preparation, ft, "connectivity:fully-connected", "logical-state:zero", flag]

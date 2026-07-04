@@ -1,0 +1,10 @@
+SQRT_X 6
+CX 6 5
+SQRT_X 0
+CX 0 2
+SQRT_X 1
+CX 0 3 3 5 5 4 1 0 0 3
+S 2 6
+CX 3 5 5 3
+S 1
+CX 0 3 0 1 0 2

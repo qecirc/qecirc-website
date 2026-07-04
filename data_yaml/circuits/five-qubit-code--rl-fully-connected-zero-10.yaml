@@ -1,0 +1,14 @@
+qec_id: 404
+name: RL fully-connected zero 10
+notes: "Source file: verification-circuit-synthesis/5-1-3/5-0-quantinuum_1_combined.stim.
+  Logical state: zero. Connectivity: fully-connected. Gate set: CX,CZ,H. Flag/ancilla
+  qubits: [5, 6, 7]. Canonicalization qubit permutation (stored qubit i = original
+  qubit permutation[i]): [0, 1, 2, 3, 4]"
+source: https://arxiv.org/abs/2402.17761
+gate_count: 23
+two_qubit_gate_count: 14
+depth: 11
+qubit_count: 8
+crumble_url: https://algassert.com/crumble#circuit=H_0_1_2_3_4_5_7;CZ_0_1_2_3_1_2_3_4_0_4;CX_7_4_7_1;CZ_7_3_7_2;CX_5_3_5_6;H_7;CZ_5_2_5_4;CX_5_6;H_5_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H","H","H","H","H",1,"H"],["•","Z"],[1,1,"•","Z"],[1,"•","Z"],[1,1,1,"•","Z"],["•",1,1,1,"Z"],[1,1,1,1,"X",1,1,"•"],[1,"X",1,1,1,1,1,"•"],[1,1,1,"Z",1,1,1,"•"],[1,1,"Z",1,1,1,1,"•"],[1,1,1,"X",1,"•"],[1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,"H"],[1,1,"Z",1,1,"•"],[1,1,1,1,"Z","•"],[1,1,1,1,1,"•","X"],[1,1,1,1,1,"H"]]}
+tags: [state-preparation, ft, "connectivity:fully-connected", "logical-state:zero", flag]
