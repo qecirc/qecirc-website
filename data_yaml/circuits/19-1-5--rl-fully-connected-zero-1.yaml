@@ -1,5 +1,6 @@
 qec_id: 204
 name: RL fully-connected zero 1
+tool: rlftqc
 notes: "Source file: distance-5/19-1-5/19_4_0_combined.stim. Logical state: zero.
   Connectivity: fully-connected. Gate set: CX,H,I. Flag/ancilla qubits: [19, 20, 21,
   22]. Canonicalization qubit permutation (stored qubit i = original qubit permutation[i]):

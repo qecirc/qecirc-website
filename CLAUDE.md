@@ -43,8 +43,9 @@ codes
   -- canonical_hash: SHA256 of canonical form for dedup (indexed)
 
 tools
-  id, name, slug, description, homepage_url, github_url, created_at
+  id, name, slug, description, homepage_url, github_url, paper_urls, created_at
   -- software tools used to create circuits
+  -- paper_urls: JSON-encoded array of associated paper URLs
 
 circuits
   id, qec_id, code_id → codes, name, slug, notes, source,

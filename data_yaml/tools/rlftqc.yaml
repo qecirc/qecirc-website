@@ -1,0 +1,6 @@
+name: rlftqc
+description: Reinforcement-learning discovery of fault-tolerant logical state preparation circuits for stabilizer codes, with customizable gate sets and qubit connectivity, producing Stim circuits.
+homepage_url: https://remmyzen.github.io/rlftqc/
+github_url: https://github.com/remmyzen/rlftqc
+paper_urls: [https://arxiv.org/abs/2402.17761]
+tags: [Python, state-preparation, fault-tolerant, reinforcement-learning]

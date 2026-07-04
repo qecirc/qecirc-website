@@ -46,6 +46,7 @@ export interface Tool {
   description: string | null;
   homepage_url: string | null;
   github_url: string | null;
+  paper_urls: string[] | null;
 }
 
 export interface ToolFilters {

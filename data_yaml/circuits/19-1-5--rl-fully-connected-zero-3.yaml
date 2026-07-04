@@ -1,5 +1,6 @@
 qec_id: 318
 name: RL fully-connected zero 3
+tool: rlftqc
 notes: "Source file: logical-state-preparation/fully-connected/19-1-5/19_5.stim. Logical
   state: zero. Connectivity: fully-connected. Gate set: CX,H. Canonicalization qubit
   permutation (stored qubit i = original qubit permutation[i]): [11, 10, 6, 5, 4,

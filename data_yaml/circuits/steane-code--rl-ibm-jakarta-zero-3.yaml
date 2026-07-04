@@ -1,5 +1,6 @@
 qec_id: 381
 name: RL ibm jakarta zero 3
+tool: rlftqc
 notes: "Source file: logical-state-preparation/ibm/7-1-3-jakarta/7_3.stim. Logical
   state: zero. Connectivity: ibm. Gate set: CX,S,SQRT_X. Device: jakarta. Device qubit
   placement (Qiskit indices): 1,0,2,3,6,5,4. Canonicalization qubit permutation (stored

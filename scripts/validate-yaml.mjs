@@ -44,6 +44,7 @@ const SCHEMAS = {
       description: "string",
       homepage_url: "string",
       github_url: "string",
+      paper_urls: "urls",
       tags: "tags",
     },
   },
@@ -55,6 +56,10 @@ function checkType(value, type) {
   if (type === "string") return typeof value === "string";
   if (type === "number") return typeof value === "number" && Number.isFinite(value);
   if (type === "tags") return Array.isArray(value) && value.every((v) => typeof v === "string");
+  if (type === "urls")
+    return (
+      Array.isArray(value) && value.every((v) => typeof v === "string" && /^https?:\/\//.test(v))
+    );
   if (type === "matrix")
     return (
       Array.isArray(value) &&

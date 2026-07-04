@@ -1,5 +1,6 @@
 qec_id: 226
 name: RL 2d-grid zero 5
+tool: rlftqc
 notes:
   "Source file: integrated-ft-logical-state-preparation/2d-grid/9-1-3-surface/26-16-8-4-24-14-6-33/9_7.stim.
   Logical state: zero. Connectivity: 2d-grid. Gate set: CX,H. Device: google-sycamore.

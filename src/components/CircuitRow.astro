@@ -145,13 +145,9 @@ const stimFilename = buildStimFilename({
         {tool && (
           <div>
             <span class="text-gray-500 dark:text-gray-400">Tool:</span>{" "}
-            {tool.homepage_url ? (
-              <a href={tool.homepage_url} class="underline hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
-                {tool.name} &#x2197;
-              </a>
-            ) : (
-              <span>{tool.name}</span>
-            )}
+            <a href={`/tools#${tool.slug}`} class="underline hover:text-gray-900 dark:hover:text-gray-100">
+              {tool.name}
+            </a>
           </div>
         )}
         {(circuit.crumble_url || circuit.quirk_url) && (

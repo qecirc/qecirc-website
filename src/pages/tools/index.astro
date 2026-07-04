@@ -21,6 +21,11 @@ const filters: ToolFilters = {
 const hasFilters = hasActiveFilters(filters);
 const tools = hasFilters ? filterTools(filters) : getAllTools();
 const allTags = getTagsWithCount("tool");
+
+const contributed = tools.filter((t) => t.circuit_count > 0);
+const others = tools
+  .filter((t) => t.circuit_count === 0)
+  .sort((a, b) => a.name.localeCompare(b.name));
 ---
 
 <Layout title="Tools" description="Software tools used to create QEC circuits">
@@ -38,10 +43,32 @@ const allTags = getTagsWithCount("tool");
       <a href="/tools" class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
     </div>
   ) : (
-    <div class="grid gap-3">
-      {tools.map((tool) => (
-        <ToolCard tool={tool} baseUrl={Astro.url} />
-      ))}
-    </div>
+    <>
+      {contributed.length > 0 && (
+        <section class="mb-8">
+          <h2 class="text-lg font-semibold mb-3">Tools contributed to QECirc</h2>
+          <div class="grid gap-3">
+            {contributed.map((tool) => (
+              <ToolCard tool={tool} baseUrl={Astro.url} />
+            ))}
+          </div>
+        </section>
+      )}
+      {others.length > 0 && (
+        <section>
+          <h2 class="text-lg font-semibold mb-3">More circuit-synthesis tools</h2>
+          <div class="grid gap-3">
+            {others.map((tool) => (
+              <ToolCard tool={tool} baseUrl={Astro.url} />
+            ))}
+          </div>
+        </section>
+      )}
+    </>
   )}
+
+  <p class="mt-8 text-sm text-gray-500 dark:text-gray-400">
+    Built a tool that generates QEC circuits? We'd love to include your circuits —
+    <a href="/contribute" class="underline hover:text-gray-900 dark:hover:text-gray-100">see how to contribute</a>.
+  </p>
 </Layout>

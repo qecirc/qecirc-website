@@ -1,0 +1,5 @@
+name: qLDPC
+description: Library for constructing qLDPC, stabilizer, and subsystem codes that generates Stim circuits for encoding, memory experiments, and SWAP-transversal logical Clifford gates.
+homepage_url: https://qldpc.readthedocs.io/
+github_url: https://github.com/qLDPCOrg/qLDPC
+tags: [Python, encoding, syndrome-extraction, qLDPC]

@@ -1,5 +1,6 @@
 qec_id: 357
 name: RL ibm tokyo zero 8
+tool: rlftqc
 notes: "Source file: logical-state-preparation/ibm/15-1-3-tokyo/15_9.stim. Logical
   state: zero. Connectivity: ibm. Gate set: CX,S,SQRT_X. Device: tokyo. Device qubit
   placement (Qiskit indices): 0,4,11,2,7,5,1,10,13,3,6,14,12,8,9. Canonicalization

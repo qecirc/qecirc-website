@@ -1,5 +1,6 @@
 qec_id: 215
 name: RL 2d-grid plus 2
+tool: rlftqc
 notes: "Source file: integrated-ft-logical-state-preparation/2d-grid/9-1-3-shor/2-3-15/9_9.stim.
   Logical state: zero. Original (source) logical state: plus. Connectivity: 2d-grid.
   Gate set: CX,H. Device: google-sycamore. Flag/ancilla qubits: [9, 10, 11]. Device

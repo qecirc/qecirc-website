@@ -32,8 +32,8 @@ db.pragma("foreign_keys = ON");
 // Prepared statements
 const stmts = {
   insertTool: db.prepare(`
-    INSERT INTO tools (name, slug, description, homepage_url, github_url)
-    VALUES (?, ?, ?, ?, ?)`),
+    INSERT INTO tools (name, slug, description, homepage_url, github_url, paper_urls)
+    VALUES (?, ?, ?, ?, ?, ?)`),
   insertCode: db.prepare(`
     INSERT INTO codes (name, slug, n, k, d, zoo_url, h, logical, canonical_hash)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`),
@@ -102,6 +102,9 @@ try {
         data.description || "",
         data.homepage_url || null,
         data.github_url || null,
+        Array.isArray(data.paper_urls) && data.paper_urls.length > 0
+          ? JSON.stringify(data.paper_urls)
+          : null,
       );
       toolSlugToId.set(slug, Number(lastInsertRowid));
 
