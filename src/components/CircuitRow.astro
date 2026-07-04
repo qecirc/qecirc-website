@@ -34,9 +34,9 @@ const stimFilename = buildStimFilename({
 });
 ---
 
-<div id={anchorId} class="rounded border border-gray-200 dark:border-gray-800 overflow-x-auto">
+<div id={anchorId} class="rounded border border-gray-200 dark:border-gray-800">
   <div
-    class="circuit-toggle w-full text-left px-4 py-3 grid min-w-max items-center gap-x-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-inset"
+    class="circuit-toggle w-full text-left px-4 py-3 grid items-center gap-x-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-inset"
     style="grid-template-columns: var(--circuit-grid);"
     role="button"
     tabindex="0"
@@ -92,28 +92,30 @@ const stimFilename = buildStimFilename({
     </span>
 
     <span></span>
-    <a href={`/circuits/${circuit.qec_id}`} class="circuit-detail-link font-medium text-sm truncate hover:underline inline-flex items-center gap-1 w-fit" data-list-detail-link>
-      {circuit.name}
+    <a href={`/circuits/${circuit.qec_id}`} class="circuit-detail-link font-medium text-sm hover:underline inline-flex items-center gap-1 w-fit max-w-full min-w-0" data-list-detail-link>
+      <span class="truncate">{circuit.name}</span>
       <svg class="w-3 h-3 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M9 5l7 7-7 7" />
       </svg>
     </a>
 
-    <div class="flex flex-wrap gap-1 justify-self-end">
-      {circuit.tags.map((tag) => (
-        <a
-          href={tagUrl(tag)}
-          class:list={[
-            "circuit-tag inline-block rounded px-1.5 py-0.5 text-xs transition-colors",
-            selectedTags.has(tag)
-              ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
-          ]}
-        >
-          {tag}
-        </a>
-      ))}
-    </div>
+    {circuit.tags.length > 0 && (
+      <div class="flex flex-wrap gap-1 justify-end col-span-full mt-1.5 md:col-auto md:mt-0 md:justify-self-end">
+        {circuit.tags.map((tag) => (
+          <a
+            href={tagUrl(tag)}
+            class:list={[
+              "circuit-tag inline-block rounded px-1.5 py-0.5 text-xs transition-colors",
+              selectedTags.has(tag)
+                ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+            ]}
+          >
+            {tag}
+          </a>
+        ))}
+      </div>
+    )}
   </div>
 
   <div class="circuit-detail overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;">
