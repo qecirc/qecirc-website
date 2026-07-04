@@ -137,25 +137,42 @@ def derive_matrices_self_dual(
 # ---------------------------------------------------------------------------
 
 
-def _relabel(circ: stim.Circuit, new_of_old: dict[int, int]) -> stim.Circuit:
-    out = stim.Circuit()
-    for instr in circ:
-        targs = [
-            stim.GateTarget(new_of_old[t.value]) if t.is_qubit_target else t
-            for t in instr.targets_copy()
-        ]
-        out.append(instr.name, targs, instr.gate_args_copy())
-    return out
-
-
 _XZ_TO_PAULI = {(0, 0): 0, (1, 0): 1, (1, 1): 2, (0, 1): 3}  # (x,z) -> stim pauli
 
 
-def _row_to_pauli(row: np.ndarray, n: int) -> stim.PauliString:
-    ps = stim.PauliString(n)
-    for i in range(n):
-        ps[i] = _XZ_TO_PAULI[(int(row[i]), int(row[i + n]))]
-    return ps
+def _row_support(row: np.ndarray, n: int) -> list[tuple[int, int]]:
+    """A symplectic row -> ``[(data-qubit role j, stim pauli)]`` over the ``n``
+    data qubits, dropping identity positions."""
+    out = []
+    for j in range(n):
+        p = _XZ_TO_PAULI[(int(row[j]), int(row[j + n]))]
+        if p:
+            out.append((j, p))
+    return out
+
+
+def _simulate(circuit: Union[str, stim.Circuit], n: int):
+    """Simulate the full circuit (flag / routing ancillas included) **once** and
+    return a ``peek(support, sigma=None)`` closure.
+
+    ``peek`` evaluates the ``+1 / 0 / -1`` expectation of a stabilizer given as a
+    ``[(role, pauli)]`` support (see :func:`_row_support`), placing role ``j`` on
+    circuit qubit ``sigma[j]`` (identity when ``sigma`` is ``None``). Simulating
+    in full — rather than pre-stripping ancillas — is what lets these tools fit
+    and validate circuits whose data qubits interact *through* routing ancillas.
+    """
+    circ = circuit if isinstance(circuit, stim.Circuit) else stim.Circuit(circuit)
+    nq = max(circ.num_qubits, n)
+    sim = stim.TableauSimulator()
+    sim.do_circuit(circ)
+
+    def peek(support: list[tuple[int, int]], sigma=None) -> int:
+        ps = stim.PauliString(nq)
+        for j, p in support:
+            ps[j if sigma is None else sigma[j]] = p
+        return sim.peek_observable_expectation(ps)
+
+    return peek
 
 
 def symplectic_validate(circuit: Union[str, stim.Circuit], H: np.ndarray, n: int) -> str:
@@ -169,15 +186,9 @@ def symplectic_validate(circuit: Union[str, stim.Circuit], H: np.ndarray, n: int
     on the data qubits — so it works whether ancillas are separable verification
     qubits or routing qubits the data interacts *through* (do not pre-strip them).
     """
-    circ = circuit if isinstance(circuit, stim.Circuit) else stim.Circuit(circuit)
-    nq = max(circ.num_qubits, n)
-    sim = stim.TableauSimulator()
-    sim.do_circuit(circ)
-    for row in H:
-        ps = stim.PauliString(nq)
-        for i in range(n):
-            ps[i] = _XZ_TO_PAULI[(int(row[i]), int(row[i + n]))]
-        if sim.peek_observable_expectation(ps) != 1:
+    peek = _simulate(circuit, n)
+    for row in np.asarray(H, dtype=int):
+        if peek(_row_support(row, n)) != 1:
             return f"failed: stabilizer {row.tolist()} not +1"
     return "passed"
 
@@ -218,26 +229,18 @@ def logical_state_of(
         k = n - np.asarray(H).shape[0]
         if k != 1:
             return "unknown"
-        logical = _compute_symplectic_logicals(np.asarray(H), n, k)
+        # Only the expectation (a ±1/0) is read off below, so skip the cosmetic
+        # minimum-weight reduction — any valid logical representative agrees.
+        logical = _compute_symplectic_logicals(np.asarray(H), n, k, minimize=False)
     else:
         raise ValueError("Provide (Hx, Hz) or H.")
 
     if logical.shape[0] != 2:  # not k=1
         return "unknown"
 
-    circ = circuit if isinstance(circuit, stim.Circuit) else stim.Circuit(circuit)
-    nq = max(circ.num_qubits, n)  # simulate in full; ancillas may route the data
-    sim = stim.TableauSimulator()
-    sim.do_circuit(circ)
-
-    def _peek(row):
-        ps = stim.PauliString(nq)
-        for i in range(n):
-            ps[i] = _XZ_TO_PAULI[(int(row[i]), int(row[i + n]))]
-        return sim.peek_observable_expectation(ps)
-
-    x_exp = _peek(logical[0])  # X-bar
-    z_exp = _peek(logical[1])  # Z-bar
+    peek = _simulate(circuit, n)  # simulate in full; ancillas may route the data
+    x_exp = peek(_row_support(logical[0], n))  # X-bar
+    z_exp = peek(_row_support(logical[1], n))  # Z-bar
     return {
         (1, 0): "zero",
         (-1, 0): "one",
@@ -312,27 +315,11 @@ def _search_permutation(circuit: stim.Circuit, H: np.ndarray, n: int, max_perms:
     (n≲9) search practical. Simulating the full circuit is also what lets it fit
     circuits whose data qubits interact *through* routing ancillas.
     """
-    nq = max(circuit.num_qubits, n)
-    sim = stim.TableauSimulator()
-    sim.do_circuit(circuit)
-    # Precompute each stabilizer as a list of (data-qubit role, pauli).
-    rows: list[list[tuple[int, int]]] = []
-    for row in H:
-        support = []
-        for j in range(n):
-            p = _XZ_TO_PAULI[(int(row[j]), int(row[j + n]))]
-            if p:
-                support.append((j, p))
-        rows.append(support)
+    peek = _simulate(circuit, n)
+    supports = [_row_support(row, n) for row in H]
 
     def fits(sigma) -> bool:
-        for support in rows:
-            ps = stim.PauliString(nq)
-            for j, p in support:
-                ps[sigma[j]] = p  # stabilizer's role-j qubit sits on circuit qubit σ[j]
-            if sim.peek_observable_expectation(ps) != 1:
-                return False
-        return True
+        return all(peek(support, sigma) == 1 for support in supports)
 
     if fits(list(range(n))):
         return FitResult(permutation=None, status="identity")
@@ -342,6 +329,30 @@ def _search_permutation(circuit: stim.Circuit, H: np.ndarray, n: int, max_perms:
         if fits(perm):
             return FitResult(permutation=list(perm), status="found")
     return FitResult(permutation=None, status="not_found")
+
+
+def fit_circuit_to_candidates(
+    circuit: Union[str, stim.Circuit],
+    H: np.ndarray,
+    n: int,
+    candidates: "tuple[tuple[int, ...], ...] | list[tuple[int, ...]]" = (),
+) -> Optional[list[int]]:
+    """Return the first permutation — identity tried first, then each of
+    ``candidates`` (convention ``sigma[new] = old``) — under which ``circuit``
+    prepares a ``+1`` eigenstate of every stabilizer of symplectic ``H``, or
+    ``None`` if none fits.
+
+    One simulation of the full circuit, a cheap peek per candidate (the same
+    engine as :func:`_search_permutation`). Use this when an exhaustive search is
+    infeasible (large ``n``) but a few candidate permutations are known, or to
+    cheaply confirm the identity fit.
+    """
+    peek = _simulate(circuit, n)
+    supports = [_row_support(row, n) for row in np.asarray(H, dtype=int)]
+    for sigma in [tuple(range(n)), *candidates]:
+        if all(peek(support, list(sigma)) == 1 for support in supports):
+            return list(sigma)
+    return None
 
 
 def fit_circuit_to_anchor_h(
