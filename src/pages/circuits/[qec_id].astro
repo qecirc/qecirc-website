@@ -46,9 +46,42 @@ const stimFilename = buildStimFilename({
 
 const hasOriginalMatrices = original?.has_original_matrices === 1;
 const originalsUrl = `/api/circuits/${qecId}/originals`;
+
+const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
+const pageUrl = `${siteUrl}/circuits/${circuit.qec_id}`;
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "@id": `${pageUrl}#circuit`,
+    name: `${circuit.name} ${displayId}`,
+    url: pageUrl,
+    description: `Quantum error correction circuit ${displayId} for the ${circuit.code_name}, in STIM format.`,
+    programmingLanguage: "STIM",
+    codeRepository: "https://github.com/qecirc/qecirc-website",
+    isPartOf: { "@id": `${siteUrl}/#website` },
+    about: {
+      "@type": "DefinedTerm",
+      name: circuit.code_name,
+      url: `${siteUrl}/codes/${circuit.code_slug}`,
+    },
+    license: "https://creativecommons.org/licenses/by-sa/4.0/",
+    ...(circuit.tags.length ? { keywords: circuit.tags.join(", ") } : {}),
+    ...(circuit.source.startsWith("http") ? { citation: circuit.source } : {}),
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Codes", item: `${siteUrl}/` },
+      { "@type": "ListItem", position: 2, name: circuit.code_name, item: `${siteUrl}/codes/${circuit.code_slug}` },
+      { "@type": "ListItem", position: 3, name: `${circuit.name} ${displayId}`, item: pageUrl },
+    ],
+  },
+];
 ---
 
-<Layout title={`${circuit.name} ${displayId}`} description={`Circuit ${displayId} for ${circuit.code_name}`}>
+<Layout title={`${circuit.name} ${displayId}`} description={`Circuit ${displayId} for ${circuit.code_name}`} jsonLd={jsonLd}>
   <a
     href={`/codes/${circuit.code_slug}`}
     class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"
