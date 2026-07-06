@@ -28,6 +28,14 @@ QECirc was created and is maintained by Ludwig Schmid and Tom Peham.
 
 The project is funded by the [Unitary Foundation](https://unitary.foundation) and supported by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the Technical University of Munich.
 
+## Contributors
+
+<!-- Maintained by hand — keep in sync with the repository's human contributors,
+     excluding bots (Claude, Renovate) and the `qecirc` service account. Mirror
+     any change here in src/pages/about.astro. -->
+
+[Ludwig Schmid](https://github.com/lsschmid), [Tom Peham](https://github.com/pehamTom), [Remmy Zen](https://github.com/remmyzen)
+
 ## Quick Start
 
 ```bash
