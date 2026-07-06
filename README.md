@@ -47,6 +47,8 @@ npm run dev
 
 ## Contributing
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for all the ways to help.
+
 Most circuits are submitted by opening a [GitHub Issue](https://github.com/qecirc/qecirc-website/issues/new/choose) using the provided templates — a maintainer then ingests them.
 
 To add circuits yourself, or import a whole dataset, see the ingestion guides:
