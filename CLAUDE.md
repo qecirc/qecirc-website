@@ -114,6 +114,12 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 
 This keeps the site fast and simple while scaling comfortably to thousands of circuits.
 
+**SEO & AI discoverability** (goal: be cited/linked by search and AI answer engines, without inviting training crawlers):
+
+- **Structured data** — schema.org JSON-LD. `Layout.astro` emits a site-wide graph (`Organization` + `WebSite`) on every page and takes a `jsonLd` prop for per-page entities. Circuit pages pass `SoftwareSourceCode` + `BreadcrumbList`; code pages pass `CollectionPage` (+ an `ItemList` of circuits) + `BreadcrumbList`. **When adding a new entity page type, pass matching `jsonLd`.**
+- **Machine-facing routes, all `prerender = false` and generated from the live DB** (no manual upkeep — new codes/circuits appear automatically): `sitemap.xml`, `llms.txt` (see [llmstxt.org](https://llmstxt.org/)), and `robots.txt`.
+- **`robots.txt` policy** — allow search/answer bots (Googlebot, OAI-SearchBot, PerplexityBot, Claude-User/SearchBot, …) but `Disallow: /` the AI-**training** crawlers (GPTBot, ClaudeBot, CCBot, Google-Extended, …). Keep new AI-training user-agents out; leave search/answer agents in.
+
 ---
 
 ## Repository Structure
