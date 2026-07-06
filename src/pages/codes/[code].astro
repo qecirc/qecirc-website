@@ -50,9 +50,58 @@ const countLabel = hasFilters
 const basePath = `/codes/${codeSlug}`;
 const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubit_count") =>
   circuitSortToggleUrl(Astro.url, sort, field, basePath);
+
+const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
+const pageUrl = `${siteUrl}/codes/${codeSlug}`;
+const codeTitle = params && code.name !== params ? `${code.name} ${params}` : code.name;
+const collection: Record<string, unknown> = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": `${pageUrl}#code`,
+  url: pageUrl,
+  name: codeTitle,
+  description: `Quantum error correction circuits for the ${codeTitle}.`,
+  isPartOf: { "@id": `${siteUrl}/#website` },
+  about: {
+    "@type": "DefinedTerm",
+    name: code.name,
+    url: pageUrl,
+    ...(params ? { termCode: params } : {}),
+    ...(code.zoo_url ? { sameAs: code.zoo_url } : {}),
+  },
+};
+// Enumerate circuits only on the canonical (unfiltered) view — the canonical
+// URL drops the query string, so a filtered subset would misrepresent it.
+if (!hasFilters) {
+  collection.mainEntity = {
+    "@type": "ItemList",
+    numberOfItems: totalCount,
+    itemListElement: circuits.map((c, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: c.name,
+      url: `${siteUrl}/circuits/${c.qec_id}`,
+    })),
+  };
+}
+const jsonLd = [
+  collection,
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Codes", item: `${siteUrl}/` },
+      { "@type": "ListItem", position: 2, name: codeTitle, item: pageUrl },
+    ],
+  },
+];
 ---
 
-<Layout title={code.name} description={`Circuits for ${code.name}${params && code.name !== params ? ` ${params}` : ""}`}>
+<Layout
+  title={code.name}
+  description={`Circuits for ${code.name}${params && code.name !== params ? ` ${params}` : ""}`}
+  jsonLd={jsonLd}
+>
   <a
     href="/"
     class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"

@@ -10,12 +10,44 @@ import pkg from "../../package.json";
 interface Props {
   title: string;
   description?: string;
+  /** Page-specific schema.org JSON-LD, emitted alongside the site-wide graph. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const DEFAULT_DESCRIPTION = "QECirc — a community-driven library for quantum error correction circuits";
-const { title, description = DEFAULT_DESCRIPTION } = Astro.props;
+const { title, description = DEFAULT_DESCRIPTION, jsonLd } = Astro.props;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const fullTitle = `${title} - QECirc`;
+
+// Site-wide structured data (schema.org), emitted on every page. Entity-level
+// JSON-LD (a circuit, a code) is passed per page via the `jsonLd` prop and
+// references these @ids.
+const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
+const siteGraph = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${siteUrl}/#organization`,
+      name: "QECirc",
+      url: `${siteUrl}/`,
+      description: "A community-driven library for quantum error correction circuits.",
+      sameAs: ["https://github.com/qecirc/qecirc-website"],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteUrl}/#website`,
+      name: "QECirc",
+      url: `${siteUrl}/`,
+      description: DEFAULT_DESCRIPTION,
+      inLanguage: "en",
+      publisher: { "@id": `${siteUrl}/#organization` },
+    },
+  ],
+};
+const extraJsonLd = jsonLd == null ? [] : Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+// Escape "<" so no string value can prematurely terminate the <script> element.
+const serializeLd = (o: unknown) => JSON.stringify(o).replace(/</g, "\\u003c");
 
 const version = pkg.version;
 const totalCircuits = countAllCircuits();
@@ -53,6 +85,8 @@ const sunIconSvg = `<svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" f
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <title>{fullTitle}</title>
+    <script type="application/ld+json" set:html={serializeLd(siteGraph)} />
+    {extraJsonLd.map((obj) => <script type="application/ld+json" set:html={serializeLd(obj)} />)}
     <script is:inline>
       (function () {
         const stored = localStorage.getItem("theme");
