@@ -47,7 +47,14 @@ npm run dev
 
 ## Contributing
 
-Circuits are submitted by opening a [GitHub Issue](https://github.com/qecirc/qecirc-website/issues/new/choose) using the provided templates.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for all the ways to help.
+
+Most circuits are submitted by opening a [GitHub Issue](https://github.com/qecirc/qecirc-website/issues/new/choose) using the provided templates — a maintainer then ingests them.
+
+To add circuits yourself, or import a whole dataset, see the ingestion guides:
+
+- [docs/adding-circuits.md](docs/adding-circuits.md) — manual workflow: the helper functions, the `add_circuit` / `import_state_prep` APIs, fitting to existing codes, bulk imports, and an FAQ.
+- [docs/adding-circuits-agent.md](docs/adding-circuits-agent.md) — the `/add-circuit` agent-assisted workflow.
 
 ## License
 
