@@ -268,6 +268,14 @@ try {
       for (const tag of data.tags || []) {
         addTag(tag, circuitId, "circuit");
       }
+      // Derived tag: every circuit with a tool is tagged `tool:<slug>` so it is
+      // filterable in the Tools category (e.g. all MQT QECC circuits at once).
+      // The `tool` field is the single source of truth — the tag is derived here
+      // rather than stored in YAML, so it stays in sync with tool_id by
+      // construction and applies to every current and future circuit.
+      if (data.tool) {
+        addTag(`tool:${data.tool}`, circuitId, "circuit");
+      }
 
       const bodyFormats = Object.keys(bodies).join(", ") || "none";
       const hasOriginals = fs.existsSync(origStimPath) && fs.existsSync(origYamlPath);
