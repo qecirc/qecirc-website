@@ -12,12 +12,25 @@ uv sync                # install Python dependencies
 
 ## What You Need
 
-- **Stabilizer matrices** — provide either:
+- **Stabilizer matrices** — provide either, _or_ derive them from the circuit (see [Which workflow?](#which-workflow)):
   - **`Hx, Hz`** — separate X-check and Z-check matrices. The pipeline rejects these unless they describe a CSS code (`Hx · Hzᵀ = 0 mod 2`); CSS detection is automatic and adds the `CSS` tag.
   - **`H, n`** — a single symplectic stabilizer matrix of shape `(n−k) × 2n` (X-half on the left, Z-half on the right) plus the qubit count `n`. CSS-decomposable `H` is auto-detected and routed through the CSS path so the `Hx`/`Hz` view and `CSS` tag are filled in automatically.
 - **STIM circuit** — file path or string
 - **Code distance `d`** — integer
 - **Source** — DOI, URL, or citation
+
+## Which workflow?
+
+Pick the path that matches what you have — they all end at the same YAML files and the same `npm run db:create`.
+
+| You have…                                                   | Use                   | Section                                                           |
+| ----------------------------------------------------------- | --------------------- | ----------------------------------------------------------------- |
+| An **encoding** circuit + check matrices (`Hx/Hz` or `H`)   | `add_circuit()`       | [Steps 1–4](#step-1-inspect)                                      |
+| A **state-preparation** circuit (matrices optional)         | `import_state_prep()` | [State-preparation circuits](#adding-a-state-preparation-circuit) |
+| A circuit whose qubit labeling differs from the stored code | either, with a _fit_  | [Fitting to an existing code](#fitting-to-an-existing-code)       |
+| **Many** circuits from one source/paper                     | a dataset importer    | [Bulk / dataset imports](#bulk--dataset-imports)                  |
+
+Only have a circuit? That's fine: [`extract_code`](#extract-code-from-circuit-optional) recovers `Hx/Hz` from an encoding circuit, and the [state-prep helpers](#get-the-check-matrices-from-the-circuit) derive them from a prep circuit. New here? See the [FAQ](#faq).
 
 ## Overview
 
@@ -242,6 +255,83 @@ npm run db:create && npm run dev  # Rebuild database and restart
 
 ---
 
+## Adding a state-preparation circuit
+
+State-preparation circuits — the bulk of the library (e.g. the MQT QECC and RLFTQC imports) — prepare a logical basis state such as `|0⟩_L` or `|+⟩_L`. You usually **don't** have check matrices for them, and the circuit often includes flag/routing ancillas. `import_state_prep()` handles all of it: it derives (or is handed) the code, fits the circuit to it, validates codespace membership, and writes the same YAML as `add_circuit()`.
+
+### Get the check matrices from the circuit
+
+If you don't have `Hx/Hz`, derive them from the prep circuit itself:
+
+```python
+from scripts.add_circuit import (
+    derive_matrices_self_dual, derive_matrices_two_circuit,
+    strip_flags, symplectic_validate, logical_state_of,
+)
+
+# Self-dual CSS code (Hz == Hx) from a single |0⟩_L circuit:
+Hx, Hz = derive_matrices_self_dual(zero_circuit, n)
+
+# Or two circuits sharing a qubit labeling — Hx from |0⟩_L, Hz from |+⟩_L:
+Hx, Hz = derive_matrices_two_circuit(zero_circuit, plus_circuit, n)
+```
+
+`n` is the number of **data** qubits; flag/ancilla qubits live at indices `≥ n` and are handled automatically (`strip_flags(circuit, n)` exposes the data-only sub-circuit if you need it). `logical_state_of(circuit, n, d, Hx=Hx, Hz=Hz)` reports which basis state the circuit prepares (`'zero'` / `'one'` / `'plus'` / `'minus'`), and `symplectic_validate(circuit, H, n)` checks the prepared state is a `+1` eigenstate of every stabilizer (the non-CSS counterpart of `validate_state_prep`).
+
+### Import
+
+```python
+from scripts.add_circuit import import_state_prep
+
+result = import_state_prep(
+    circuit=zero_circuit, n=7, d=3,
+    method="self_dual",                  # or "two_circuit" / "anchor"
+    code_name="Steane Code",
+    circuit_name="FT |0⟩ prep (flag)",
+    source="https://arxiv.org/abs/...", tool="mqt-qecc",
+    tags=["state-preparation", "ft", "flag"],
+    logical_state="zero",                # provenance → note + logical-state:zero tag
+)
+print(result.summary())
+```
+
+`method` picks how the code is obtained _in the circuit's own labeling_:
+
+| `method`        | When                                                                                          |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| `"self_dual"`   | Self-dual CSS code, from a single `\|0⟩_L` circuit                                            |
+| `"two_circuit"` | CSS code, `Hx` from `\|0⟩_L` and `Hz` from `\|+⟩_L` (pass `plus_circuit=`)                    |
+| `"anchor"`      | Non-CSS / non-self-dual, or a non-`\|0⟩` state — fit against a trusted symplectic `anchor_H=` |
+
+The full circuit (flags included) is what gets stored; the pipeline dedups it to the canonical code, applies any qubit permutation, and preserves the original in `originals/`. Provenance you pass (`source_file`, `logical_state`, `connectivity`, `gate_set`, `device`, `qubit_placement`) is folded into the circuit notes, and the categorical ones also become `key:value` tags — nothing is dropped.
+
+## Fitting to an existing code
+
+Published circuits rarely use the same qubit labeling as the stored code, so the circuit must be **fitted** by a qubit permutation (convention `σ[new] = old`). Both `add_circuit()` and `import_state_prep()` resolve this for you, trying in order:
+
+1. **Identity** — small codes (e.g. `[[5,1,3]]`, `[[7,1,3]]`) often match as-is.
+2. **Automatic dedup** — `find_existing_code_full()` / the canonical-hash search resolves the permutation for most codes (`n ≤ 9` is brute-forced).
+3. **Structural finder** — `find_code_permutation()` recovers `σ` from the two codes' check matrices when the hash search can't (automorphism-rich codes, or `n` too large to brute-force).
+4. **Explicit** — pass `qubit_permutation=σ` (`add_circuit`) or `permutation=σ` (`import_state_prep`). It is verified by row-space equality against the stored code — no search — so it works even where the canonical hash isn't a true permutation invariant.
+
+If a submission's invariants match a stored code but no permutation can be confirmed within the search budget, `add_circuit` raises `UncertainDedupError`. Either supply `σ`, or pass `assume_new=True` to add it as a genuinely new code.
+
+## Bulk / dataset imports
+
+Importing a whole dataset (a paper's circuits, a tool's output) is a repeatable job, so it lives in its own script rather than the general pipeline. The split:
+
+- **Reusable logic** — deriving/validating/fitting a code, capturing provenance — lives in `scripts/add_circuit/` and is imported.
+- **Dataset-specific knowledge** — folder layout, which stored code each folder maps to, hardware metadata — lives in `data-imports/<dataset>/rebuild_all.py` with a README recording the decisions.
+
+Two worked examples to copy from:
+
+- [`data-imports/mqt-ftsp/`](../data-imports/mqt-ftsp/README.md) — MQT QECC fault-tolerant state-prep circuits.
+- [`data-imports/rlftqc/`](../data-imports/rlftqc/README.md) — RL-discovered fault-tolerant state-prep circuits.
+
+Each `rebuild_all.py` classifies without writing by default and imports with `--write`, then you run the standard `npm run format && npm run validate:yaml && npm run validate:circuits && npm run db:create`.
+
+---
+
 ## What the pipeline computes
 
 - Code parameters [[n,k,d]], CSS detection, self-dual detection
@@ -340,3 +430,29 @@ Tools must be added manually before circuits can reference them.
 - To edit existing data, modify the YAML files directly and run `npm run db:create`.
 - **Existing codes: omit `code_name`.** On a dedup match the circuit files under the code's _stored_ slug (e.g. `23-1-7`); any `code_name` you pass is ignored for the slug. Passing a name that _doesn't_ resolve to the stored slug would otherwise orphan the circuit.
 - **Overwrites are refused by default.** If a circuit with the same `<code>--<circuit>` slug already exists, `add_circuit` raises `FileExistsError`. Pass `overwrite=True` to replace it in place (the existing `qec_id` is preserved), or choose a distinct `circuit_name`.
+
+## FAQ
+
+**I only have a circuit, no check matrices. Can I still add it?**
+Yes. For an encoding circuit use [`extract_code`](#extract-code-from-circuit-optional); for a state-prep circuit use the [derive-matrices helpers](#get-the-check-matrices-from-the-circuit). Both recover the code from the circuit.
+
+**Encoding vs state-preparation — which is my circuit?**
+An _encoding_ circuit maps `k` data qubits (plus ancillas) into the codespace; the first `k` qubits carry the logical input. A _state-preparation_ circuit starts from `|0…0⟩` and outputs a fixed logical state (`|0⟩_L`, `|+⟩_L`, …). Most library circuits are state-prep. The choice sets the `encoding` / `state-preparation` tag, which routes `validate:circuits`.
+
+**My circuit uses different qubit indices than the stored code.**
+Expected — see [Fitting to an existing code](#fitting-to-an-existing-code). You rarely need to work out the permutation by hand.
+
+**How do I mark a circuit fault-tolerant?**
+Explicitly, with the `ft` (or `non-ft`) tag — it is **never** inferred. Add `flag` if it uses flag qubits.
+
+**Do I need to add a `tool:` tag?**
+No. Set the circuit's `tool` field; the `tool:<slug>` tag is derived at build time (see [Step 3](#step-3-add-tags)).
+
+**`add_circuit` raised `UncertainDedupError` or `FileExistsError`.**
+`UncertainDedupError` — the code looks like a stored one but the permutation couldn't be confirmed; supply `qubit_permutation=σ` or `assume_new=True`. `FileExistsError` — a circuit with that `<code>--<circuit>` slug exists; pass `overwrite=True` (keeps the `qec_id`) or use a distinct `circuit_name`.
+
+**The website didn't change after I rebuilt.**
+Restart the dev server after `npm run db:create` — Astro caches the DB connection.
+
+**I have many circuits from one paper/tool.**
+See [Bulk / dataset imports](#bulk--dataset-imports).

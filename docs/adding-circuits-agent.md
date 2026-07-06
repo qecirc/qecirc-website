@@ -73,9 +73,9 @@ The pipeline also preserves the original (pre-canonicalization) STIM circuit and
 
 The agent only uses tags that already exist in the library. Current tags:
 
-| Level   | Tags                                                                           |
-| ------- | ------------------------------------------------------------------------------ |
-| Code    | `CSS`, `stabilizer`, `self-dual`, `color-code`, `concatenated`                 |
-| Circuit | `encoding`, `state-preparation`, `syndrome-extraction`, `ft`, `non-ft`, `flag` |
+| Level   | Tags                                                                                                                                                                                              |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Code    | `CSS`, `stabilizer`, `self-dual`, `color-code`, `surface-code`, `concatenated`                                                                                                                    |
+| Circuit | `encoding`, `state-preparation`, `syndrome-extraction`, `ft`, `non-ft`, `flag`, `deterministic`, plus structured tags `logical-state:*`, `connectivity:*`, `device:*`, `prep:*`, `verification:*` |
 
-If the Zoo or user suggests a tag not in this list, the agent will ask before adding it.
+`tool:*` tags are **not** set by hand — they are derived from a circuit's `tool` field when the database is built. If the Zoo or user suggests any other tag not already in the library, the agent will ask before adding it.
