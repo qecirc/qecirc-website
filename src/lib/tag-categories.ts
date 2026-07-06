@@ -4,13 +4,14 @@
  * free for new values; only genuinely new free-form tags may need a new entry.
  */
 
-export type TagCategoryKey = "type" | "ft" | "hardware" | "method" | "other";
+export type TagCategoryKey = "type" | "ft" | "hardware" | "method" | "tools" | "other";
 
 export const TAG_CATEGORIES: readonly { key: TagCategoryKey; label: string }[] = [
   { key: "type", label: "Type" },
   { key: "ft", label: "Fault tolerance" },
   { key: "hardware", label: "Hardware" },
   { key: "method", label: "Method" },
+  { key: "tools", label: "Tools" },
   { key: "other", label: "Other" },
 ];
 
@@ -24,6 +25,8 @@ export function categorizeTag(name: string): TagCategoryKey {
   if (HARDWARE_TAGS.has(name) || name.startsWith("connectivity:") || name.startsWith("device:"))
     return "hardware";
   if (name.startsWith("prep:") || name.startsWith("verification:")) return "method";
+  // `tool:<slug>` tags are derived from each circuit's tool at DB-build time.
+  if (name.startsWith("tool:")) return "tools";
   return "other";
 }
 

@@ -209,6 +209,14 @@ Add a `tags:` list. Common circuit tags:
 | Fault tolerance | `ft`, `non-ft`, `flag`, `deterministic`                                                        |
 | Hardware        | `connectivity:2d-grid`, `device:tokyo`, `1D-AOD` (full connectivity is the default — untagged) |
 | Method          | `prep:opt`, `prep:heuristic`, `verification:opt`                                               |
+| Tools           | `tool:mqt-qecc` — **derived automatically, do not add** (see below)                            |
+
+> **Tool tags are derived, not stored.** Every circuit with a `tool:` field is
+> tagged `tool:<slug>` automatically when the database is built (see
+> `scripts/db/create_database.mjs`), which powers the **Tools** filter category
+> (e.g. all MQT QECC circuits at once). The `tool` field is the single source of
+> truth, so never add a `tool:*` tag to a YAML `tags:` list — set `tool:` and the
+> tag follows for every current and future circuit.
 
 Check existing tags with:
 
