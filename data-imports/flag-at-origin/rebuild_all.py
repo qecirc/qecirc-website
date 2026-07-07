@@ -46,6 +46,13 @@ from scripts.add_circuit import import_state_prep  # noqa: E402
 SOURCE = "https://arxiv.org/abs/2508.14200"
 TOOL = "flag-at-origin"
 
+# QEC Zoo links + family tags for the identified new codes (see README).
+ZOO_SURFACE = "https://errorcorrectionzoo.org/c/rotated_surface"
+ZOO_COLOR = "https://errorcorrectionzoo.org/c/488_color"
+ZOO_QR = "https://errorcorrectionzoo.org/c/galois_quad_residue"
+SURFACE_TAGS = ["CSS", "surface-code", "topological"]
+COLOR_TAGS = ["CSS", "self-dual", "color-code", "topological"]
+
 # Precomputed qubit permutations (sigma[new] = old) mapping the flag-at-origin
 # labelling onto the stored color codes, for the two automorphism-rich codes
 # where the pipeline's structural finder is too slow to run each import.
@@ -68,6 +75,8 @@ class Spec:
     mode: str  # "std" (auto-dedup or new code) | "perm" (existing, precomputed sigma)
     code_name: str = ""  # proposed name if the code is new (ignored on dedup)
     code_tags: list[str] = field(default_factory=lambda: ["CSS", "stabilizer"])
+    code_slug: str = ""  # explicit slug for a new code (default: derived from name)
+    zoo_url: str = ""  # QEC Zoo link for a new code
     slug: str = ""  # stored slug for mode="perm"
     # Base-new codes whose [[n,k]] params collide with a stored code (a false
     # "uncertain" dedup — the canonical hashes differ). Variants stay False so
@@ -132,6 +141,8 @@ SPECS: list[Spec] = [
         slug="31-1-7",
     ),
     # --- new codes (base codes: assume_new to bypass false-collision dedup) ---
+    # Identities from the paper repo's own comments + stabiliser-weight structure
+    # + QEC Zoo; the three [[20,2,6]] / [[49,1,5]] / [[95,1,7]] have no known name.
     Spec(
         "20-2-6",
         "TwentyDist6Code.json",
@@ -141,6 +152,8 @@ SPECS: list[Spec] = [
         "FT zero (flag at origin)",
         "std",
         code_name="[[20,2,6]] Code",
+        code_slug="20-2-6",
+        code_tags=["CSS", "self-dual", "stabilizer"],
         assume_new=True,
     ),
     # [[25,1,5]] is the d=5 rotated surface code (verified with find_code_permutation),
@@ -175,6 +188,7 @@ SPECS: list[Spec] = [
         "FT zero (flag at origin, variant +)",
         "std",
         code_name="[[49,1,5]] Code",
+        code_slug="49-1-5",
         assume_new=True,
     ),
     Spec(
@@ -186,8 +200,9 @@ SPECS: list[Spec] = [
         "FT zero (flag at origin, variant F)",
         "std",
         code_name="[[49,1,5]] Code",
+        code_slug="49-1-5",
     ),
-    Spec(
+    Spec(  # 7x7 rotated surface code (paper comment "#7x7 surface")
         "49-1-7",
         "Code_[[49,1,7]].json",
         49,
@@ -195,10 +210,13 @@ SPECS: list[Spec] = [
         7,
         "FT zero (flag at origin)",
         "std",
-        code_name="[[49,1,7]] Code",
+        code_name="Rotated Surface Code",
+        code_slug="rotated-surface-code-d-7",
+        code_tags=SURFACE_TAGS,
+        zoo_url=ZOO_SURFACE,
         assume_new=True,
     ),
-    Spec(
+    Spec(  # 9x9 4.8.8 colour code (paper comment "#9x9 color")
         "49-1-9",
         "Code_[[49,1,9]].json",
         49,
@@ -206,10 +224,13 @@ SPECS: list[Spec] = [
         9,
         "FT zero (flag at origin)",
         "std",
-        code_name="[[49,1,9]] Code",
+        code_name="4.8.8 Color Code",
+        code_slug="49-1-9",
+        code_tags=COLOR_TAGS,
+        zoo_url=ZOO_COLOR,
         assume_new=True,
     ),
-    Spec(
+    Spec(  # 9x9 rotated surface code (paper comment "#9x9 surface")
         "81-1-9",
         "Code_[[81,1,9]].json",
         81,
@@ -217,10 +238,13 @@ SPECS: list[Spec] = [
         9,
         "FT zero (flag at origin)",
         "std",
-        code_name="[[81,1,9]] Code",
+        code_name="Rotated Surface Code",
+        code_slug="rotated-surface-code-d-9",
+        code_tags=SURFACE_TAGS,
+        zoo_url=ZOO_SURFACE,
         assume_new=True,
     ),
-    Spec(
+    Spec(  # 11x11 4.8.8 colour code (paper comment "#11x11 color")
         "71-1-11",
         "Code_[[71,1,11]].json",
         71,
@@ -228,10 +252,13 @@ SPECS: list[Spec] = [
         11,
         "FT zero (flag at origin)",
         "std",
-        code_name="[[71,1,11]] Code",
+        code_name="4.8.8 Color Code",
+        code_slug="71-1-11",
+        code_tags=COLOR_TAGS,
+        zoo_url=ZOO_COLOR,
         assume_new=True,
     ),
-    Spec(
+    Spec(  # quantum quadratic-residue code (self-dual, uniform weight-12)
         "47-1-11",
         "Code_[[47,1,11]].json",
         47,
@@ -239,7 +266,10 @@ SPECS: list[Spec] = [
         11,
         "FT zero (flag at origin)",
         "std",
-        code_name="[[47,1,11]] Code",
+        code_name="Quantum Quadratic-Residue Code",
+        code_slug="47-1-11",
+        code_tags=["CSS", "self-dual"],
+        zoo_url=ZOO_QR,
         assume_new=True,
     ),
     Spec(
@@ -251,6 +281,7 @@ SPECS: list[Spec] = [
         "FT zero (flag at origin)",
         "std",
         code_name="[[95,1,7]] Code",
+        code_slug="95-1-7",
         assume_new=True,
     ),
 ]
@@ -329,7 +360,9 @@ def import_one(spec: Spec, zf: zipfile.ZipFile, write: bool, data_dir: str) -> s
         kw.update(
             anchor_H=H,
             code_name=spec.code_name,
+            code_slug=spec.code_slug,
             code_tags=spec.code_tags,
+            zoo_url=spec.zoo_url,
             assume_new=spec.assume_new,
         )
     try:

@@ -1,7 +1,8 @@
-name: "[[71,1,11]] Code"
+name: 4.8.8 Color Code
 n: 71
 k: 1
 d: 11
+zoo_url: https://errorcorrectionzoo.org/c/488_color
 canonical_hash: 282dd692475d9730e07aac06b0786e495bb1751e9848c5ad7c2287c102db1477
 h:
   - [
@@ -10373,4 +10374,4 @@ logical:
       0,
       0,
     ]
-tags: [CSS, self-dual, stabilizer]
+tags: [CSS, self-dual, color-code, topological]

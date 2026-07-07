@@ -57,15 +57,34 @@ Fit strategy per code:
     an external tool — [`bm_qecc`](https://github.com/MaxieHelenBichmann/bm_qecc)
     by Maxie Helen Bichmann — and stored inverted into our `σ[new]=old`
     convention.
-- **new code** (`20-2-6`, `47-1-11`, `49-1-5`, `49-1-7`, `49-1-9`, `71-1-11`,
-  `81-1-9`, `95-1-7`): `assume_new=True` bypasses a _false_ uncertain dedup.
-  Each was checked to have a `[[n,k,d]]` that **no** stored code shares (the only
-  way it could be equivalent to an existing code), and canonical-hash distinctness
-  alone is _not_ trusted here — it is unreliable (stale stored hashes), which is
-  exactly what masked `[[25,1,5]]` as new at first.
+- **new code** (`rotated-surface-code-d-7`, `rotated-surface-code-d-9`, `49-1-9`,
+  `71-1-11`, `47-1-11`, `20-2-6`, `49-1-5`, `95-1-7`): `assume_new=True` bypasses
+  a _false_ uncertain dedup. Each was checked to have a `[[n,k,d]]` that **no**
+  stored code shares (the only way it could be equivalent to an existing code);
+  canonical-hash distinctness alone is _not_ trusted here — it is unreliable
+  (stale stored hashes), which is exactly what masked `[[25,1,5]]` as new at first.
 
 The `+` / `F` suffixed files are alternative flag-gadget configurations of the
 same code; they dedup onto the base code as separate circuit variants.
+
+### Identifying the new codes
+
+Five of the new codes are known codes — named/tagged/linked accordingly, from
+the paper repo's own inline comments (`#7x7 surface` etc.) plus the natural
+stabiliser-weight structure and QEC Zoo:
+
+| Code          | Identity                       | slug                       |
+| ------------- | ------------------------------ | -------------------------- |
+| `[[49,1,7]]`  | Rotated Surface Code (7×7)     | `rotated-surface-code-d-7` |
+| `[[81,1,9]]`  | Rotated Surface Code (9×9)     | `rotated-surface-code-d-9` |
+| `[[49,1,9]]`  | 4.8.8 Color Code (9×9)         | `49-1-9`                   |
+| `[[71,1,11]]` | 4.8.8 Color Code (11×11)       | `71-1-11`                  |
+| `[[47,1,11]]` | Quantum Quadratic-Residue Code | `47-1-11`                  |
+
+The remaining three — `[[20,2,6]]` (self-dual, 4.8.8-like weights but `k=2`),
+`[[49,1,5]]` and `[[95,1,7]]` (not self-dual, mixed weights) — have no name in
+the source repo or QEC Zoo, so they keep parameter names + `CSS`/`stabilizer`
+(and `self-dual` where applicable).
 
 `[[63,45,4]]` is **out of scope** — the source repo has no stabiliser definition
 for it and a `k = 45` code can't be recovered from a single `|0⟩_L` circuit, so
