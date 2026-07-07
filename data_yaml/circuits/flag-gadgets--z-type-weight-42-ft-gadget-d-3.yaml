@@ -1,0 +1,14 @@
+qec_id: 727
+name: Z-type weight-42 FT gadget (d=3)
+tool: flag-at-origin
+notes: "Fault-tolerant gadget for a weight-42 Z-type stabiliser, verified to distance
+  3 via the 'flag at origin' construction (arXiv:2508.14200). A reusable building
+  block (42 data qubits + 1 flag ancillas) that is not tied to a specific code. Source
+  file: Notebook_2/3_42_Z_ft_plaquette.txt."
+source: https://arxiv.org/abs/2508.14200
+gate_count: 45
+two_qubit_gate_count: 43
+depth: 43
+qubit_count: 43
+weight: 42
+tags: [gadget, flag, ft, "distance:3", z-type]

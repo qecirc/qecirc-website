@@ -58,7 +58,7 @@ def build_circuit_yaml(circ):
     if circ.get("source"):
         data["source"] = circ["source"]
 
-    for field in ("gate_count", "two_qubit_gate_count", "depth", "qubit_count"):
+    for field in ("gate_count", "two_qubit_gate_count", "depth", "qubit_count", "weight"):
         if circ.get(field) is not None:
             data[field] = circ[field]
 

@@ -1,0 +1,18 @@
+qec_id: 522
+name: FT zero (flag at origin)
+tool: flag-at-origin
+notes: "Fault-tolerant |0>_L preparation via the 'flag at origin' construction (arXiv:2508.14200).
+  Flag-verification measurements are included (post-selection); the terminal logical-Z
+  readout of the SPAM benchmark is not part of the prep.. Source file: Notebook_1/TwentyDist6Code.json.
+  Logical state: zero. Connectivity: all-to-all. Gate set: CX,H,M. Flag/ancilla qubits:
+  [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+  40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+  60, 61, 62, 63, 64, 65, 66]. Canonicalization qubit permutation (stored qubit i
+  = original qubit permutation[i]): [16, 12, 8, 6, 5, 4, 7, 2, 1, 13, 11, 17, 0, 19,
+  15, 10, 9, 18, 14, 3]"
+source: https://arxiv.org/abs/2508.14200
+gate_count: 221
+two_qubit_gate_count: 145
+depth: 51
+qubit_count: 67
+tags: [state-preparation, ft, flag, "logical-state:zero", "distance:6", "connectivity:all-to-all"]

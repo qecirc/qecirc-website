@@ -1,0 +1,14 @@
+qec_id: 742
+name: X-type weight-50 FT gadget (d=3)
+tool: flag-at-origin
+notes: "Fault-tolerant gadget for a weight-50 X-type stabiliser, verified to distance
+  3 via the 'flag at origin' construction (arXiv:2508.14200). A reusable building
+  block (50 data qubits + 1 flag ancillas) that is not tied to a specific code. Source
+  file: Notebook_2/3_50_X_ft_plaquette.txt."
+source: https://arxiv.org/abs/2508.14200
+gate_count: 52
+two_qubit_gate_count: 51
+depth: 51
+qubit_count: 51
+weight: 50
+tags: [gadget, flag, ft, "distance:3", x-type]

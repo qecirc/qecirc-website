@@ -14,7 +14,7 @@ export const GET: APIRoute = ({ site }) => {
 
   const codeLines = codes.map((c) => {
     const params = formatCodeParams(c);
-    const label = c.name === params ? params : `${c.name} ${params}`;
+    const label = params === "" || c.name === params ? c.name : `${c.name} ${params}`;
     const n = c.circuit_count;
     return `- [${label}](${base}/codes/${c.slug}): ${n} circuit${n !== 1 ? "s" : ""}`;
   });

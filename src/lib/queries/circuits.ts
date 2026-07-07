@@ -39,6 +39,16 @@ export function countCircuitsForCode(codeId: number): number {
   return row.count;
 }
 
+/** Whether any circuit under this code carries a stabiliser `weight` (only the
+ * flag-gadget collector does) — gates showing the weight filter for that page. */
+export function codeHasWeightedCircuits(codeId: number): boolean {
+  const db = getDb();
+  const row = db
+    .prepare("SELECT 1 FROM circuits WHERE code_id = ? AND weight IS NOT NULL LIMIT 1")
+    .get(codeId);
+  return row !== undefined;
+}
+
 export function countAllCircuits(): number {
   const db = getDb();
   const row = db.prepare("SELECT COUNT(*) as count FROM circuits").get() as {
@@ -73,6 +83,7 @@ export function filterCircuitsForCode(
   addConditions("two_qubit_gate_count", filters.two_qubit_gate_count, conditions, params);
   addConditions("depth", filters.depth, conditions, params);
   addConditions("qubit_count", filters.qubit_count, conditions, params);
+  addConditions("weight", filters.weight, conditions, params);
   addTagConditions(filters.tags, "circuit", conditions, params);
 
   const where = `WHERE ${conditions.join(" AND ")}`;

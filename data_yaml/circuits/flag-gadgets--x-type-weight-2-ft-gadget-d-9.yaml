@@ -1,0 +1,16 @@
+qec_id: 894
+name: X-type weight-2 FT gadget (d=9)
+tool: flag-at-origin
+notes: "Fault-tolerant gadget for a weight-2 X-type stabiliser, verified to distance
+  9 via the 'flag at origin' construction (arXiv:2508.14200). A reusable building
+  block (2 data qubits + no flag ancillas needed) that is not tied to a specific code.
+  Source file: Notebook_2/9_2_X_ft_plaquette.txt."
+source: https://arxiv.org/abs/2508.14200
+gate_count: 2
+two_qubit_gate_count: 1
+depth: 1
+qubit_count: 2
+weight: 2
+crumble_url: https://algassert.com/crumble#circuit=H_0;CX_0_1_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H"],["•","X"]]}
+tags: [gadget, ft, "distance:9", x-type]

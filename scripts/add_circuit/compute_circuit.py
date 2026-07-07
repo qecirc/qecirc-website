@@ -10,6 +10,12 @@ import stim
 from .circuit_validate import circuit_properties, has_ticks
 from .compute import slugify
 
+# Above this qubit count a circuit is too wide for the per-qubit artifacts to be
+# useful, and they bloat the repo: the Crumble/Quirk URLs and the Cirq ASCII
+# grid all scale with width (a 475-qubit prep yields a ~700 KB URL and a ~9 MB
+# Cirq string). Past the threshold we keep only STIM (canonical) + QASM.
+LARGE_CIRCUIT_MAX_QUBITS = 40
+
 
 def compute_circuit_data(
     circuit_text: str,
@@ -43,14 +49,21 @@ def compute_circuit_data(
     # 3. Metrics
     props = circuit_properties(str(circ))
 
-    # 4. Links
-    crumble_url = circ.to_crumble_url()
-    quirk_url = circ.to_quirk_url()
+    # 4. Links (omitted for large circuits — unusable and bloat the YAML)
+    if props.qubit_count <= LARGE_CIRCUIT_MAX_QUBITS:
+        crumble_url = circ.to_crumble_url()
+        quirk_url = circ.to_quirk_url()
+    else:
+        crumble_url = ""
+        quirk_url = ""
 
-    # 5. Format conversions
+    # 5. Format conversions. Cirq's text form is a per-moment ASCII grid whose
+    # width scales with the qubit count, so for wide circuits it explodes (a
+    # 475-qubit prep serializes to ~9 MB) while adding no value — skip it there.
+    # STIM (canonical) and QASM stay compact and are always kept.
     stim_body = str(circ)
     qasm_body = _to_qasm(circ)
-    cirq_body = _to_cirq_str(circ)
+    cirq_body = "" if props.qubit_count > LARGE_CIRCUIT_MAX_QUBITS else _to_cirq_str(circ)
 
     # 6. Slug
     slug = slugify(circuit_name) if circuit_name else ""

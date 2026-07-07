@@ -5,6 +5,7 @@ export const CIRCUIT_SORT_FIELDS: readonly CircuitSortField[] = [
   "depth",
   "gate_count",
   "two_qubit_gate_count",
+  "weight",
 ];
 
 export const CODE_SORT_FIELDS: readonly CodeSortField[] = ["n", "k", "d"];

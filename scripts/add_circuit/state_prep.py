@@ -415,6 +415,7 @@ def import_state_prep(
     plus_circuit: Union[str, stim.Circuit, None] = None,
     anchor_H: Optional[np.ndarray] = None,
     permutation: Optional[list[int]] = None,
+    assume_new: bool = False,
     zoo_url: str = "",
     code_slug: str = "",
     code_tags: Optional[list[str]] = None,
@@ -448,6 +449,11 @@ def import_state_prep(
     code directly (convention ``sigma[new] = old``), bypassing ``add_circuit``'s
     dedup search — use it with ``self_dual`` / ``two_circuit`` for
     automorphism-rich codes where the search cannot confirm equivalence in time.
+
+    ``assume_new`` (optional) forwards to ``add_circuit``: set it when the code is
+    genuinely new but its parameters/invariants collide with a stored code so the
+    dedup search reports ``uncertain`` (e.g. distinct same-``[[n,k]]`` codes). It
+    suppresses :exc:`UncertainDedupError` and adds the submission as a new code.
 
     The untouched ``circuit`` (flags included) is what gets stored; ``add_circuit``
     dedups it to the canonical code, applies the permutation, and preserves the
@@ -533,6 +539,7 @@ def import_state_prep(
         tool=tool,
         data_dir=data_dir,
         qubit_permutation=permutation,
+        assume_new=assume_new,
         **code_kwargs,
     )
 
