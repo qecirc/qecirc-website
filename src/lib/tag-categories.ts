@@ -21,7 +21,8 @@ const HARDWARE_TAGS = new Set(["1D-AOD"]);
 
 export function categorizeTag(name: string): TagCategoryKey {
   if (TYPE_TAGS.has(name) || name.startsWith("logical-state:")) return "type";
-  if (FT_TAGS.has(name)) return "ft";
+  // `distance:N` is a fault-tolerance property (a circuit/gadget FT to distance N).
+  if (FT_TAGS.has(name) || name.startsWith("distance:")) return "ft";
   if (HARDWARE_TAGS.has(name) || name.startsWith("connectivity:") || name.startsWith("device:"))
     return "hardware";
   if (name.startsWith("prep:") || name.startsWith("verification:")) return "method";

@@ -49,11 +49,14 @@ CODE = {
     "name": "Flag Gadgets",
     "n": 0,
     "k": 0,
-    "tags": [{"name": t} for t in ("flag", "fault-tolerant", "gadget")],
+    "tags": [{"name": "no-code"}],  # placeholder collector — not an actual code
 }
 
+# The canonical gadget set is the plain `{d}_{w}_{X|Z}_ft_plaquette.txt` files —
+# what the paper's own generate_FT_plaq_notebook() reads and its Notebook_2 table
+# catalogs. The `_mod_ANC` / `_from_Cplusplus` variants are auxiliary and skipped.
 # member basename -> (distance, weight, basis)
-_NAME_RE = re.compile(r"^(\d+)_(\d+)_([XZ])_ft_plaquette_mod_ANC\.txt$")
+_NAME_RE = re.compile(r"^(\d+)_(\d+)_([XZ])_ft_plaquette\.txt$")
 
 
 def parse_name(member: str) -> tuple[int, int, str] | None:
@@ -81,13 +84,18 @@ def import_one(member: str, d: int, w: int, basis: str, data_dir: Path, write: b
     stim_text, ndata, anc, _ = dict_to_stim(load_pytket_dict(zf.read(member).decode()))
     b = basis.lower()
     name = f"{basis}-type weight-{w} FT gadget (d={d})"
+    anc_phrase = f"{len(anc)} flag ancillas" if anc else "no flag ancillas needed"
     notes = (
         f"Fault-tolerant gadget for a weight-{w} {basis}-type stabiliser, verified "
         f"to distance {d} via the 'flag at origin' construction (arXiv:2508.14200). "
-        f"A reusable building block ({ndata} data qubits + {len(anc)} flag ancillas) "
+        f"A reusable building block ({ndata} data qubits + {anc_phrase}) "
         f"that is not tied to a specific code. Source file: {member}."
     )
-    tags = ["gadget", "flag", "ft", f"distance:{d}", f"weight:{w}", f"{b}-type"]
+    # `flag` tag only when the gadget actually uses flag ancillas; the trivial
+    # low-weight cases need none but are still FT (they keep the `ft` tag).
+    tags = ["gadget", "ft", f"distance:{d}", f"weight:{w}", f"{b}-type"]
+    if anc:
+        tags.insert(1, "flag")
     circ = compute_circuit_data(
         stim_text, circuit_name=name, source=SOURCE, tool=TOOL, notes=notes, tags=tags
     )

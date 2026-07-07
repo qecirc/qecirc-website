@@ -75,8 +75,9 @@ class Spec:
     assume_new: bool = False
 
 
-# One entry per circuit file. [[63,45,4]] is deferred: no stabiliser definition
-# exists in the source repo, and it can't be recovered from a |0>_L circuit.
+# One entry per circuit file. [[63,45,4]] is intentionally out of scope: no
+# stabiliser definition exists in the source repo, and it can't be recovered
+# from a |0>_L circuit (k=45).
 SPECS: list[Spec] = [
     # --- existing codes (auto-dedup; the proposed code_name is ignored on match) ---
     Spec(
@@ -356,10 +357,7 @@ def main() -> None:
     with zipfile.ZipFile(zip_path) as zf:
         for spec in specs:
             print(import_one(spec, zf, args.write, args.data_dir), flush=True)
-    print(
-        f"\n{'wrote' if args.write else 'classified'} {len(specs)} circuits; "
-        f"[[63,45,4]] deferred (no stabiliser source)."
-    )
+    print(f"\n{'wrote' if args.write else 'classified'} {len(specs)} circuits.")
 
 
 if __name__ == "__main__":

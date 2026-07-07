@@ -12,7 +12,7 @@ The importers read the circuits **directly from the zips** — no manual unzip:
 
 - `Notebook_1.zip` — per-code FT `|0⟩_L` preparation circuits (one pytket
   `Circuit.to_dict()` JSON per code).
-- `Notebook_2.zip` — standalone flag gadgets (`*_ft_plaquette_mod_ANC.txt`,
+- `Notebook_2.zip` — standalone flag gadgets (`{d}_{w}_{X|Z}_ft_plaquette.txt`,
   same pytket-dict format).
 
 Everything is pure Clifford + measurement (`H/CX/Measure/Barrier`), so
@@ -68,8 +68,10 @@ same code; they dedup onto the base code as separate circuit variants.
   31 qubits, so the backtracking search exhausts its budget without producing a
   certified σ. Add it once a permutation is computed offline (e.g. a graph-iso /
   symmetry-aware method) and dropped into `sigma_precomputed.json`.
-- **`[[63,45,4]]`** — the source repo has no stabiliser definition for it, and a
-  `k = 45` code cannot be recovered from a single `|0⟩_L` circuit.
+
+`[[63,45,4]]` is **out of scope** — the source repo has no stabiliser definition
+for it and a `k = 45` code can't be recovered from a single `|0⟩_L` circuit, so
+it is intentionally not imported.
 
 ### `import_gadgets.py` — standalone flag gadgets
 
@@ -77,13 +79,24 @@ same code; they dedup onto the base code as separate circuit variants.
 python import_gadgets.py --write
 ```
 
-The 111 `*_mod_ANC` gadgets are complete FT circuits that prepare/measure a
-single weight-`n` stabiliser to distance `d` (X- or Z-type). They are reusable
-building blocks that don't correspond to any code, so they can't go through the
-normal `import_state_prep` path. They're collected under a placeholder
-**`flag-gadgets`** code (`n = k = 0`, no check matrices — the code page renders
-without a matrices section) and written directly with the pipeline's helpers, so
-their metrics / STIM+QASM bodies / slugs match every other circuit.
+Imports the **354 plain `{d}_{w}_{X|Z}_ft_plaquette.txt`** gadgets — one per
+`(distance, weight, basis)`, the canonical set the paper's own
+`generate_FT_plaq_notebook()` reads and its Notebook_2 table catalogs (weights
+2–51, distances 3/5/7/9/11). The `_mod_ANC` and `_from_Cplusplus` variants are
+auxiliary — `_mod_ANC` only covers 111 configs and merely adds a redundant flag
+to the trivial weight-2/3 cases; `_from_Cplusplus` is a different C++ text format
+and coverage-redundant — so both are skipped.
+
+Each gadget is a complete FT circuit that prepares/measures a single weight-`w`
+stabiliser to distance `d`. They don't correspond to any code, so they can't go
+through `import_state_prep`; they're collected under a placeholder
+**`flag-gadgets`** code (`n = k = 0`, no check matrices — so the code page has no
+matrices section; tagged `no-code`) and written directly with the pipeline's
+helpers, so metrics / STIM+QASM bodies / slugs match every other circuit.
+
+Tags: `gadget`, `ft`, `distance:d`, `weight:w`, `x-type`/`z-type`, plus `flag`
+**only** when the gadget actually uses flag ancillas (the trivial low-weight
+cases need none but stay `ft`).
 
 ## Re-running
 
