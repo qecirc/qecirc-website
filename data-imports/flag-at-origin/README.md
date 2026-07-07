@@ -41,24 +41,33 @@ Fit strategy per code:
 
 - **auto-dedup** (Steane, Golay, `[[9,1,3]]` → `rotated-surface-code-d-3`): the
   pipeline matches the anchor to a stored code and finds the permutation itself.
-- **precomputed σ** (`17-1-5`): the color code is automorphism-rich, so the
-  structural finder is too slow to run each time; the permutation is cached in
+- **precomputed σ**: dedups onto a stored code the auto-search can't confirm in
+  time, using a permutation cached in
   [`sigma_precomputed.json`](sigma_precomputed.json) (produced once with
-  `find_code_permutation`).
-- **new code** (`20-2-6`, `25-1-5`, `47-1-11`, `49-1-5`, `49-1-7`, `49-1-9`,
-  `71-1-11`, `81-1-9`, `95-1-7`): `assume_new=True` bypasses a _false_ uncertain
-  dedup — several share `[[n,1]]` parameters and weak invariants with a stored
-  code but have distinct canonical hashes.
+  `find_code_permutation`). Two codes go this way:
+  - `17-1-5` → the stored `17-1-5` 4.8.8 color code (automorphism-rich, slow).
+  - `25-1-5` → the stored `rotated-surface-code-d-5`. **`[[25,1,5]]` is the d=5
+    rotated surface code**, verified with `find_code_permutation` — do _not_ add
+    it as a new code.
+- **new code** (`20-2-6`, `47-1-11`, `49-1-5`, `49-1-7`, `49-1-9`, `71-1-11`,
+  `81-1-9`, `95-1-7`): `assume_new=True` bypasses a _false_ uncertain dedup.
+  Each was checked to have a `[[n,k,d]]` that **no** stored code shares (the only
+  way it could be equivalent to an existing code), and canonical-hash distinctness
+  alone is _not_ trusted here — it is unreliable (stale stored hashes), which is
+  exactly what masked `[[25,1,5]]` as new at first.
 
 The `+` / `F` suffixed files are alternative flag-gadget configurations of the
 same code; they dedup onto the base code as separate circuit variants.
 
 #### Deferred
 
-- **`[[31,1,7]]`** — the same code as the stored `31-1-7`, but
-  `find_code_permutation` does not converge on this automorphism-rich color code.
-  Add it once a permutation is computed offline (drop it into
-  `sigma_precomputed.json`).
+- **`[[31,1,7]]`** — almost certainly the same code as the stored `31-1-7`: all
+  permutation-invariant checks match (ranks, and the per-column colour-invariant
+  histograms `find_code_permutation` computes). But the 4.8.8 colour code is so
+  symmetric that colour refinement yields only 4 distinct qubit classes across
+  31 qubits, so the backtracking search exhausts its budget without producing a
+  certified σ. Add it once a permutation is computed offline (e.g. a graph-iso /
+  symmetry-aware method) and dropped into `sigma_precomputed.json`.
 - **`[[63,45,4]]`** — the source repo has no stabiliser definition for it, and a
   `k = 45` code cannot be recovered from a single `|0⟩_L` circuit.
 

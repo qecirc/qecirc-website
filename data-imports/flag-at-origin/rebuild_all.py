@@ -142,6 +142,9 @@ SPECS: list[Spec] = [
         code_name="[[20,2,6]] Code",
         assume_new=True,
     ),
+    # [[25,1,5]] is the d=5 rotated surface code (verified with find_code_permutation),
+    # so both variants dedup onto the stored rotated-surface-code-d-5 via a precomputed
+    # permutation — NOT a new code.
     Spec(
         "25-1-5",
         "Code_[[25,1,5]].json",
@@ -149,9 +152,8 @@ SPECS: list[Spec] = [
         1,
         5,
         "FT zero (flag at origin)",
-        "std",
-        code_name="[[25,1,5]] Code",
-        assume_new=True,
+        "perm",
+        slug="rotated-surface-code-d-5",
     ),
     Spec(
         "25-1-5-F",
@@ -160,8 +162,8 @@ SPECS: list[Spec] = [
         1,
         5,
         "FT zero (flag at origin, variant F)",
-        "std",
-        code_name="[[25,1,5]] Code",
+        "perm",
+        slug="rotated-surface-code-d-5",
     ),
     Spec(
         "49-1-5-plus",
