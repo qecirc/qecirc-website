@@ -27,6 +27,9 @@ const CODE_LIST_COLUMNS = "c.id, c.name, c.slug, c.n, c.k, c.d, c.zoo_url, c.can
 const CODE_DETAIL_COLUMNS = `${CODE_LIST_COLUMNS}, (c.h IS NOT NULL AND c.logical IS NOT NULL) AS has_matrices`;
 
 export function formatCodeParams(code: Pick<Code, "n" | "k" | "d">): string {
+  // A placeholder collector (e.g. the flag-gadget bucket) carries n = 0 and has
+  // no meaningful [[n,k,d]] parameters — render nothing rather than "[[0,0]]".
+  if (code.n === 0) return "";
   return code.d != null ? `[[${code.n},${code.k},${code.d}]]` : `[[${code.n},${code.k}]]`;
 }
 

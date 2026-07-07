@@ -120,7 +120,7 @@ const jsonLd = [
   <div class="flex items-baseline flex-wrap gap-x-3.5 gap-y-1 mb-2">
     <h1 class="text-2xl font-bold">
       {code.name}
-      {code.name !== params && <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>}
+      {params !== "" && code.name !== params && <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>}
     </h1>
     {code.zoo_url && (
       <a

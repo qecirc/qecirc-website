@@ -11,7 +11,7 @@ interface Props {
 const { code, baseUrl } = Astro.props;
 const { name, slug, tags, circuit_count } = code;
 const params = formatCodeParams(code);
-const showParams = name !== params;
+const showParams = params !== "" && name !== params;
 ---
 
 <div

@@ -1,0 +1,15 @@
+qec_id: 562
+name: Z-type weight-9 FT gadget (d=5)
+tool: flag-at-origin
+notes: "Fault-tolerant gadget for a weight-9 Z-type stabiliser, verified to distance
+  5 via the 'flag at origin' construction (arXiv:2508.14200). A reusable building
+  block (9 data qubits + 3 flag ancillas) that is not tied to a specific code. Source
+  file: Notebook_2/5_9_Z_ft_plaquette_mod_ANC.txt."
+source: https://arxiv.org/abs/2508.14200
+gate_count: 20
+two_qubit_gate_count: 14
+depth: 11
+qubit_count: 12
+crumble_url: https://algassert.com/crumble#circuit=H_9_10_11;CX_11_0_10_0_8_11_9_0_5_10_7_0_4_10_6_0_11_0_3_0;H_11;CX_2_0;M_11;CX_10_0_1_0;H_10;CX_9_0;M_10;H_9;M_9_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,1,1,1,1,1,"H","H","H"],["X",1,1,1,1,1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,"•",1,1,"X"],["X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"•",1,1,1,1,"X"],["X",1,1,1,1,1,1,"•"],[1,1,1,1,"•",1,1,1,1,1,"X"],["X",1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,1,1,1,"•"],["X",1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,"H"],["X",1,"•"],[1,1,1,1,1,1,1,1,1,1,1,"ZDetector"],["X",1,1,1,1,1,1,1,1,1,"•"],["X","•"],[1,1,1,1,1,1,1,1,1,1,"H"],["X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"H","ZDetector"],[1,1,1,1,1,1,1,1,1,"ZDetector"]]}
+tags: [gadget, flag, ft, "distance:5", "weight:9", z-type]

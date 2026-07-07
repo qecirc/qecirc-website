@@ -1,0 +1,15 @@
+qec_id: 540
+name: Z-type weight-5 FT gadget (d=3)
+tool: flag-at-origin
+notes: "Fault-tolerant gadget for a weight-5 Z-type stabiliser, verified to distance
+  3 via the 'flag at origin' construction (arXiv:2508.14200). A reusable building
+  block (5 data qubits + 1 flag ancillas) that is not tied to a specific code. Source
+  file: Notebook_2/3_5_Z_ft_plaquette_mod_ANC.txt."
+source: https://arxiv.org/abs/2508.14200
+gate_count: 8
+two_qubit_gate_count: 6
+depth: 6
+qubit_count: 6
+crumble_url: https://algassert.com/crumble#circuit=H_5;CX_5_0_4_0_3_0_2_0_1_0_5_0;H_5;M_5_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,1,"H"],["X",1,1,1,1,"•"],["X",1,1,1,"•"],["X",1,1,"•"],["X",1,"•"],["X","•"],["X",1,1,1,1,"•"],[1,1,1,1,1,"H"],[1,1,1,1,1,"ZDetector"]]}
+tags: [gadget, flag, ft, "distance:3", "weight:5", z-type]

@@ -323,10 +323,11 @@ Importing a whole dataset (a paper's circuits, a tool's output) is a repeatable 
 - **Reusable logic** — deriving/validating/fitting a code, capturing provenance — lives in `scripts/add_circuit/` and is imported.
 - **Dataset-specific knowledge** — folder layout, which stored code each folder maps to, hardware metadata — lives in `data-imports/<dataset>/rebuild_all.py` with a README recording the decisions.
 
-Two worked examples to copy from:
+Worked examples to copy from:
 
 - [`data-imports/mqt-ftsp/`](../data-imports/mqt-ftsp/README.md) — MQT QECC fault-tolerant state-prep circuits.
 - [`data-imports/rlftqc/`](../data-imports/rlftqc/README.md) — RL-discovered fault-tolerant state-prep circuits.
+- [`data-imports/flag-at-origin/`](../data-imports/flag-at-origin/README.md) — flag-at-origin FT preps (converts pytket circuits to STIM, fits via precomputed/`assume_new` strategies) **and** standalone flag gadgets collected under a placeholder `flag-gadgets` code (`n = k = 0`, no check matrices) for circuits that don't belong to a code.
 
 Each `rebuild_all.py` classifies without writing by default and imports with `--write`, then you run the standard `npm run format && npm run validate:yaml && npm run validate:circuits && npm run db:create`.
 
