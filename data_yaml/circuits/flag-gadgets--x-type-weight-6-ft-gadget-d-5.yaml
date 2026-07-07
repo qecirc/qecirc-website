@@ -10,6 +10,7 @@ gate_count: 10
 two_qubit_gate_count: 9
 depth: 7
 qubit_count: 8
+weight: 6
 crumble_url: https://algassert.com/crumble#circuit=H_0;CX_0_7_0_6_7_5_7_4_0_3_0_2_0_7_0_1;M_7;CX_0_6;M_6_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H"],["•",1,1,1,1,1,1,"X"],["•",1,1,1,1,1,"X"],[1,1,1,1,1,"X",1,"•"],[1,1,1,1,"X",1,1,"•"],["•",1,1,"X"],["•",1,"X"],["•",1,1,1,1,1,1,"X"],["•","X"],[1,1,1,1,1,1,1,"ZDetector"],["•",1,1,1,1,1,"X"],[1,1,1,1,1,1,"ZDetector"]]}
-tags: [gadget, flag, ft, "distance:5", "weight:6", x-type]
+tags: [gadget, flag, ft, "distance:5", x-type]

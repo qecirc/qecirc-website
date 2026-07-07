@@ -52,6 +52,7 @@ const CIRCUIT_FILTER_FIELDS = [
   "two_qubit_gate_count",
   "depth",
   "qubit_count",
+  "weight",
 ] as const;
 const VALID_SORT_DIRS = new Set<SortDir>(["asc", "desc"]);
 

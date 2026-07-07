@@ -94,9 +94,11 @@ through `import_state_prep`; they're collected under a placeholder
 matrices section; tagged `no-code`) and written directly with the pipeline's
 helpers, so metrics / STIM+QASM bodies / slugs match every other circuit.
 
-Tags: `gadget`, `ft`, `distance:d`, `weight:w`, `x-type`/`z-type`, plus `flag`
-**only** when the gadget actually uses flag ancillas (the trivial low-weight
-cases need none but stay `ft`).
+Tags: `gadget`, `ft`, `distance:d`, `x-type`/`z-type`, plus `flag` **only** when
+the gadget actually uses flag ancillas (the trivial low-weight cases need none
+but stay `ft`). The stabiliser **weight** is stored as a numeric `weight` field
+(not a tag — ~50 distinct values), which drives a range filter shown only on this
+listing (see `codeHasWeightedCircuits`); it's `null` for every code circuit.
 
 ## Re-running
 

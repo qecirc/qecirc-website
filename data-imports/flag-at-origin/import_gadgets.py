@@ -57,6 +57,7 @@ CODE = {
 # catalogs. The `_mod_ANC` / `_from_Cplusplus` variants are auxiliary and skipped.
 # member basename -> (distance, weight, basis)
 _NAME_RE = re.compile(r"^(\d+)_(\d+)_([XZ])_ft_plaquette\.txt$")
+_qec_id_re = re.compile(r"^qec_id:\s*(\d+)\s*$", re.MULTILINE)
 
 
 def parse_name(member: str) -> tuple[int, int, str] | None:
@@ -91,18 +92,24 @@ def import_one(member: str, d: int, w: int, basis: str, data_dir: Path, write: b
         f"A reusable building block ({ndata} data qubits + {anc_phrase}) "
         f"that is not tied to a specific code. Source file: {member}."
     )
+    # Weight is a numeric metric (like qubit_count), not a tag — there are ~50
+    # distinct values, so it powers a range filter instead of a tag dropdown.
     # `flag` tag only when the gadget actually uses flag ancillas; the trivial
     # low-weight cases need none but are still FT (they keep the `ft` tag).
-    tags = ["gadget", "ft", f"distance:{d}", f"weight:{w}", f"{b}-type"]
+    tags = ["gadget", "ft", f"distance:{d}", f"{b}-type"]
     if anc:
         tags.insert(1, "flag")
     circ = compute_circuit_data(
         stim_text, circuit_name=name, source=SOURCE, tool=TOOL, notes=notes, tags=tags
     )
+    circ["weight"] = w
     stem = f"{CODE_SLUG}--{circ['slug']}"
     if write:
-        circ["qec_id"] = next_qec_id(data_dir)
         circuits_dir = data_dir / "circuits"
+        # Preserve a previously-assigned qec_id on overwrite; ids are permanent.
+        existing = circuits_dir / f"{stem}.yaml"
+        prev = _qec_id_re.search(existing.read_text()) if existing.exists() else None
+        circ["qec_id"] = int(prev.group(1)) if prev else next_qec_id(data_dir)
         write_file(circuits_dir / f"{stem}.yaml", dump_yaml(build_circuit_yaml(circ)), quiet=True)
         for body in circ.get("bodies", []):
             if body.get("body"):

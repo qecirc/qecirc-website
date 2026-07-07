@@ -33,6 +33,7 @@ const SCHEMAS = {
       two_qubit_gate_count: "number",
       depth: "number",
       qubit_count: "number",
+      weight: "number",
       crumble_url: "string",
       quirk_url: "string",
       tags: "tags",

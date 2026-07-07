@@ -10,4 +10,5 @@ gate_count: 65
 two_qubit_gate_count: 64
 depth: 64
 qubit_count: 51
-tags: [gadget, flag, ft, "distance:7", "weight:37", x-type]
+weight: 37
+tags: [gadget, flag, ft, "distance:7", x-type]

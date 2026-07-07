@@ -9,7 +9,17 @@ interface Props {
   rawTwoQubitGateCount: string;
   rawDepth: string;
   rawQubitCount: string;
-  errors: { gate_count: boolean; two_qubit_gate_count: boolean; depth: boolean; qubit_count: boolean };
+  rawWeight: string;
+  errors: {
+    gate_count: boolean;
+    two_qubit_gate_count: boolean;
+    depth: boolean;
+    qubit_count: boolean;
+    weight: boolean;
+  };
+  // Whether this listing has circuits carrying a stabiliser weight (only the
+  // flag-gadget collector does) — the Weight filter shows only then.
+  showWeight: boolean;
   hasFilters: boolean;
   focus: string;
   allTags: TagWithCount[];
@@ -19,9 +29,16 @@ interface Props {
   sort: CircuitSort;
 }
 
-const { rawGateCount, rawTwoQubitGateCount, rawDepth, rawQubitCount, errors, hasFilters, focus, allTags, selectedTags, currentUrl, codeSlug, sort } = Astro.props;
-const anyError = errors.gate_count || errors.two_qubit_gate_count || errors.depth || errors.qubit_count;
+const { rawGateCount, rawTwoQubitGateCount, rawDepth, rawQubitCount, rawWeight, errors, showWeight, hasFilters, focus, allTags, selectedTags, currentUrl, codeSlug, sort } = Astro.props;
+const anyError =
+  errors.gate_count ||
+  errors.two_qubit_gate_count ||
+  errors.depth ||
+  errors.qubit_count ||
+  (showWeight && errors.weight);
 const basePath = `/codes/${codeSlug}`;
+const filterFields = ["gate_count", "two_qubit_gate_count", "depth", "qubit_count"];
+if (showWeight) filterFields.push("weight");
 
 function inputClass(hasError: boolean): string {
   const base = "w-24 px-2 py-1 text-sm focus:outline-none bg-transparent";
@@ -44,6 +61,7 @@ const gateSort = labelInfo("gate_count");
 const twoQubitGateSort = labelInfo("two_qubit_gate_count");
 const depthSort = labelInfo("depth");
 const qubitSort = labelInfo("qubit_count");
+const weightSort = labelInfo("weight");
 
 const tagGroups = TAG_CATEGORIES.map((c) => ({
   label: c.label,
@@ -52,7 +70,7 @@ const tagGroups = TAG_CATEGORIES.map((c) => ({
 ---
 
 <form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2 sm:sticky sm:top-0 sm:z-20 bg-white dark:bg-gray-950 sm:border-b sm:border-gray-200 sm:dark:border-gray-800 sm:pb-4 sm:-mb-2"
-  data-filter-fields="gate_count,two_qubit_gate_count,depth,qubit_count" data-filter-focus={focus} data-base-path={basePath} data-preserve-sort>
+  data-filter-fields={filterFields.join(",")} data-filter-focus={focus} data-base-path={basePath} data-preserve-sort>
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
       <a href={sortToggleUrl("gate_count")} class={`px-1 py-0.5 text-xs transition-colors ${gateSort.cls}`}>
@@ -78,6 +96,14 @@ const tagGroups = TAG_CATEGORIES.map((c) => ({
       </a>
       <input type="text" name="qubit_count" value={rawQubitCount} class={inputClass(errors.qubit_count)} placeholder="7" aria-label="Filter by qubit count" data-filter />
     </div>
+    {showWeight && (
+      <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
+        <a href={sortToggleUrl("weight")} class={`px-1 py-0.5 text-xs transition-colors ${weightSort.cls}`}>
+          Weight{weightSort.arrow && <span class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{weightSort.arrow}</span>}
+        </a>
+        <input type="text" name="weight" value={rawWeight} class={inputClass(errors.weight)} placeholder="<=8" aria-label="Filter by stabiliser weight" data-filter />
+      </div>
+    )}
     <div class="text-xs" data-filter-status>
       {anyError ? (
         <span data-filter-error class="text-red-500">Invalid filter</span>

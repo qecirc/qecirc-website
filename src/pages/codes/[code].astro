@@ -14,6 +14,7 @@ import {
   formatCodeParams,
   hasActiveFilters,
   countCircuitsForCode,
+  codeHasWeightedCircuits,
   getCircuitTagsForCode,
   getCircuitsWithBodies,
   getToolsForCircuits,
@@ -39,6 +40,7 @@ const { raw, errors, tags: selectedTags, focus, filters, sort } = parseCircuitPa
 
 const hasFilters = hasActiveFilters(filters);
 const totalCount = countCircuitsForCode(code.id);
+const showWeight = codeHasWeightedCircuits(code.id);
 const { circuits, bodiesMap } = getCircuitsWithBodies(code.id, filters, sort);
 const allCircuitTags = getCircuitTagsForCode(code.id);
 const toolsMap = getToolsForCircuits(circuits.map((c) => c.id));
@@ -190,6 +192,8 @@ const jsonLd = [
     rawTwoQubitGateCount={raw.two_qubit_gate_count}
     rawDepth={raw.depth}
     rawQubitCount={raw.qubit_count}
+    rawWeight={raw.weight}
+    showWeight={showWeight}
     errors={errors}
     hasFilters={hasFilters}
     focus={focus}

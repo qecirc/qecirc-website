@@ -10,6 +10,7 @@ gate_count: 1
 two_qubit_gate_count: 1
 depth: 1
 qubit_count: 2
+weight: 2
 crumble_url: https://algassert.com/crumble#circuit=CX_1_0_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["X","•"]]}
-tags: [gadget, ft, "distance:7", "weight:2", z-type]
+tags: [gadget, ft, "distance:7", z-type]
