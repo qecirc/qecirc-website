@@ -43,12 +43,20 @@ Fit strategy per code:
   pipeline matches the anchor to a stored code and finds the permutation itself.
 - **precomputed σ**: dedups onto a stored code the auto-search can't confirm in
   time, using a permutation cached in
-  [`sigma_precomputed.json`](sigma_precomputed.json) (produced once with
-  `find_code_permutation`). Two codes go this way:
-  - `17-1-5` → the stored `17-1-5` 4.8.8 color code (automorphism-rich, slow).
+  [`sigma_precomputed.json`](sigma_precomputed.json). Every cached σ is verified
+  by the pipeline's row-space check at import, regardless of how it was found.
+  Three codes go this way:
+  - `17-1-5` → the stored `17-1-5` 4.8.8 color code (automorphism-rich, slow);
+    from `find_code_permutation`.
   - `25-1-5` → the stored `rotated-surface-code-d-5`. **`[[25,1,5]]` is the d=5
     rotated surface code**, verified with `find_code_permutation` — do _not_ add
     it as a new code.
+  - `31-1-7` → the stored `31-1-7` 4.8.8 color code. Our `find_code_permutation`
+    can't crack this one (colour refinement collapses all 31 qubits into 4
+    classes, so the search exhausts its budget). The permutation was found with
+    an external tool — [`bm_qecc`](https://github.com/MaxieHelenBichmann/bm_qecc)
+    by Maxie Helen Bichmann — and stored inverted into our `σ[new]=old`
+    convention.
 - **new code** (`20-2-6`, `47-1-11`, `49-1-5`, `49-1-7`, `49-1-9`, `71-1-11`,
   `81-1-9`, `95-1-7`): `assume_new=True` bypasses a _false_ uncertain dedup.
   Each was checked to have a `[[n,k,d]]` that **no** stored code shares (the only
@@ -58,16 +66,6 @@ Fit strategy per code:
 
 The `+` / `F` suffixed files are alternative flag-gadget configurations of the
 same code; they dedup onto the base code as separate circuit variants.
-
-#### Deferred
-
-- **`[[31,1,7]]`** — almost certainly the same code as the stored `31-1-7`: all
-  permutation-invariant checks match (ranks, and the per-column colour-invariant
-  histograms `find_code_permutation` computes). But the 4.8.8 colour code is so
-  symmetric that colour refinement yields only 4 distinct qubit classes across
-  31 qubits, so the backtracking search exhausts its budget without producing a
-  certified σ. Add it once a permutation is computed offline (e.g. a graph-iso /
-  symmetry-aware method) and dropped into `sigma_precomputed.json`.
 
 `[[63,45,4]]` is **out of scope** — the source repo has no stabiliser definition
 for it and a `k = 45` code can't be recovered from a single `|0⟩_L` circuit, so
