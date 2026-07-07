@@ -69,22 +69,25 @@ same code; they dedup onto the base code as separate circuit variants.
 
 ### Identifying the new codes
 
-Five of the new codes are known codes — named/tagged/linked accordingly, from
-the paper repo's own inline comments (`#7x7 surface` etc.) plus the natural
-stabiliser-weight structure and QEC Zoo:
+Identities come from **Table I of the paper**, the repo's own inline comments
+(`#7x7 surface` etc.), the natural stabiliser-weight structure, and QEC Zoo:
 
-| Code          | Identity                       | slug                       |
-| ------------- | ------------------------------ | -------------------------- |
-| `[[49,1,7]]`  | Rotated Surface Code (7×7)     | `rotated-surface-code-d-7` |
-| `[[81,1,9]]`  | Rotated Surface Code (9×9)     | `rotated-surface-code-d-9` |
-| `[[49,1,9]]`  | 4.8.8 Color Code (9×9)         | `49-1-9`                   |
-| `[[71,1,11]]` | 4.8.8 Color Code (11×11)       | `71-1-11`                  |
-| `[[47,1,11]]` | Quantum Quadratic-Residue Code | `47-1-11`                  |
+| Code          | Identity                       | slug / logical state             |
+| ------------- | ------------------------------ | -------------------------------- |
+| `[[49,1,7]]`  | Rotated Surface Code (7×7)     | `rotated-surface-code-d-7`, \|0⟩ |
+| `[[81,1,9]]`  | Rotated Surface Code (9×9)     | `rotated-surface-code-d-9`, \|0⟩ |
+| `[[49,1,9]]`  | 4.8.8 Color Code (9×9)         | `49-1-9`, \|0⟩                   |
+| `[[71,1,11]]` | 4.8.8 Color Code (11×11)       | `71-1-11`, \|0⟩                  |
+| `[[47,1,11]]` | Quantum Quadratic-Residue Code | `47-1-11`, \|0⟩                  |
+| `[[49,1,5]]`  | **Triorthogonal Code**         | `49-1-5`, **\|+⟩**               |
+| `[[95,1,7]]`  | **Triorthogonal Code**         | `95-1-7`, **\|+⟩**               |
 
-The remaining three — `[[20,2,6]]` (self-dual, 4.8.8-like weights but `k=2`),
-`[[49,1,5]]` and `[[95,1,7]]` (not self-dual, mixed weights) — have no name in
-the source repo or QEC Zoo, so they keep parameter names + `CSS`/`stabilizer`
-(and `self-dual` where applicable).
+Table I prepares **\|+⟩\_L** (not \|0⟩) for the two triorthogonal codes — verified
+here with `logical_state_of`, so those circuits are `FT plus` /
+`logical-state:plus`. Only `[[20,2,6]]` keeps a parameter name: Table I calls it
+just "self-dual" (no specific family), so it gets `CSS` + `self-dual`. As a
+fidelity check, every circuit's two-qubit-gate count matches Table I's CX column
+exactly (14/14).
 
 `[[63,45,4]]` is **out of scope** — the source repo has no stabiliser definition
 for it and a `k = 45` code can't be recovered from a single `|0⟩_L` circuit, so

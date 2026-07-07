@@ -50,6 +50,7 @@ TOOL = "flag-at-origin"
 ZOO_SURFACE = "https://errorcorrectionzoo.org/c/rotated_surface"
 ZOO_COLOR = "https://errorcorrectionzoo.org/c/488_color"
 ZOO_QR = "https://errorcorrectionzoo.org/c/galois_quad_residue"
+ZOO_TRIORTHOGONAL = "https://errorcorrectionzoo.org/c/triorthogonal"
 SURFACE_TAGS = ["CSS", "surface-code", "topological"]
 COLOR_TAGS = ["CSS", "self-dual", "color-code", "topological"]
 
@@ -77,6 +78,7 @@ class Spec:
     code_tags: list[str] = field(default_factory=lambda: ["CSS", "stabilizer"])
     code_slug: str = ""  # explicit slug for a new code (default: derived from name)
     zoo_url: str = ""  # QEC Zoo link for a new code
+    logical_state: str = "zero"  # "zero" (|0>_L / |0..0>_L) or "plus" (|+>_L)
     slug: str = ""  # stored slug for mode="perm"
     # Base-new codes whose [[n,k]] params collide with a stored code (a false
     # "uncertain" dedup — the canonical hashes differ). Variants stay False so
@@ -179,16 +181,21 @@ SPECS: list[Spec] = [
         "perm",
         slug="rotated-surface-code-d-5",
     ),
+    # [[49,1,5]] and [[95,1,7]] are triorthogonal codes and the paper prepares
+    # |+>_L for them (Table I), not |0>_L.
     Spec(
         "49-1-5-plus",
         "Code_[[49,1,5]]+.json",
         49,
         1,
         5,
-        "FT zero (flag at origin, variant +)",
+        "FT plus (flag at origin, variant +)",
         "std",
-        code_name="[[49,1,5]] Code",
+        code_name="Triorthogonal Code",
         code_slug="49-1-5",
+        code_tags=["CSS", "triorthogonal", "stabilizer"],
+        zoo_url=ZOO_TRIORTHOGONAL,
+        logical_state="plus",
         assume_new=True,
     ),
     Spec(
@@ -197,10 +204,13 @@ SPECS: list[Spec] = [
         49,
         1,
         5,
-        "FT zero (flag at origin, variant F)",
+        "FT plus (flag at origin, variant F)",
         "std",
-        code_name="[[49,1,5]] Code",
+        code_name="Triorthogonal Code",
         code_slug="49-1-5",
+        code_tags=["CSS", "triorthogonal", "stabilizer"],
+        zoo_url=ZOO_TRIORTHOGONAL,
+        logical_state="plus",
     ),
     Spec(  # 7x7 rotated surface code (paper comment "#7x7 surface")
         "49-1-7",
@@ -278,10 +288,13 @@ SPECS: list[Spec] = [
         95,
         1,
         7,
-        "FT zero (flag at origin)",
+        "FT plus (flag at origin)",
         "std",
-        code_name="[[95,1,7]] Code",
+        code_name="Triorthogonal Code",
         code_slug="95-1-7",
+        code_tags=["CSS", "triorthogonal", "stabilizer"],
+        zoo_url=ZOO_TRIORTHOGONAL,
+        logical_state="plus",
         assume_new=True,
     ),
 ]
@@ -318,13 +331,20 @@ def import_one(spec: Spec, zf: zipfile.ZipFile, write: bool, data_dir: str) -> s
     body, _ = prep_body(d, spec.n)
     # Conceptual note only; the pipeline appends source_file / logical_state /
     # connectivity / gate_set / flag qubits / permutation from the kwargs below.
+    ket = "+" if spec.logical_state == "plus" else "0"
     notes = (
-        "Fault-tolerant |0>_L preparation via the 'flag at origin' construction "
+        f"Fault-tolerant |{ket}>_L preparation via the 'flag at origin' construction "
         "(arXiv:2508.14200). Flag-verification measurements are included "
-        "(post-selection); the terminal logical-Z readout of the SPAM benchmark "
+        "(post-selection); the terminal data-qubit readout of the SPAM benchmark "
         "is not part of the prep."
     )
-    tags = ["state-preparation", "ft", "flag", "logical-state:zero", f"distance:{spec.d}"]
+    tags = [
+        "state-preparation",
+        "ft",
+        "flag",
+        f"logical-state:{spec.logical_state}",
+        f"distance:{spec.d}",
+    ]
     kw = dict(
         circuit=body,
         n=spec.n,
@@ -334,7 +354,7 @@ def import_one(spec: Spec, zf: zipfile.ZipFile, write: bool, data_dir: str) -> s
         source=SOURCE,
         tool=TOOL,
         source_file=f"Notebook_1/{spec.fname}",
-        logical_state="zero",
+        logical_state=spec.logical_state,
         connectivity="all-to-all",
         gate_set="CX,H,M",
         tags=tags,
