@@ -59,7 +59,13 @@ const OG_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" w
 const TARGETS = [
   // density scales librsvg's 72dpi rasterisation up to the target size (and
   // 2× beyond it for the og card, downscaled by resize for crisp text).
-  { file: "apple-touch-icon.png", svg: ICON_SVG, width: 180, height: 180, density: (72 * 180) / 64 },
+  {
+    file: "apple-touch-icon.png",
+    svg: ICON_SVG,
+    width: 180,
+    height: 180,
+    density: (72 * 180) / 64,
+  },
   { file: "og-card.png", svg: OG_SVG, width: 1200, height: 630, density: 144 },
 ];
 
