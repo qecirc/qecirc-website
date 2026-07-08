@@ -27,6 +27,11 @@ the source-of-truth `package.json` version.
 
 ### Changed
 
+- Filtering and sorting on the codes index and code pages now run client-side
+  over the rendered rows: filter changes apply instantly (no page reload) and
+  every visit shares one canonical cached document. The URL contract is
+  unchanged (old filter links still work, applied on load); `/api/download`
+  still parses the same params server-side.
 - Code pages no longer embed circuit bodies in the initial HTML; bodies load
   on first row expand via the new `/api/circuits/[qec_id]/bodies` endpoint.
   Largest page (`/codes/flag-gadgets`) drops from ~15 MB to ~3 MB HTML and
