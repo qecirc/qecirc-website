@@ -1,0 +1,63 @@
+---
+// Markup skeleton cloned client-side by circuit-bodies-client.ts when a
+// circuit row is first expanded on a code page. Rendered once per code page.
+// KEEP THE TAB / CODE-BLOCK MARKUP IN SYNC with FormatSwitcher.astro and
+// CodeBlock.astro (server-rendered on circuit detail pages).
+import { TAB_INACTIVE_CLASS } from "../lib/constants";
+
+const TAB_BASE_CLASS =
+  "format-tab px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors";
+---
+
+<template id="circuit-bodies-template">
+  <div class="format-switcher">
+    <div class="format-tabs flex gap-0.5 mb-2">
+      <button class={`${TAB_BASE_CLASS} ${TAB_INACTIVE_CLASS}`} data-format="">
+        <span class="tab-label"></span>
+        <kbd
+          class="ml-1.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-300 dark:border-gray-700 bg-white/60 dark:bg-gray-900/60 text-[10px] text-gray-400 dark:text-gray-500 font-mono"
+        ></kbd>
+      </button>
+    </div>
+    <div class="format-body" data-format="">
+      <div
+        class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden"
+        data-code-block
+      >
+        <div
+          class="border-b border-gray-200 dark:border-gray-800 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between"
+        >
+          <span class="block-label"></span>
+          <div class="flex items-center gap-3.5">
+            <button
+              class="download-btn flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
+              aria-label="Download file"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              </svg>
+              <span>Download</span>
+              <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+                d
+              </kbd>
+            </button>
+            <button
+              class="copy-btn flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
+              aria-label="Copy to clipboard"
+              title="Copy to clipboard (c)"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span class="copy-label">Copy</span>
+              <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+                c
+              </kbd>
+            </button>
+          </div>
+        </div>
+        <pre class="overflow-x-auto p-4 text-sm leading-relaxed"><code></code></pre>
+      </div>
+    </div>
+  </div>
+</template>

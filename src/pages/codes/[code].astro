@@ -5,6 +5,7 @@ import Layout from "../../components/Layout.astro";
 import TagList from "../../components/TagList.astro";
 import CircuitFilter from "../../components/CircuitFilter.astro";
 import CircuitRow from "../../components/CircuitRow.astro";
+import CircuitBodiesTemplate from "../../components/CircuitBodiesTemplate.astro";
 import CodeMatrices from "../../components/CodeMatrices.astro";
 import CollapsibleSection from "../../components/CollapsibleSection.astro";
 import HeartIcon from "../../components/HeartIcon.astro";
@@ -16,7 +17,8 @@ import {
   countCircuitsForCode,
   codeHasWeightedCircuits,
   getCircuitTagsForCode,
-  getCircuitsWithBodies,
+  getCircuitsForCode,
+  filterCircuitsForCode,
   getToolsForCircuits,
 } from "../../lib/queries";
 import { parseCircuitParams, circuitSortToggleUrl } from "../../lib/url";
@@ -41,7 +43,9 @@ const { raw, errors, tags: selectedTags, focus, filters, sort } = parseCircuitPa
 const hasFilters = hasActiveFilters(filters);
 const totalCount = countCircuitsForCode(code.id);
 const showWeight = codeHasWeightedCircuits(code.id);
-const { circuits, bodiesMap } = getCircuitsWithBodies(code.id, filters, sort);
+const circuits = hasFilters
+  ? filterCircuitsForCode(code.id, filters, sort)
+  : getCircuitsForCode(code.id, sort);
 const allCircuitTags = getCircuitTagsForCode(code.id);
 const toolsMap = getToolsForCircuits(circuits.map((c) => c.id));
 
@@ -227,11 +231,13 @@ const jsonLd = [
       </div>
       <div class="space-y-2">
         {circuits.map((circuit) => (
-          <CircuitRow circuit={circuit} bodies={bodiesMap.get(circuit.id) ?? []} tool={toolsMap.get(circuit.id)} codeSlug={codeSlug!} currentUrl={Astro.url} />
+          <CircuitRow circuit={circuit} tool={toolsMap.get(circuit.id)} codeSlug={codeSlug!} currentUrl={Astro.url} />
         ))}
       </div>
     </div>
   )}
+
+  <CircuitBodiesTemplate />
 </Layout>
 
 <script>
@@ -239,8 +245,10 @@ const jsonLd = [
   import { initListKeynav } from "../../lib/list-keynav-client";
   import { initCircuitActions } from "../../lib/circuit-actions-client";
   import { initBackKey } from "../../lib/back-key-client";
+  import { initCircuitBodies } from "../../lib/circuit-bodies-client";
 
   initBackKey("/");
+  initCircuitBodies();
 
   initListKeynav({
     rowSelector: "[data-list-row]",

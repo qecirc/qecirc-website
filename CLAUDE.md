@@ -110,7 +110,7 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 
 - Static pages: landing page, 404 (pre-rendered at build time)
 - SSR pages (`prerender = false`): all `/codes/...` and `/circuits/...` routes, `/api/search` (rendered on request, read from SQLite)
-- Client-side JS: search bar (debounced fetch), circuit row expand/collapse, format switching, favorites (toggle/filter/export/import), CodeBlock copy/download, filter input validation + auto-submit
+- Client-side JS: search bar (debounced fetch), circuit row expand/collapse, format switching, favorites (toggle/filter/export/import), CodeBlock copy/download, filter input validation + auto-submit, lazy-loaded circuit bodies on code pages (fetched from `/api/circuits/[qec_id]/bodies` on first row expand)
 
 This keeps the site fast and simple while scaling comfortably to thousands of circuits.
 

@@ -18,6 +18,10 @@ the source-of-truth `package.json` version.
 
 ### Changed
 
+- Code pages no longer embed circuit bodies in the initial HTML; bodies load
+  on first row expand via the new `/api/circuits/[qec_id]/bodies` endpoint.
+  Largest page (`/codes/flag-gadgets`) drops from ~15 MB to ~3 MB HTML and
+  from ~39k to ~20k DOM nodes.
 - **BREAKING:** `add_circuit()` matrix arguments (`Hx`, `Hz`, `H`, `n`) are now
   keyword-only. Migration: replace `add_circuit(Hx, Hz, circuit, name, d, ...)`
   with `add_circuit(circuit=circuit, circuit_name=name, d=d, Hx=Hx, Hz=Hz, ...)`.

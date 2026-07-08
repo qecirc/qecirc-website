@@ -43,6 +43,7 @@ if [ -z "$qec_id" ]; then
 else
   check "/circuits/$qec_id"        "<title"
   check "/api/circuits?ids=$qec_id" "qec_id"
+  check "/api/circuits/$qec_id/bodies" '"format":"stim"'
 fi
 
 # Search query path

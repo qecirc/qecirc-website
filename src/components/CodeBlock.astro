@@ -6,6 +6,9 @@ interface Props {
   source?: string;
 }
 
+// KEEP THE CODE-BLOCK MARKUP IN SYNC with CircuitBodiesTemplate.astro, which
+// is cloned client-side on code pages (this component renders only on
+// circuit detail pages).
 const { code, label, downloadName, source } = Astro.props;
 const lines = code.trimEnd().split("\n");
 const lineCount = lines.length;
