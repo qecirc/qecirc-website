@@ -42,7 +42,7 @@ export const GET: APIRoute = ({ url }) => {
       .filter(Boolean)
       .join(", "),
     tags: ci.tags,
-    href: `/codes/${ci.code_slug}#${ci.qec_id}`,
+    href: `/circuits/${ci.qec_id}`,
     subtitle: ci.code_name,
   }));
 
