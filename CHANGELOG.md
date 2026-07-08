@@ -7,6 +7,11 @@ the source-of-truth `package.json` version.
 
 ### Added
 
+- Edge caching: `s-maxage` raised from 10 minutes to 7 days (pages and API),
+  paired with an automatic Cloudflare purge-everything on each deploy
+  (`src/lib/cache-purge.ts`, activated by the `CLOUDFLARE_ZONE_ID` /
+  `CLOUDFLARE_API_TOKEN` env vars; logged no-op without them).
+
 - Social-share card: static `og:image` / `twitter:image` (1200×630, generated
   by `scripts/icons/generate.mjs`) on all pages; Twitter card upgraded to
   `summary_large_image`.

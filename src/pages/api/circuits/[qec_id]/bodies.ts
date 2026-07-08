@@ -19,7 +19,8 @@ export const GET: APIRoute = ({ params }) => {
       "Content-Type": "application/json",
       // qec_ids are permanent and never reused; body edits between deploys
       // tolerate <=1h of browser-cache staleness (matches originals.ts).
-      "Cache-Control": "public, max-age=3600",
+      // Edge holds for a week — every deploy purges (src/lib/cache-purge.ts).
+      "Cache-Control": "public, max-age=3600, s-maxage=604800",
     },
   });
 };
