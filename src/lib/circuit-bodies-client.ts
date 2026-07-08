@@ -162,4 +162,15 @@ export function initCircuitBodies(): void {
     const container = detail.querySelector<HTMLElement>(".circuit-bodies");
     if (container) void loadBodies(container, template);
   });
+
+  // A row may already be expanded before our listener registered: CircuitRow's
+  // expandFromHash dispatches circuit-expand during its own module init, and
+  // module execution order between component and page scripts isn't
+  // guaranteed. Load bodies for any already-expanded row now.
+  document
+    .querySelectorAll<HTMLElement>('.circuit-toggle[aria-expanded="true"] + .circuit-detail')
+    .forEach(function (detail) {
+      const container = detail.querySelector<HTMLElement>(".circuit-bodies");
+      if (container) void loadBodies(container, template);
+    });
 }
