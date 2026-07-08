@@ -42,7 +42,8 @@ export const GET: APIRoute = ({ params }) => {
     {
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=3600",
+        // Edge holds for a week — every deploy purges (src/lib/cache-purge.ts).
+        "Cache-Control": "public, max-age=3600, s-maxage=604800",
       },
     },
   );

@@ -34,7 +34,8 @@ export const GET: APIRoute = ({ params }) => {
         "Content-Type": "application/json",
         // The page passes ?v=<canonical_hash> as a cache key; when matrices
         // change between deploys the hash changes and the browser refetches.
-        "Cache-Control": "public, max-age=3600",
+        // Edge holds for a week — every deploy purges (src/lib/cache-purge.ts).
+        "Cache-Control": "public, max-age=3600, s-maxage=604800",
       },
     },
   );
