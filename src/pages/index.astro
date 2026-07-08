@@ -4,47 +4,55 @@ export const prerender = false;
 import Layout from "../components/Layout.astro";
 import CodeCard from "../components/CodeCard.astro";
 import CodeFilter from "../components/CodeFilter.astro";
-import { filterCodes, countAllCodes, hasActiveFilters, getTagsWithCount } from "../lib/queries";
-import { parseCodeParams } from "../lib/url";
+import { filterCodes, getTagsWithCount } from "../lib/queries";
 
-const { raw, errors, tags: selectedTags, focus: focusField, filters, sort } = parseCodeParams(Astro.url);
-
+// Filtering/sorting happens client-side (list-filter-client.ts): the page
+// always renders the full list in default order and ignores filter params,
+// so every visit shares one cached document.
 const allTags = getTagsWithCount("code");
-const active = hasActiveFilters(filters);
-const codes = filterCodes(filters, sort);
-const totalCount = active ? countAllCodes() : codes.length;
+const codes = filterCodes({});
+const totalCount = codes.length;
 ---
 
 <Layout title="Codes" description="Browse quantum error correction codes and circuits">
   <h1 class="text-2xl font-bold mb-6">Codes</h1>
 
-  <CodeFilter
-    rawN={raw.n} rawK={raw.k} rawD={raw.d}
-    errors={errors} hasFilters={active} focus={focusField}
-    allTags={allTags} selectedTags={selectedTags}
-    currentUrl={Astro.url}
-    sort={sort}
-  />
+  <CodeFilter allTags={allTags} />
 
-  <p class="text-sm text-gray-500 mb-4">
-    {active
-      ? `Showing ${codes.length} of ${totalCount} codes`
-      : `${totalCount} ${totalCount === 1 ? "code" : "codes"}`}
+  <p data-list-count class="text-sm text-gray-500 mb-4">
+    {totalCount} {totalCount === 1 ? "code" : "codes"}
   </p>
 
-  {codes.length === 0 ? (
-    <p class="text-gray-500">No codes match the current filters.</p>
-  ) : (
-    <div class="grid gap-4">
-      {codes.map((code) => (
-        <CodeCard code={code} baseUrl={Astro.url} />
-      ))}
-    </div>
-  )}
+  <div data-list-empty class="hidden text-center py-8">
+    <p class="text-gray-500 dark:text-gray-400 mb-2">No codes match the current filters.</p>
+    <a href="/" data-clear-filters class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
+  </div>
+
+  <div class="grid gap-4" data-list-container>
+    {codes.map((code) => (
+      <CodeCard code={code} />
+    ))}
+  </div>
 </Layout>
 
 <script>
+  import { initListFilter } from "../lib/list-filter-client";
   import { initListKeynav } from "../lib/list-keynav-client";
+
+  initListFilter({
+    formSelector: "#code-filter",
+    fields: ["n", "k", "d"],
+    rowSelector: "[data-filter-row]",
+    containerSelector: "[data-list-container]",
+    basePath: "/",
+    countSelector: "[data-list-count]",
+    formatCount: (visible, total, active) =>
+      active
+        ? `Showing ${visible} of ${total} codes`
+        : `${total} ${total === 1 ? "code" : "codes"}`,
+    emptyStateSelector: "[data-list-empty]",
+    defaultSort: { field: "n", dir: "asc" },
+  });
 
   initListKeynav({
     rowSelector: "[data-list-row]",

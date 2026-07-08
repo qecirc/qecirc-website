@@ -1,31 +1,28 @@
 ---
 import type { TagWithCount } from "../types";
-import { tagToggleUrl } from "../lib/url";
 import TagList from "./TagList.astro";
 
 /**
  * Tag filter block: a "Tags:" label plus category dropdown fields (grouped
  * view) or the flat all-tags cloud, with a persisted toggle between the two.
  * Callers pass the tags pre-grouped; empty groups are skipped here.
+ *
+ * Selected-state styling, the selected-count badges and the removable chips
+ * ([data-tag-chips]) are managed client-side by list-filter-client.ts —
+ * KEEP THE CLASS PAIRS THERE IN SYNC with the markup below.
  */
 interface Props {
   allTags: TagWithCount[];
-  selectedTags: string[];
-  currentUrl: URL;
   basePath: string;
   groups: { label: string; tags: TagWithCount[] }[];
   defaultView: "grouped" | "all";
   storageKey: string;
 }
 
-const { allTags, selectedTags, currentUrl, basePath, groups, defaultView, storageKey } =
-  Astro.props;
+const { allTags, basePath, groups, defaultView, storageKey } = Astro.props;
 
-const selectedSet = new Set(selectedTags);
-const tagUrl = (tag: string) => tagToggleUrl(currentUrl.search, selectedTags, tag, basePath);
+const tagUrl = (tag: string) => `${basePath}?tag=${encodeURIComponent(tag)}`;
 const tagGroups = groups.filter((g) => g.tags.length > 0);
-const selectedCount = (g: (typeof tagGroups)[number]) =>
-  g.tags.filter((t) => selectedSet.has(t.name)).length;
 ---
 
 {allTags.length > 0 && (
@@ -42,61 +39,38 @@ const selectedCount = (g: (typeof tagGroups)[number]) =>
       Tags:
     </span>
     <div data-tag-grouped class:list={["flex flex-wrap items-center gap-2", defaultView === "all" && "hidden"]}>
-      {tagGroups.map((g) => {
-        const nSelected = selectedCount(g);
-        return (
-          <details data-tag-dropdown class="relative">
-            <summary
-              class:list={[
-                "flex items-center gap-1.5 rounded px-2.5 py-1 text-xs cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden transition-colors",
-                nSelected > 0
-                  ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 font-semibold"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium",
-              ]}
-            >
-              {g.label}
-              {nSelected > 0 && <span>({nSelected})</span>}
-              <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M19 9l-7 7-7-7" />
-              </svg>
-            </summary>
-            <div data-tag-popover class="absolute left-0 top-full mt-1 z-20 min-w-max rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg p-1.5 flex flex-col gap-0.5">
-              {g.tags.map((t) => (
-                <a
-                  href={tagUrl(t.name)}
-                  class:list={[
-                    "flex items-center justify-between gap-4 rounded px-2 py-1 text-xs transition-colors",
-                    selectedSet.has(t.name)
-                      ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
-                  ]}
-                >
-                  {t.name}
-                  <span class:list={[selectedSet.has(t.name) ? "opacity-70" : "text-gray-400 dark:text-gray-500"]}>{t.count}</span>
-                </a>
-              ))}
-            </div>
-          </details>
-        );
-      })}
-      {selectedTags.map((tag) => (
-        <a
-          href={tagUrl(tag)}
-          class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 transition-colors"
-          title={`Remove tag filter "${tag}"`}
-        >
-          {tag}
-          <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </a>
+      {tagGroups.map((g) => (
+        <details data-tag-dropdown class="relative">
+          <summary
+            class="flex items-center gap-1.5 rounded px-2.5 py-1 text-xs cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden transition-colors bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium"
+          >
+            {g.label}
+            <span data-summary-count></span>
+            <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 9l-7 7-7-7" />
+            </svg>
+          </summary>
+          <div data-tag-popover class="absolute left-0 top-full mt-1 z-20 min-w-max rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg p-1.5 flex flex-col gap-0.5">
+            {g.tags.map((t) => (
+              <a
+                href={tagUrl(t.name)}
+                data-tag={t.name}
+                class="flex items-center justify-between gap-4 rounded px-2 py-1 text-xs transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                {t.name}
+                <span class="text-gray-400 dark:text-gray-500">{t.count}</span>
+              </a>
+            ))}
+          </div>
+        </details>
       ))}
+      <span data-tag-chips class="contents"></span>
       <button type="button" data-tag-view-toggle class="text-xs text-gray-400 dark:text-gray-500 underline hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
         all tags
       </button>
     </div>
     <div data-tag-cloud class:list={["min-w-0", defaultView !== "all" && "hidden"]}>
-      <TagList tags={allTags} selectedTags={selectedTags} showCount baseUrl={currentUrl} basePath={basePath}>
+      <TagList tags={allTags} showCount basePath={basePath}>
         <button type="button" data-tag-view-toggle class="text-xs text-gray-400 dark:text-gray-500 underline hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
           by category
         </button>

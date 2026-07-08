@@ -1,6 +1,5 @@
 ---
 import type { Circuit, Tool } from "../types";
-import { tagToggleUrl } from "../lib/url";
 import { formatCircuitId } from "../lib/queries";
 import { buildStimFilename } from "../lib/filename";
 import HeartIcon from "./HeartIcon.astro";
@@ -10,16 +9,22 @@ interface Props {
   circuit: Circuit & { tags: string[] };
   tool?: Tool;
   codeSlug: string;
-  currentUrl: URL;
 }
 
-const { circuit, tool, codeSlug, currentUrl } = Astro.props;
+const { circuit, tool, codeSlug } = Astro.props;
 
-const existingTags = currentUrl.searchParams.getAll("tag");
 const basePath = `/codes/${codeSlug}`;
-const tagUrl = (tag: string) => tagToggleUrl(currentUrl.search, existingTags, tag, basePath);
-const selectedTags = new Set(existingTags);
 const displayId = formatCircuitId(circuit.qec_id);
+
+// Row data consumed by list-filter-client.ts (client-side filtering/sorting).
+const rowMetrics = JSON.stringify({
+  gate_count: circuit.gate_count,
+  two_qubit_gate_count: circuit.two_qubit_gate_count,
+  depth: circuit.depth,
+  qubit_count: circuit.qubit_count,
+  weight: circuit.weight ?? null,
+});
+const rowTags = JSON.stringify(circuit.tags);
 const anchorId = String(circuit.qec_id);
 
 const stimFilename = buildStimFilename({
@@ -32,7 +37,14 @@ const stimFilename = buildStimFilename({
 });
 ---
 
-<div id={anchorId} class="rounded border border-gray-200 dark:border-gray-800">
+<div
+  id={anchorId}
+  class="rounded border border-gray-200 dark:border-gray-800"
+  data-filter-row
+  data-name={circuit.name}
+  data-metrics={rowMetrics}
+  data-tags={rowTags}
+>
   <div
     class="circuit-toggle w-full text-left px-4 py-3 grid items-center gap-x-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-inset"
     style="grid-template-columns: var(--circuit-grid);"
@@ -101,13 +113,9 @@ const stimFilename = buildStimFilename({
       <div class="flex flex-wrap gap-1 justify-end col-span-full mt-1.5 md:col-auto md:mt-0 md:justify-self-end">
         {circuit.tags.map((tag) => (
           <a
-            href={tagUrl(tag)}
-            class:list={[
-              "circuit-tag inline-block rounded px-1.5 py-0.5 text-xs transition-colors",
-              selectedTags.has(tag)
-                ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
-            ]}
+            href={`${basePath}?tag=${encodeURIComponent(tag)}`}
+            data-tag={tag}
+            class="circuit-tag inline-block rounded px-1.5 py-0.5 text-xs transition-colors bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
           >
             {tag}
           </a>

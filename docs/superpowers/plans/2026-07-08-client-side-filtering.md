@@ -17,6 +17,7 @@
 ### Task 1: Data attributes + shared client module
 
 **Files:**
+
 - Create: `src/lib/list-filter-client.ts`
 - Modify: `src/components/CircuitRow.astro` (outer `div[id]`: `data-metrics`, `data-tags`, `data-name`; tag links get `data-tag`)
 - Modify: `src/components/CodeCard.astro` (root: same three attrs)
@@ -34,6 +35,7 @@
 ### Task 2: Server simplification + wiring
 
 **Files:**
+
 - Modify: `src/pages/index.astro`, `src/pages/codes/[code].astro` (stop parsing filter/sort params; always full list, default order; init the module; JSON-LD ItemList always rendered, capped at 200)
 - Modify: `src/components/CodeFilter.astro`, `CircuitFilter.astro` (drop `raw*`/`errors`/`hasFilters`/`focus` props; empty inputs)
 - Modify: `src/lib/url.ts` (drop `focus` handling and now-unused sort-URL helpers as applicable; `parseCircuitParams` stays for `/api/download` with a sync comment)
@@ -48,6 +50,7 @@
 ### Task 3: Verification matrix (browser, programmatic via preview)
 
 Codes index (`/`):
+
 - [ ] Type `>10` in n → visible cards = cards with n>10 (computed from data attrs); URL has `n=%3E10`; Clear link appears; count label updates.
 - [ ] Comma-AND `>10,<30`; `!=7`; bare `7`; `>=`/`<=` forms — each matches data-attr computation.
 - [ ] Invalid input (`>>3`) → red ring + "Invalid filter"; rows unchanged; URL unchanged.
@@ -57,6 +60,7 @@ Codes index (`/`):
 - [ ] history.back() after several changes → prior state reapplied each step.
 
 Code page (`/codes/steane-code` + `/codes/flag-gadgets`):
+
 - [ ] Each metric filter incl. comma-AND; rows with NULL metric excluded when that field filtered.
 - [ ] Default view: 2Q label marked active-asc (parity with today).
 - [ ] Sort via filter-bar label AND via column header (G/2Q/D/Q) — same result, both indicators update; NULL metrics sort last in asc and desc.
