@@ -829,7 +829,7 @@ wheels = [
 
 [[package]]
 name = "qecirc-website"
-version = "0.4.10"
+version = "0.4.11"
 source = { virtual = "." }
 dependencies = [
     { name = "mqt-qecc" },

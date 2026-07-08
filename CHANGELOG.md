@@ -27,6 +27,8 @@ the source-of-truth `package.json` version.
 
 ### Changed
 
+- Circuit results in the search dropdown now link to the circuit's own page
+  (`/circuits/<id>`) instead of the anchored code list.
 - Filtering and sorting on the codes index and code pages now run client-side
   over the rendered rows: filter changes apply instantly (no page reload) and
   every visit shares one canonical cached document. The URL contract is
