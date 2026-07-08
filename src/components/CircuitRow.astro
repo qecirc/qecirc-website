@@ -1,21 +1,19 @@
 ---
-import type { Circuit, CircuitBody, Tool } from "../types";
+import type { Circuit, Tool } from "../types";
 import { tagToggleUrl } from "../lib/url";
 import { formatCircuitId } from "../lib/queries";
 import { buildStimFilename } from "../lib/filename";
-import FormatSwitcher from "./FormatSwitcher.astro";
 import HeartIcon from "./HeartIcon.astro";
 import MetricBadge from "./MetricBadge.astro";
 
 interface Props {
   circuit: Circuit & { tags: string[] };
-  bodies: CircuitBody[];
   tool?: Tool;
   codeSlug: string;
   currentUrl: URL;
 }
 
-const { circuit, bodies, tool, codeSlug, currentUrl } = Astro.props;
+const { circuit, tool, codeSlug, currentUrl } = Astro.props;
 
 const existingTags = currentUrl.searchParams.getAll("tag");
 const basePath = `/codes/${codeSlug}`;
@@ -181,7 +179,14 @@ const stimFilename = buildStimFilename({
         </div>
       )}
 
-      <FormatSwitcher bodies={bodies} stimFilename={stimFilename} source={circuit.source} />
+      <div
+        class="circuit-bodies"
+        data-qec-id={anchorId}
+        data-stim-filename={stimFilename}
+        data-source={circuit.source}
+      >
+        <p class="circuit-bodies-status text-sm text-gray-400">Loading circuit&hellip;</p>
+      </div>
     </div>
   </div>
 </div>
@@ -229,6 +234,8 @@ const stimFilename = buildStimFilename({
           chevron.classList.add("rotate-90");
           btn.setAttribute("aria-expanded", "true");
           history.replaceState(null, "", "#" + qecId);
+          // Signal circuit-bodies-client (code pages) to lazy-load bodies.
+          detail.dispatchEvent(new CustomEvent("circuit-expand", { bubbles: true }));
 
           // Notes toggle: check overflow after first expand
           const notesText = detail.querySelector(".notes-text") as HTMLElement;

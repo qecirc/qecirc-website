@@ -14,10 +14,10 @@ attribute. On top of that, each row carries ~13 kB of repeated static chrome
 
 Measured on `/codes/flag-gadgets` (354 circuits, 1000 bodies):
 
-| Metric | Value |
-| --- | --- |
-| HTML size | 15.2 MB (640 kB compressed in production) |
-| DOM nodes | 39,248 (~25× Lighthouse's "excessive DOM" threshold) |
+| Metric           | Value                                                     |
+| ---------------- | --------------------------------------------------------- |
+| HTML size        | 15.2 MB (640 kB compressed in production)                 |
+| DOM nodes        | 39,248 (~25× Lighthouse's "excessive DOM" threshold)      |
 | `domInteractive` | ~334 ms on fast desktop; est. 1.5–3 s on mid-range mobile |
 
 ## Goal
@@ -64,7 +64,7 @@ UX change beyond a brief "Loading circuit…" state on first expand.
   tool, Crumble/Quirk links, notes) and gains a placeholder:
 
   ```html
-  <div class="circuit-bodies" data-qec-id={...} data-stim-filename={...} data-source={...}>
+  <div class="circuit-bodies" data-qec-id="{...}" data-stim-filename="{...}" data-source="{...}">
     <p class="circuit-bodies-status text-sm text-gray-400">Loading circuit…</p>
   </div>
   ```
@@ -79,7 +79,7 @@ UX change beyond a brief "Loading circuit…" state on first expand.
 
 - New component `CircuitBodiesTemplate.astro`, rendered **once** per code
   page (from `codes/[code].astro`), containing a `<template
-  id="circuit-bodies-template">` with the FormatSwitcher + CodeBlock
+id="circuit-bodies-template">` with the FormatSwitcher + CodeBlock
   markup skeleton: tab bar (with kbd hints), and one format-body block
   (header with label, download button, copy button; empty `<pre><code>`).
   The client clones the format-body block per format and the tab button
@@ -121,7 +121,7 @@ Modeled on the `CodeMatrices` lazy-load script:
   - Calls `initFormatSwitchers(clonedRoot)` (it already accepts a root)
     to wire tab switching.
   - Re-syncs the collapse animation: `detail.style.maxHeight =
-    detail.scrollHeight + "px"` after insertion (and the existing
+detail.scrollHeight + "px"` after insertion (and the existing
     format-switcher client already re-syncs on tab clicks).
 
 ### 5. Keyboard shortcuts and existing behaviors
@@ -138,17 +138,17 @@ Modeled on the `CodeMatrices` lazy-load script:
 
 ## Files touched
 
-| File | Change |
-| --- | --- |
-| `src/pages/api/circuits/[qec_id]/bodies.ts` | new endpoint |
-| `src/lib/queries/circuits.ts` | add `getBodiesForCircuitByQecId`; remove `getCircuitsWithBodies` (its only caller was `codes/[code].astro`) |
-| `src/components/CircuitRow.astro` | remove FormatSwitcher/bodies, add placeholder |
-| `src/components/CircuitBodiesTemplate.astro` | new template component |
-| `src/lib/circuit-bodies-client.ts` | new client module |
-| `src/pages/codes/[code].astro` | drop bodiesMap, render template, init client module |
-| `src/components/FormatSwitcher.astro`, `CodeBlock.astro` | sync comments only |
-| `scripts/smoke.sh` | add bodies-endpoint check |
-| `package.json`, `pyproject.toml`, `uv.lock` | version bump 0.4.6 → 0.4.7 |
+| File                                                     | Change                                                                                          |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `src/pages/api/circuits/[qec_id]/bodies.ts`              | new endpoint                                                                                    |
+| `src/lib/queries/circuits.ts`                            | add `getBodiesForCircuitByQecId`; `getCircuitsWithBodies` stays (still used by `/api/download`) |
+| `src/components/CircuitRow.astro`                        | remove FormatSwitcher/bodies, add placeholder                                                   |
+| `src/components/CircuitBodiesTemplate.astro`             | new template component                                                                          |
+| `src/lib/circuit-bodies-client.ts`                       | new client module                                                                               |
+| `src/pages/codes/[code].astro`                           | drop bodiesMap, render template, init client module                                             |
+| `src/components/FormatSwitcher.astro`, `CodeBlock.astro` | sync comments only                                                                              |
+| `scripts/smoke.sh`                                       | add bodies-endpoint check                                                                       |
+| `package.json`, `pyproject.toml`, `uv.lock`              | version bump 0.4.6 → 0.4.7                                                                      |
 
 ## Testing & verification
 

@@ -17,6 +17,7 @@
 ### Task 1: Bodies API endpoint
 
 **Files:**
+
 - Modify: `scripts/smoke.sh` (add endpoint check)
 - Modify: `src/lib/queries/circuits.ts` (add query helper)
 - Modify: `src/lib/queries/index.ts` (export it)
@@ -45,8 +46,7 @@ In `src/lib/queries/circuits.ts`, add after `getBodiesForCircuits` (keep `getBod
 export function getBodiesForCircuitByQecId(qecId: number): CircuitBody[] {
   const db = getDb();
   const row = db.prepare("SELECT id FROM circuits WHERE qec_id = ?").get(qecId) as
-    | { id: number }
-    | undefined;
+    { id: number } | undefined;
   if (!row) return [];
   return getBodiesForCircuits([row.id]).get(row.id) ?? [];
 }
@@ -92,6 +92,7 @@ Run: `./scripts/smoke.sh`
 Expected: all checks `OK`, including `OK   /api/circuits/<id>/bodies`.
 
 Also verify edge cases:
+
 - `curl -s -o /dev/null -w "%{http_code}" http://localhost:4321/api/circuits/999999/bodies` → `404`
 - `curl -s -o /dev/null -w "%{http_code}" http://localhost:4321/api/circuits/abc/bodies` → `400`
 
@@ -109,6 +110,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ### Task 2: Template component + client module (inert until Task 3 wires them up)
 
 **Files:**
+
 - Create: `src/components/CircuitBodiesTemplate.astro`
 - Create: `src/lib/circuit-bodies-client.ts`
 
@@ -213,9 +215,7 @@ const loaded = new WeakSet<HTMLElement>();
 function lineNumbered(code: string): string {
   const lines = code.trimEnd().split("\n");
   const gutterWidth = String(lines.length).length;
-  return lines
-    .map((line, i) => `${String(i + 1).padStart(gutterWidth, " ")}  ${line}`)
-    .join("\n");
+  return lines.map((line, i) => `${String(i + 1).padStart(gutterWidth, " ")}  ${line}`).join("\n");
 }
 
 /** Same cite-toast behavior as CodeBlock.astro's copy/download handlers. */
@@ -226,9 +226,7 @@ function citeNotice(source: string): void {
   } else if (source) {
     window.showCiteToast("Please cite the source when using this circuit: " + source);
   } else {
-    window.showCiteToast(
-      "Please check and cite the corresponding source when using this circuit.",
-    );
+    window.showCiteToast("Please check and cite the corresponding source when using this circuit.");
   }
 }
 
@@ -275,9 +273,7 @@ function buildSwitcher(
 
     const downloadBtn = bodyEl.querySelector<HTMLElement>(".download-btn");
     if (downloadBtn) {
-      const downloadName = stimFilename
-        ? stimFilename.replace(/\.stim$/, `.${entry.format}`)
-        : "";
+      const downloadName = stimFilename ? stimFilename.replace(/\.stim$/, `.${entry.format}`) : "";
       if (downloadName) {
         downloadBtn.title = `Download ${downloadName} (d)`;
         downloadBtn.addEventListener("click", function () {
@@ -330,10 +326,7 @@ function syncDetailHeight(container: HTMLElement): void {
   }
 }
 
-async function loadBodies(
-  container: HTMLElement,
-  template: HTMLTemplateElement,
-): Promise<void> {
+async function loadBodies(container: HTMLElement, template: HTMLTemplateElement): Promise<void> {
   if (loaded.has(container)) return;
   loaded.add(container);
   const qecId = container.dataset.qecId;
@@ -352,9 +345,7 @@ async function loadBodies(
 }
 
 export function initCircuitBodies(): void {
-  const template = document.getElementById(
-    "circuit-bodies-template",
-  ) as HTMLTemplateElement | null;
+  const template = document.getElementById("circuit-bodies-template") as HTMLTemplateElement | null;
   if (!template) return;
 
   document.addEventListener("circuit-expand", function (e) {
@@ -384,6 +375,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ### Task 3: Wire up — CircuitRow placeholder, event dispatch, code page
 
 **Files:**
+
 - Modify: `src/components/CircuitRow.astro`
 - Modify: `src/pages/codes/[code].astro`
 - Modify: `src/lib/queries/circuits.ts` (remove `getCircuitsWithBodies`)
@@ -399,6 +391,7 @@ In `src/components/CircuitRow.astro`:
 ```ts
 import type { Circuit, Tool } from "../types";
 ```
+
 ```ts
 interface Props {
   circuit: Circuit & { tags: string[] };
@@ -426,8 +419,8 @@ const { circuit, tool, codeSlug, currentUrl } = Astro.props;
 3. In the `<script>`, in the expand branch of the toggle click handler, add the event dispatch directly after `history.replaceState(null, "", "#" + qecId);`:
 
 ```ts
-          // Signal circuit-bodies-client (code pages) to lazy-load bodies.
-          detail.dispatchEvent(new CustomEvent("circuit-expand", { bubbles: true }));
+// Signal circuit-bodies-client (code pages) to lazy-load bodies.
+detail.dispatchEvent(new CustomEvent("circuit-expand", { bubbles: true }));
 ```
 
 - [ ] **Step 2: Code page — drop bodiesMap, render template, init client**
@@ -558,8 +551,10 @@ curl -s -o /dev/null -w "flag-gadgets: %{size_download} bytes\n" http://localhos
 In the browser console on `/codes/flag-gadgets`:
 
 ```js
-({ nodes: document.getElementsByTagName("*").length,
-   interactive: Math.round(performance.getEntriesByType("navigation")[0].domInteractive) })
+({
+  nodes: document.getElementsByTagName("*").length,
+  interactive: Math.round(performance.getEntriesByType("navigation")[0].domInteractive),
+});
 ```
 
 Expected: ~1–2 MB (was 15.2 MB), roughly 9k nodes (was 39,248). Record actual numbers for the PR description.
@@ -569,6 +564,7 @@ Expected: ~1–2 MB (was 15.2 MB), roughly 9k nodes (was 39,248). Record actual 
 ### Task 5: Housekeeping — changelog, version bump, docs
 
 **Files:**
+
 - Modify: `CHANGELOG.md`
 - Modify: `package.json`, `pyproject.toml`, `uv.lock`, `package-lock.json`
 - Modify: `CLAUDE.md`

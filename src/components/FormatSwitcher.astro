@@ -3,6 +3,10 @@ import type { CircuitBody } from "../types";
 import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "../lib/constants";
 import CodeBlock from "./CodeBlock.astro";
 
+// KEEP THE TAB MARKUP IN SYNC with CircuitBodiesTemplate.astro, which is
+// cloned client-side on code pages (this component renders only on circuit
+// detail pages).
+
 interface Props {
   bodies: CircuitBody[];
   stimFilename?: string;

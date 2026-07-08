@@ -147,8 +147,7 @@ export function getBodiesForCircuits(circuitIds: number[]): Map<number, CircuitB
 export function getBodiesForCircuitByQecId(qecId: number): CircuitBody[] {
   const db = getDb();
   const row = db.prepare("SELECT id FROM circuits WHERE qec_id = ?").get(qecId) as
-    | { id: number }
-    | undefined;
+    { id: number } | undefined;
   if (!row) return [];
   return getBodiesForCircuits([row.id]).get(row.id) ?? [];
 }

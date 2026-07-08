@@ -24,9 +24,7 @@ const loaded = new WeakSet<HTMLElement>();
 function lineNumbered(code: string): string {
   const lines = code.trimEnd().split("\n");
   const gutterWidth = String(lines.length).length;
-  return lines
-    .map((line, i) => `${String(i + 1).padStart(gutterWidth, " ")}  ${line}`)
-    .join("\n");
+  return lines.map((line, i) => `${String(i + 1).padStart(gutterWidth, " ")}  ${line}`).join("\n");
 }
 
 /** Same cite-toast behavior as CodeBlock.astro's copy/download handlers. */
@@ -37,9 +35,7 @@ function citeNotice(source: string): void {
   } else if (source) {
     window.showCiteToast("Please cite the source when using this circuit: " + source);
   } else {
-    window.showCiteToast(
-      "Please check and cite the corresponding source when using this circuit.",
-    );
+    window.showCiteToast("Please check and cite the corresponding source when using this circuit.");
   }
 }
 
@@ -86,9 +82,7 @@ function buildSwitcher(
 
     const downloadBtn = bodyEl.querySelector<HTMLElement>(".download-btn");
     if (downloadBtn) {
-      const downloadName = stimFilename
-        ? stimFilename.replace(/\.stim$/, `.${entry.format}`)
-        : "";
+      const downloadName = stimFilename ? stimFilename.replace(/\.stim$/, `.${entry.format}`) : "";
       if (downloadName) {
         downloadBtn.title = `Download ${downloadName} (d)`;
         downloadBtn.addEventListener("click", function () {
@@ -141,10 +135,7 @@ function syncDetailHeight(container: HTMLElement): void {
   }
 }
 
-async function loadBodies(
-  container: HTMLElement,
-  template: HTMLTemplateElement,
-): Promise<void> {
+async function loadBodies(container: HTMLElement, template: HTMLTemplateElement): Promise<void> {
   if (loaded.has(container)) return;
   loaded.add(container);
   const qecId = container.dataset.qecId;
@@ -163,9 +154,7 @@ async function loadBodies(
 }
 
 export function initCircuitBodies(): void {
-  const template = document.getElementById(
-    "circuit-bodies-template",
-  ) as HTMLTemplateElement | null;
+  const template = document.getElementById("circuit-bodies-template") as HTMLTemplateElement | null;
   if (!template) return;
 
   document.addEventListener("circuit-expand", function (e) {
