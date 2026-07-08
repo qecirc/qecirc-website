@@ -1,43 +1,40 @@
 ---
-import type { TagWithCount, CodeSort, CodeSortField } from "../types";
-import { codeSortToggleUrl } from "../lib/url";
+import type { TagWithCount, CodeSortField } from "../types";
 import { CODE_TAG_CATEGORIES, categorizeCodeTag } from "../lib/tag-categories";
 import TagFilterDropdowns from "./TagFilterDropdowns.astro";
 
+// Filtering/sorting runs client-side (list-filter-client.ts, initialised by
+// the page). Inputs render empty and sort labels render the default state;
+// the client fills both from the URL on load. KEEP THE SORT-LABEL CLASS
+// PAIRS IN SYNC with SORT_LABEL_ACTIVE/INACTIVE in list-filter-client.ts.
 interface Props {
-  rawN: string;
-  rawK: string;
-  rawD: string;
-  errors: { n: boolean; k: boolean; d: boolean };
-  hasFilters: boolean;
-  focus: string;
   allTags: TagWithCount[];
-  selectedTags: string[];
-  currentUrl: URL;
-  sort: CodeSort;
 }
 
-const { rawN, rawK, rawD, errors, hasFilters, focus, allTags, selectedTags, currentUrl, sort } = Astro.props;
-const anyError = errors.n || errors.k || errors.d;
-function inputClass(hasError: boolean): string {
-  const base = "w-24 px-2 py-1 text-sm focus:outline-none bg-transparent";
-  return hasError ? `${base} ring-1 ring-red-300` : base;
-}
+const { allTags } = Astro.props;
+
+// Matches the server's default ordering (buildCodeOrderBy: n, k, d, name).
+const DEFAULT_SORT_FIELD: CodeSortField = "n";
+
+const INPUT_CLASS = "w-24 px-2 py-1 text-sm focus:outline-none bg-transparent";
 
 function labelInfo(field: CodeSortField) {
-  const isActive = sort.field === field;
-  const arrow = isActive ? (sort.dir === "desc" ? "▼" : "▲") : "";
-  const cls = isActive
-    ? "text-amber-600 dark:text-amber-400 font-semibold cursor-pointer"
-    : "text-gray-600 dark:text-gray-400 font-medium hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer";
-  return { arrow, cls };
+  const isActive = field === DEFAULT_SORT_FIELD;
+  return {
+    arrow: isActive ? "▲" : "",
+    cls: isActive
+      ? "text-amber-600 dark:text-amber-400 font-semibold cursor-pointer"
+      : "text-gray-600 dark:text-gray-400 font-medium hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer",
+  };
 }
 
-const sortToggleUrl = (field: CodeSortField) => codeSortToggleUrl(currentUrl, sort, field, "/");
+const sortHref = (field: CodeSortField) => `/?sort=${field}&sort_dir=asc`;
 
-const nSort = labelInfo("n");
-const kSort = labelInfo("k");
-const dSort = labelInfo("d");
+const FIELDS: { field: CodeSortField; placeholder: string }[] = [
+  { field: "n", placeholder: ">3,<10" },
+  { field: "k", placeholder: ">=2" },
+  { field: "d", placeholder: "!=5" },
+];
 
 const tagGroups = CODE_TAG_CATEGORIES.map((c) => ({
   label: c.label,
@@ -45,59 +42,40 @@ const tagGroups = CODE_TAG_CATEGORIES.map((c) => ({
 }));
 ---
 
-<form id="code-filter" method="GET" action="/" class="mb-6 space-y-2"
-  data-filter-fields="n,k,d" data-filter-focus={focus} data-base-path="/" data-preserve-sort>
+<form id="code-filter" method="GET" action="/" class="mb-6 space-y-2">
   <div class="flex flex-wrap items-center gap-3">
-    <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
-      <a href={sortToggleUrl("n")} class={`px-1 py-0.5 text-xs transition-colors ${nSort.cls}`} title="Click to sort by n">
-        n{nSort.arrow && <span class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{nSort.arrow}</span>}
-      </a>
-      <input id="filter-n" type="text" name="n" value={rawN} class={inputClass(errors.n)} placeholder=">3,<10" aria-label="Filter by n" data-filter />
-    </div>
-    <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
-      <a href={sortToggleUrl("k")} class={`px-1 py-0.5 text-xs transition-colors ${kSort.cls}`} title="Click to sort by k">
-        k{kSort.arrow && <span class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{kSort.arrow}</span>}
-      </a>
-      <input id="filter-k" type="text" name="k" value={rawK} class={inputClass(errors.k)} placeholder=">=2" aria-label="Filter by k" data-filter />
-    </div>
-    <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
-      <a href={sortToggleUrl("d")} class={`px-1 py-0.5 text-xs transition-colors ${dSort.cls}`} title="Click to sort by d">
-        d{dSort.arrow && <span class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{dSort.arrow}</span>}
-      </a>
-      <input id="filter-d" type="text" name="d" value={rawD} class={inputClass(errors.d)} placeholder="!=5" aria-label="Filter by d" data-filter />
-    </div>
+    {FIELDS.map(({ field, placeholder }) => {
+      const info = labelInfo(field);
+      return (
+        <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
+          <a href={sortHref(field)} data-sort-field={field} class={`px-1 py-0.5 text-xs transition-colors ${info.cls}`} title={`Click to sort by ${field}`}>
+            {field}<span data-sort-arrow class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{info.arrow}</span>
+          </a>
+          <input id={`filter-${field}`} type="text" name={field} class={INPUT_CLASS} placeholder={placeholder} aria-label={`Filter by ${field}`} data-filter />
+        </div>
+      );
+    })}
     <div class="text-xs" data-filter-status>
-      {anyError ? (
-        <span data-filter-error class="text-red-500">Invalid filter</span>
-      ) : hasFilters && (
-        <a
-          href="/"
-          class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
-          title="Clear all active filters"
-        >
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 18L18 6M6 6l12 12" />
-          </svg>
-          Clear filters
-        </a>
-      )}
-      {!anyError && <span data-filter-error class="text-red-500 hidden">Invalid filter</span>}
+      <span data-filter-error class="text-red-500 hidden">Invalid filter</span>
+      <a
+        href="/"
+        data-clear-filters
+        class="hidden inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
+        title="Clear all active filters"
+      >
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Clear filters
+      </a>
     </div>
   </div>
 
   <TagFilterDropdowns
     allTags={allTags}
-    selectedTags={selectedTags}
-    currentUrl={currentUrl}
     basePath="/"
     groups={tagGroups}
     defaultView="all"
     storageKey="qecirc:code-tag-view"
   />
 </form>
-
-<script>
-  import { initFilterForm } from "../lib/filter-client";
-  const form = document.getElementById("code-filter") as HTMLFormElement;
-  if (form) initFilterForm(form);
-</script>

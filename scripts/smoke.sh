@@ -33,6 +33,16 @@ if [ -z "$slug" ]; then
   echo "FAIL: no code slug found in sitemap"; fail=1
 else
   check "/codes/$slug" "<title"
+  # Filtering is client-side: the server must ignore filter params and render
+  # the same rows for a filtered URL as for the canonical page.
+  canonical_rows=$(curl -fsS "$BASE/codes/$slug" | grep -o "circuit-bodies-status" | wc -l | tr -d " ")
+  filtered_rows=$(curl -fsS "$BASE/codes/$slug?gate_count=%3E999999" | grep -o "circuit-bodies-status" | wc -l | tr -d " ")
+  if [ "$canonical_rows" = "$filtered_rows" ] && [ "$canonical_rows" != "0" ]; then
+    echo "OK   /codes/$slug (server ignores filter params, $canonical_rows rows)"
+  else
+    echo "FAIL /codes/$slug: filtered rows ($filtered_rows) != canonical ($canonical_rows)"; fail=1
+  fi
+  check "/?n=%3E9999" "<title"
 fi
 
 # Discover a circuit qec_id by probing /api/circuits?ids=1..10

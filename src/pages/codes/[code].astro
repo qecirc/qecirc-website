@@ -13,15 +13,12 @@ import {
   getCodeBySlug,
   getTagsFor,
   formatCodeParams,
-  hasActiveFilters,
-  countCircuitsForCode,
   codeHasWeightedCircuits,
   getCircuitTagsForCode,
   getCircuitsForCode,
-  filterCircuitsForCode,
   getToolsForCircuits,
 } from "../../lib/queries";
-import { parseCircuitParams, circuitSortToggleUrl } from "../../lib/url";
+import type { CircuitSort, CircuitSortField } from "../../types";
 
 const { code: codeSlug } = Astro.params;
 const code = getCodeBySlug(codeSlug!);
@@ -37,25 +34,23 @@ const matricesUrl = code.canonical_hash
   ? `/api/codes/${codeSlug}/matrices?v=${code.canonical_hash}`
   : `/api/codes/${codeSlug}/matrices`;
 
-// Parse circuit filter and sort params
-const { raw, errors, tags: selectedTags, focus, filters, sort } = parseCircuitParams(Astro.url);
+// Filtering/sorting happens client-side (list-filter-client.ts): the page
+// always renders the full list in the default order and ignores filter
+// params, so every visit shares one cached document. The default sort must
+// match list-filter-client's defaultSort config below.
+const DEFAULT_SORT: CircuitSort = { field: "two_qubit_gate_count", dir: "asc" };
 
-const hasFilters = hasActiveFilters(filters);
-const totalCount = countCircuitsForCode(code.id);
 const showWeight = codeHasWeightedCircuits(code.id);
-const circuits = hasFilters
-  ? filterCircuitsForCode(code.id, filters, sort)
-  : getCircuitsForCode(code.id, sort);
+const circuits = getCircuitsForCode(code.id, DEFAULT_SORT);
+const totalCount = circuits.length;
 const allCircuitTags = getCircuitTagsForCode(code.id);
 const toolsMap = getToolsForCircuits(circuits.map((c) => c.id));
 
-const countLabel = hasFilters
-  ? `${circuits.length} of ${totalCount} circuit${totalCount !== 1 ? "s" : ""}`
-  : `${totalCount} circuit${totalCount !== 1 ? "s" : ""}`;
+const countLabel = `${totalCount} circuit${totalCount !== 1 ? "s" : ""}`;
 
 const basePath = `/codes/${codeSlug}`;
-const sortHref = (field: "gate_count" | "two_qubit_gate_count" | "depth" | "qubit_count") =>
-  circuitSortToggleUrl(Astro.url, sort, field, basePath);
+// Standalone sort hrefs; clicks are intercepted client-side.
+const sortHref = (field: CircuitSortField) => `${basePath}?sort=${field}&sort_dir=asc`;
 
 const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
 const pageUrl = `${siteUrl}/codes/${codeSlug}`;
@@ -76,20 +71,18 @@ const collection: Record<string, unknown> = {
     ...(code.zoo_url ? { sameAs: code.zoo_url } : {}),
   },
 };
-// Enumerate circuits only on the canonical (unfiltered) view — the canonical
-// URL drops the query string, so a filtered subset would misrepresent it.
-if (!hasFilters) {
-  collection.mainEntity = {
-    "@type": "ItemList",
-    numberOfItems: totalCount,
-    itemListElement: circuits.map((c, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: c.name,
-      url: `${siteUrl}/circuits/${c.qec_id}`,
-    })),
-  };
-}
+// The page is always the canonical full list (filtering is client-side).
+// Cap the enumeration to bound head size; numberOfItems keeps the true total.
+collection.mainEntity = {
+  "@type": "ItemList",
+  numberOfItems: totalCount,
+  itemListElement: circuits.slice(0, 200).map((c, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: c.name,
+    url: `${siteUrl}/circuits/${c.qec_id}`,
+  })),
+};
 const jsonLd = [
   collection,
   {
@@ -166,7 +159,7 @@ const jsonLd = [
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
           </svg>
-          <span>{countLabel}</span>
+          <span data-list-count>{countLabel}</span>
           <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
             ⇧D
           </kbd>
@@ -191,27 +184,11 @@ const jsonLd = [
     </div>
   </div>
 
-  <CircuitFilter
-    rawGateCount={raw.gate_count}
-    rawTwoQubitGateCount={raw.two_qubit_gate_count}
-    rawDepth={raw.depth}
-    rawQubitCount={raw.qubit_count}
-    rawWeight={raw.weight}
-    showWeight={showWeight}
-    errors={errors}
-    hasFilters={hasFilters}
-    focus={focus}
-    allTags={allCircuitTags}
-    selectedTags={selectedTags}
-    currentUrl={Astro.url}
-    codeSlug={codeSlug!}
-    sort={sort}
-  />
+  <CircuitFilter showWeight={showWeight} allTags={allCircuitTags} codeSlug={codeSlug!} />
 
   {circuits.length === 0 ? (
     <div class="text-center py-8">
-      <p class="text-gray-500 dark:text-gray-400 mb-2">No circuits match your filters.</p>
-      <a href={`/codes/${codeSlug}`} class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
+      <p class="text-gray-500 dark:text-gray-400 mb-2">No circuits yet for this code.</p>
     </div>
   ) : (
     <div>
@@ -222,16 +199,20 @@ const jsonLd = [
         <span></span>
         <span></span>
         <span></span>
-        <a href={sortHref("gate_count")} class:list={["text-center hover:text-gray-900 dark:hover:text-gray-100", sort.field === "gate_count" && "text-amber-600 dark:text-amber-400"]} title="Gate count — click to sort">G</a>
-        <a href={sortHref("two_qubit_gate_count")} class:list={["text-center hover:text-gray-900 dark:hover:text-gray-100", sort.field === "two_qubit_gate_count" && "text-amber-600 dark:text-amber-400"]} title="Two-qubit gate count — click to sort">2Q</a>
-        <a href={sortHref("depth")} class:list={["text-center hover:text-gray-900 dark:hover:text-gray-100", sort.field === "depth" && "text-amber-600 dark:text-amber-400"]} title="Circuit depth — click to sort">D</a>
-        <a href={sortHref("qubit_count")} class:list={["text-center hover:text-gray-900 dark:hover:text-gray-100", sort.field === "qubit_count" && "text-amber-600 dark:text-amber-400"]} title="Qubit count — click to sort">Q</a>
+        <a href={sortHref("gate_count")} data-sort-field="gate_count" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100" title="Gate count — click to sort">G</a>
+        <a href={sortHref("two_qubit_gate_count")} data-sort-field="two_qubit_gate_count" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100 text-amber-600 dark:text-amber-400" title="Two-qubit gate count — click to sort">2Q</a>
+        <a href={sortHref("depth")} data-sort-field="depth" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100" title="Circuit depth — click to sort">D</a>
+        <a href={sortHref("qubit_count")} data-sort-field="qubit_count" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100" title="Qubit count — click to sort">Q</a>
         <span></span>
         <span>Name</span>
       </div>
-      <div class="space-y-2">
+      <div data-list-empty class="hidden text-center py-8">
+        <p class="text-gray-500 dark:text-gray-400 mb-2">No circuits match your filters.</p>
+        <a href={basePath} data-clear-filters class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
+      </div>
+      <div class="space-y-2" data-list-container>
         {circuits.map((circuit) => (
-          <CircuitRow circuit={circuit} tool={toolsMap.get(circuit.id)} codeSlug={codeSlug!} currentUrl={Astro.url} />
+          <CircuitRow circuit={circuit} tool={toolsMap.get(circuit.id)} codeSlug={codeSlug!} />
         ))}
       </div>
     </div>
@@ -243,12 +224,32 @@ const jsonLd = [
 <script>
   import { getFavorites } from "../../lib/favorites-client";
   import { initListKeynav } from "../../lib/list-keynav-client";
+  import { initListFilter } from "../../lib/list-filter-client";
   import { initCircuitActions } from "../../lib/circuit-actions-client";
   import { initBackKey } from "../../lib/back-key-client";
   import { initCircuitBodies } from "../../lib/circuit-bodies-client";
 
   initBackKey("/");
   initCircuitBodies();
+
+  // Client-side filtering/sorting; must run before keynav so its initial
+  // focus lands on a visible row. defaultSort mirrors the page's SSR order.
+  initListFilter({
+    formSelector: "#circuit-filter",
+    // `weight` filters from the URL even on codes without a weight input,
+    // matching the previous server behavior.
+    fields: ["gate_count", "two_qubit_gate_count", "depth", "qubit_count", "weight"],
+    rowSelector: "[data-filter-row]",
+    containerSelector: "[data-list-container]",
+    basePath: window.location.pathname,
+    countSelector: "[data-list-count]",
+    formatCount: (visible, total, active) =>
+      active
+        ? `${visible} of ${total} circuit${total !== 1 ? "s" : ""}`
+        : `${total} circuit${total !== 1 ? "s" : ""}`,
+    emptyStateSelector: "[data-list-empty]",
+    defaultSort: { field: "two_qubit_gate_count", dir: "asc" },
+  });
 
   initListKeynav({
     rowSelector: "[data-list-row]",

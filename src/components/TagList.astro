@@ -41,6 +41,7 @@ function tagCount(tag: string | TagWithCount): number | undefined {
       return (
         <a
           href={tagUrl(name)}
+          data-tag={name}
           class:list={[
             "inline-block rounded px-1.5 py-0.5 text-xs transition-colors",
             selectedSet && isSelected
