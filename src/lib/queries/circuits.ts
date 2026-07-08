@@ -142,6 +142,17 @@ export function getBodiesForCircuits(circuitIds: number[]): Map<number, CircuitB
   return result;
 }
 
+/** Bodies for a single circuit looked up by its public qec_id, in preferred
+ * format order. Returns [] when the circuit doesn't exist. */
+export function getBodiesForCircuitByQecId(qecId: number): CircuitBody[] {
+  const db = getDb();
+  const row = db.prepare("SELECT id FROM circuits WHERE qec_id = ?").get(qecId) as
+    | { id: number }
+    | undefined;
+  if (!row) return [];
+  return getBodiesForCircuits([row.id]).get(row.id) ?? [];
+}
+
 export function getCircuitByQecId(
   qecId: number,
 ): (Circuit & { tags: string[]; code_slug: string; code_name: string }) | null {

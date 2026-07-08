@@ -10,6 +10,7 @@ export {
   filterCircuitsForCode,
   getCircuitsWithBodies,
   getBodiesForCircuits,
+  getBodiesForCircuitByQecId,
   getCircuitByQecId,
   getCircuitsByQecIds,
   getAllCircuitQecIds,
