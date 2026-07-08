@@ -7,6 +7,10 @@ the source-of-truth `package.json` version.
 
 ### Added
 
+- Social-share card: static `og:image` / `twitter:image` (1200×630, generated
+  by `scripts/icons/generate.mjs`) on all pages; Twitter card upgraded to
+  `summary_large_image`.
+
 - Non-CSS stabilizer code support throughout the pipeline (symplectic representation).
   Submit codes via `add_circuit(H=..., n=...)` for non-CSS, or the existing
   `Hx`/`Hz` path for CSS.
