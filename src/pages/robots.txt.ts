@@ -11,6 +11,9 @@ Allow: /
 User-agent: Amazonbot
 Disallow: /
 
+User-agent: Amzn-SearchBot
+Disallow: /
+
 User-agent: Applebot-Extended
 Disallow: /
 
