@@ -1,0 +1,16 @@
+qec_id: 1010
+name: Direct zero prep
+notes: "Unitary 'stabilizer-expanding' preparation of |0>_L (gates act directly
+  between data qubits, needing next-nearest-neighbour links). Partially fault-tolerant:
+  fault distance = d=5 for X errors, bounded for Z. Source file: clean_circuits/rotated_surface_code/unitary_encoding_without_ancilla/Z/unitary_encoding_Z_L5_without_ancilla.stim.
+  Logical state: zero. Connectivity: 2d-grid. Gate set: CX,H. Canonicalization qubit
+  permutation (stored qubit i = original qubit permutation[i]): [18, 8, 3, 22, 12,
+  1, 16, 6, 2, 7, 13, 21, 10, 15, 20, 0, 5, 24, 19, 9, 14, 4, 11, 17, 23]"
+source: https://arxiv.org/abs/2601.05113
+gate_count: 40
+two_qubit_gate_count: 28
+depth: 12
+qubit_count: 25
+crumble_url: https://algassert.com/crumble#circuit=H_5_22_11_3_4_8_2_10_24_17_20_21;TICK;CX_5_7_22_6;TICK;CX_5_16_22_13;TICK;CX_5_15_22_12_11_14;TICK;CX_3_23_4_9;TICK;CX_3_6_4_7;TICK;CX_3_11_4_22_8_5;TICK;CX_2_1_10_0;TICK;CX_2_9_10_23;TICK;CX_2_8_10_4_24_3;TICK;CX_17_18_20_19;TICK;CX_17_0_20_1;TICK;CX_17_24_20_10_21_2;TICK_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"H","H","H","H",1,1,"H",1,"H","H",1,1,1,1,1,"H",1,1,"H","H","H",1,"H"],[1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,"X"],[1,1,1,"•",1,1,"X"],[1,1,1,1,"•",1,1,"X"],[1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"X",1,1,"•"],[1,"X","•"],["X",1,1,1,1,1,1,1,1,1,"•"],[1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,"X",1,1,1,1,1,"•"],[1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X","•"],["X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"]]}
+tags: [state-preparation, partial-ft, "distance:5", "connectivity:2d-grid", "logical-state:zero"]

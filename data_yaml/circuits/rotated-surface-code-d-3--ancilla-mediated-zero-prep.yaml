@@ -1,0 +1,16 @@
+qec_id: 1004
+name: Ancilla-mediated zero prep
+notes: "Unitary 'stabilizer-expanding' preparation of |0>_L (ancillas bridge the
+  data qubits, so gates stay nearest-neighbour). Partially fault-tolerant: fault distance
+  = d=3 for X errors, bounded for Z. Source file: clean_circuits/rotated_surface_code/unitary_encoding_with_ancilla/Z/unitary_encoding_Z_L3_with_ancilla.stim.
+  Logical state: zero. Connectivity: 2d-grid. Gate set: CX,H. Routing ancilla qubits:
+  [9, 10, 11, 12, 13, 14, 15, 16]. Canonicalization qubit permutation (stored qubit
+  i = original qubit permutation[i]): [4, 1, 6, 0, 3, 8, 5, 2, 7]"
+source: https://arxiv.org/abs/2601.05113
+gate_count: 20
+two_qubit_gate_count: 16
+depth: 10
+qubit_count: 17
+crumble_url: https://algassert.com/crumble#circuit=H_1_8_5_7;CX_1_11_8_16;TICK;CX_11_3_16_2;TICK;CX_11_4;TICK;CX_11_0;TICK;CX_1_11_8_16;TICK;CX_5_14_7_9;TICK;CX_14_8_9_1;TICK;CX_14_0;TICK;CX_14_6;TICK;CX_5_14_7_9;TICK_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,"H",1,1,1,"H",1,"H","H"],[1,"•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"X",1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,1,1,1,"•"],[1,"•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,1,1,"X",1,1,1,1,1,"•"],[1,"X",1,1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,"•",1,"X"]]}
+tags: [state-preparation, partial-ft, "distance:3", "connectivity:2d-grid", "logical-state:zero"]

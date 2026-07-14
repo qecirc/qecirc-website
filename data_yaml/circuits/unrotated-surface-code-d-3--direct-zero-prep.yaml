@@ -1,0 +1,16 @@
+qec_id: 1026
+name: Direct zero prep
+notes: "Unitary 'stabilizer-expanding' preparation of |0>_L (gates act directly
+  between data qubits, needing next-nearest-neighbour links). Partially fault-tolerant:
+  fault distance = d=3 for X errors, bounded for Z. Source file: clean_circuits/unrotated_surface_code/unitary_encoding_without_ancilla/Z/unitary_encoding_unrotated_Z_L3_without_ancilla.stim.
+  Logical state: zero. Connectivity: 2d-grid. Gate set: CX,H. Canonicalization qubit
+  permutation (stored qubit i = original qubit permutation[i]): [9, 8, 4, 3, 1, 6,
+  11, 0, 5, 10, 2, 7, 12]"
+source: https://arxiv.org/abs/2601.05113
+gate_count: 20
+two_qubit_gate_count: 14
+depth: 6
+qubit_count: 13
+crumble_url: https://algassert.com/crumble#circuit=H_4_5_6_10_11_12;TICK;CX_4_3_5_1;TICK;CX_4_7_5_8_6_9;TICK;CX_5_3_6_1;TICK;CX_10_2_11_0;TICK;CX_10_4_11_5_12_6;TICK;CX_11_2_12_0;TICK_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,"H","H","H",1,1,1,"H","H","H"],[1,1,1,"X","•"],[1,"X",1,1,1,"•"],[1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,"X",1,"•"],[1,"X",1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"X",1,1,1,1,1,"•"],[1,1,1,1,1,"X",1,1,1,1,1,"•"],[1,1,1,1,1,1,"X",1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,1,1,1,1,"•"]]}
+tags: [state-preparation, partial-ft, "distance:3", "connectivity:2d-grid", "logical-state:zero"]

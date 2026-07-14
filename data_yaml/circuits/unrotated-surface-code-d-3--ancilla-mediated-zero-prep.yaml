@@ -1,0 +1,16 @@
+qec_id: 1024
+name: Ancilla-mediated zero prep
+notes: "Unitary 'stabilizer-expanding' preparation of |0>_L (ancillas bridge the
+  data qubits, so gates stay nearest-neighbour). Partially fault-tolerant: fault distance
+  = d=3 for X errors, bounded for Z. Source file: clean_circuits/unrotated_surface_code/unitary_encoding_with_ancilla/Z/unitary_encoding_unrotated_Z_L3_with_ancilla.stim.
+  Logical state: zero. Connectivity: 2d-grid. Gate set: CX,H. Routing ancilla qubits:
+  13-24 (12 qubits). Canonicalization qubit permutation (stored qubit i = original
+  qubit permutation[i]): [9, 8, 4, 3, 1, 6, 11, 0, 5, 10, 2, 7, 12]"
+source: https://arxiv.org/abs/2601.05113
+gate_count: 32
+two_qubit_gate_count: 26
+depth: 10
+qubit_count: 25
+crumble_url: https://algassert.com/crumble#circuit=H_4_5_6_10_11_12;TICK;CX_4_13_5_18_6_23;TICK;CX_13_3_18_1;TICK;CX_13_7_18_8_23_9;TICK;CX_18_3_23_1;TICK;CX_4_13_5_18_6_23;TICK;CX_10_14_11_19_12_24;TICK;CX_14_2_19_0;TICK;CX_14_4_19_5_24_6;TICK;CX_19_2_24_0;TICK;CX_10_14_11_19_12_24;TICK_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,"H","H","H",1,1,1,"H","H","H"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,"X",1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,"X",1,1,1,1,1,1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,"X"]]}
+tags: [state-preparation, partial-ft, "distance:3", "connectivity:2d-grid", "logical-state:zero"]
