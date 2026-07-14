@@ -1,0 +1,31 @@
+---
+// Show/hide QUBIT_COORDS on a circuit body. Sits in the format-tab row (a view
+// control, like picking STIM vs QASM) rather than among the block's
+// copy/download actions.
+//
+// Used server-side by FormatSwitcher/CodeBlock and cloned client-side from
+// CircuitBodiesTemplate, so there is exactly one copy of this markup.
+// Wired by coords-toggle-client.ts, which removes it when the body has no
+// coordinates.
+import { TAB_INACTIVE_CLASS } from "../lib/constants";
+
+const BASE =
+  "coords-btn flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors";
+---
+
+<button
+  class:list={[BASE, TAB_INACTIVE_CLASS]}
+  role="switch"
+  aria-checked="false"
+  title="Show qubit coordinates"
+>
+  <!-- Unchecked box; swapped for the checked one by coords-toggle-client. -->
+  <svg class="coords-off w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="3" />
+  </svg>
+  <svg class="coords-on hidden w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="3" />
+    <path d="M7.5 12.5l3 3 6-6.5" />
+  </svg>
+  <span>Coords</span>
+</button>

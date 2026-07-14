@@ -120,14 +120,49 @@ def _relabel_qubits(circ, permutation):
 
 
 def _compact_circuit(circ):
-    """Compact a stim circuit using MQT QECC."""
+    """Compact a stim circuit using MQT QECC, preserving qubit coordinates.
+
+    ``compact_stim_circuit`` keeps the ``QUBIT_COORDS`` instructions but drops
+    their arguments, turning ``QUBIT_COORDS(3, 7) 0`` into a meaningless bare
+    ``QUBIT_COORDS 0``. It only re-packs gate timing and never renumbers qubits
+    (the whole pipeline depends on indices matching the code's columns), so the
+    coordinates are captured beforehand and re-attached by index afterwards.
+    """
+    coords = circ.get_final_qubit_coordinates()
     try:
         from mqt.qecc.circuit_synthesis.circuit_utils import compact_stim_circuit
 
-        return compact_stim_circuit(circ)
+        compacted = compact_stim_circuit(circ)
     except Exception as e:
         warnings.warn(f"STIM compaction failed, using original: {e}")
         return circ
+    return _restore_coords(compacted, coords)
+
+
+def _restore_coords(circ, coords):
+    """Re-emit ``QUBIT_COORDS`` for ``coords`` at the front of ``circ``.
+
+    ``coords`` maps qubit index -> coordinate list, as returned by
+    ``get_final_qubit_coordinates()`` before compaction. Any coordinate-less
+    ``QUBIT_COORDS`` left behind by compaction is dropped in favour of these.
+    """
+    import stim
+
+    coords = {q: c for q, c in coords.items() if c}
+    if not coords:
+        return circ
+
+    out = stim.Circuit()
+    for q, c in sorted(coords.items()):
+        out.append("QUBIT_COORDS", [q], c)
+    for op in circ:
+        if isinstance(op, stim.CircuitRepeatBlock):
+            out.append(op)
+            continue
+        if op.name == "QUBIT_COORDS":
+            continue
+        out.append(op.name, op.targets_copy(), op.gate_args_copy())
+    return out
 
 
 def _to_qasm(circ):

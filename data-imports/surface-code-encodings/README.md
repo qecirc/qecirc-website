@@ -161,10 +161,18 @@ reports them and continues.
   well-defined for derivation, and it **fixes inflated qubit counts for free** —
   the rotated `Z` files reset `2d²−1` qubits and the unrotated files reset
   `(2d−1)²`, most never used. `d=5` direct stores `qubit_count: 25`, not 49.
-- **`QUBIT_COORDS` dropped.** The unrotated files carry coordinates and the
-  rotated ones don't; no stored body in the library uses them. Keeping them for
-  half the import would be inconsistent. _Geometry is recoverable from
-  `originals/` if it is ever wanted._
+- **`QUBIT_COORDS` kept** ([#107](https://github.com/qecirc/qecirc-website/issues/107)).
+  The unrotated files carry the lattice layout; the rotated ones ship none, so
+  20 of the 40 circuits have coordinates and 20 do not. That asymmetry is the
+  upstream data's, not a decision. Coordinates flow into the Crumble link, which
+  is what makes the layout visible there rather than an abstract gate list.
+
+  Only coordinates for qubits the preparation **actually touches** are kept. The
+  files declare one per grid site, including sites named solely in the dropped
+  reset layer, and a `QUBIT_COORDS` target counts towards stim's `num_qubits` —
+  so keeping all of them would put the inflated `qubit_count` straight back
+  (unrotated d=3 direct: 25 rather than 13).
+
 - **`partial-ft`, a new tag.** The library had only `ft` (509) and `non-ft` (251).
   Neither fits: the paper preserves fault distance _"only for the type of error
   that flips the corresponding codeword, for example, X errors when preparing the
