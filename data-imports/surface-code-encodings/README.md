@@ -146,8 +146,16 @@ reports them and continues.
 - **Terminal readout dropped.** Every one of the 40 files ends with `M`/`MX` on
   all data qubits plus `DETECTOR`s and `OBSERVABLE_INCLUDE` — the SPAM benchmark
   behind figures 5 and 9, not part of the encoding. The stored body is the prep
-  alone, matching flag-at-origin and mqt-ftsp for the same circuit shape. The
-  file is preserved verbatim in `circuits/originals/`.
+  alone, matching flag-at-origin and mqt-ftsp for the same circuit shape.
+
+  Note what this does **not** mean: `circuits/originals/` holds the circuit
+  _pre-canonicalization_ — as handed to `add_circuit`, before qubit relabeling —
+  and what is handed over is already `prep_body()`-transformed. So the originals
+  are the stripped prep in the paper's labeling, **not** the published file
+  byte-for-byte. The dropped readout, the detectors, and the observable survive
+  only in the upstream dataset; the exact file is identified by `Source file:` in
+  each circuit's notes. Same for the other importers that pre-process a body.
+
 - **Reset layer rewritten** to library convention: `RX` → `H`, `R` dropped
   (`|0…0⟩` is implicit in a stored body). This is also what makes the tableau
   well-defined for derivation, and it **fixes inflated qubit counts for free** —
