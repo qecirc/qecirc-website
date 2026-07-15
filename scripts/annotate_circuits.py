@@ -27,10 +27,12 @@ if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
 import numpy as np  # noqa: E402
+import stim  # noqa: E402
 import yaml  # noqa: E402
 
 from scripts.add_circuit.annotate import (  # noqa: E402
     build_annotated,
+    logical_input_qubits,
     strip_readout,
     validate_annotated,
 )
@@ -117,7 +119,7 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
             notes=data.get("notes") or "",
         )
         if circ is None:
-            results.append(Result(stem, "skipped", f"not representable ({kind}, {state or 'n/a'})"))
+            results.append(Result(stem, "skipped", _why_skipped(body_path, stored_h, n, k, kind)))
             continue
 
         error = validate_annotated(circ)
@@ -130,12 +132,15 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
         # Both Crumble links follow the same width gate as the canonical body:
         # past it the URL is megabytes and unusable.
         wide = circ.num_qubits > LARGE_CIRCUIT_MAX_QUBITS
-        url = "" if wide else circ.to_crumble_url()
         # `crumble_url` is the link for what the STIM tab shows by default, which
-        # for an annotated circuit is the reset prologue + body — not the stored
+        # for these circuits is the reset prologue + body — not the stored
         # canonical body, which leaves the |0...0> input implied. Overwriting it
         # is what keeps the link and the displayed text in step.
         plain_url = "" if wide else strip_readout(circ).to_crumble_url()
+        # The second link only exists if there is a second view. A prologue-only
+        # body (non-CSS: no basis reads its stabilizers) has no Detectors switch,
+        # so an annotated URL there would just duplicate `crumble_url`.
+        url = "" if wide or circ.num_detectors == 0 else circ.to_crumble_url()
 
         # Compare rendered text, not the parsed value: a duplicated key parses to
         # the same value while leaving the file invalid.
@@ -157,6 +162,27 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
         )
 
     return results
+
+
+def _why_skipped(body_path: Path, stored_h: np.ndarray, n: int, k: int, kind: str) -> str:
+    """Explain a ``build_annotated`` refusal.
+
+    Every prep and encoder should get at least a reset prologue, so a refusal is
+    worth a reason rather than a shrug. For an encoder it means the k logical
+    inputs could not be derived — and since the derivation just asks which
+    qubits' Z propagates outside the stabilizer group, an answer other than k
+    says the circuit and the code it is filed under disagree.
+    """
+    if kind != "encoding":
+        return "no reset targets"
+    circ = stim.Circuit(body_path.read_text(encoding="utf-8"))
+    inputs = logical_input_qubits(circ, stored_h, n)
+    if inputs is None:
+        return "encoder inputs underivable (no tableau and no resets)"
+    return (
+        f"encoder derived {len(inputs)} logical inputs, expected k={k} — "
+        f"circuit and stored h disagree"
+    )
 
 
 def _with_urls(text: str, plain: str, annotated: str) -> str:

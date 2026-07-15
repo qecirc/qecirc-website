@@ -217,6 +217,27 @@ def logical_input_qubits(circ: stim.Circuit, stored_h: np.ndarray, n: int) -> Op
     return inputs
 
 
+def _readout_basis(stored_h: np.ndarray, n: int, kind: str, logical_state: str) -> Optional[str]:
+    """The terminal readout basis, or ``None`` when there is no usable one.
+
+    ``None`` means the circuit gets a reset prologue and nothing else. Two ways
+    to land there:
+
+    * **non-CSS** — every stabilizer mixes X and Z on the same qubit (the
+      five-qubit code's ``YZIZY``), so no single-basis terminal measurement reads
+      them, and no detector could be deterministic.
+    * **an unsupported prepared state** — only ``|0>_L`` and ``|+>_L`` map onto a
+      transversal Z/X readout. (``|1>_L`` and ``|->_L`` would work the same way,
+      but every such circuit in the library is on the non-CSS five-qubit code, so
+      they are excluded by the first rule anyway.)
+    """
+    if split_h_to_css(stored_h, n) is None:
+        return None
+    if kind == "encoding":
+        return "Z"  # Hz is deterministic for any logical input; Hx is not
+    return {"zero": "Z", "plus": "X"}.get(logical_state)
+
+
 def build_annotated(
     body: str,
     stored_h: np.ndarray,
@@ -233,47 +254,52 @@ def build_annotated(
     ``kind`` is ``"state-preparation"`` or ``"encoding"``; ``logical_state`` is
     ``"zero"`` or ``"plus"`` (ignored for encoders, which have no prepared state).
 
-    Returns ``None`` — never raises — for the cases this cannot represent:
-    non-CSS codes, unsupported logical states, or a code whose deterministic half
-    is empty. Callers treat ``None`` as "no annotated body for this circuit".
+    Two parts, and they are independent:
+
+    * the **reset prologue**, which states the ``|0...0>`` input explicitly
+      instead of leaving it implied. It applies to every prep and encoder — those
+      genuinely start from ``|0...0>`` — regardless of the code.
+    * the **readout epilogue** (terminal measurement, detectors, observables),
+      which needs a single terminal basis that reads the deterministic half of
+      the stabilizers. Only CSS codes have one.
+
+    So a non-CSS circuit still gets a body: reset prologue and gates, no readout.
+    That is why the checks below narrow the *epilogue* rather than bailing out —
+    the five-qubit code's stabilizers mix X and Z (``YZIZY``), so nothing reads
+    them in one basis, but its preps start from ``|0...0>`` like any other.
+
+    Returns ``None`` — never raises — only when even the prologue is undefined:
+    an unknown ``kind``, or an encoder whose logical inputs cannot be derived.
     The result is *not* validated here; run :func:`validate_annotated` on it.
     """
-    if split_h_to_css(stored_h, n) is None:
-        return None  # mixed X/Z stabilizers: no single terminal basis reads them
-
-    if kind == "state-preparation":
-        if logical_state == "zero":
-            basis = "Z"
-        elif logical_state == "plus":
-            basis = "X"
-        else:
-            return None
-    elif kind == "encoding":
-        basis = "Z"  # Hz is deterministic for any logical input; Hx is not
-    else:
+    if kind not in ("state-preparation", "encoding"):
         return None
 
     source = stim.Circuit(body)
 
-    # Prefer the submitter's basis (mapped into this labeling) over RREF; fall
-    # back to the stored matrix when no original maps.
-    basis_h = stored_h
-    if original_h is not None:
-        mapped = map_original_h(original_h, stored_h, n, notes)
-        if mapped is not None:
-            basis_h = mapped[0]
-    detectors = sparsify_basis(_half(basis_h, n, basis))
-    if detectors.shape[0] == 0:
-        return None
-
+    # Which qubits are fixed in |0>. For an encoder that is everything except the
+    # k logical inputs, which the reader supplies and which must stay free.
     if kind == "encoding":
         inputs = logical_input_qubits(source, stored_h, n)
         if inputs is None or len(inputs) != k:
             return None
         reset = [q for q in range(source.num_qubits) if q not in set(inputs)]
     else:
-        inputs = []
         reset = list(range(source.num_qubits))
+
+    basis = _readout_basis(stored_h, n, kind, logical_state)
+    detectors = np.zeros((0, n), dtype=int)
+    if basis is not None:
+        # Prefer the submitter's basis (mapped into this labeling) over RREF; fall
+        # back to the stored matrix when no original maps.
+        basis_h = stored_h
+        if original_h is not None:
+            mapped = map_original_h(original_h, stored_h, n, notes)
+            if mapped is not None:
+                basis_h = mapped[0]
+        detectors = sparsify_basis(_half(basis_h, n, basis))
+        if detectors.shape[0] == 0:
+            basis = None  # nothing deterministic to read; emit the prologue alone
 
     out = stim.Circuit()
     for qubit, coord in sorted(source.get_final_qubit_coordinates().items()):
@@ -289,6 +315,9 @@ def build_annotated(
         if op.name == "QUBIT_COORDS":
             continue
         out.append(op.name, op.targets_copy(), op.gate_args_copy())
+    if basis is None:
+        return out  # prologue only: nothing here can be read in a single basis
+
     # Bodies that carry their own TICK schedule already end on one; don't double it.
     if len(out) and out[-1].name != "TICK":
         out.append("TICK")

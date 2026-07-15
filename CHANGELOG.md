@@ -27,7 +27,14 @@ the source-of-truth `package.json` version.
   the derive/fit pipeline depend on it. 418 of 834 circuits are annotated (357
   state prep, 61 encoders); the 62 five-qubit-code circuits are excluded,
   because non-CSS stabilizers mix X and Z on the same qubit and no single
-  terminal readout basis reads them.
+  terminal readout basis reads them — but they still get the reset prologue,
+  since being non-CSS blocks the readout, not the initialisation.
+- State-prep and encoding circuits now state their `|0…0⟩` input explicitly with
+  a reset prologue, in both toggle states, instead of leaving it implied.
+  Encoders reset only their non-input qubits, since those are the ones actually
+  fixed in `|0⟩`. Circuits that act on an already-encoded state (syndrome
+  extraction, gadgets) get no prologue — a reset there would be wrong, not
+  merely unhelpful.
 - Encoders are annotated differently from state preps: only their ancillas are
   reset, leaving the k logical inputs free, and they get detectors but no
   observable. Hz is deterministic for any input, so the detectors hold whatever

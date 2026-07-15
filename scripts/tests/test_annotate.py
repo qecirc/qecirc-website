@@ -77,6 +77,38 @@ def _five_qubit_h():
     return np.hstack([x, z])
 
 
+# A five-qubit encoder in the library's own labeling — needed because the input
+# derivation only makes sense against the matching h, and a hand-rolled circuit
+# would not encode this code. Its logical input sits at qubit 4.
+FIVE_ENCODER = """\
+H 4 0
+S 3 0
+H 1 2 3 0
+SWAP 4 0 0 1 4 2
+S_DAG 0
+H 2
+S_DAG 4
+SWAP 1 3
+S_DAG 2
+H 3 1
+S 3 1
+H 3 1
+CZ 1 0 3 2
+H 0 1
+S 2
+S_DAG 0
+H 2
+S_DAG 3
+H 3
+CZ 2 4 3 0
+S_DAG 4
+H 2 0 3
+CZ 1 4
+S_DAG 0
+CZ 2 0
+"""
+
+
 # --- the derived annotation is actually correct -----------------------------
 
 
@@ -229,23 +261,79 @@ def test_corrupted_check_row_is_rejected():
     assert validate_annotated(out) is not None
 
 
-# --- scope: what this refuses to annotate -----------------------------------
+# --- scope: prologue always, readout only where a basis exists ---------------
+
+_FIVE_LOGICAL = build_symplectic_logical(
+    np.array([[1, 1, 1, 1, 1]], dtype=int), np.array([[1, 1, 1, 1, 1]], dtype=int), 5, 1
+)
 
 
-def test_non_css_code_is_refused():
-    h = _five_qubit_h()
-    logical = build_symplectic_logical(
-        np.array([[1, 1, 1, 1, 1]], dtype=int), np.array([[1, 1, 1, 1, 1]], dtype=int), 5, 1
+def test_non_css_code_gets_a_prologue_but_no_readout():
+    """Non-CSS blocks the readout, not the initialisation. The five-qubit code's
+    stabilizers mix X and Z, so nothing reads them in one basis — but its preps
+    start from |0...0> like any other, and should say so."""
+    circ = build_annotated(
+        "H 0\n",
+        _five_qubit_h(),
+        _FIVE_LOGICAL,
+        n=5,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
     )
-    assert (
-        build_annotated(
-            "H 0\n", h, logical, n=5, k=1, kind="state-preparation", logical_state="zero"
-        )
-        is None
+    assert circ is not None
+    names = [op.name for op in circ]
+    assert names[0] == "R"
+    assert circ.num_detectors == 0
+    assert circ.num_observables == 0
+    assert "M" not in names and "MX" not in names
+
+
+def test_non_css_encoder_resets_only_its_ancillas():
+    """Input derivation is basis-independent — it asks whether Z_q propagates
+    outside the stabilizer group, which is defined for non-CSS codes too."""
+    circ = build_annotated(FIVE_ENCODER, _five_qubit_h(), _FIVE_LOGICAL, n=5, k=1, kind="encoding")
+    assert circ is not None
+    reset = next(op for op in circ if op.name == "R")
+    assert len(reset.targets_copy()) == 4  # the one logical input stays free
+    assert circ.num_detectors == 0
+
+
+def test_unsupported_logical_state_gets_a_prologue_but_no_readout():
+    """Only |0>_L and |+>_L map onto a transversal Z/X readout. An unknown state
+    still starts from |0...0>, so it keeps the prologue."""
+    circ = build_annotated(
+        STEANE_ZERO,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="magic",
     )
+    assert circ is not None
+    assert [op.name for op in circ][0] == "R"
+    assert circ.num_detectors == 0
 
 
-def test_unsupported_logical_state_is_refused():
+def test_prologue_only_body_has_nothing_for_the_detectors_switch_to_do():
+    """The UI drops the switch when the body has no detectors, so a prologue-only
+    body must be a fixed point of strip_readout."""
+    circ = build_annotated(
+        "H 0\n",
+        _five_qubit_h(),
+        _FIVE_LOGICAL,
+        n=5,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    assert str(strip_readout(circ)) == str(circ)
+
+
+def test_unknown_kind_is_still_refused():
+    """A syndrome-extraction gadget acts on an already-encoded state, so a reset
+    prologue would be actively wrong — not merely unhelpful."""
     assert (
         build_annotated(
             STEANE_ZERO,
@@ -253,8 +341,7 @@ def test_unsupported_logical_state_is_refused():
             STEANE_LOGICAL,
             n=7,
             k=1,
-            kind="state-preparation",
-            logical_state="magic",
+            kind="syndrome-extraction",
         )
         is None
     )
