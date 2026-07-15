@@ -6,7 +6,7 @@ export const prerender = false;
 // https://llmstxt.org/ — a concise, LLM-friendly map of the site. Generated
 // from the live database (like sitemap.xml) so it never drifts. Codes are the
 // top-level entities; each code page enumerates its own circuits (and carries
-// schema.org JSON-LD), so listing all 400+ circuits here would only add noise.
+// schema.org JSON-LD), so listing every circuit here would only add noise.
 export const GET: APIRoute = ({ site }) => {
   const base = site!.origin;
   const codes = getAllCodes(); // ordered by name
