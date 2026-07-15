@@ -110,6 +110,7 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 
 - Static pages: landing page, 404 (pre-rendered at build time)
 - SSR pages (`prerender = false`): all `/codes/...` and `/circuits/...` routes, `/api/search` (rendered on request, read from SQLite)
+- **Unknown id/slug → `return notFound()`** (`src/lib/not-found.ts`), which returns a bodiless 404; Astro fills the body with the prerendered /404 page. Never `Astro.rewrite("/404")` from an SSR page — /404 is prerendered, so the rewrite finds no component instance and 500s (`scripts/smoke.sh` guards this).
 - Client-side JS: search bar (debounced fetch), circuit row expand/collapse, format switching, favorites (toggle/filter/export/import), CodeBlock copy/download, lazy-loaded circuit bodies on code pages (fetched from `/api/circuits/[qec_id]/bodies` on first row expand), and filtering/sorting on the listing pages (`list-filter-client.ts` over `data-metrics`/`data-tags` row attributes — the server always renders the canonical full list and ignores filter params; `/api/download` still parses them)
 
 This keeps the site fast and simple while scaling comfortably to thousands of circuits.
