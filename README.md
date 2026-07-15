@@ -30,11 +30,13 @@ The project is funded by the [Unitary Foundation](https://unitary.foundation) an
 
 ## Contributors
 
-<!-- Maintained by hand — keep in sync with the repository's human contributors,
-     excluding bots (Claude, Renovate) and the `qecirc` service account. Mirror
-     any change here in src/pages/about.astro. -->
+<!-- Maintained by hand — the repository's human contributors, excluding bots
+     (Claude, Renovate) and the `qecirc` service account, PLUS people who helped
+     without committing and so have no GitHub link (listed unlinked). Do not
+     regenerate this from the GitHub contributor list: that would silently drop
+     the unlinked names. Mirror any change here in src/pages/about.astro. -->
 
-[Ludwig Schmid](https://github.com/lsschmid), [Tom Peham](https://github.com/pehamTom), [Remmy Zen](https://github.com/remmyzen), [Maxie Helen Bichmann](https://github.com/MaxieHelenBichmann), [Diego Forlivesi](https://github.com/DiegoForlivesi), [David Amaro](https://github.com/davamaro)
+[Ludwig Schmid](https://github.com/lsschmid), [Tom Peham](https://github.com/pehamTom), [Remmy Zen](https://github.com/remmyzen), [Maxie Helen Bichmann](https://github.com/MaxieHelenBichmann), [Diego Forlivesi](https://github.com/DiegoForlivesi), [David Amaro](https://github.com/davamaro), Luis Colmenarez
 
 ## Quick Start
 
