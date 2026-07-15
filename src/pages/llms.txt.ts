@@ -31,6 +31,7 @@ ${codeLines.join("\n")}
 
 ## About
 
+- [Codes](${base}/codes): browse and filter all codes by [[n,k,d]] parameters and tags.
 - [About](${base}/about): project goals, data model, and scope.
 - [Contribute](${base}/contribute): how to submit a circuit or import a dataset.
 - [Tools](${base}/tools): software tools used to create the circuits.

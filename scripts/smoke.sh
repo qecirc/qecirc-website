@@ -22,9 +22,24 @@ check() {
 }
 
 # Static / always-present routes
-check "/"            "<title"     # codes index renders SSR
+check "/"            "<title"     # landing page renders SSR
+check "/codes"       "<title"     # codes index renders SSR
 check "/about"       "QECirc"     # static prerender sanity
 check "/sitemap.xml" "<urlset"    # exercises getAllCodes
+
+# Filtering on /codes is client-side, so the server must serve the canonical
+# document regardless of filter params (this is what makes the edge cache safe).
+check "/codes?n=%3E9999" "<title"
+
+# Legacy /-as-codes-list URLs redirect (301) rather than silently dropping filters.
+if [ "$(curl -fsS -o /dev/null -w "%{http_code}" "$BASE/?tag=CSS")" = "301" ]; then
+  echo "OK   /?tag=CSS (301 -> /codes)"
+else
+  echo "FAIL /?tag=CSS: expected 301 redirect to /codes"; fail=1
+fi
+
+# Advanced search: server-filtered, so results must appear in the HTML itself.
+check "/search?q=code" "<title"
 
 # Discover a code slug from the sitemap
 slug=$(curl -fsS "$BASE/sitemap.xml" \
@@ -42,7 +57,6 @@ else
   else
     echo "FAIL /codes/$slug: filtered rows ($filtered_rows) != canonical ($canonical_rows)"; fail=1
   fi
-  check "/?n=%3E9999" "<title"
 fi
 
 # Discover a circuit qec_id by probing /api/circuits?ids=1..10

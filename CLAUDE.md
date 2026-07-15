@@ -108,9 +108,15 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 
 **Rendering strategy — Astro v7 (static default, SSR opt-in):**
 
-- Static pages: landing page, 404 (pre-rendered at build time)
-- SSR pages (`prerender = false`): all `/codes/...` and `/circuits/...` routes, `/api/search` (rendered on request, read from SQLite)
+- Static pages: 404, `/about`, `/contribute`, `/privacy`, `/legal` (pre-rendered at build time)
+- SSR pages (`prerender = false`): the landing page `/`, all `/codes/...` and `/circuits/...` routes, `/search`, `/api/search` (rendered on request, read from SQLite)
+  - **`/` must stay SSR.** `@astrojs/node` serves pre-rendered pages straight from disk without running middleware, so a static `/` would silently lose the `s-maxage` edge caching (see below). The DB is baked at build time either way, so pre-rendering buys nothing here.
 - Client-side JS: search bar (debounced fetch), circuit row expand/collapse, format switching, favorites (toggle/filter/export/import), CodeBlock copy/download, lazy-loaded circuit bodies on code pages (fetched from `/api/circuits/[qec_id]/bodies` on first row expand), and filtering/sorting on the listing pages (`list-filter-client.ts` over `data-metrics`/`data-tags` row attributes — the server always renders the canonical full list and ignores filter params; `/api/download` still parses them)
+- **`/search` is the exception: it filters on the server.** That convention's justification — every visit shares one cached document — cannot hold for free-text search, and `list-filter-client.ts` has no text matching and only filters rows already in the DOM. Consequences: `/search` sets its own shorter `Cache-Control` (the `?q=` key space is unbounded) and is `Disallow`ed in `robots.txt`.
+
+**Caching:** `src/middleware.ts` stamps `s-maxage=604800` on every response lacking its own `Cache-Control`; safe only because rendered output is immutable between deploys and each deploy purges Cloudflare (`src/lib/cache-purge.ts`). A page that varies by query string must set its own shorter value.
+
+**Search:** the header quick-search (`/api/search`) does LIKE matching over names and tags for codes, circuits and tools. `/search` is circuits-only, reads `notes` too, and ranks by BM25 over the `circuit_search` FTS5 table (`data/migrations/015`), which `scripts/db/create_database.mjs` repopulates on every build.
 
 This keeps the site fast and simple while scaling comfortably to thousands of circuits.
 

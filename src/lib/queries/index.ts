@@ -6,6 +6,7 @@ export {
   countCircuitsForCode,
   codeHasWeightedCircuits,
   countAllCircuits,
+  getLatestCircuits,
   getCircuitTagsForCode,
   filterCircuitsForCode,
   getCircuitsWithBodies,
@@ -17,4 +18,14 @@ export {
   getOriginalForCircuit,
 } from "./circuits";
 export { getAllTools, filterTools, getToolsForCircuits } from "./tools";
-export { searchCodes, searchCircuits, searchTools } from "./search";
+export {
+  searchCodes,
+  searchCircuits,
+  searchTools,
+  searchCircuitsRanked,
+  searchCircuitFacets,
+  toFtsQuery,
+  MIN_QUERY_LENGTH,
+  type RankedCircuit,
+  type SearchFacets,
+} from "./search";

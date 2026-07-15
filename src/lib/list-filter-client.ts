@@ -1,5 +1,7 @@
-// Client-side filtering and sorting for listing pages (codes index, code
-// detail). Rows are server-rendered in canonical default order and carry
+// Client-side filtering and sorting for listing pages (/codes, code detail).
+// Not used by /search, which filters server-side: this module has no text
+// matching and only filters rows already in the DOM. Rows are server-rendered
+// in canonical default order and carry
 // their data in attributes (data-metrics, data-tags, data-name); this module
 // intercepts filter inputs, sort links ([data-sort-field]) and tag links
 // ([data-tag]), applies filters by toggling the Tailwind `hidden` class,

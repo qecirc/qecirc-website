@@ -5,13 +5,14 @@ import { tagToggleUrl } from "../lib/url";
 interface Props {
   tags: string[] | TagWithCount[];
   baseUrl?: URL;
-  basePath?: string;
+  /** Path tag links point at. Required — a default silently sends tags to the wrong list. */
+  basePath: string;
   selectedTags?: string[];
   showCount?: boolean;
   class?: string;
 }
 
-const { tags, baseUrl, basePath = "/", selectedTags, showCount = false, class: className } = Astro.props;
+const { tags, baseUrl, basePath, selectedTags, showCount = false, class: className } = Astro.props;
 const selectedSet = selectedTags ? new Set(selectedTags) : null;
 const currentSearch = baseUrl?.search ?? "";
 const currentTags = baseUrl?.searchParams.getAll("tag") ?? [];

@@ -300,5 +300,22 @@ try {
   throw e;
 }
 
+// --- 4. Populate the full-text search index (data/migrations/015) ---
+// Derived entirely from the rows just inserted, so it is rebuilt from scratch
+// here rather than maintained by triggers. `source` rides along in the notes
+// column: it is provenance prose (DOI/citation) and shares its low weight.
+const indexed = db
+  .prepare(
+    `INSERT INTO circuit_search (circuit_id, name, code_name, tags, notes)
+     SELECT c.id, c.name, co.name,
+            COALESCE((SELECT group_concat(t.name, ' ')
+                      FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+                      WHERE tg.taggable_id = c.id AND tg.taggable_type = 'circuit'), ''),
+            TRIM(COALESCE(c.notes, '') || ' ' || COALESCE(c.source, ''))
+     FROM circuits c JOIN codes co ON co.id = c.code_id`,
+  )
+  .run();
+
 db.close();
+console.log(`\nSearch index: ${indexed.changes} circuits.`);
 console.log("\nDatabase created successfully.");

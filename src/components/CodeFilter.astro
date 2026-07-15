@@ -9,9 +9,11 @@ import TagFilterDropdowns from "./TagFilterDropdowns.astro";
 // PAIRS IN SYNC with SORT_LABEL_ACTIVE/INACTIVE in list-filter-client.ts.
 interface Props {
   allTags: TagWithCount[];
+  /** Path this filter's links/form point at; must equal the page's own path. */
+  basePath: string;
 }
 
-const { allTags } = Astro.props;
+const { allTags, basePath } = Astro.props;
 
 // Matches the server's default ordering (buildCodeOrderBy: n, k, d, name).
 const DEFAULT_SORT_FIELD: CodeSortField = "n";
@@ -28,7 +30,7 @@ function labelInfo(field: CodeSortField) {
   };
 }
 
-const sortHref = (field: CodeSortField) => `/?sort=${field}&sort_dir=asc`;
+const sortHref = (field: CodeSortField) => `${basePath}?sort=${field}&sort_dir=asc`;
 
 const FIELDS: { field: CodeSortField; placeholder: string }[] = [
   { field: "n", placeholder: ">3,<10" },
@@ -42,7 +44,7 @@ const tagGroups = CODE_TAG_CATEGORIES.map((c) => ({
 }));
 ---
 
-<form id="code-filter" method="GET" action="/" class="mb-6 space-y-2">
+<form id="code-filter" method="GET" action={basePath} class="mb-6 space-y-2">
   <div class="flex flex-wrap items-center gap-3">
     {FIELDS.map(({ field, placeholder }) => {
       const info = labelInfo(field);
@@ -58,7 +60,7 @@ const tagGroups = CODE_TAG_CATEGORIES.map((c) => ({
     <div class="text-xs" data-filter-status>
       <span data-filter-error class="text-red-500 hidden">Invalid filter</span>
       <a
-        href="/"
+        href={basePath}
         data-clear-filters
         class="hidden inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
         title="Clear all active filters"
@@ -73,7 +75,7 @@ const tagGroups = CODE_TAG_CATEGORIES.map((c) => ({
 
   <TagFilterDropdowns
     allTags={allTags}
-    basePath="/"
+    basePath={basePath}
     groups={tagGroups}
     defaultView="all"
     storageKey="qecirc:code-tag-view"

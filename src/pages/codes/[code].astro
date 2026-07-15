@@ -89,7 +89,7 @@ const jsonLd = [
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Codes", item: `${siteUrl}/` },
+      { "@type": "ListItem", position: 1, name: "Codes", item: `${siteUrl}/codes` },
       { "@type": "ListItem", position: 2, name: codeTitle, item: pageUrl },
     ],
   },
@@ -102,7 +102,7 @@ const jsonLd = [
   jsonLd={jsonLd}
 >
   <a
-    href="/"
+    href="/codes"
     class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"
     title="Back to Codes — Backspace or b"
     data-back-link
@@ -134,7 +134,7 @@ const jsonLd = [
   </div>
 
   <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
-    <TagList tags={tags} />
+    <TagList tags={tags} basePath="/codes" />
   </div>
 
   {code.has_matrices === 1 && (
@@ -229,7 +229,7 @@ const jsonLd = [
   import { initBackKey } from "../../lib/back-key-client";
   import { initCircuitBodies } from "../../lib/circuit-bodies-client";
 
-  initBackKey("/");
+  initBackKey("/codes");
   initCircuitBodies();
 
   // Client-side filtering/sorting; must run before keynav so its initial

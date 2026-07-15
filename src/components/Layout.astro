@@ -42,6 +42,14 @@ const siteGraph = {
       description: DEFAULT_DESCRIPTION,
       inLanguage: "en",
       publisher: { "@id": `${siteUrl}/#organization` },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
     },
   ],
 };
@@ -54,6 +62,7 @@ const totalCircuits = countAllCircuits();
 const totalCircuitsLabel = new Intl.NumberFormat("en-US").format(totalCircuits);
 
 const NAV_LINKS = [
+  { href: "/codes", label: "Codes" },
   { href: "/tools", label: "Tools" },
   { href: "/contribute", label: "Contribute" },
   { href: "/about", label: "About" },

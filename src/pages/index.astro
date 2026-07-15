@@ -1,61 +1,117 @@
 ---
+// SSR, deliberately NOT prerendered. @astrojs/node serves prerendered pages
+// from disk without running middleware, so a static `/` would silently lose the
+// s-maxage=604800 edge caching every other page gets (see src/middleware.ts and
+// src/lib/cache-purge.ts). The DB is baked at build time either way, so there is
+// nothing to gain from prerendering and a cache to lose. The redirect below
+// also depends on this running per-request.
 export const prerender = false;
 
 import Layout from "../components/Layout.astro";
-import CodeCard from "../components/CodeCard.astro";
-import CodeFilter from "../components/CodeFilter.astro";
-import { filterCodes, getTagsWithCount } from "../lib/queries";
+import {
+  countAllCodes,
+  countAllCircuits,
+  getLatestCircuits,
+  formatCircuitId,
+} from "../lib/queries";
 
-// Filtering/sorting happens client-side (list-filter-client.ts): the page
-// always renders the full list in default order and ignores filter params,
-// so every visit shares one cached document.
-const allTags = getTagsWithCount("code");
-const codes = filterCodes({});
-const totalCount = codes.length;
+// `/` was the codes list until v0.5.0, and client-side filtering pushed history
+// entries like /?n=>3 and /?tag=CSS. Forward those rather than silently
+// dropping the filter on the landing page.
+const CODES_LIST_PARAMS = ["tag", "n", "k", "d", "sort", "sort_dir"];
+if (CODES_LIST_PARAMS.some((p) => Astro.url.searchParams.has(p))) {
+  return Astro.redirect(`/codes${Astro.url.search}`, 301);
+}
+
+const codeCount = countAllCodes();
+const circuitCount = countAllCircuits();
+const fmt = new Intl.NumberFormat("en-US");
+
+const latest = getLatestCircuits(5);
+
+const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": `${siteUrl}/#landing`,
+  url: `${siteUrl}/`,
+  name: "QECirc",
+  description: "A community-driven library for quantum error correction circuits.",
+  isPartOf: { "@id": `${siteUrl}/#website` },
+};
+
+const cardCls =
+  "rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors";
 ---
 
-<Layout title="Codes" description="Browse quantum error correction codes and circuits">
-  <h1 class="text-2xl font-bold mb-6">Codes</h1>
+<Layout
+  title="Quantum error correction circuits"
+  description="A community-driven library of quantum error correction circuits — browse, search and download STIM, QASM and Cirq circuits by code."
+  jsonLd={jsonLd}
+>
+  <section class="max-w-2xl mb-10">
+    <h1 class="text-3xl font-bold mb-3">Quantum error correction circuits</h1>
+    <p class="text-gray-600 dark:text-gray-400 mb-4">
+      A community-driven library of reusable QEC circuits — encoding, state preparation,
+      syndrome extraction and more. Stored in STIM, available as QASM and Cirq.{" "}
+      <span class="whitespace-nowrap">{fmt.format(circuitCount)} circuits</span>{" "}across{" "}
+      <span class="whitespace-nowrap">{fmt.format(codeCount)} codes</span>.
+    </p>
 
-  <CodeFilter allTags={allTags} />
+    <form method="GET" action="/search" class="flex gap-2">
+      <input
+        type="search"
+        name="q"
+        placeholder="Search circuits by name, notes, tag or #id"
+        aria-label="Search circuits"
+        class="flex-1 rounded border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+      />
+      <button
+        type="submit"
+        class="rounded px-4 py-2 text-sm font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer"
+      >
+        Search
+      </button>
+    </form>
 
-  <p data-list-count class="text-sm text-gray-500 mb-4">
-    {totalCount} {totalCount === 1 ? "code" : "codes"}
-  </p>
+  </section>
 
-  <div data-list-empty class="hidden text-center py-8">
-    <p class="text-gray-500 dark:text-gray-400 mb-2">No codes match the current filters.</p>
-    <a href="/" data-clear-filters class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
-  </div>
+  <section class="grid gap-4 sm:grid-cols-3 mb-10">
+    <a href="/codes" class={cardCls}>
+      <h2 class="font-medium mb-1">Browse codes &#8594;</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        All {fmt.format(codeCount)} codes, filterable by [[n,k,d]] and tags.
+      </p>
+    </a>
+    <a href="/tools" class={cardCls}>
+      <h2 class="font-medium mb-1">Tools &#8594;</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        The software used to synthesise these circuits.
+      </p>
+    </a>
+    <a href="/contribute" class={cardCls}>
+      <h2 class="font-medium mb-1">Contribute &#8594;</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Add a circuit or import a dataset.
+      </p>
+    </a>
+  </section>
 
-  <div class="grid gap-4" data-list-container>
-    {codes.map((code) => (
-      <CodeCard code={code} />
-    ))}
-  </div>
+  {latest.length > 0 && (
+    <section>
+      <h2 class="text-lg font-semibold mb-3">Latest circuits</h2>
+      <div class="grid gap-2">
+        {latest.map((circuit) => (
+          <a
+            href={`/circuits/${circuit.qec_id}`}
+            class="rounded border border-gray-200 dark:border-gray-800 px-4 py-2.5 flex items-baseline gap-2 flex-wrap hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
+          >
+            <span class="font-mono text-xs text-gray-400 dark:text-gray-500">{formatCircuitId(circuit.qec_id)}</span>
+            <span class="font-medium text-sm">{circuit.name}</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">{circuit.code_name}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
 </Layout>
-
-<script>
-  import { initListFilter } from "../lib/list-filter-client";
-  import { initListKeynav } from "../lib/list-keynav-client";
-
-  initListFilter({
-    formSelector: "#code-filter",
-    fields: ["n", "k", "d"],
-    rowSelector: "[data-filter-row]",
-    containerSelector: "[data-list-container]",
-    basePath: "/",
-    countSelector: "[data-list-count]",
-    formatCount: (visible, total, active) =>
-      active
-        ? `Showing ${visible} of ${total} codes`
-        : `${total} ${total === 1 ? "code" : "codes"}`,
-    emptyStateSelector: "[data-list-empty]",
-    defaultSort: { field: "n", dir: "asc" },
-  });
-
-  initListKeynav({
-    rowSelector: "[data-list-row]",
-    enterSelector: "[data-list-link]",
-  });
-</script>

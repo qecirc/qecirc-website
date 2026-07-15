@@ -57,6 +57,31 @@ export function countAllCircuits(): number {
   return row.count;
 }
 
+/** Most recently added circuits, for the landing page.
+ *
+ * Ordered by `qec_id DESC`, NOT `created_at`: create_database.mjs rebuilds the
+ * DB from YAML on every build and omits `created_at` from its INSERT, so every
+ * row carries the same build timestamp. `qec_id` is assigned max+1 at ingestion
+ * and never reused, making it the only stable "added at" signal in the schema.
+ */
+export function getLatestCircuits(
+  limit: number,
+): (Circuit & { tags: string[]; code_slug: string; code_name: string })[] {
+  const db = getDb();
+  const rows = db
+    .prepare(
+      `SELECT c.*, co.slug AS code_slug, co.name AS code_name
+       FROM circuits c JOIN codes co ON co.id = c.code_id
+       ORDER BY c.qec_id DESC LIMIT ?`,
+    )
+    .all(limit) as (Circuit & { code_slug: string; code_name: string })[];
+  return withTags(rows, "circuit") as (Circuit & {
+    tags: string[];
+    code_slug: string;
+    code_name: string;
+  })[];
+}
+
 export function getCircuitTagsForCode(codeId: number): TagWithCount[] {
   const db = getDb();
   return db
