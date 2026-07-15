@@ -59,18 +59,20 @@ const cardCls =
 
 <Layout
   title="Quantum error correction circuits"
-  description="A community-driven library of quantum error correction circuits — browse, search and download STIM, QASM and Cirq circuits by code."
+  description="Find the QEC circuits you need to design fault-tolerant computation. Browse, search and download STIM, QASM and Cirq circuits, organised by error-correcting code."
   jsonLd={jsonLd}
 >
   <section class="max-w-2xl mb-8">
     <h1 class="text-3xl font-bold mb-3">Quantum error correction circuits</h1>
-    {/* Circuit types named here are the ones that actually exist: state
-        preparation, flag gadgets and encoding. The corpus has no
-        syndrome-extraction circuits yet, so the hero does not promise any. */}
+    {/* Encoding, state preparation and flag gadgets are what the library
+        actually holds; syndrome extraction is named as scope, so it says "still
+        to come" rather than implying you can download one today. */}
     <p class="text-gray-600 dark:text-gray-400 mb-3">
-      Find, compare and download reusable QEC circuits — state preparation, flag gadgets
-      and encoding — organised by error-correcting code. Every circuit comes with its
-      metrics and its source, stored in STIM and offered as QASM and Cirq.
+      QECirc is where QEC researchers find the circuits they need to design
+      fault-tolerant computation. Browse, compare and download reusable circuits for
+      encoding, state preparation and flag gadgets, organised by error-correcting code,
+      with syndrome extraction still to come. Each circuit carries its metrics and its
+      source, stored in STIM and offered as QASM and Cirq.
     </p>
     <p class="text-gray-600 dark:text-gray-400 mb-4">
       QECirc is built as a community project, in the open. The circuits are drawn from
