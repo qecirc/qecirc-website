@@ -2,10 +2,14 @@
 interface Props {
   value: number | null;
   label?: string;
+  /** Classes for the label alone. Circuit rows pass `md:hidden`: above md the
+   *  column header names the metric, below md there is no header and the label
+   *  has to travel with the number. */
+  labelClass?: string;
   title: string;
 }
 
-const { value, label, title } = Astro.props;
+const { value, label, labelClass, title } = Astro.props;
 ---
 
 {
@@ -14,7 +18,8 @@ const { value, label, title } = Astro.props;
       class="font-mono text-[13px] font-medium text-gray-900 dark:text-gray-100 tabular-nums"
       title={title}
     >
-      {label ? `${label} ${value}` : value}
+      {label && <span class={labelClass}>{label} </span>}
+      {value}
     </span>
   )
 }

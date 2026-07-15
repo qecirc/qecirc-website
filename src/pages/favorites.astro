@@ -9,7 +9,7 @@ import Layout from "../components/Layout.astro";
     <h1 class="text-2xl font-bold">Favorites</h1>
     <button
       id="download-all-favs"
-      class="hidden text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+      class="hidden text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
       title="Download all favorite circuits — Shift+D"
       aria-label="Download all favorite circuits"
     >
@@ -17,7 +17,7 @@ import Layout from "../components/Layout.astro";
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
         </svg>
-        <kbd class="inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+        <kbd class="inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
           ⇧D
         </kbd>
       </span>
@@ -30,12 +30,12 @@ import Layout from "../components/Layout.astro";
 
   <div id="fav-empty" class="text-center py-8 hidden">
     <p class="text-gray-500 dark:text-gray-400 mb-2">No favorites yet.</p>
-    <p class="text-sm text-gray-400 dark:text-gray-500">Browse circuits and click the heart icon to save them here.</p>
+    <p class="text-sm text-gray-500 dark:text-gray-400">Browse circuits and click the heart icon to save them here.</p>
   </div>
 
   <div id="fav-error" class="text-center py-8 hidden">
     <p class="text-gray-500 dark:text-gray-400 mb-2">Could not load favorites.</p>
-    <p class="text-sm text-gray-400 dark:text-gray-500">Please reload the page or try again later.</p>
+    <p class="text-sm text-gray-500 dark:text-gray-400">Please reload the page or try again later.</p>
   </div>
 
   <div id="fav-content" class="hidden space-y-6"></div>
@@ -160,7 +160,7 @@ import Layout from "../components/Layout.astro";
 
             // ID
             const idSpan = document.createElement("span");
-            idSpan.className = "font-mono text-xs text-gray-400 dark:text-gray-500 shrink-0";
+            idSpan.className = "font-mono text-xs text-gray-500 dark:text-gray-400 shrink-0";
             idSpan.textContent = `#${circuit.qec_id}`;
             row.appendChild(idSpan);
 

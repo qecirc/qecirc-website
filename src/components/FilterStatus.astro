@@ -14,9 +14,11 @@
 interface Props {
   /** Where "Clear filters" points; must equal the page's own path. */
   basePath: string;
+  /** Extra classes for the slot itself, for the caller's own layout. */
+  class?: string;
 }
 
-const { basePath } = Astro.props;
+const { basePath, class: className } = Astro.props;
 
 // Mirrors parseFilterString's grammar (queries/shared.ts and
 // list-filter-client.ts): a bare number, an operator and a number, or several
@@ -35,10 +37,10 @@ const HINT_TITLE =
     an element carrying one of those simply never hides. That is why the clear
     link below lays its icon out with `inline-block` on the *svg* instead of
     `inline-flex` on itself. */}
-<div class="text-xs" data-filter-status>
+<div class:list={["text-xs", className]} data-filter-status>
   <span data-filter-error class="hidden text-red-500">Invalid filter</span>
 
-  <span data-filter-hint class="text-gray-400 dark:text-gray-500" title={HINT_TITLE}>
+  <span data-filter-hint class="text-gray-500 dark:text-gray-400" title={HINT_TITLE}>
     e.g.{" "}
     {EXAMPLES.map((example, i) => (
       <Fragment>
