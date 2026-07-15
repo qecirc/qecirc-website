@@ -1,0 +1,95 @@
+---
+export const prerender = false;
+
+import Layout from "../../components/Layout.astro";
+import CodeCard from "../../components/CodeCard.astro";
+import CodeFilter from "../../components/CodeFilter.astro";
+import { filterCodes, getTagsWithCount, formatCodeParams } from "../../lib/queries";
+
+// Filtering/sorting happens client-side (list-filter-client.ts): the page
+// always renders the full list in default order and ignores filter params,
+// so every visit shares one cached document.
+const allTags = getTagsWithCount("code");
+const codes = filterCodes({});
+const totalCount = codes.length;
+
+const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
+const pageUrl = `${siteUrl}/codes`;
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${pageUrl}#codes`,
+    url: pageUrl,
+    name: "Codes",
+    description: "Browse quantum error correction codes and circuits.",
+    isPartOf: { "@id": `${siteUrl}/#website` },
+    // The page is always the canonical full list (filtering is client-side).
+    // Cap the enumeration to bound head size; numberOfItems keeps the true total.
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: totalCount,
+      itemListElement: codes.slice(0, 200).map((code, i) => {
+        const params = formatCodeParams(code);
+        return {
+          "@type": "ListItem",
+          position: i + 1,
+          name: params === "" || code.name === params ? code.name : `${code.name} ${params}`,
+          url: `${siteUrl}/codes/${code.slug}`,
+        };
+      }),
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [{ "@type": "ListItem", position: 1, name: "Codes", item: pageUrl }],
+  },
+];
+---
+
+<Layout title="Codes" description="Browse quantum error correction codes and circuits" jsonLd={jsonLd}>
+  <h1 class="text-2xl font-bold mb-6">Codes</h1>
+
+  <CodeFilter allTags={allTags} basePath="/codes" />
+
+  <p data-list-count class="text-sm text-gray-500 mb-4">
+    {totalCount} {totalCount === 1 ? "code" : "codes"}
+  </p>
+
+  <div data-list-empty class="hidden text-center py-8">
+    <p class="text-gray-500 dark:text-gray-400 mb-2">No codes match the current filters.</p>
+    <a href="/codes" data-clear-filters class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
+  </div>
+
+  <div class="grid gap-4" data-list-container>
+    {codes.map((code) => (
+      <CodeCard code={code} basePath="/codes" />
+    ))}
+  </div>
+</Layout>
+
+<script>
+  import { initListFilter } from "../../lib/list-filter-client";
+  import { initListKeynav } from "../../lib/list-keynav-client";
+
+  initListFilter({
+    formSelector: "#code-filter",
+    fields: ["n", "k", "d"],
+    rowSelector: "[data-filter-row]",
+    containerSelector: "[data-list-container]",
+    basePath: "/codes",
+    countSelector: "[data-list-count]",
+    formatCount: (visible, total, active) =>
+      active
+        ? `Showing ${visible} of ${total} codes`
+        : `${total} ${total === 1 ? "code" : "codes"}`,
+    emptyStateSelector: "[data-list-empty]",
+    defaultSort: { field: "n", dir: "asc" },
+  });
+
+  initListKeynav({
+    rowSelector: "[data-list-row]",
+    enterSelector: "[data-list-link]",
+  });
+</script>

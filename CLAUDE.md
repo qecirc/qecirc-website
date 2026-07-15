@@ -119,10 +119,38 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 
 **Rendering strategy — Astro v7 (static default, SSR opt-in):**
 
-- Static pages: landing page, 404 (pre-rendered at build time)
-- SSR pages (`prerender = false`): all `/codes/...` and `/circuits/...` routes, `/api/search` (rendered on request, read from SQLite)
+- Static pages: 404, `/about`, `/contribute`, `/privacy`, `/legal` (pre-rendered at build time)
+- SSR pages (`prerender = false`): the landing page `/`, all `/codes/...` and `/circuits/...` routes, `/search`, `/api/search` (rendered on request, read from SQLite)
+  - **`/` must stay SSR.** `@astrojs/node` serves pre-rendered pages straight from disk without running middleware, so a static `/` would silently lose the `s-maxage` edge caching (see below). The DB is baked at build time either way, so pre-rendering buys nothing here.
 - **Unknown id/slug → `return notFound()`** (`src/lib/not-found.ts`), which returns a bodiless 404; Astro fills the body with the prerendered /404 page. Never `Astro.rewrite("/404")` from an SSR page — /404 is prerendered, so the rewrite finds no component instance and 500s (`scripts/smoke.sh` guards this).
 - Client-side JS: search bar (debounced fetch), circuit row expand/collapse, format switching, favorites (toggle/filter/export/import), CodeBlock copy/download, lazy-loaded circuit bodies on code pages (fetched from `/api/circuits/[qec_id]/bodies` on first row expand), and filtering/sorting on the listing pages (`list-filter-client.ts` over `data-metrics`/`data-tags` row attributes — the server always renders the canonical full list and ignores filter params; `/api/download` still parses them)
+- **`/search` is the exception: it filters on the server.** That convention's justification — every visit shares one cached document — cannot hold for free-text search, and `list-filter-client.ts` has no text matching and only filters rows already in the DOM. Consequences: `/search` sets its own shorter `Cache-Control` (the `?q=` key space is unbounded) and is `Disallow`ed in `robots.txt`.
+
+**Caching:** `src/middleware.ts` stamps `s-maxage=604800` on every response lacking its own `Cache-Control`; safe only because rendered output is immutable between deploys and each deploy purges Cloudflare (`src/lib/cache-purge.ts`). A page that varies by query string must set its own shorter value.
+
+**Search — two engines, on purpose.** They share a spelling dictionary, nothing else.
+
+|          | header quick-search (`/api/search`)  | `/search`                 |
+| -------- | ------------------------------------ | ------------------------- |
+| Job      | jump to a known thing                | find things               |
+| Scope    | codes, circuits, tools               | circuits only             |
+| Matching | LIKE, **substring** — names and tags | FTS5 tokens, plus `notes` |
+| Order    | alphabetical, grouped by type        | BM25 relevance            |
+
+**Do not "unify" these by pointing the quick-search at the FTS index.** LIKE matches mid-word (`ycle` → Bivariate Bicycle Code), which token-based FTS cannot — that is what makes a type-ahead usable. There is also no FTS index for codes or tools, and pulling `notes` into a 10-item navigation list would surface circuits that merely mention the term. Enter with nothing highlighted hands over to `/search`; that is where the two meet.
+
+`/search` ranks by BM25 over the `circuit_search` FTS5 table (`data/migrations/016`), which `scripts/db/create_database.mjs` repopulates on every build, and is forgiving in three layers, applied in this order (`src/lib/queries/search.ts` → `resolveQuery`):
+
+1. **Stemming** — `circuit_search` uses the `porter` tokenizer, so `encodings`/`encode`/`encoding` meet at one term.
+2. **Spelling correction** — `src/lib/queries/spelling.ts` maps a token that matches _nothing_ to its nearest word in the `search_vocab` dictionary (Damerau-Levenshtein, Elasticsearch "AUTO" edit budget). Shared with the quick-search, so the two agree on what exists. Only unmatched tokens are touched, so a query that already works is never rewritten. Tokens containing digits are never corrected: `#508` is one edit from an arXiv `2508`, and `distance:3` from `distance:5`. `?literal=1` opts out.
+3. **OR fallback** — if no circuit matches _every_ term, the query is retried as "any term" and the page says so.
+
+Gotchas if you touch this:
+
+- `search_vocab` must stay **unstemmed** (it indexes `search_terms`, not `circuit_search`) or suggestions become stems — porter stores "steane" as "stean".
+- `search_terms` must keep covering **codes and tools**, not just circuits: a tool with no circuits appears in no circuit text, so a circuit-only dictionary cannot fix `autqce` → `autqec`.
+- The findability probe asks **both** indexes. `circuit_search` alone would call a tool name a typo; `search_terms` alone is unstemmed and would "correct" `encodings` → `encoding`. Neither answers both cases.
+- Results and facets must be built from the _same_ `ResolvedQuery`, or the filter counts describe a different search than the list.
 
 This keeps the site fast and simple while scaling comfortably to thousands of circuits.
 

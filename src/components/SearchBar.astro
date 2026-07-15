@@ -81,6 +81,8 @@
 
     if (results.length === 0) {
       resultsList.innerHTML = '<li class="px-3 py-2 text-sm text-gray-400">No results</li>';
+      appendAdvanced(query);
+      cachedItems = resultsList.querySelectorAll<HTMLLIElement>("li[data-href]");
       show();
       return;
     }
@@ -127,8 +129,27 @@
       resultsList.appendChild(li);
     });
 
+    appendAdvanced(query);
     cachedItems = resultsList.querySelectorAll<HTMLLIElement>("li[data-href]");
     show();
+  }
+
+  // This dropdown caps out at 20 codes / 10 circuits / 10 tools and matches
+  // names and tags only. /search reads circuit notes too and ranks by
+  // relevance, so offer it as the way out -- especially on "No results".
+  function appendAdvanced(query: string) {
+    const href = "/search?q=" + encodeURIComponent(query);
+    const li = document.createElement("li");
+    li.className =
+      "px-3 py-2 text-sm cursor-pointer border-t border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800";
+    li.setAttribute("role", "option");
+    li.setAttribute("aria-selected", "false");
+    li.dataset.href = href;
+    li.textContent = `Search all circuits for "${query}" →`;
+    li.addEventListener("click", function () {
+      navigateTo(href);
+    });
+    resultsList.appendChild(li);
   }
 
   input.addEventListener("input", function () {
@@ -141,6 +162,20 @@
 
   input.addEventListener("keydown", function (e) {
     const items = cachedItems;
+
+    // Enter without a highlighted result hands over to /search. This bar is for
+    // jumping to a known code/circuit/tool; pressing Enter means "I want results,
+    // not this list". Handled ahead of the no-items guard on purpose: an empty
+    // dropdown is exactly when /search helps most, since it also reads notes and
+    // tolerates typos this LIKE-matched dropdown cannot.
+    if (e.key === "Enter" && activeIndex < 0) {
+      const q = input.value.trim();
+      if (q.length < 2) return;
+      e.preventDefault();
+      navigateTo("/search?q=" + encodeURIComponent(q));
+      return;
+    }
+
     if (items.length === 0) return;
 
     if (e.key === "ArrowDown") {

@@ -5,9 +5,15 @@ import { formatCodeParams } from "../lib/queries";
 
 interface Props {
   code: CodeWithMeta;
+  /** Path tag links point at (the host page's own path). */
+  basePath: string;
+  /** Pass on pages where tag clicks must navigate and preserve other params
+   *  (e.g. /search keeping ?q=); omit where list-filter-client intercepts them. */
+  baseUrl?: URL;
+  selectedTags?: string[];
 }
 
-const { code } = Astro.props;
+const { code, basePath, baseUrl, selectedTags } = Astro.props;
 const { name, slug, tags, circuit_count } = code;
 const params = formatCodeParams(code);
 const showParams = params !== "" && name !== params;
@@ -33,7 +39,7 @@ const rowTags = JSON.stringify(tags);
       <span class="text-xs text-gray-400 dark:text-gray-500">{circuit_count} {circuit_count === 1 ? "circuit" : "circuits"}</span>
     </a>
     <div class="ml-auto">
-      <TagList tags={tags} />
+      <TagList tags={tags} basePath={basePath} baseUrl={baseUrl} selectedTags={selectedTags} />
     </div>
   </div>
 </div>

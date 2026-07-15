@@ -1,5 +1,7 @@
-// Client-side filtering and sorting for listing pages (codes index, code
-// detail). Rows are server-rendered in canonical default order and carry
+// Client-side filtering and sorting for listing pages (/codes, code detail).
+// Not used by /search, which filters server-side: this module has no text
+// matching and only filters rows already in the DOM. Rows are server-rendered
+// in canonical default order and carry
 // their data in attributes (data-metrics, data-tags, data-name); this module
 // intercepts filter inputs, sort links ([data-sort-field]) and tag links
 // ([data-tag]), applies filters by toggling the Tailwind `hidden` class,
@@ -14,7 +16,15 @@
 //   (plain UTF-16 comparison, approximating SQLite BINARY collation);
 // - tag filters AND together (row must carry all selected tags).
 
-import { FILTER_PART_REGEX } from "./constants";
+import {
+  FILTER_PART_REGEX,
+  TAG_SELECTED,
+  TAG_UNSELECTED,
+  DROPDOWN_ENTRY_SELECTED,
+  DROPDOWN_ENTRY_UNSELECTED,
+  SUMMARY_SELECTED,
+  SUMMARY_UNSELECTED,
+} from "./constants";
 import type { FilterCondition, FilterOp, SortDir } from "../types";
 
 export interface ListFilterConfig {
@@ -53,25 +63,11 @@ interface ListState {
 }
 
 // ---------------------------------------------------------------------------
-// Styling constants. KEEP IN SYNC with the server-rendered class lists in
-// TagList.astro / TagFilterDropdowns.astro / CircuitRow.astro /
-// CircuitFilter.astro / CodeFilter.astro.
+// Styling constants. The tag/dropdown/summary classes come from constants.ts,
+// shared with the server-rendered markup in TagList.astro and
+// TagFilterDropdowns.astro. The sort classes below are still duplicated in
+// CircuitFilter.astro / CodeFilter.astro — KEEP THOSE IN SYNC.
 // ---------------------------------------------------------------------------
-
-const TAG_SELECTED =
-  "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300";
-const TAG_UNSELECTED =
-  "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700";
-
-const DROPDOWN_ENTRY_SELECTED =
-  "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300";
-const DROPDOWN_ENTRY_UNSELECTED =
-  "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800";
-
-const SUMMARY_SELECTED =
-  "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 font-semibold";
-const SUMMARY_UNSELECTED =
-  "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium";
 
 const SORT_LABEL_ACTIVE = "text-amber-600 dark:text-amber-400 font-semibold cursor-pointer";
 const SORT_LABEL_INACTIVE =

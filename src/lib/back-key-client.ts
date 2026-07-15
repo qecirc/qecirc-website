@@ -1,7 +1,7 @@
 // Backspace (and `b` as alternate) navigates to a parent page on detail
 // pages. Each page that wants this calls initBackKey with the explicit
 // parent href; Backspace from a circuit detail goes to its code page,
-// from a code page to the homepage. Using an explicit href rather than
+// from a code page to the codes list. Using an explicit href rather than
 // history.back() keeps the destination predictable when a user landed
 // on the page via a direct URL.
 

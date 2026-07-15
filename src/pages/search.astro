@@ -1,0 +1,299 @@
+---
+export const prerender = false;
+
+import Layout from "../components/Layout.astro";
+import CircuitRow from "../components/CircuitRow.astro";
+import CircuitBodiesTemplate from "../components/CircuitBodiesTemplate.astro";
+import TagFilterDropdowns from "../components/TagFilterDropdowns.astro";
+import { TAG_CATEGORIES, categorizeTag } from "../lib/tag-categories";
+import {
+  searchCircuitsRanked,
+  searchCircuitFacets,
+  resolveQuery,
+  getToolsForCircuits,
+  formatCodeParams,
+  MIN_QUERY_LENGTH,
+} from "../lib/queries";
+import { tagToggleUrl } from "../lib/url";
+
+// Server-filtered, unlike /codes: this page ranks by relevance over text the
+// client never sees (notes), so client-side filtering (list-filter-client.ts)
+// cannot express it. That also means each ?q= is its own edge-cache key, hence
+// the shortened s-maxage below and Disallow: /search in robots.txt.ts.
+const RESULT_LIMIT = 100;
+
+const q = Astro.url.searchParams.get("q")?.trim() ?? "";
+const selectedTags = Astro.url.searchParams.getAll("tag");
+const codeSlug = Astro.url.searchParams.get("code") ?? "";
+// `literal=1` is the escape hatch from a spelling correction ("search instead
+// for ..."), so the user is never trapped in a rewritten query.
+const literal = Astro.url.searchParams.get("literal") === "1";
+
+const hasQuery = q.length >= MIN_QUERY_LENGTH;
+const tooShort = q.length > 0 && !hasQuery;
+
+// One resolution shared by results AND facets: they must describe the same
+// search, or the filter counts belong to a different query than the list.
+const resolved = hasQuery ? resolveQuery(q, { literal }) : null;
+
+// Filter choices come from the query's matches, so we never offer a code or tag
+// that leads to an empty page.
+const facets = resolved ? searchCircuitFacets(resolved) : { codes: [], tags: [] };
+const selectedCode = codeSlug ? facets.codes.find((c) => c.slug === codeSlug) : undefined;
+// A ?code= that no longer matches the query yields no results; keep it in the
+// select anyway so the control still reflects the URL rather than lying.
+const codeOptions = facets.codes;
+const staleCode = codeSlug !== "" && selectedCode == null;
+
+const results = resolved
+  ? searchCircuitsRanked(resolved, {
+      codeId: selectedCode?.id,
+      tags: selectedTags.length > 0 ? selectedTags : undefined,
+      limit: RESULT_LIMIT,
+    })
+  : [];
+const truncated = results.length === RESULT_LIMIT;
+const toolsMap = getToolsForCircuits(results.map((c) => c.id));
+
+// Grouped the same way as a code page's circuit tags (CircuitFilter.astro).
+const tagGroups = TAG_CATEGORIES.map((c) => ({
+  label: c.label,
+  tags: facets.tags.filter((t) => categorizeTag(t.name) === c.key),
+}));
+
+const hasFilters = selectedTags.length > 0 || codeSlug !== "";
+const codeLabel = (c: { name: string; n: number; k: number; d: number | null }) => {
+  const p = formatCodeParams(c);
+  return p === "" || c.name === p ? c.name : `${c.name} ${p}`;
+};
+const clearHref = `/search?q=${encodeURIComponent(q)}${literal ? "&literal=1" : ""}`;
+// Escape hatch from a correction: same query, spelling left alone.
+const literalHref = `/search?q=${encodeURIComponent(q)}&literal=1`;
+
+// Query strings must not be cached at the edge for a week like the rest of the
+// site (middleware.ts): the key space is unbounded and attacker-fillable.
+Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
+---
+
+<Layout
+  title="Search"
+  description="Search quantum error correction circuits by name, notes, tags and code"
+>
+  <h1 class="text-2xl font-bold mb-2">Search circuits</h1>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+    Searches circuit names, notes, tags and code names. For codes and tools, use the
+    quick search in the header.
+  </p>
+
+  <form method="GET" action="/search" class="mb-6">
+    {/* Tags toggle via links, not inputs, so without these a submit (or a code
+        change) would silently drop the active tag filters. */}
+    {selectedTags.map((tag) => <input type="hidden" name="tag" value={tag} />)}
+
+    <div class="flex gap-2">
+      <input
+        type="search"
+        name="q"
+        value={q}
+        autofocus
+        placeholder="Search circuits by name, notes, tag or #id"
+        aria-label="Search circuits"
+        class="flex-1 rounded border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+      />
+      <button
+        type="submit"
+        class="rounded px-4 py-2 text-sm font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer"
+      >
+        Search
+      </button>
+    </div>
+
+    {/* Filters appear only once a query has matches to narrow. Opt-in: the
+        disclosure starts closed unless a filter is already active, and the
+        inline script below keeps it open once the user opens it. */}
+    {hasQuery && (facets.codes.length > 0 || facets.tags.length > 0) && (
+      <Fragment>
+      <details id="search-filters" open={hasFilters} class="mt-3">
+        <summary class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer select-none">
+          Filters{hasFilters && <span class="ml-1 text-amber-600 dark:text-amber-400">&#183; active</span>}
+        </summary>
+
+        <div class="mt-3 space-y-3 rounded border border-gray-200 dark:border-gray-800 p-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <label for="code-select" class="text-xs font-medium text-gray-600 dark:text-gray-400">Code</label>
+            <select
+              id="code-select"
+              name="code"
+              class="rounded border border-gray-300 dark:border-gray-700 px-2 py-1 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            >
+              <option value="">Any code ({facets.codes.reduce((s, c) => s + c.count, 0)})</option>
+              {staleCode && <option value={codeSlug} selected>No match for this query</option>}
+              {codeOptions.map((c) => (
+                <option value={c.slug} selected={c.slug === codeSlug}>
+                  {codeLabel(c)} ({c.count})
+                </option>
+              ))}
+            </select>
+            {hasFilters && (
+              <a href={clearHref} class="text-xs underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">
+                Clear
+              </a>
+            )}
+          </div>
+
+          {facets.tags.length > 0 && (
+            /* Same category dropdowns as a code page's circuit filter. Passing
+               baseUrl puts them in server-filtered mode: links navigate and keep
+               ?q=/?code=, and selected state is rendered rather than left to
+               list-filter-client, which this page does not run. Counts are per
+               query, not per current selection -- see searchCircuitFacets. */
+            <TagFilterDropdowns
+              allTags={facets.tags}
+              basePath="/search"
+              groups={tagGroups}
+              defaultView="grouped"
+              storageKey="qecirc:tag-view"
+              baseUrl={Astro.url}
+              selectedTags={selectedTags}
+            />
+          )}
+        </div>
+      </details>
+      {/* The server can only render this open when a filter is *currently*
+          active, so deselecting the last tag would slam the panel shut while
+          the user is still working in it. Remember that they opened it and
+          restore that. Inline and adjacent to the element so it applies before
+          paint rather than flashing shut (same idiom as Layout.astro's theme
+          script). Never force-close: an active filter must stay visible. */}
+      <script is:inline>
+        (function () {
+          const d = document.getElementById("search-filters");
+          if (!d) return;
+          const KEY = "qecirc:search-filters-open";
+          if (localStorage.getItem(KEY) === "1") d.open = true;
+          d.addEventListener("toggle", function () {
+            localStorage.setItem(KEY, d.open ? "1" : "0");
+          });
+        })();
+      </script>
+      </Fragment>
+    )}
+  </form>
+
+  {tooShort && (
+    <p class="text-sm text-gray-500 dark:text-gray-400 py-4">
+      Enter at least {MIN_QUERY_LENGTH} characters.
+    </p>
+  )}
+
+  {!hasQuery && !tooShort && (
+    <div class="text-sm text-gray-500 dark:text-gray-400 py-4 space-y-2">
+      <p>Type a query above, or {" "}
+        <a href="/codes" class="underline hover:text-gray-900 dark:hover:text-gray-100">browse all codes</a>.
+      </p>
+      <p>Results are ranked by relevance. Search by circuit name, words in its notes, a tag, a code name, or a circuit id like <span class="font-mono">#1043</span>.</p>
+    </div>
+  )}
+
+  {hasQuery && (
+    <>
+      <p class="text-sm text-gray-500 mb-3">
+        {results.length === 0
+          ? "No circuits found"
+          : `${truncated ? `Top ${results.length}` : results.length} ${results.length === 1 ? "circuit" : "circuits"}`}
+        {" for "}<span class="font-medium text-gray-900 dark:text-gray-100">{resolved?.display ?? q}</span>
+      </p>
+
+      {resolved?.corrected && (
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          Showing results for <span class="font-medium text-gray-900 dark:text-gray-100">{resolved.display}</span>.
+          {" "}Search instead for{" "}
+          <a href={`${literalHref}`} class="underline hover:text-gray-900 dark:hover:text-gray-100">{resolved.raw}</a>.
+        </p>
+      )}
+
+      {resolved?.partial && (
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          No circuit matches every term, so these match at least one.
+        </p>
+      )}
+
+      {results.length === 0 ? (
+        <div class="text-center py-8">
+          <p class="text-gray-500 dark:text-gray-400 mb-2">
+            No circuits match {hasFilters ? "this query and these filters." : "this query."}
+          </p>
+          {hasFilters && (
+            <a href={clearHref} class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">
+              Clear filters
+            </a>
+          )}
+        </div>
+      ) : (
+        <div>
+          {/* Same columns as a code page's circuit list. Not sortable here:
+              order is relevance, which is the point of the page. */}
+          <div
+            class="grid items-center gap-x-1.5 px-4 py-1.5 text-[11px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400"
+            style="grid-template-columns: var(--circuit-grid);"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+            <span class="text-center" title="Gate count">G</span>
+            <span class="text-center text-amber-600 dark:text-amber-400" title="Two-qubit gate count">2Q</span>
+            <span class="text-center" title="Circuit depth">D</span>
+            <span class="text-center" title="Qubit count">Q</span>
+            <span></span>
+            <span>Name</span>
+          </div>
+          <div class="space-y-2">
+            {results.map((circuit) => (
+              <CircuitRow
+                circuit={circuit}
+                tool={toolsMap.get(circuit.id)}
+                codeSlug={circuit.code_slug}
+                codeLabel={codeLabel({
+                  name: circuit.code_name,
+                  n: circuit.code_n,
+                  k: circuit.code_k,
+                  d: circuit.code_d,
+                })}
+                tagHrefFor={(tag) => tagToggleUrl(Astro.url.search, selectedTags, tag, "/search")}
+                permalinkPath={`/circuits/${circuit.qec_id}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  )}
+
+  <CircuitBodiesTemplate />
+</Layout>
+
+<script>
+  import { initListKeynav } from "../lib/list-keynav-client";
+  import { initCircuitBodies } from "../lib/circuit-bodies-client";
+  import { initCircuitActions } from "../lib/circuit-actions-client";
+
+  initCircuitBodies();
+  initCircuitActions();
+
+  // Tags apply the moment they are clicked (they are plain links), so the code
+  // select has to apply on change too. Without this it looks inert: the choice
+  // sticks but nothing happens until the Search button is pressed. The button
+  // remains the no-JS path.
+  const codeSelect = document.getElementById("code-select") as HTMLSelectElement | null;
+  codeSelect?.addEventListener("change", () => codeSelect.form?.submit());
+
+  initListKeynav({
+    rowSelector: "[data-list-row]",
+    enterSelector: "[data-list-detail-link]",
+    expandable: true,
+    expandSelfClick: true,
+    favoritable: true,
+    favoriteSelector: "[data-list-fav]",
+    hashAttr: "data-qec-id",
+  });
+</script>

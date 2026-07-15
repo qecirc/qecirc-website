@@ -3,7 +3,9 @@ import { getAllCodes, getAllCircuitQecIds } from "../lib/queries";
 
 export const prerender = false;
 
-const STATIC_PATHS = ["/", "/about", "/contribute", "/tools", "/privacy", "/legal"];
+// /search is deliberately omitted — it is noindex (see robots.txt.ts) because
+// free-text queries crossed with tag links are an unbounded crawl space.
+const STATIC_PATHS = ["/", "/codes", "/about", "/contribute", "/tools", "/privacy", "/legal"];
 
 export const GET: APIRoute = ({ site }) => {
   const codes = getAllCodes();

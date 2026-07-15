@@ -6,7 +6,7 @@ export const prerender = false;
 // https://llmstxt.org/ — a concise, LLM-friendly map of the site. Generated
 // from the live database (like sitemap.xml) so it never drifts. Codes are the
 // top-level entities; each code page enumerates its own circuits (and carries
-// schema.org JSON-LD), so listing all 400+ circuits here would only add noise.
+// schema.org JSON-LD), so listing every circuit here would only add noise.
 export const GET: APIRoute = ({ site }) => {
   const base = site!.origin;
   const codes = getAllCodes(); // ordered by name
@@ -31,6 +31,7 @@ ${codeLines.join("\n")}
 
 ## About
 
+- [Codes](${base}/codes): browse and filter all codes by [[n,k,d]] parameters and tags.
 - [About](${base}/about): project goals, data model, and scope.
 - [Contribute](${base}/contribute): how to submit a circuit or import a dataset.
 - [Tools](${base}/tools): software tools used to create the circuits.

@@ -9,11 +9,23 @@ interface Props {
   circuit: Circuit & { tags: string[] };
   tool?: Tool;
   codeSlug: string;
+  /** Shown next to the name on cross-code lists (/search), where the row would
+   *  otherwise not say which code it belongs to. Omitted on code pages, where
+   *  the whole page is already one code. */
+  codeLabel?: string;
+  /** Where a tag chip links. Defaults to filtering this circuit's code page.
+   *  /search overrides it so a tag toggles the search's own tag filter. */
+  tagHrefFor?: (tag: string) => string;
+  /** What the id button copies. Defaults to this page + #id, which is right on
+   *  a code page. /search must override it: a /search#id link drops the ?q= and
+   *  would resolve to a page that never renders that row. */
+  permalinkPath?: string;
 }
 
-const { circuit, tool, codeSlug } = Astro.props;
+const { circuit, tool, codeSlug, codeLabel, tagHrefFor, permalinkPath } = Astro.props;
 
 const basePath = `/codes/${codeSlug}`;
+const tagHref = tagHrefFor ?? ((tag: string) => `${basePath}?tag=${encodeURIComponent(tag)}`);
 const displayId = formatCircuitId(circuit.qec_id);
 
 // Row data consumed by list-filter-client.ts (client-side filtering/sorting).
@@ -70,6 +82,7 @@ const stimFilename = buildStimFilename({
       aria-label="Copy link to circuit"
       title="Copy link"
       data-qec-id={anchorId}
+      data-permalink-path={permalinkPath}
     >
       <span class="permalink-label">{displayId}</span>
       <svg class="permalink-check w-3.5 h-3.5 hidden text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -102,18 +115,25 @@ const stimFilename = buildStimFilename({
     </span>
 
     <span></span>
-    <a href={`/circuits/${circuit.qec_id}`} class="circuit-detail-link font-medium text-sm hover:underline inline-flex items-center gap-1 w-fit max-w-full min-w-0" data-list-detail-link>
-      <span class="truncate">{circuit.name}</span>
-      <svg class="w-3 h-3 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M9 5l7 7-7 7" />
-      </svg>
-    </a>
+    <div class="flex items-baseline gap-2 min-w-0">
+      <a href={`/circuits/${circuit.qec_id}`} class="circuit-detail-link font-medium text-sm hover:underline inline-flex items-baseline gap-1 w-fit max-w-full min-w-0" data-list-detail-link>
+        <span class="truncate">{circuit.name}</span>
+        <svg class="w-3 h-3 shrink-0 self-center text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+      {codeLabel && (
+        <a href={basePath} class="circuit-code-link text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 truncate shrink-0">
+          {codeLabel}
+        </a>
+      )}
+    </div>
 
     {circuit.tags.length > 0 && (
       <div class="flex flex-wrap gap-1 justify-end col-span-full mt-1.5 md:col-auto md:mt-0 md:justify-self-end">
         {circuit.tags.map((tag) => (
           <a
-            href={`${basePath}?tag=${encodeURIComponent(tag)}`}
+            href={tagHref(tag)}
             data-tag={tag}
             class="circuit-tag inline-block rounded px-1.5 py-0.5 text-xs transition-colors bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
           >
@@ -219,6 +239,7 @@ const stimFilename = buildStimFilename({
 
       btn.addEventListener("click", function (e) {
         if ((e.target as HTMLElement).closest(".circuit-tag")) return;
+        if ((e.target as HTMLElement).closest(".circuit-code-link")) return;
         if ((e.target as HTMLElement).closest(".circuit-permalink")) return;
         if ((e.target as HTMLElement).closest(".circuit-id-copy")) return;
         if ((e.target as HTMLElement).closest(".circuit-detail-link")) return;
@@ -310,7 +331,11 @@ const stimFilename = buildStimFilename({
 
       btn.addEventListener("click", async function () {
         const qecId = btn.dataset.qecId;
-        const url = location.origin + location.pathname + "#" + qecId;
+        // data-permalink-path is set on cross-code lists, where "this page +
+        // #id" would not resolve back to this row (see the prop's doc).
+        const url = btn.dataset.permalinkPath
+          ? location.origin + btn.dataset.permalinkPath
+          : location.origin + location.pathname + "#" + qecId;
         const ok = await copyToClipboard(url);
         if (!ok) return;
         showCopyCheck(btn, ".permalink-label", ".permalink-check");

@@ -57,6 +57,59 @@ export function countAllCircuits(): number {
   return row.count;
 }
 
+/** Distinct papers to cite when using these circuits.
+ *
+ * `circuits.source` is the work a circuit should be credited to — normally a
+ * paper link. It is free-form, though, and some rows instead hold the tool that
+ * generated the circuit: a bare name ("circuit-synth"), or a repo URL that is
+ * literally a tool's own `github_url`. Those belong to the tool, which carries
+ * its own homepage/github/paper links, so they are not counted here.
+ *
+ * Hence the rule: a source is a paper if it is a link and is not a tool's link.
+ * Testing for arxiv.org/doi.org instead would be narrower AND wronger — it
+ * would miss a paper published anywhere else (a journal, quantum-journal.org).
+ *
+ * Counts the circuits' own sources only: `tools.paper_urls` cites the tool, not
+ * the circuit.
+ */
+export function countCircuitPapers(): number {
+  const db = getDb();
+  const row = db
+    .prepare(
+      `SELECT COUNT(DISTINCT source) AS count FROM circuits
+       WHERE source LIKE 'http%'
+         AND source NOT IN (SELECT homepage_url FROM tools WHERE homepage_url IS NOT NULL)
+         AND source NOT IN (SELECT github_url FROM tools WHERE github_url IS NOT NULL)`,
+    )
+    .get() as { count: number };
+  return row.count;
+}
+
+/** Most recently added circuits, for the landing page.
+ *
+ * Ordered by `qec_id DESC`, NOT `created_at`: create_database.mjs rebuilds the
+ * DB from YAML on every build and omits `created_at` from its INSERT, so every
+ * row carries the same build timestamp. `qec_id` is assigned max+1 at ingestion
+ * and never reused, making it the only stable "added at" signal in the schema.
+ */
+export function getLatestCircuits(
+  limit: number,
+): (Circuit & { tags: string[]; code_slug: string; code_name: string })[] {
+  const db = getDb();
+  const rows = db
+    .prepare(
+      `SELECT c.*, co.slug AS code_slug, co.name AS code_name
+       FROM circuits c JOIN codes co ON co.id = c.code_id
+       ORDER BY c.qec_id DESC LIMIT ?`,
+    )
+    .all(limit) as (Circuit & { code_slug: string; code_name: string })[];
+  return withTags(rows, "circuit") as (Circuit & {
+    tags: string[];
+    code_slug: string;
+    code_name: string;
+  })[];
+}
+
 export function getCircuitTagsForCode(codeId: number): TagWithCount[] {
   const db = getDb();
   return db

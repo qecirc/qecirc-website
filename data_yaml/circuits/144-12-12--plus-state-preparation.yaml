@@ -2,7 +2,7 @@ qec_id: 25
 name: QECC Plus State Preparation
 tool: mqt-qecc
 notes: Created using the `synthesize_encoding_circuit` function in mqt.qecc
-source: https://github.com/munich-quantum-toolkit/qecc
+source: https://arxiv.org/abs/2605.15266
 gate_count: 330
 two_qubit_gate_count: 330
 depth: 16

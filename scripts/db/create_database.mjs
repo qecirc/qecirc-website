@@ -303,5 +303,47 @@ try {
   throw e;
 }
 
+// --- 4. Populate the full-text search index (data/migrations/016) ---
+// Derived entirely from the rows just inserted, so it is rebuilt from scratch
+// here rather than maintained by triggers. `source` rides along in the notes
+// column: it is provenance prose (DOI/citation) and shares its low weight.
+const SEARCH_TEXT = `
+  SELECT c.id AS circuit_id, c.name AS name, co.name AS code_name,
+         COALESCE((SELECT group_concat(t.name, ' ')
+                   FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+                   WHERE tg.taggable_id = c.id AND tg.taggable_type = 'circuit'), '') AS tags,
+         TRIM(COALESCE(c.notes, '') || ' ' || COALESCE(c.source, '')) AS notes
+  FROM circuits c JOIN codes co ON co.id = c.code_id`;
+
+const indexed = db
+  .prepare(
+    `INSERT INTO circuit_search (circuit_id, name, code_name, tags, notes)
+     SELECT circuit_id, name, code_name, tags, notes FROM (${SEARCH_TEXT})`,
+  )
+  .run();
+
+// The unstemmed spelling dictionary (see migration 015). Covers every entity,
+// not just circuits: it also backs the header quick-search, which looks up codes
+// and tools. A tool that has contributed no circuits appears in no circuit text,
+// so without these rows its name could never be offered as a correction.
+const TAGS_OF = (type) => `
+  COALESCE((SELECT group_concat(t.name, ' ')
+            FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+            WHERE tg.taggable_id = e.id AND tg.taggable_type = '${type}'), '')`;
+
+db.prepare(
+  `INSERT INTO search_terms (text)
+   SELECT name || ' ' || code_name || ' ' || tags || ' ' || notes FROM (${SEARCH_TEXT})`,
+).run();
+db.prepare(
+  `INSERT INTO search_terms (text) SELECT e.name || ' ' || ${TAGS_OF("code")} FROM codes e`,
+).run();
+db.prepare(
+  `INSERT INTO search_terms (text) SELECT e.name || ' ' || ${TAGS_OF("tool")} FROM tools e`,
+).run();
+
+const vocabSize = db.prepare("SELECT COUNT(*) AS n FROM search_vocab").get().n;
+
 db.close();
+console.log(`\nSearch index: ${indexed.changes} circuits, ${vocabSize} dictionary terms.`);
 console.log("\nDatabase created successfully.");
