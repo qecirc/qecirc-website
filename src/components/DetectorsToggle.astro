@@ -3,10 +3,10 @@
 // Sits in the format-tab row next to the Coords switch — both are view controls
 // over the same block, like picking STIM vs QASM.
 //
-// Switching it on swaps in the `stim-annotated` body (reset prologue, terminal
-// readout, detectors, observables) and repoints the Crumble link at the matching
-// URL. Wired by body-view-client.ts, which removes it when the circuit has no
-// annotated body — most do not.
+// Off, the body shows its reset prologue and gates; on, it also shows the
+// terminal readout and the derived annotations, and the Crumble link follows.
+// Wired by body-view-client.ts, which removes the switch when the body has no
+// detectors — most circuits have none, and non-CSS codes never can.
 import { TAB_INACTIVE_CLASS } from "../lib/constants";
 
 const BASE =

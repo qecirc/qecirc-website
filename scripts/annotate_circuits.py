@@ -1,9 +1,15 @@
 """
 Backfill `stim-annotated` bodies for state-prep and encoding circuits.
 
-Writes `data_yaml/circuits/<stem>.stim-annotated` for every circuit that can
-carry deterministic detectors, and records the matching Crumble link in the
-circuit YAML as `crumble_url_annotated`.
+Writes `data_yaml/circuits/<stem>.stim-annotated` for every state-prep and
+encoding circuit: a reset prologue stating the `|0...0>` input, then the body,
+then — where a terminal readout basis exists — the readout and its detectors.
+Non-CSS codes get the prologue alone (see `annotate.build_annotated`).
+
+Also rewrites both Crumble links in the circuit YAML. `crumble_url` follows what
+the STIM tab shows by default, which now carries the prologue, so leaving it
+pointing at the reset-free stored body would make link and text disagree.
+`crumble_url_annotated` is written only when there is a second view to link to.
 
 Idempotent: re-running regenerates from source and rewrites only what changed.
 Every emitted body is checked with stim's detector error model before it is

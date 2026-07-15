@@ -58,8 +58,8 @@ function buildSwitcher(
   const source = container.dataset.source ?? "";
 
   // The annotated body is a view of the STIM body, not a format of its own, so
-  // it gets no tab. Mirrors FormatSwitcher.astro, which resolves this
-  // server-side.
+  // it gets no tab; it supersedes the plain STIM body for display. Mirrors
+  // FormatSwitcher.astro, which resolves this server-side.
   const { tabs, annotated } = splitAnnotated(bodies);
 
   // Only STIM carries coordinates or an annotated variant, so at most one body
@@ -106,7 +106,7 @@ function buildSwitcher(
     const blockLabel = bodyEl.querySelector<HTMLElement>(".block-label");
     if (blockLabel) blockLabel.textContent = `${entry.format.toUpperCase()} Circuit`;
 
-    // Seed the default view (coordinates hidden, canonical body); initBodyView
+    // Seed the default view (coordinates and detectors hidden); initBodyView
     // repaints it once the whole switcher is assembled. Copy and download read
     // the copy button's data-code rather than `raw`, so they follow what is on
     // screen.

@@ -19,7 +19,8 @@ interface Props {
 const { bodies, stimFilename, source } = Astro.props;
 
 // The annotated body is a view of the STIM body, not a format of its own, so it
-// gets no tab — the Detectors switch swaps it in behind the STIM tab.
+// gets no tab. It supersedes the plain STIM body for display; the switches
+// subtract from it.
 const { tabs, annotated } = splitAnnotated(bodies);
 const hasMultipleFormats = tabs.length > 1;
 

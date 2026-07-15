@@ -1,6 +1,10 @@
 // Wires the switches that control how a circuit body is displayed: "Coords"
-// (show/hide QUBIT_COORDS) and "Detectors" (swap in the annotated body, which
-// carries the reset prologue, terminal readout and derived detectors).
+// (show/hide QUBIT_COORDS) and "Detectors" (show/hide the terminal readout and
+// the derived DETECTOR/OBSERVABLE_INCLUDE annotations).
+//
+// Both *subtract* from the fullest form the circuit has; neither swaps bodies.
+// The reset prologue is therefore in both views — it states the |0...0> input,
+// which is not what the Detectors switch is about.
 //
 // One module rather than one per switch: both derive the *same* rendered text
 // from the same block, so they have to share a single view state. Two

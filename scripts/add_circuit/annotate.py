@@ -1,23 +1,30 @@
-"""Derive detectors and observables for state-prep and encoding circuits.
+"""Derive a reset prologue, detectors and observables for prep/encoding circuits.
 
-The stored ``stim`` body is a pure unitary (no terminal readout, no annotations)
-because ``to_tableau()`` and the derive/fit machinery depend on it. This module
-builds a *separate* ``stim-annotated`` body: reset prologue, the body verbatim,
-a terminal readout, and the deterministic stabilizer outcomes as ``DETECTOR``s.
+The stored ``stim`` body is reset-free and unannotated — ``to_tableau()`` and the
+derive/fit machinery need a circuit with no resets, and it leaves the ``|0...0>``
+input implied. (It is not gate-only: 399 of 834 bodies carry flag or verification
+measurements, which are part of the circuit.) This module builds a *separate*
+``stim-annotated`` body stating what the stored one leaves out: an explicit reset
+prologue, then the body verbatim, then — where derivable — a terminal readout and
+the deterministic stabilizer outcomes as ``DETECTOR``s.
 
-Two shapes, because the circuits mean different things:
+The prologue and the readout are independent, and that is the main thing to know:
 
-* **state prep** — every qubit is reset, the prepared basis fixes which half of
-  the stabilizers is deterministic (Hz for ``|0>_L``, Hx for ``|+>_L``), and the
-  logical is deterministic too, so it becomes an ``OBSERVABLE_INCLUDE``.
-* **encoding** — only the ancillas are reset; the k logical inputs are left free.
-  Hz is deterministic for *any* input (the encoder maps into the codespace and
-  every codeword is stabilized by all of Hz), so the detectors hold regardless of
-  what the reader puts on the inputs. The logical is input-dependent, so there is
-  no observable.
+* the **prologue** applies to every prep and encoder, whatever the code, because
+  those genuinely start from ``|0...0>``. State preps reset everything; encoders
+  reset only their ancillas, leaving the k logical inputs free for the reader.
+* the **readout** needs a single terminal basis that reads the deterministic half
+  of the stabilizers (Hz for ``|0>_L``, Hx for ``|+>_L``). Only CSS codes have
+  one — the five-qubit code's stabilizers mix X and Z on the same qubit
+  (``YZIZY``), so nothing reads them in one basis.
 
-Non-CSS codes are refused: their stabilizers mix X and Z on the same qubit
-(the five-qubit code's ``YZIZY``), so no single terminal basis reads them.
+So a non-CSS circuit still gets a body; it just stops after the prologue. See
+:func:`_readout_basis`.
+
+Observables are for state preps only. An encoder's logical is whatever the reader
+supplies, so nothing about it is deterministic — but Hz still is, for *any* input
+(the encoder maps into the codespace and every codeword is stabilized by all of
+Hz), so its detectors hold regardless.
 """
 
 import re

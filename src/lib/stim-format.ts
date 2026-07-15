@@ -8,8 +8,8 @@ const COORDS_LINE = /^\s*QUBIT_COORDS\b/;
 
 /** The detector/observable-annotated STIM body. Stored as its own
  *  `circuit_bodies` format, but it is a *view* of the STIM body rather than a
- *  format of its own, so it never gets a format tab — the Detectors switch
- *  swaps it in behind the STIM tab. */
+ *  format of its own, so it never gets a format tab. It supersedes the plain
+ *  STIM body for display, and the switches subtract from it. */
 export const ANNOTATED_FORMAT = "stim-annotated";
 
 /** The format whose tab the Detectors switch belongs to. */
