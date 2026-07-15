@@ -429,6 +429,7 @@ def import_state_prep(
     gate_set: Optional[str] = None,
     device: Optional[str] = None,
     qubit_placement: Optional[str] = None,
+    ancilla_role: str = "flag",
     data_dir: str = "data_yaml",
     dry_run: bool = False,
 ) -> "AddCircuitResult":
@@ -450,6 +451,13 @@ def import_state_prep(
     dedup search — use it with ``self_dual`` / ``two_circuit`` for
     automorphism-rich codes where the search cannot confirm equivalence in time.
 
+    ``ancilla_role`` says what the qubits at indices ``>= n`` are for. ``"flag"``
+    (the default) means flag / verification qubits, and the circuit is tagged
+    ``flag``. ``"routing"`` means they only mediate gates between data qubits
+    (bridge qubits for a restricted connectivity) and carry no verification role,
+    so no ``flag`` tag is added — the ``flag`` tag is a claim about fault
+    tolerance, not about qubit count.
+
     ``assume_new`` (optional) forwards to ``add_circuit``: set it when the code is
     genuinely new but its parameters/invariants collide with a stored code so the
     dedup search reports ``uncertain`` (e.g. distinct same-``[[n,k]]`` codes). It
@@ -468,6 +476,9 @@ def import_state_prep(
     diffing the ``originals/`` circuit against the stored body).
     """
     from . import add_circuit
+
+    if ancilla_role not in ("flag", "routing"):
+        raise ValueError(f"ancilla_role must be 'flag' or 'routing', got {ancilla_role!r}.")
 
     # 1. Derive the code matrices in the circuit's own labeling.
     code_kwargs: dict = {}
@@ -563,6 +574,7 @@ def import_state_prep(
         gate_set=gate_set,
         device=device,
         flag_qubits=flag_qubits,
+        ancilla_role=ancilla_role,
         qubit_placement=qubit_placement,
         permutation=applied_perm,
     )
@@ -571,7 +583,7 @@ def import_state_prep(
         connectivity=connectivity,
         device=device,
         logical_state=logical_state,
-        has_flags=bool(flag_qubits),
+        has_flags=bool(flag_qubits) and ancilla_role == "flag",
     )
 
     # 4. Duplicate guard: published datasets contain byte-identical circuits
@@ -588,6 +600,19 @@ def import_state_prep(
     return add_circuit(**common, tags=full_tags, notes=notes, dry_run=dry_run)
 
 
+def _compact_ids(ids: list[int]) -> str:
+    """Render a long contiguous qubit run as ``lo-hi (N qubits)``.
+
+    Ancilla indices are ``range(n, num_qubits)``, so they are always contiguous.
+    Spelling out every integer is unreadable once a code is large (a d=11
+    unrotated prep has 220 of them). Short runs stay a plain list, which reads
+    better at that size, and anything non-contiguous falls back to the list.
+    """
+    if len(ids) > 8 and ids == list(range(ids[0], ids[-1] + 1)):
+        return f"{ids[0]}-{ids[-1]} ({len(ids)} qubits)"
+    return str(ids)
+
+
 def _build_notes(
     *,
     base_notes: Optional[str],
@@ -600,6 +625,7 @@ def _build_notes(
     flag_qubits: list[int],
     qubit_placement: Optional[str],
     permutation: Optional[list[int]],
+    ancilla_role: str = "flag",
 ) -> str:
     """Fold otherwise-unschema'd provenance into a single ``notes`` string."""
     parts: list[str] = []
@@ -621,7 +647,8 @@ def _build_notes(
     if device:
         parts.append(f"Device: {device}")
     if flag_qubits:
-        parts.append(f"Flag/ancilla qubits: {flag_qubits}")
+        label = "Flag/ancilla qubits" if ancilla_role == "flag" else "Routing ancilla qubits"
+        parts.append(f"{label}: {_compact_ids(flag_qubits)}")
     if qubit_placement:
         parts.append(f"Device qubit placement (Qiskit indices): {qubit_placement}")
     if permutation is not None:

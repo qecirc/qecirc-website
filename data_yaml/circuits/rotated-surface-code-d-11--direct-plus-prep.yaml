@@ -1,0 +1,19 @@
+qec_id: 1023
+name: Direct plus prep
+notes: "Unitary 'stabilizer-expanding' preparation of |+>_L (gates act directly
+  between data qubits, needing next-nearest-neighbour links). Partially fault-tolerant:
+  fault distance = d=11 for Z errors, bounded for X. Source file: clean_circuits/rotated_surface_code/unitary_encoding_without_ancilla/X/unitary_encoding_X_L11_without_ancilla.stim.
+  Logical state: plus. Connectivity: 2d-grid. Gate set: CX,H. Canonicalization qubit
+  permutation (stored qubit i = original qubit permutation[i]): [118, 116, 114, 112,
+  110, 108, 106, 104, 102, 100, 96, 94, 92, 90, 99, 88, 111, 86, 84, 82, 80, 78, 74,
+  72, 70, 68, 77, 66, 89, 101, 113, 64, 62, 60, 58, 56, 52, 50, 48, 46, 55, 44, 67,
+  79, 91, 103, 115, 42, 40, 38, 36, 34, 30, 28, 26, 24, 33, 22, 45, 57, 69, 81, 93,
+  105, 117, 20, 18, 16, 14, 12, 9, 8, 7, 19, 31, 6, 5, 17, 29, 41, 53, 4, 3, 15, 27,
+  39, 51, 63, 75, 2, 1, 13, 25, 37, 49, 61, 73, 85, 97, 11, 0, 109, 120, 23, 35, 47,
+  59, 71, 83, 95, 107, 119, 87, 98, 65, 76, 43, 54, 21, 32, 10]"
+source: https://arxiv.org/abs/2601.05113
+gate_count: 221
+two_qubit_gate_count: 160
+depth: 30
+qubit_count: 121
+tags: [state-preparation, partial-ft, "distance:11", "connectivity:2d-grid", "logical-state:plus"]

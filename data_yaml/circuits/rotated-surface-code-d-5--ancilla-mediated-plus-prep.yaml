@@ -1,0 +1,15 @@
+qec_id: 1009
+name: Ancilla-mediated plus prep
+notes: "Unitary 'stabilizer-expanding' preparation of |+>_L (ancillas bridge the
+  data qubits, so gates stay nearest-neighbour). Partially fault-tolerant: fault distance
+  = d=5 for Z errors, bounded for X. Source file: clean_circuits/rotated_surface_code/unitary_encoding_with_ancilla/X/unitary_encoding_X_L5_with_ancilla.stim.
+  Logical state: plus. Connectivity: 2d-grid. Gate set: CX,H. Routing ancilla qubits:
+  25-46 (22 qubits). Canonicalization qubit permutation (stored qubit i = original
+  qubit permutation[i]): [18, 8, 3, 22, 12, 1, 16, 6, 2, 7, 13, 21, 10, 15, 20, 0,
+  5, 24, 19, 9, 14, 4, 11, 17, 23]"
+source: https://arxiv.org/abs/2601.05113
+gate_count: 77
+two_qubit_gate_count: 52
+depth: 20
+qubit_count: 47
+tags: [state-preparation, partial-ft, "distance:5", "connectivity:2d-grid", "logical-state:plus"]
