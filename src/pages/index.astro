@@ -8,12 +8,16 @@
 export const prerender = false;
 
 import Layout from "../components/Layout.astro";
+import TagList from "../components/TagList.astro";
+import ToolCard from "../components/ToolCard.astro";
 import {
   countAllCodes,
   countAllCircuits,
   countAllTools,
   countCircuitPapers,
   getLatestCircuits,
+  getTagsWithCount,
+  getAllTools,
   formatCircuitId,
 } from "../lib/queries";
 import { CONTRIBUTORS } from "../lib/contributors";
@@ -42,6 +46,46 @@ const STATS: { value: number; label: string }[] = [
 
 const latest = getLatestCircuits(5);
 
+// Illustrations for the "What you can do" panels below. Both are queried, not
+// listed by hand: a hardcoded tag would outlive the tag itself, and a hardcoded
+// tool would go stale the moment /tools grows.
+// getTagsWithCount sorts by name, not count, so re-sort before slicing --
+// otherwise this shows whatever happens to sort first, not what most codes are.
+const EXAMPLE_CODE_TAGS = getTagsWithCount("code")
+  .toSorted((a, b) => b.count - a.count)
+  .slice(0, 6)
+  .map((t) => t.name);
+
+// The three fields CodeFilter renders, with its own placeholder text as the
+// example -- so this shows the real filter syntax, not an invented one. `n`
+// carries the amber active-sort styling because sorting by n ascending is
+// CodeFilter's true default (DEFAULT_SORT_FIELD).
+const FILTER_EXAMPLES: { field: string; example: string; sorted: boolean }[] = [
+  { field: "n", example: ">3,<10", sorted: true },
+  { field: "k", example: ">=2", sorted: false },
+  { field: "d", example: "!=5", sorted: false },
+];
+// getAllTools sorts by circuit count, so [0] is the most productive tool.
+// Tools with no circuits yet are real (/tools lists them) but make a poor
+// preview: this step is about reaching the software behind a circuit.
+// Undefined only if the tools table is empty, hence the guard at the usage.
+const EXAMPLE_TOOL = getAllTools().find((t) => t.circuit_count > 0);
+
+const CONTRIBUTE_STEPS = [
+  "You open an issue with the circuit and where it came from",
+  "A maintainer checks it and runs the ingestion pipeline",
+  "It appears in the library, credited to its source",
+];
+
+const cardCls =
+  "rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors";
+const stepCls =
+  "rounded border border-gray-200 dark:border-gray-800 p-4 grid gap-4 sm:grid-cols-2 sm:items-start";
+const stepTitleCls = "font-medium mb-1 flex items-baseline gap-2";
+const stepNumCls = "font-mono text-xs text-gray-400 dark:text-gray-500";
+const previewLabelCls =
+  "text-[11px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1.5";
+
 const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
 const jsonLd = {
   "@context": "https://schema.org",
@@ -53,8 +97,6 @@ const jsonLd = {
   isPartOf: { "@id": `${siteUrl}/#website` },
 };
 
-const cardCls =
-  "rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors";
 ---
 
 <Layout
@@ -144,6 +186,118 @@ const cardCls =
         Add a circuit or import a dataset.
       </p>
     </a>
+  </section>
+
+  {/* Expands the three cards above into what each one actually does. The
+      previews are built from the site's own live components and queries rather
+      than screenshots: the site is alpha and changes without notice, so an
+      image would rot silently with nothing in CI to catch it, would need a
+      second copy for dark mode, and could not be clicked. These cannot drift --
+      restyle a tag and this restyles with it. */}
+  <section class="mb-10">
+    <h2 class="text-lg font-semibold mb-1">How QECirc works</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+      Three parts, and how they fit together. The examples are live, so you can click
+      straight through.
+    </p>
+
+    <div class="space-y-3">
+      <div class={stepCls}>
+        <div>
+          <h3 class={stepTitleCls}>
+            <span class={stepNumCls}>1</span>Browse codes to find circuits
+          </h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            Every circuit belongs to a code, so start there. Narrow {fmt.format(codeCount)} codes
+            by any of [[n,k,d]] at once, or by family; click a parameter to sort on it instead.
+            Open a code to see its circuits with gate count, depth and qubit count.
+          </p>
+          <a href="/codes" class="text-sm font-medium prose-link">Browse codes &#8594;</a>
+        </div>
+        <div class="min-w-0">
+          <p class={previewLabelCls}>Filter by parameter</p>
+          {/* A replica of CodeFilter's control, not the control itself:
+              CodeFilter renders a form that list-filter-client binds to by id,
+              and a second one here would fight the real one for the same
+              clicks. Each box links to the filter it shows, so the example is
+              also the way in. */}
+          <div class="flex flex-wrap gap-1.5">
+            {FILTER_EXAMPLES.map(({ field, example, sorted }) => (
+              <a
+                href={`/codes?${field}=${encodeURIComponent(example)}`}
+                class="inline-flex items-center gap-1 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5 hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
+                title={`Filter codes by ${field} ${example}`}
+              >
+                <span
+                  class:list={[
+                    "px-1 py-0.5 text-xs font-semibold",
+                    sorted
+                      ? "text-amber-600 dark:text-amber-400"
+                      : "text-gray-600 dark:text-gray-400",
+                  ]}
+                >
+                  {field}
+                  {sorted && <span class="ml-0.5 text-[10px] text-gray-500">&#9650;</span>}
+                </span>
+                <span class="px-1 py-0.5 text-sm font-mono text-gray-500 dark:text-gray-400">
+                  {example}
+                </span>
+              </a>
+            ))}
+          </div>
+          <p class={`${previewLabelCls} mt-3`}>Or by family</p>
+          <TagList tags={EXAMPLE_CODE_TAGS} basePath="/codes" />
+        </div>
+      </div>
+
+      <div class={stepCls}>
+        <div>
+          <h3 class={stepTitleCls}>
+            <span class={stepNumCls}>2</span>Browse tools to synthesise your own
+          </h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            Most circuits here were generated rather than written by hand. Every tool lists its
+            paper and repository, and its circuits carry a{" "}
+            <span class="font-mono text-xs">tool:</span>{" "}tag, so you can go from a circuit you
+            like to the software that produced it.
+          </p>
+          <a href="/tools" class="text-sm font-medium prose-link">
+            All {fmt.format(countAllTools())} tools &#8594;
+          </a>
+        </div>
+        <div class="min-w-0">
+          <p class={previewLabelCls}>A tool entry</p>
+          {/* The real ToolCard /tools renders, on real data -- so this preview
+              is the page, not a picture of it. */}
+          {EXAMPLE_TOOL && <ToolCard tool={EXAMPLE_TOOL} />}
+        </div>
+      </div>
+
+      <div class={stepCls}>
+        <div>
+          <h3 class={stepTitleCls}>
+            <span class={stepNumCls}>3</span>Contribute what you have
+          </h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            Found a circuit in a paper, or built one yourself? Open an issue with the STIM body
+            and its source. A maintainer reviews it and runs the ingestion, so you do not need
+            to touch the repository. Whole datasets are welcome too.
+          </p>
+          <a href="/contribute" class="text-sm font-medium prose-link">How to contribute &#8594;</a>
+        </div>
+        <div class="min-w-0">
+          <p class={previewLabelCls}>What happens next</p>
+          <ol class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+            {CONTRIBUTE_STEPS.map((s, i) => (
+              <li class="flex gap-2">
+                <span class="font-mono text-xs text-gray-400 dark:text-gray-500 pt-0.5">{i + 1}</span>
+                <span>{s}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </div>
   </section>
 
   {latest.length > 0 && (
