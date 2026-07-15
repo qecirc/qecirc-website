@@ -393,6 +393,15 @@ The `qec_id` is a **permanent, globally unique** integer identifier for the circ
 
 Body files (`.stim`, `.qasm`, `.cirq`) share the same stem as the circuit YAML.
 
+State-prep and encoding circuits get one more, `.stim-annotated`, written by
+`uv run python scripts/annotate_circuits.py` (idempotent — run it after adding
+such a circuit). It restates the `|0…0⟩` input that the canonical `.stim` body
+leaves implied, and adds a terminal readout with detectors where a readout basis
+exists. It is a view of the STIM body rather than a display format, so it gets no
+format tab; the Detectors toggle derives both views from it. The canonical
+`.stim` body must stay reset-free — `to_tableau()` and the derive/fit machinery
+depend on that.
+
 ### Original submission (`data_yaml/circuits/originals/`)
 
 For each circuit, the pipeline generates two files preserving the original (pre-canonicalization) data:

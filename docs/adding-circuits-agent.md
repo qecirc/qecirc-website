@@ -37,7 +37,7 @@ You confirm before anything is written.
 
 ### Phase 3: Generate YAML files
 
-The agent calls the Python API to write the code YAML, circuit YAML, and body files (`.stim`, `.qasm`, `.cirq`) to `data_yaml/`. Each circuit is automatically assigned a unique `qec_id` (displayed as `#N` in the UI). This ID is permanent and must never be reused.
+The agent calls the Python API to write the code YAML, circuit YAML, and body files (`.stim`, `.qasm`, `.cirq`) to `data_yaml/`. For state-prep and encoding circuits, run `uv run python scripts/annotate_circuits.py` afterwards to add the `.stim-annotated` body. Each circuit is automatically assigned a unique `qec_id` (displayed as `#N` in the UI). This ID is permanent and must never be reused.
 
 ### Phase 4: Zoo lookup and tagging
 

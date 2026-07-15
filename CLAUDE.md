@@ -55,12 +55,16 @@ circuits
   -- source: provenance (DOI, URL, or citation)
   -- gate_count, two_qubit_gate_count, depth, qubit_count: numeric metrics for filtering
   -- crumble_url, quirk_url: optional external visualization links
+  -- crumble_url_annotated: Crumble link for the 'stim-annotated' body (NULL if none)
   -- tool_id: optional link to tool used to create the circuit
 
 circuit_bodies
   id, circuit_id → circuits, format, body
-  -- format: circuit format identifier (e.g. 'stim', 'qasm', 'cirq')
+  -- format: circuit format identifier (e.g. 'stim', 'qasm', 'cirq', 'stim-annotated')
   -- UNIQUE(circuit_id, format): one body per format per circuit
+  -- 'stim-annotated' is a *view* of the stim body, not a display format: it adds an
+     explicit reset prologue and (for CSS codes) a terminal readout with detectors.
+     It gets no format tab; the Detectors toggle derives both views from it.
 
 circuit_originals
   id, circuit_id → circuits (UNIQUE),
@@ -84,6 +88,13 @@ taggings
 Circuits are stored in STIM format and converted to QASM/Cirq for display.
 The STIM body is the canonical source; QASM/Cirq are generated as alternate
 views in `circuit_bodies`.
+
+The canonical STIM body is **reset-free** — `to_tableau()` and the derive/fit
+machinery need a circuit with no resets — so it leaves the `|0…0⟩` input implied.
+State-prep and encoding circuits therefore also carry a `stim-annotated` body
+that states it explicitly, plus a terminal readout and detectors where a readout
+basis exists. Generate it with `uv run python scripts/annotate_circuits.py`
+(idempotent); the canonical body must stay reset-free.
 
 ---
 

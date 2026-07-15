@@ -4,7 +4,9 @@ import * as yaml from "js-yaml";
 
 const DATA_DIR = path.join(process.cwd(), "data_yaml");
 
-const BODY_EXTENSIONS = [".stim", ".qasm", ".cirq"];
+// `.stim-annotated` holds the detector/observable-annotated variant of the
+// canonical `.stim` body; both are indexed as circuit_bodies formats.
+const BODY_EXTENSIONS = [".stim", ".qasm", ".cirq", ".stim-annotated"];
 
 // --- Schema definitions ---
 
@@ -35,6 +37,7 @@ const SCHEMAS = {
       qubit_count: "number",
       weight: "number",
       crumble_url: "string",
+      crumble_url_annotated: "string",
       quirk_url: "string",
       tags: "tags",
     },

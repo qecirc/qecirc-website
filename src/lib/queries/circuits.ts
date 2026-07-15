@@ -109,7 +109,10 @@ export function getCircuitsWithBodies(
   return { circuits, bodiesMap };
 }
 
-const FORMAT_ORDER = ["stim", "qasm", "cirq"];
+// `stim-annotated` is listed so it sorts deterministically rather than falling
+// through to the unknown-format branch below. It gets no format tab — the UI
+// pulls it out via splitAnnotated and the Detectors switch derives from it.
+const FORMAT_ORDER = ["stim", "qasm", "cirq", "stim-annotated"];
 
 export function getBodiesForCircuits(circuitIds: number[]): Map<number, CircuitBody[]> {
   const db = getDb();
