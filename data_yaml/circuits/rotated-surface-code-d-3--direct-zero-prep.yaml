@@ -11,7 +11,7 @@ gate_count: 12
 two_qubit_gate_count: 8
 depth: 6
 qubit_count: 9
-crumble_url: https://algassert.com/crumble#circuit=H_1_8_5_7;TICK;CX_1_0;TICK;CX_1_4;TICK;CX_1_3_8_2;TICK;CX_5_6;TICK;CX_5_0;TICK;CX_5_8_7_1;TICK_
+crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6_7_8;TICK;H_1_8_5_7;TICK;CX_1_0;TICK;CX_1_4;TICK;CX_1_3_8_2;TICK;CX_5_6;TICK;CX_5_0;TICK;CX_5_8_7_1_
 crumble_url_annotated: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6_7_8;TICK;H_1_8_5_7;TICK;CX_1_0;TICK;CX_1_4;TICK;CX_1_3_8_2;TICK;CX_5_6;TICK;CX_5_0;TICK;CX_5_8_7_1;TICK;M_0_1_2_3_4_5_6_7_8;DT_rec[-6]_rec[-5];DT_rec[-9]_rec[-8]_rec[-4]_rec[-2];DT_rec[-9]_rec[-7]_rec[-5]_rec[-1];DT_rec[-4]_rec[-3];OI(0)rec[-9]_rec[-6]_rec[-4]_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,"H",1,1,1,"H",1,"H","H"],["X","•"],[1,"•",1,1,"X"],[1,"•",1,"X"],[1,1,"X",1,1,1,1,1,"•"],[1,1,1,1,1,"•","X"],["X",1,1,1,1,"•"],[1,1,1,1,1,"•",1,1,"X"],[1,"X",1,1,1,1,1,"•"]]}
 tags: [state-preparation, partial-ft, "distance:3", "connectivity:2d-grid", "logical-state:zero"]

@@ -1,7 +1,7 @@
 ---
 import type { CircuitBody } from "../types";
 import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "../lib/constants";
-import { ANNOTATED_OF, hasQubitCoords, splitAnnotated } from "../lib/stim-format";
+import { ANNOTATED_OF, hasDetectors, hasQubitCoords, splitAnnotated } from "../lib/stim-format";
 import CodeBlock from "./CodeBlock.astro";
 import CoordsToggle from "./CoordsToggle.astro";
 import DetectorsToggle from "./DetectorsToggle.astro";
@@ -26,10 +26,14 @@ const hasMultipleFormats = tabs.length > 1;
 // Both switches belong to one format (only STIM carries coordinates or an
 // annotated variant) but share the tab row with all of them — they are hidden
 // while another format is selected, rather than left doing nothing. See
-// format-switcher-client.
-const coordsFormat = tabs.find((b) => hasQubitCoords(b.body))?.format
-  ?? (annotated && hasQubitCoords(annotated) ? ANNOTATED_OF : undefined);
-const detectorsFormat = annotated ? ANNOTATED_OF : undefined;
+// format-switcher-client. The annotated body supersedes the plain one for
+// display, so ask it about coordinates when it exists.
+const stimBody = tabs.find((b) => b.format === ANNOTATED_OF)?.body;
+const displayed = annotated ?? stimBody;
+const coordsFormat =
+  tabs.find((b) => hasQubitCoords(annotated && b.format === ANNOTATED_OF ? annotated : b.body))
+    ?.format ?? undefined;
+const detectorsFormat = displayed && hasDetectors(displayed) ? ANNOTATED_OF : undefined;
 const switchFormat = coordsFormat ?? detectorsFormat;
 
 function annotatedFor(format: string): string | undefined {

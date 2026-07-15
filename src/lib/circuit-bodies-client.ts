@@ -65,10 +65,9 @@ function buildSwitcher(
   // Only STIM carries coordinates or an annotated variant, so at most one body
   // per switcher owns the switches.
   let coordsSlot = tabBar.querySelector<HTMLElement>(".coords-slot");
-  const coordsFormat =
-    tabs.find((b) => hasQubitCoords(b.body))?.format ??
-    (annotated && hasQubitCoords(annotated) ? ANNOTATED_OF : undefined);
-  const switchFormat = coordsFormat ?? (annotated ? ANNOTATED_OF : undefined);
+  const switchFormat =
+    tabs.find((b) => hasQubitCoords(annotated && b.format === ANNOTATED_OF ? annotated : b.body))
+      ?.format ?? (annotated ? ANNOTATED_OF : undefined);
   if (switchFormat) {
     switcher.dataset.coordsFormat = switchFormat;
   } else {
@@ -80,6 +79,10 @@ function buildSwitcher(
 
   tabs.forEach(function (entry, i) {
     const raw = entry.body.trimEnd();
+    // The annotated body supersedes the plain STIM one for display: same circuit
+    // with the |0...0> input stated explicitly, plus a readout the Detectors
+    // switch subtracts. Both switches derive from this one superset.
+    const display = entry.format === ANNOTATED_OF && annotated ? annotated : raw;
 
     const tab = tabProto.cloneNode(true) as HTMLElement;
     tab.className = `${TAB_BASE_CLASS} ${i === 0 ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS}`;
@@ -107,19 +110,16 @@ function buildSwitcher(
     // repaints it once the whole switcher is assembled. Copy and download read
     // the copy button's data-code rather than `raw`, so they follow what is on
     // screen.
-    const shown = bodyForDisplay(raw, false);
+    const shown = bodyForDisplay(display, false, false);
     const codeEl = bodyEl.querySelector<HTMLElement>("pre code");
     if (codeEl) codeEl.textContent = lineNumbered(shown);
     const copyBtn = bodyEl.querySelector<HTMLElement>(".copy-btn");
     if (copyBtn) copyBtn.dataset.code = shown;
 
     const block = bodyEl.querySelector<HTMLElement>("[data-code-block]");
-    // The switches derive what is shown from the full body, so hand it over
-    // whenever either switch is live on this format.
-    if (block && entry.format === switchFormat) {
-      block.dataset.rawCode = raw;
-      if (annotated) block.dataset.annotatedCode = annotated;
-    }
+    // The switches subtract from the full body, so hand it over whenever either
+    // switch is live on this format.
+    if (block && entry.format === switchFormat) block.dataset.rawCode = display;
 
     const downloadBtn = bodyEl.querySelector<HTMLElement>(".download-btn");
     if (downloadBtn) {
@@ -127,7 +127,7 @@ function buildSwitcher(
       if (downloadName) {
         downloadBtn.title = `Download ${downloadName} (d)`;
         downloadBtn.addEventListener("click", function () {
-          const body = copyBtn?.dataset.code ?? raw;
+          const body = copyBtn?.dataset.code ?? shown;
           const blob = new Blob([body], { type: "text/plain" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
@@ -144,7 +144,7 @@ function buildSwitcher(
 
     if (copyBtn) {
       copyBtn.addEventListener("click", async function () {
-        const ok = await copyToClipboard(copyBtn.dataset.code ?? raw);
+        const ok = await copyToClipboard(copyBtn.dataset.code ?? shown);
         if (!ok) return;
         const label = copyBtn.querySelector<HTMLElement>(".copy-label");
         if (label) {

@@ -308,6 +308,38 @@ def build_annotated(
     return out
 
 
+def strip_readout(circ: stim.Circuit) -> stim.Circuit:
+    """Drop the readout epilogue, keeping the reset prologue and the body.
+
+    The inverse of what the Detectors switch shows: reset prologue + circuit,
+    with no terminal measurement and no annotations. Resets stay — the whole
+    point of the prologue is to state the ``|0...0>`` input explicitly instead of
+    leaving it implied.
+
+    Only the *added* epilogue goes. Pre-existing mid-circuit measurements are
+    part of the circuit (399 of 834 bodies carry flag/verification measurements)
+    and must survive. :func:`build_annotated` appends exactly one readout
+    instruction, last, so after the annotations are dropped it is the final
+    instruction — anything earlier belongs to the body.
+
+    Mirrors ``stripReadout`` in src/lib/stim-format.ts, which does the same for
+    the browser. Keep the two in step.
+    """
+    ops = [op for op in circ if op.name not in ("DETECTOR", "OBSERVABLE_INCLUDE")]
+    if ops and ops[-1].name in ("M", "MX"):
+        ops.pop()
+    while ops and ops[-1].name == "TICK":
+        ops.pop()
+
+    out = stim.Circuit()
+    for op in ops:
+        if isinstance(op, stim.CircuitRepeatBlock):
+            out.append(op)
+            continue
+        out.append(op.name, op.targets_copy(), op.gate_args_copy())
+    return out
+
+
 def validate_annotated(circ: stim.Circuit) -> Optional[str]:
     """Check every detector is deterministic. Returns an error string, or None.
 

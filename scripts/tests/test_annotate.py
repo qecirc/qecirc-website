@@ -16,11 +16,12 @@ from scripts.add_circuit.annotate import (
     logical_input_qubits,
     map_original_h,
     sparsify_basis,
+    strip_readout,
     validate_annotated,
 )
 from scripts.add_circuit.circuit_validate import extract_code
 from scripts.add_circuit.code_identify import build_symplectic_h, build_symplectic_logical
-from scripts.annotate_circuits import _with_annotated_url
+from scripts.annotate_circuits import _with_urls
 
 # The Steane encoder from test_circuit_validate, which that module already
 # asserts maps |0...0> into the code space. Deriving the check matrices from it
@@ -371,46 +372,136 @@ def test_sparsify_handles_empty():
     assert sparsify_basis(empty).shape == (0, 7)
 
 
+# --- stripping the readout back off ------------------------------------------
+
+
+def test_strip_readout_keeps_resets_and_drops_annotations():
+    circ = build_annotated(
+        STEANE_ZERO,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    stripped = strip_readout(circ)
+    names = [op.name for op in stripped]
+    assert names[0] == "R"  # the reset prologue is the point; it stays
+    assert "M" not in names
+    assert "DETECTOR" not in names
+    assert "OBSERVABLE_INCLUDE" not in names
+
+
+def test_strip_readout_preserves_a_body_ending_in_a_flag_measurement():
+    """The regression this guards: 399 of 834 bodies carry flag/verification
+    measurements. Only the ONE readout the generator appends may be removed."""
+    body = STEANE_ZERO + "MR 6\n"
+    circ = build_annotated(
+        body,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    assert circ is not None
+    stripped = strip_readout(circ)
+    names = [op.name for op in stripped]
+    assert "MR" in names  # the flag measurement survives
+    assert "M" not in names  # the added readout does not
+    assert names[0] == "R"
+
+
+def test_strip_readout_leaves_the_body_gates_untouched():
+    circ = build_annotated(
+        STEANE_ZERO,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    stripped = strip_readout(circ)
+    original = stim.Circuit(STEANE_ZERO)
+    gates = [op.name for op in stripped if op.name not in ("R", "TICK")]
+    assert gates == [op.name for op in original if op.name != "TICK"]
+
+
+def test_strip_readout_of_an_encoder_keeps_only_the_ancilla_resets():
+    circ = build_annotated(STEANE_STIM, STEANE_H, STEANE_LOGICAL, n=7, k=1, kind="encoding")
+    stripped = strip_readout(circ)
+    reset = next(op for op in stripped if op.name == "R")
+    assert len(reset.targets_copy()) == 6  # the input qubit stays free
+
+
+def test_strip_readout_is_still_a_unitary_free_circuit_stim_accepts():
+    circ = build_annotated(
+        STEANE_ZERO,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    # No detectors left, so the DEM is trivially fine — the point is it parses
+    # and round-trips as valid STIM.
+    text = str(strip_readout(circ))
+    assert stim.Circuit(text).num_detectors == 0
+    assert "R 0 1 2 3 4 5 6" in text
+
+
 # --- the YAML edit in the backfill script ------------------------------------
 
 _YAML = "qec_id: 1\ncrumble_url: https://a\nquirk_url: https://q\ntags: [encoding]\n"
 
 
-def test_annotated_url_is_inserted_after_crumble_url():
-    out = _with_annotated_url(_YAML, "https://b")
+def test_both_urls_are_written_in_order():
+    out = _with_urls(_YAML, "https://plain", "https://ann")
     lines = out.splitlines()
-    assert lines[1] == "crumble_url: https://a"
-    assert lines[2] == "crumble_url_annotated: https://b"
+    assert lines[1] == "crumble_url: https://plain"
+    assert lines[2] == "crumble_url_annotated: https://ann"
     assert lines[3] == "quirk_url: https://q"
 
 
-def test_annotated_url_edit_is_idempotent():
+def test_plain_url_is_overwritten_not_left_stale():
+    """`crumble_url` must follow the default view, which now carries the reset
+    prologue — the stored canonical body's link would no longer match."""
+    out = _with_urls(_YAML, "https://with-resets", "https://ann")
+    assert "https://a\n" not in out
+    assert out.count("crumble_url:") == 1
+
+
+def test_url_edit_is_idempotent():
     """The regression: a single-pass edit wrote the key twice on re-run, and the
     duplicate parsed to the same value — so a value-based change check missed it."""
-    once = _with_annotated_url(_YAML, "https://b")
-    twice = _with_annotated_url(once, "https://b")
+    once = _with_urls(_YAML, "https://p", "https://b")
+    twice = _with_urls(once, "https://p", "https://b")
     assert once == twice
     assert twice.count("crumble_url_annotated:") == 1
+    assert twice.count("crumble_url:") == 1
 
 
 def test_annotated_url_replaces_a_stale_value():
-    stale = _with_annotated_url(_YAML, "https://old")
-    fresh = _with_annotated_url(stale, "https://new")
+    stale = _with_urls(_YAML, "https://p", "https://old")
+    fresh = _with_urls(stale, "https://p", "https://new")
     assert "https://old" not in fresh
     assert fresh.count("crumble_url_annotated:") == 1
 
 
 def test_empty_annotated_url_removes_the_key():
     """Wide circuits have no Crumble link; the key must not linger as an empty."""
-    present = _with_annotated_url(_YAML, "https://b")
-    removed = _with_annotated_url(present, "")
+    present = _with_urls(_YAML, "https://p", "https://b")
+    removed = _with_urls(present, "", "")
     assert "crumble_url_annotated" not in removed
-    assert removed == _YAML
 
 
 def test_annotated_url_appended_when_no_crumble_url_key():
     text = "qec_id: 1\ntags: [encoding]\n"
-    out = _with_annotated_url(text, "https://b")
+    out = _with_urls(text, "", "https://b")
     assert out.count("crumble_url_annotated:") == 1
     assert out.startswith(text)
 

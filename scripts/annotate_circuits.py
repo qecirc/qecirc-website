@@ -29,7 +29,11 @@ if _PROJECT_ROOT not in sys.path:
 import numpy as np  # noqa: E402
 import yaml  # noqa: E402
 
-from scripts.add_circuit.annotate import build_annotated, validate_annotated  # noqa: E402
+from scripts.add_circuit.annotate import (  # noqa: E402
+    build_annotated,
+    strip_readout,
+    validate_annotated,
+)
 from scripts.add_circuit.compute_circuit import LARGE_CIRCUIT_MAX_QUBITS  # noqa: E402
 
 ANNOTATED_FORMAT = "stim-annotated"
@@ -123,14 +127,20 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
 
         annotated_path = circuits_dir / f"{stem}.{ANNOTATED_FORMAT}"
         text = str(circ) + "\n"
-        # The Crumble link follows the same width gate as the canonical body:
+        # Both Crumble links follow the same width gate as the canonical body:
         # past it the URL is megabytes and unusable.
-        url = circ.to_crumble_url() if circ.num_qubits <= LARGE_CIRCUIT_MAX_QUBITS else ""
+        wide = circ.num_qubits > LARGE_CIRCUIT_MAX_QUBITS
+        url = "" if wide else circ.to_crumble_url()
+        # `crumble_url` is the link for what the STIM tab shows by default, which
+        # for an annotated circuit is the reset prologue + body — not the stored
+        # canonical body, which leaves the |0...0> input implied. Overwriting it
+        # is what keeps the link and the displayed text in step.
+        plain_url = "" if wide else strip_readout(circ).to_crumble_url()
 
         # Compare rendered text, not the parsed value: a duplicated key parses to
         # the same value while leaving the file invalid.
         current_yaml = path.read_text(encoding="utf-8")
-        desired_yaml = _with_annotated_url(current_yaml, url)
+        desired_yaml = _with_urls(current_yaml, plain_url, url)
         body_changed = (
             not annotated_path.exists() or annotated_path.read_text(encoding="utf-8") != text
         )
@@ -149,8 +159,9 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
     return results
 
 
-def _with_annotated_url(text: str, url: str) -> str:
-    """Return `text` with exactly one `crumble_url_annotated`, after `crumble_url`.
+def _with_urls(text: str, plain: str, annotated: str) -> str:
+    """Return `text` with the two Crumble links set: `crumble_url` to `plain`,
+    followed by exactly one `crumble_url_annotated`.
 
     Edits the text rather than round-tripping through yaml.safe_load/dump: a full
     re-dump would reflow every circuit file (block scalars, key order, quoting)
@@ -159,19 +170,23 @@ def _with_annotated_url(text: str, url: str) -> str:
     Pure, so the caller can diff the result against the file and stay idempotent
     even when the file is already malformed.
     """
-    # Drop every existing occurrence first, then insert at most one. Doing this
-    # in a single pass double-writes: the insert-after-`crumble_url` branch and
-    # the replace-existing branch both fire on an already-annotated file.
+    # Drop every existing occurrence of the annotated key first, then insert at
+    # most one. Doing this in a single pass double-writes: the
+    # insert-after-`crumble_url` branch and the replace-existing branch both fire
+    # on an already-annotated file. `crumble_url:` does not match the longer key.
     lines = [
         ln for ln in text.splitlines(keepends=True) if not ln.startswith(f"{ANNOTATED_URL_KEY}:")
     ]
-    if not url:
+    if not annotated:
         return "".join(lines)
 
-    entry = f"{ANNOTATED_URL_KEY}: {url}\n"
+    entry = f"{ANNOTATED_URL_KEY}: {annotated}\n"
     out, inserted = [], False
     for line in lines:
-        out.append(line)
+        if plain and line.startswith("crumble_url:"):
+            out.append(f"crumble_url: {plain}\n")
+        else:
+            out.append(line)
         if not inserted and line.startswith("crumble_url:"):
             out.append(entry)
             inserted = True

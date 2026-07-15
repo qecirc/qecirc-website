@@ -11,13 +11,14 @@
 // `[data-coords-scope]` wrapper when a block is rendered without format tabs
 // (e.g. the original submission on a circuit detail page).
 //
-// The block owns the full bodies in `data-raw-code` / `data-annotated-code`;
-// what is on screen is derived from them. Copy and download read the copy
-// button's `data-code`, so keeping that in sync is what makes them follow the
-// switches rather than silently handing over something different from what is
-// displayed.
+// The block owns the fullest form of the body in `data-raw-code` — the
+// annotated one when the circuit has it — and everything on screen is derived
+// from that by subtraction, which is what lets the two switches compose. Copy
+// and download read the copy button's `data-code`, so keeping that in sync is
+// what makes them follow the switches rather than silently handing over
+// something different from what is displayed.
 
-import { bodyForDisplay, hasQubitCoords, lineNumbered } from "./stim-format";
+import { bodyForDisplay, hasDetectors, hasQubitCoords, lineNumbered } from "./stim-format";
 import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "./constants";
 
 const ACTIVE = TAB_ACTIVE_CLASS.split(" ");
@@ -71,15 +72,8 @@ function paintCrumble(scope: HTMLElement, detectors: boolean): void {
   link.href = detectors ? annotated : plain;
 }
 
-function paint(
-  scope: HTMLElement,
-  block: HTMLElement,
-  canonical: string,
-  annotated: string | undefined,
-  view: View,
-): void {
-  const raw = view.detectors && annotated ? annotated : canonical;
-  const shown = bodyForDisplay(raw, view.coords);
+function paint(scope: HTMLElement, block: HTMLElement, raw: string, view: View): void {
+  const shown = bodyForDisplay(raw, view.coords, view.detectors);
 
   const codeEl = block.querySelector<HTMLElement>("pre code");
   if (codeEl) codeEl.textContent = lineNumbered(shown);
@@ -110,31 +104,29 @@ export function initBodyView(scope: HTMLElement): void {
   const detectorsBtn = scope.querySelector<HTMLElement>(".detectors-btn");
   if (!coordsBtn && !detectorsBtn) return;
 
+  // `data-raw-code` holds the fullest form the circuit has — the annotated body
+  // when there is one, else the plain STIM body. Both switches subtract from it.
   const block = scope.querySelector<HTMLElement>("[data-code-block][data-raw-code]");
-  const canonical = block?.dataset.rawCode;
-  if (!block || !canonical) {
+  const raw = block?.dataset.rawCode;
+  if (!block || !raw) {
     coordsBtn?.remove();
     detectorsBtn?.remove();
     return;
   }
-  const annotated = block.dataset.annotatedCode;
 
-  // Coordinates can live in either body, so ask both before dropping the switch.
-  if (!hasQubitCoords(canonical) && !(annotated && hasQubitCoords(annotated))) {
-    coordsBtn?.remove();
-  }
-  if (!annotated) detectorsBtn?.remove();
+  if (!hasQubitCoords(raw)) coordsBtn?.remove();
+  if (!hasDetectors(raw)) detectorsBtn?.remove();
 
   const view: View = { coords: false, detectors: false };
-  paint(scope, block, canonical, annotated, view);
+  paint(scope, block, raw, view);
 
   scope.querySelector<HTMLElement>(".coords-btn")?.addEventListener("click", function () {
     view.coords = !view.coords;
-    paint(scope, block, canonical, annotated, view);
+    paint(scope, block, raw, view);
   });
   scope.querySelector<HTMLElement>(".detectors-btn")?.addEventListener("click", function () {
     view.detectors = !view.detectors;
-    paint(scope, block, canonical, annotated, view);
+    paint(scope, block, raw, view);
   });
 }
 
