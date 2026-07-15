@@ -6,7 +6,7 @@
  * Steps:
  *   1. Delete existing DB
  *   2. Run migrations
- *   3. Read YAML files (tools → codes → circuits)
+ *   3. Read YAML files (tools → papers → codes → circuits)
  *   4. Insert into DB
  */
 
@@ -16,6 +16,7 @@ import path from "node:path";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import * as yaml from "js-yaml";
+import { paperKey, paperLinks, isPaperSource } from "../paper-links.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const dbPath = path.join(root, "data", "qecirc.db");
@@ -32,14 +33,17 @@ db.pragma("foreign_keys = ON");
 // Prepared statements
 const stmts = {
   insertTool: db.prepare(`
-    INSERT INTO tools (name, slug, description, homepage_url, github_url, paper_urls)
-    VALUES (?, ?, ?, ?, ?, ?)`),
+    INSERT INTO tools (name, slug, description, homepage_url, github_url, paper_urls, aliases)
+    VALUES (?, ?, ?, ?, ?, ?, ?)`),
+  insertPaper: db.prepare(`
+    INSERT INTO papers (slug, title, authors, year, arxiv_id, doi, journal_ref, url)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`),
   insertCode: db.prepare(`
-    INSERT INTO codes (name, slug, n, k, d, zoo_url, h, logical, canonical_hash)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+    INSERT INTO codes (name, slug, n, k, d, zoo_url, aliases, related, h, logical, canonical_hash)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertCircuit: db.prepare(`
-    INSERT INTO circuits (qec_id, code_id, name, slug, notes, source, gate_count, two_qubit_gate_count, depth, qubit_count, weight, crumble_url, crumble_url_annotated, quirk_url, tool_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+    INSERT INTO circuits (qec_id, code_id, name, slug, notes, source, gate_count, two_qubit_gate_count, depth, qubit_count, weight, crumble_url, crumble_url_annotated, quirk_url, tool_id, paper_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertBody: db.prepare(`
     INSERT INTO circuit_bodies (circuit_id, format, body)
     VALUES (?, ?, ?)`),
@@ -52,6 +56,18 @@ const stmts = {
     INSERT OR IGNORE INTO taggings (tag_id, taggable_id, taggable_type)
     VALUES (?, ?, ?)`),
 };
+
+/** Alias lists collapse to one space-joined string per entity.
+ *
+ * Stored verbatim, hyphens and all: FTS5's unicode61 splits "Reed-Muller" into
+ * `reed`+`muller`, so both "reed muller" and "reed-muller" match it, while the
+ * quick-search's LIKE is substring-based and matches either way too. Folding the
+ * hyphens out would only break the LIKE path for a user who types one.
+ */
+function joinAliases(list) {
+  const text = (list || []).join(" ").trim();
+  return text === "" ? null : text;
+}
 
 function addTag(name, taggableId, taggableType) {
   stmts.insertTag.run(name);
@@ -79,6 +95,11 @@ const BODY_EXTENSIONS = new Set(["stim", "qasm", "cirq", "stim-annotated"]);
 // --- 4. Insert data ---
 const toolSlugToId = new Map();
 const codeSlugToId = new Map();
+/** paperKey(link) → papers.id, for every link a paper answers to. */
+const paperKeyToId = new Map();
+/** Link-shaped circuit sources that matched no paper → how many circuits. Not
+ *  fatal; reported after the build as a nudge to add the missing paper. */
+const unmatchedSources = new Map();
 const errors = [];
 
 try {
@@ -107,6 +128,7 @@ try {
         Array.isArray(data.paper_urls) && data.paper_urls.length > 0
           ? JSON.stringify(data.paper_urls)
           : null,
+        joinAliases(data.aliases),
       );
       toolSlugToId.set(slug, Number(lastInsertRowid));
 
@@ -115,6 +137,50 @@ try {
       }
 
       console.log(`  Tool: ${data.name} (${slug})`);
+    }
+
+    // --- Papers ---
+    const papersDir = path.join(dataDir, "papers");
+    for (const file of listYamlFiles(papersDir)) {
+      const slug = file.replace(/\.yaml$/, "");
+      const data = readYaml(path.join(papersDir, file));
+
+      if (!data.title) {
+        errors.push(`Paper ${file}: missing required field 'title'`);
+        continue;
+      }
+      if (!Array.isArray(data.authors) || data.authors.length === 0) {
+        errors.push(`Paper ${file}: 'authors' must be a non-empty list`);
+        continue;
+      }
+      if (!data.url) {
+        errors.push(`Paper ${file}: missing required field 'url'`);
+        continue;
+      }
+
+      const { lastInsertRowid } = stmts.insertPaper.run(
+        slug,
+        data.title,
+        JSON.stringify(data.authors),
+        data.year ?? null,
+        data.arxiv_id ? String(data.arxiv_id) : null,
+        data.doi || null,
+        data.journal_ref || null,
+        data.url,
+      );
+      const paperId = Number(lastInsertRowid);
+
+      for (const link of paperLinks(data)) {
+        const key = paperKey(link);
+        const claimed = paperKeyToId.get(key);
+        if (claimed != null && claimed !== paperId) {
+          errors.push(`Paper ${file}: link '${link}' is already claimed by another paper`);
+          continue;
+        }
+        paperKeyToId.set(key, paperId);
+      }
+
+      console.log(`  Paper: ${data.title} (${slug})`);
     }
 
     // --- Codes ---
@@ -143,6 +209,8 @@ try {
         data.k,
         data.d || null,
         data.zoo_url || null,
+        joinAliases(data.aliases),
+        joinAliases(data.related),
         data.h == null ? null : JSON.stringify(data.h),
         data.logical == null ? null : JSON.stringify(data.logical),
         data.canonical_hash || null,
@@ -228,13 +296,25 @@ try {
         }
       }
 
+      // Resolve paper from `source`. Only link-shaped sources are candidates:
+      // the rest name a tool ("circuit-synth"), which is provenance but not a
+      // paper. A link that matches no paper is NOT an error -- papers are
+      // optional enrichment, and a circuit may cite a work we hold no record of
+      // -- so the circuit keeps its bare `source` and is reported at the end.
+      const source = data.source || "";
+      let paperId = null;
+      if (isPaperSource(source)) {
+        paperId = paperKeyToId.get(paperKey(source)) ?? null;
+        if (paperId == null) unmatchedSources.set(source, (unmatchedSources.get(source) ?? 0) + 1);
+      }
+
       const { lastInsertRowid } = stmts.insertCircuit.run(
         data.qec_id,
         codeId,
         data.name,
         circuitSlug,
         data.notes || null,
-        data.source || "",
+        source,
         data.gate_count ?? null,
         data.two_qubit_gate_count ?? null,
         data.depth ?? null,
@@ -244,6 +324,7 @@ try {
         data.crumble_url_annotated || null,
         data.quirk_url || null,
         toolId,
+        paperId,
       );
       const circuitId = Number(lastInsertRowid);
 
@@ -303,22 +384,54 @@ try {
   throw e;
 }
 
-// --- 4. Populate the full-text search index (data/migrations/016) ---
+// --- 4. Populate the full-text search index (migrations 016 → 019) ---
 // Derived entirely from the rows just inserted, so it is rebuilt from scratch
 // here rather than maintained by triggers. `source` rides along in the notes
 // column: it is provenance prose (DOI/citation) and shares its low weight.
+//
+// A circuit inherits its code's aliases and related names (migration 017), which
+// is what lets "laflamme" or "bb codes" reach circuits whose own text says
+// neither. Tool aliases ride in `notes`: they are weak evidence about a circuit
+// (every circuit from a tool would otherwise match its every alias equally) and
+// `notes` is the low-weight column for exactly that kind of term.
+//
+// `code_tags` (migration 019) carries the tags of the code the circuit belongs
+// to. Without it `LDPC`, `topological` and `self-dual` -- all code-level tags --
+// matched no circuit at all. Kept apart from `tags` so the two can be weighted
+// separately and so a name used at both levels cannot double-count.
+//
+// `paper` (migration 018) carries the paper's title, authors and ids, which is
+// the only place that text exists -- `source` is a bare link. json_each flattens
+// papers.authors (a JSON array) back into words so an author surname is a term.
+// The arXiv id is indexed as written: unicode61 splits "2402.17761" into "2402"
+// and "17761", so both halves stay searchable.
 const SEARCH_TEXT = `
   SELECT c.id AS circuit_id, c.name AS name, co.name AS code_name,
+         COALESCE(co.aliases, '') AS aliases,
+         COALESCE(co.related, '') AS related,
          COALESCE((SELECT group_concat(t.name, ' ')
                    FROM taggings tg JOIN tags t ON t.id = tg.tag_id
                    WHERE tg.taggable_id = c.id AND tg.taggable_type = 'circuit'), '') AS tags,
-         TRIM(COALESCE(c.notes, '') || ' ' || COALESCE(c.source, '')) AS notes
+         COALESCE((SELECT group_concat(t.name, ' ')
+                   FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+                   WHERE tg.taggable_id = co.id AND tg.taggable_type = 'code'), '') AS code_tags,
+         COALESCE((SELECT TRIM(p.title || ' ' ||
+                          COALESCE((SELECT group_concat(a.value, ' ')
+                                    FROM json_each(p.authors) a), '') || ' ' ||
+                          COALESCE(p.arxiv_id, '') || ' ' ||
+                          COALESCE(p.doi, '') || ' ' ||
+                          COALESCE(p.journal_ref, '') || ' ' ||
+                          COALESCE(CAST(p.year AS TEXT), ''))
+                   FROM papers p WHERE p.id = c.paper_id), '') AS paper,
+         TRIM(COALESCE(c.notes, '') || ' ' || COALESCE(c.source, '') || ' '
+              || COALESCE((SELECT tl.aliases FROM tools tl WHERE tl.id = c.tool_id), '')) AS notes
   FROM circuits c JOIN codes co ON co.id = c.code_id`;
 
 const indexed = db
   .prepare(
-    `INSERT INTO circuit_search (circuit_id, name, code_name, tags, notes)
-     SELECT circuit_id, name, code_name, tags, notes FROM (${SEARCH_TEXT})`,
+    `INSERT INTO circuit_search (circuit_id, name, code_name, aliases, related, tags, code_tags, paper, notes)
+     SELECT circuit_id, name, code_name, aliases, related, tags, code_tags, paper, notes
+     FROM (${SEARCH_TEXT})`,
   )
   .run();
 
@@ -331,19 +444,54 @@ const TAGS_OF = (type) => `
             FROM taggings tg JOIN tags t ON t.id = tg.tag_id
             WHERE tg.taggable_id = e.id AND tg.taggable_type = '${type}'), '')`;
 
+// Aliases are indexed here too, so the dictionary learns their vocabulary and
+// "bivarient bicycle" or "laflame" correct like any other term. This also stops
+// an alias being "corrected" into something else: correctTokens only rewrites a
+// token that matches NOTHING, so a known alias is now left alone -- which is
+// what fixes `msd` silently becoming `msb`.
 db.prepare(
   `INSERT INTO search_terms (text)
-   SELECT name || ' ' || code_name || ' ' || tags || ' ' || notes FROM (${SEARCH_TEXT})`,
+   SELECT name || ' ' || code_name || ' ' || aliases || ' ' || related || ' '
+          || tags || ' ' || code_tags || ' ' || paper || ' ' || notes
+   FROM (${SEARCH_TEXT})`,
 ).run();
 db.prepare(
-  `INSERT INTO search_terms (text) SELECT e.name || ' ' || ${TAGS_OF("code")} FROM codes e`,
+  `INSERT INTO search_terms (text)
+   SELECT e.name || ' ' || COALESCE(e.aliases, '') || ' ' || COALESCE(e.related, '')
+          || ' ' || ${TAGS_OF("code")} FROM codes e`,
 ).run();
 db.prepare(
-  `INSERT INTO search_terms (text) SELECT e.name || ' ' || ${TAGS_OF("tool")} FROM tools e`,
+  `INSERT INTO search_terms (text)
+   SELECT e.name || ' ' || COALESCE(e.aliases, '') || ' ' || ${TAGS_OF("tool")} FROM tools e`,
+).run();
+// Papers get their own rows for the same reason tools do: a paper whose circuits
+// are not yet in the library appears in no circuit text, so a dictionary built
+// from circuits alone could never offer "Colmenarez" as a correction for
+// "Colmenraez". Title and authors only -- ids and years are digit tokens, which
+// correctTokens refuses to correct anyway (see queries/spelling.ts).
+db.prepare(
+  `INSERT INTO search_terms (text)
+   SELECT p.title || ' ' ||
+          COALESCE((SELECT group_concat(a.value, ' ') FROM json_each(p.authors) a), '')
+   FROM papers p`,
 ).run();
 
 const vocabSize = db.prepare("SELECT COUNT(*) AS n FROM search_vocab").get().n;
+const linked = db.prepare("SELECT COUNT(*) AS n FROM circuits WHERE paper_id IS NOT NULL").get().n;
+const paperCount = db.prepare("SELECT COUNT(*) AS n FROM papers").get().n;
 
 db.close();
 console.log(`\nSearch index: ${indexed.changes} circuits, ${vocabSize} dictionary terms.`);
+console.log(`Papers: ${paperCount}, linked to ${linked} circuits.`);
+
+// A link-shaped source with no paper behind it is the one way this feature
+// quietly under-delivers: the circuit still renders and still searches, it just
+// has no title or authors to find it by. Say so rather than let it pass.
+if (unmatchedSources.size > 0) {
+  console.log(`\nSources with no paper in data_yaml/papers/ (searchable by URL only):`);
+  for (const [source, count] of [...unmatchedSources].sort((a, b) => b[1] - a[1])) {
+    console.log(`  - ${source} (${count} circuit${count === 1 ? "" : "s"})`);
+  }
+}
+
 console.log("\nDatabase created successfully.");

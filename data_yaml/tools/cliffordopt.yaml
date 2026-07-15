@@ -1,5 +1,8 @@
 name: CliffordOpt
 description: Heuristic and optimal synthesis of CNOT and Clifford circuits from parity-check or symplectic matrices, minimizing two-qubit gate count or circuit depth.
 github_url: https://github.com/m-webster/CliffordOpt
+aliases:
+  - "Clifford optimisation"
+  - "Clifford optimization"
 paper_urls: [https://arxiv.org/abs/2503.14660]
 tags: [Python, optimization, Clifford, encoding]

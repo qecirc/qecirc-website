@@ -3,6 +3,14 @@ n: 108
 k: 8
 d: 10
 zoo_url: https://errorcorrectionzoo.org/c/bb108
+aliases:
+  - "[[108,8,10]]"
+  - "bb108"
+  - "(9,6) BB6 code"
+  - "BB6 code"
+  - "BB code"
+  - "qLDPC code"
+  - "LDPC code"
 canonical_hash: d9ceb7eca9ef02594d2b6d4ea59342226a4ee7664aa8af0c51e8470144cd656e
 h:
   - [

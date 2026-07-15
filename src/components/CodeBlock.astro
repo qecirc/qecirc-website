@@ -7,6 +7,9 @@ interface Props {
   label?: string;
   downloadName?: string;
   source?: string;
+  /** Human-readable citation for `source`, when it resolved to a paper. Used as
+   *  the cite-toast link label in place of the raw URL. */
+  citation?: string;
   /** The detector-annotated variant of `code`, when the circuit has one. It
    *  supersedes `code` for display: it is the same circuit with the |0...0>
    *  input stated explicitly, plus a readout the Detectors switch subtracts. */
@@ -19,7 +22,7 @@ interface Props {
 // KEEP THE CODE-BLOCK MARKUP IN SYNC with CircuitBodiesTemplate.astro, which
 // is cloned client-side on code pages (this component renders only on
 // circuit detail pages).
-const { code, label, downloadName, source, annotated, coordsToggle = true } = Astro.props;
+const { code, label, downloadName, source, citation, annotated, coordsToggle = true } = Astro.props;
 
 // The switches subtract from the fullest form the circuit has, so that is what
 // the block carries and what gets rendered down to the default view.
@@ -44,6 +47,7 @@ const needsRaw = hasCoords || hasDetectors(raw);
     class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden"
     data-code-block
     data-source={source ?? ""}
+    data-citation={citation || undefined}
     data-raw-code={needsRaw ? raw : undefined}
   >
     <div class="border-b border-gray-200 dark:border-gray-800 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
@@ -88,6 +92,7 @@ const needsRaw = hasCoords || hasDetectors(raw);
 <script>
   import { copyToClipboard } from "../lib/dom-helpers";
   import { initBodyViews } from "../lib/body-view-client";
+  import { citeNotice as showCiteNotice } from "../lib/cite-client";
 
   initBodyViews();
 
@@ -95,17 +100,10 @@ const needsRaw = hasCoords || hasDetectors(raw);
     block.setAttribute("data-initialized", "");
 
     const source = block.dataset.source || "";
+    const citation = block.dataset.citation || undefined;
 
     function citeNotice() {
-      if (typeof window.showCiteToast === "function") {
-        if (source && source.startsWith("http")) {
-          window.showCiteToast("Please cite the source when using this circuit:", source);
-        } else if (source) {
-          window.showCiteToast("Please cite the source when using this circuit: " + source);
-        } else {
-          window.showCiteToast("Please check and cite the corresponding source when using this circuit.");
-        }
-      }
+      showCiteNotice(source, citation);
     }
 
     block.querySelectorAll(".copy-btn").forEach(function (btn) {

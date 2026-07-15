@@ -39,9 +39,17 @@ You confirm before anything is written.
 
 The agent calls the Python API to write the code YAML, circuit YAML, and body files (`.stim`, `.qasm`, `.cirq`) to `data_yaml/`. For state-prep and encoding circuits, run `uv run python scripts/annotate_circuits.py` afterwards to add the `.stim-annotated` body. Each circuit is automatically assigned a unique `qec_id` (displayed as `#N` in the UI). This ID is permanent and must never be reused.
 
-### Phase 4: Zoo lookup and tagging
+### Phase 4: Zoo lookup, paper lookup, and tagging
 
-The agent enriches the generated YAML with tags:
+If the circuit's `source` is a paper link, the agent runs `npm run papers:add -- <link>`,
+which fetches the title and authors from arXiv (or Crossref) into `data_yaml/papers/`. That
+is what makes the circuit findable by paper title, author and arXiv id instead of by its bare
+URL. It is skipped automatically if the paper is already catalogued, and neither the agent nor
+you ever type the metadata: author lists are facts about real people, and papers are often
+newer than the model's training data. Nothing references the paper from the circuit — the link
+is derived from `source` at build time.
+
+The agent then enriches the generated YAML with tags:
 
 - **Auto-tags** (already applied): `CSS`, `self-dual` — mathematically verified
 - **Zoo lookup**: if a Zoo URL is available, the agent fetches the page and proposes tags based on the code's properties (family, structure). It only suggests tags that already exist in the library.

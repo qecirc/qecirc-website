@@ -6,7 +6,6 @@ export {
   countCircuitsForCode,
   codeHasWeightedCircuits,
   countAllCircuits,
-  countCircuitPapers,
   getLatestCircuits,
   getCircuitTagsForCode,
   filterCircuitsForCode,
@@ -19,6 +18,13 @@ export {
   getOriginalForCircuit,
 } from "./circuits";
 export { getAllTools, countAllTools, filterTools, getToolsForCircuits } from "./tools";
+export {
+  getPapersForCircuits,
+  countCircuitPapers,
+  formatCitation,
+  formatAuthors,
+  formatPaperId,
+} from "./papers";
 export { correctTokens } from "./spelling";
 export {
   searchCodes,

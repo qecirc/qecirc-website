@@ -186,6 +186,43 @@ If the code has a `zoo_url`, or if the user wants you to find one:
 3. **Map to existing tags**: Only propose tags that already exist in the library. If the Zoo mentions something not in the vocabulary, ask the user if they want to add it as a new tag.
 4. **Add `zoo_url`** to the code YAML if not already present.
 
+### 4c-bis. Paper lookup — the circuit's `source`
+
+If `source` is a link, the work it points at should be in `data_yaml/papers/` —
+that is what makes the circuit findable by title, author and arXiv id rather than
+by bare URL alone. **This is scripted; do not write the YAML yourself:**
+
+```bash
+npm run papers:add -- <the source link, arXiv id, or DOI>
+```
+
+It fetches from arXiv (or Crossref for a DOI-only source), writes
+`data_yaml/papers/<slug>.yaml`, and prints `HAVE …` and changes nothing if the
+paper is already catalogued — so it is always safe to run.
+
+**Never hand-write or recall paper metadata.** Author lists are facts about real
+people; a wrong one is a misattribution that renders on the page and in the
+circuit's JSON-LD. Papers are also routinely newer than your training data. If
+the script fails, read the publisher's page — do not fill the fields in from
+memory.
+
+Circuits do **not** reference papers: `create_database.mjs` matches `source`
+against each paper's url/arxiv_id/doi (tolerating http/https, trailing slashes,
+`dx.doi.org`, `/pdf/` vs `/abs/`, and version suffixes). So writing the paper file
+is the entire job — no circuit YAML changes, and every other circuit citing that
+work is enriched too.
+
+Then confirm it linked. `npm run db:create` prints:
+
+```
+Papers: 7, linked to 724 circuits.
+```
+
+and lists any source with no paper behind it. The new circuit must not be in that
+list. A source that is not arXiv/DOI (a bare tool name like `circuit-synth`, a
+free-form citation) has no paper and that is correct — not every circuit comes
+from a paper.
+
 ### 4d. Circuit tags — ask the user
 
 Circuit tags require user input. Ask explicitly:
