@@ -1,0 +1,15 @@
+R 0 1 2 4 5 6 7 8
+TICK
+H 2 1 0 7
+TICK
+CX 7 3 0 5 2 8
+TICK
+CX 7 5 3 8
+TICK
+CX 0 2 1 7 5 6 3 4
+TICK
+M 0 1 2 3 4 5 6 7 8
+DETECTOR rec[-9] rec[-8] rec[-4] rec[-2]
+DETECTOR rec[-9] rec[-7] rec[-6] rec[-1]
+DETECTOR rec[-6] rec[-5]
+DETECTOR rec[-4] rec[-3]

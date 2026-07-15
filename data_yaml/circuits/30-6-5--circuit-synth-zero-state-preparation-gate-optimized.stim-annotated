@@ -1,0 +1,24 @@
+R 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
+TICK
+H 0 3 8 14 15 16 17 19 22 24 25 27
+CX 3 2 15 6 22 12 14 4 27 26 8 23 24 21 16 5 19 7 17 20 15 13 3 9 8 6 27 23 22 1 26 29 21 19 0 16 7 10 24 14 25 15 3 18 12 9 8 17 23 22 0 21 5 7 24 28 20 29 4 18 25 3 12 11 10 15 21 9 13 24 25 11 4 12 18 23 16 3 20 21 26 25 12 8 6 18 17 16 0 11 3 23 5 26 19 12 16 18 17 28 15 8 6 7 9 25 2 26 19 5 15 14 12 27 11 17 23 28 8 20 26 24 18 19
+TICK
+M 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
+DETECTOR rec[-30] rec[-18] rec[-17] rec[-16] rec[-14] rec[-12] rec[-8] rec[-6] rec[-2] rec[-1]
+DETECTOR rec[-29] rec[-23] rec[-17] rec[-13] rec[-11] rec[-9] rec[-6] rec[-2]
+DETECTOR rec[-28] rec[-16] rec[-15] rec[-13] rec[-12] rec[-11] rec[-8] rec[-5] rec[-3] rec[-1]
+DETECTOR rec[-27] rec[-22] rec[-16] rec[-15] rec[-13] rec[-10] rec[-7] rec[-5]
+DETECTOR rec[-26] rec[-18] rec[-16] rec[-12] rec[-11] rec[-10] rec[-7] rec[-2]
+DETECTOR rec[-25] rec[-18] rec[-16] rec[-11] rec[-8] rec[-7] rec[-4] rec[-1]
+DETECTOR rec[-24] rec[-15] rec[-14] rec[-13] rec[-11] rec[-10] rec[-8] rec[-7] rec[-4] rec[-3]
+DETECTOR rec[-27] rec[-23] rec[-22] rec[-14] rec[-12] rec[-9] rec[-8] rec[-6] rec[-4] rec[-1]
+DETECTOR rec[-26] rec[-22] rec[-16] rec[-14] rec[-13] rec[-9] rec[-7] rec[-1]
+DETECTOR rec[-25] rec[-21] rec[-18] rec[-11] rec[-6] rec[-5] rec[-3] rec[-2]
+DETECTOR rec[-29] rec[-23] rec[-20] rec[-18] rec[-15] rec[-9] rec[-7] rec[-1]
+DETECTOR rec[-27] rec[-22] rec[-19] rec[-17] rec[-13] rec[-9] rec[-4] rec[-3]
+OBSERVABLE_INCLUDE(0) rec[-28] rec[-26] rec[-24] rec[-14] rec[-12]
+OBSERVABLE_INCLUDE(1) rec[-25] rec[-24] rec[-23] rec[-20] rec[-12] rec[-11]
+OBSERVABLE_INCLUDE(2) rec[-25] rec[-24] rec[-20] rec[-17] rec[-14] rec[-9]
+OBSERVABLE_INCLUDE(3) rec[-30] rec[-28] rec[-27] rec[-24] rec[-23] rec[-17] rec[-15]
+OBSERVABLE_INCLUDE(4) rec[-29] rec[-26] rec[-25] rec[-24] rec[-23] rec[-20] rec[-18]
+OBSERVABLE_INCLUDE(5) rec[-30] rec[-29] rec[-28] rec[-25] rec[-24] rec[-23] rec[-21]
