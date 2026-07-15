@@ -28,11 +28,12 @@ if (CODES_LIST_PARAMS.some((p) => Astro.url.searchParams.has(p))) {
 
 const fmt = new Intl.NumberFormat("en-US");
 const codeCount = countAllCodes();
+const circuitCount = countAllCircuits();
 
 // Deliberately not linked, unlike the cards below: "papers" has no page to go
 // to, and a row where only some numbers are clickable reads as broken.
 const STATS: { value: number; label: string }[] = [
-  { value: countAllCircuits(), label: "Circuits" },
+  { value: circuitCount, label: "Circuits" },
   { value: codeCount, label: "Codes" },
   { value: countAllTools(), label: "Tools" },
   { value: countCircuitPapers(), label: "Papers" },
@@ -74,15 +75,19 @@ const cardCls =
     <p class="text-gray-600 dark:text-gray-400 mb-4">
       QECirc is built as a community project, in the open. The circuits are drawn from
       published work and from the tools that generate them, and anyone can add one by{" "}
-      <a href="/contribute" class="prose-link">opening an issue</a> — no account, no
-      gatekeeping. See <a href="/about" class="prose-link">about</a> for the scope and
-      how it fits together.
+      <a href="/contribute" class="prose-link">opening an issue on GitHub</a>. See{" "}
+      <a href="/about" class="prose-link">about</a> for the scope and how it fits
+      together.
     </p>
 
     {/* Labels the search box, which otherwise floats between the intro and the
         stats with nothing tying it to the page. Matches the "Latest circuits"
         heading below. */}
-    <h2 class="text-lg font-semibold mt-6 mb-2">Find circuits</h2>
+    <h2 class="text-lg font-semibold mt-6 mb-1">Find circuits</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+      Search all {fmt.format(circuitCount)} circuits by name, notes, tag or code, ranked by
+      relevance.
+    </p>
     <form method="GET" action="/search" class="flex gap-2">
       <input
         type="search"
