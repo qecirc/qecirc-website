@@ -33,11 +33,9 @@ function labelInfo(field: CodeSortField) {
 
 const sortHref = (field: CodeSortField) => `${basePath}?sort=${field}&sort_dir=asc`;
 
-const FIELDS: { field: CodeSortField; placeholder: string }[] = [
-  { field: "n", placeholder: ">3,<10" },
-  { field: "k", placeholder: ">=2" },
-  { field: "d", placeholder: "!=5" },
-];
+// Inputs render with no placeholder: the examples live in FilterStatus, beside
+// the boxes rather than inside them.
+const FIELDS: CodeSortField[] = ["n", "k", "d"];
 
 const tagGroups = CODE_TAG_CATEGORIES.map((c) => ({
   label: c.label,
@@ -47,14 +45,14 @@ const tagGroups = CODE_TAG_CATEGORIES.map((c) => ({
 
 <form id="code-filter" method="GET" action={basePath} class="mb-6 space-y-2">
   <div class="flex flex-wrap items-center gap-3">
-    {FIELDS.map(({ field, placeholder }) => {
+    {FIELDS.map((field) => {
       const info = labelInfo(field);
       return (
         <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
           <a href={sortHref(field)} data-sort-field={field} class={`px-1 py-0.5 text-xs transition-colors ${info.cls}`} title={`Click to sort by ${field}`}>
             {field}<span data-sort-arrow class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{info.arrow}</span>
           </a>
-          <input id={`filter-${field}`} type="text" name={field} class={INPUT_CLASS} placeholder={placeholder} aria-label={`Filter by ${field}`} data-filter />
+          <input id={`filter-${field}`} type="text" name={field} class={INPUT_CLASS} aria-label={`Filter by ${field}`} data-filter />
         </div>
       );
     })}

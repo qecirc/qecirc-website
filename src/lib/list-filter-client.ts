@@ -161,6 +161,7 @@ export function initListFilter(config: ListFilterConfig): void {
   // document: the empty state carries its own [data-clear-filters] link (a
   // plain href, so it works without JS) that must never be toggled from here.
   const errorSpan = form?.querySelector<HTMLElement>("[data-filter-error]") ?? null;
+  const hintEl = form?.querySelector<HTMLElement>("[data-filter-hint]") ?? null;
   const clearLink = form?.querySelector<HTMLElement>("[data-clear-filters]") ?? null;
   const countEl = config.countSelector
     ? document.querySelector<HTMLElement>(config.countSelector)
@@ -226,13 +227,16 @@ export function initListFilter(config: ListFilterConfig): void {
 
   /** The one writer of the FilterStatus slot (FilterStatus.astro).
    *
-   *  It holds at most one thing: a parse error, or the clear link once filters
-   *  are active. An error outranks the link — so deciding both in one place is
-   *  what keeps them from contradicting each other.
+   *  It holds exactly one of three things, in priority order: a parse error, the
+   *  clear link, or the syntax hint. There is nothing to clear while the hint is
+   *  up, and an error outranks both — so deciding all three in one place is what
+   *  keeps them from contradicting each other.
    */
   function renderStatus(): void {
+    const active = hasActiveFilters();
     errorSpan?.classList.toggle("hidden", !inputError);
-    clearLink?.classList.toggle("hidden", inputError || !hasActiveFilters());
+    clearLink?.classList.toggle("hidden", inputError || !active);
+    hintEl?.classList.toggle("hidden", inputError || active);
   }
 
   function rowMatches(data: RowData): boolean {

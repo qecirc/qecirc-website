@@ -2,9 +2,14 @@
 /**
  * The status slot of a filter bar, shared by CodeFilter and CircuitFilter.
  *
- * It shows at most one thing at a time -- a parse error, or a "Clear filters"
- * link -- and which one is list-filter-client.ts's call (see renderStatus
- * there). An error outranks the link.
+ * It shows exactly one of three things -- a parse error, a "Clear filters"
+ * link, or the syntax hint -- and which one is list-filter-client.ts's call
+ * (see renderStatus there). The three are mutually exclusive by design: there
+ * is nothing to clear while the hint is up, and an error outranks both.
+ *
+ * The examples live here rather than in the inputs' `placeholder`s. In a box
+ * that is otherwise empty, a greyed-out `>3,<10` reads as a value the filter
+ * already has, so people took the boxes for pre-filled rather than blank.
  */
 interface Props {
   /** Where "Clear filters" points; must equal the page's own path. */
@@ -12,6 +17,14 @@ interface Props {
 }
 
 const { basePath } = Astro.props;
+
+// Mirrors parseFilterString's grammar (queries/shared.ts and
+// list-filter-client.ts): a bare number, an operator and a number, or several
+// of those comma-separated. Ordered simplest-first.
+const EXAMPLES = ["7", ">3", "<=10", ">3,<10"];
+
+const HINT_TITLE =
+  "A number, or an operator (>, >=, <, <=, !=) and a number. Comma-separate to combine.";
 ---
 
 {/* Everything in here is shown and hidden by toggling Tailwind's `hidden`, so
@@ -24,6 +37,16 @@ const { basePath } = Astro.props;
     `inline-flex` on itself. */}
 <div class="text-xs" data-filter-status>
   <span data-filter-error class="hidden text-red-500">Invalid filter</span>
+
+  <span data-filter-hint class="text-gray-400 dark:text-gray-500" title={HINT_TITLE}>
+    e.g.{" "}
+    {EXAMPLES.map((example, i) => (
+      <Fragment>
+        {i > 0 && <span class="mx-1 opacity-60">&#183;</span>}
+        <span class="font-mono">{example}</span>
+      </Fragment>
+    ))}
+  </span>
 
   <a
     href={basePath}

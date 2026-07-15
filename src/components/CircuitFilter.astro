@@ -34,14 +34,16 @@ function labelInfo(field: CircuitSortField) {
 
 const sortHref = (field: CircuitSortField) => `${basePath}?sort=${field}&sort_dir=asc`;
 
-const FIELDS: { field: CircuitSortField; label: string; placeholder: string; aria: string }[] = [
-  { field: "gate_count", label: "Gates", placeholder: ">10", aria: "Filter by gate count" },
-  { field: "two_qubit_gate_count", label: "2Q Gates", placeholder: ">5", aria: "Filter by two-qubit gate count" },
-  { field: "depth", label: "Depth", placeholder: "<=5", aria: "Filter by depth" },
-  { field: "qubit_count", label: "Qubits", placeholder: "7", aria: "Filter by qubit count" },
+// Inputs render with no placeholder: the examples live in FilterStatus, beside
+// the boxes rather than inside them.
+const FIELDS: { field: CircuitSortField; label: string; aria: string }[] = [
+  { field: "gate_count", label: "Gates", aria: "Filter by gate count" },
+  { field: "two_qubit_gate_count", label: "2Q Gates", aria: "Filter by two-qubit gate count" },
+  { field: "depth", label: "Depth", aria: "Filter by depth" },
+  { field: "qubit_count", label: "Qubits", aria: "Filter by qubit count" },
 ];
 if (showWeight) {
-  FIELDS.push({ field: "weight", label: "Weight", placeholder: "<=8", aria: "Filter by stabiliser weight" });
+  FIELDS.push({ field: "weight", label: "Weight", aria: "Filter by stabiliser weight" });
 }
 
 const tagGroups = TAG_CATEGORIES.map((c) => ({
@@ -52,14 +54,14 @@ const tagGroups = TAG_CATEGORIES.map((c) => ({
 
 <form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2 sm:sticky sm:top-0 sm:z-20 bg-white dark:bg-gray-950 sm:border-b sm:border-gray-200 sm:dark:border-gray-800 sm:pb-4 sm:-mb-2">
   <div class="flex flex-wrap items-center gap-3">
-    {FIELDS.map(({ field, label, placeholder, aria }) => {
+    {FIELDS.map(({ field, label, aria }) => {
       const info = labelInfo(field);
       return (
         <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
           <a href={sortHref(field)} data-sort-field={field} class={`px-1 py-0.5 text-xs transition-colors ${info.cls}`} title={`Sort by ${label}`}>
             {label}<span data-sort-arrow class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{info.arrow}</span>
           </a>
-          <input type="text" name={field} class={INPUT_CLASS} placeholder={placeholder} aria-label={aria} data-filter />
+          <input type="text" name={field} class={INPUT_CLASS} aria-label={aria} data-filter />
         </div>
       );
     })}
