@@ -1,35 +1,90 @@
 import { getDb } from "../db";
 import type { Circuit, CodeListItem, TagWithCount, Tool } from "../../types";
 import { withTags, addTagConditions } from "./shared";
+import { correctTokens } from "./spelling";
 import { parseToolRow, type ToolRow } from "./tools";
 
 /** Shortest query we will run. Below this, LIKE/FTS scans match near-everything
  *  and the result list is noise. Mirrored by /api/search and /search. */
 export const MIN_QUERY_LENGTH = 2;
 
-/** Translate raw user input into an FTS5 MATCH expression.
+/** Split raw user input into safe search tokens.
  *
  * Raw input CANNOT be passed to MATCH: bare `AND`/`OR`/`NOT`/`NEAR`, `*`, `^`,
  * `:`, `-` and `"` are query syntax, so a search for `code-capacity` or a lone
- * `*` would either throw or silently mean something else. Every token is
- * therefore quoted into a literal phrase and ANDed. The final token gets a `*`
- * so partial words match while typing ("encod" -> "encoding").
- *
- * Returns null when nothing searchable remains (e.g. input was all punctuation),
- * which callers must treat as "no results" rather than "match everything".
+ * `*` would either throw or silently mean something else. Tokens are quoted
+ * into literal phrases by buildFtsExpr below.
  */
-export function toFtsQuery(raw: string): string | null {
-  const tokens = raw
-    .trim()
-    .split(/\s+/)
-    // Drop `"` outright: escaping it by doubling would let a crafted query
-    // reopen a phrase. Tokens must retain a letter or digit to be meaningful --
-    // FTS5 rejects an empty phrase ("").
-    .map((t) => t.replace(/"/g, ""))
-    .filter((t) => /[\p{L}\p{N}]/u.test(t));
+function tokenizeQuery(raw: string): string[] {
+  return (
+    raw
+      .trim()
+      .split(/\s+/)
+      // Drop `"` outright: escaping it by doubling would let a crafted query
+      // reopen a phrase. Tokens must retain a letter or digit to be meaningful --
+      // FTS5 rejects an empty phrase ("").
+      .map((t) => t.replace(/"/g, ""))
+      .filter((t) => /[\p{L}\p{N}]/u.test(t))
+  );
+}
 
+/** Quote each token as a literal phrase and join them. The final token gets a
+ *  `*` so partial words still match ("encod" -> "encoding"). */
+function buildFtsExpr(tokens: string[], op: "AND" | "OR"): string {
+  return tokens.map((t, i) => `"${t}"${i === tokens.length - 1 ? "*" : ""}`).join(` ${op} `);
+}
+
+function countMatches(expr: string): number {
+  const row = getDb()
+    .prepare("SELECT COUNT(*) AS n FROM circuit_search WHERE circuit_search MATCH ?")
+    .get(expr) as { n: number };
+  return row.n;
+}
+
+/** A query worked out into the expression we will actually run, plus what to
+ *  tell the user we did. Results and facets MUST be built from the same one, or
+ *  the filter counts describe a different search than the list. */
+export interface ResolvedQuery {
+  /** Exactly what the user typed. */
+  raw: string;
+  /** What we searched for -- differs from `raw` only when spelling was fixed. */
+  display: string;
+  /** The FTS5 MATCH expression. */
+  match: string;
+  /** Spelling was corrected; the page should say so and offer the literal. */
+  corrected: boolean;
+  /** No circuit had every term, so we matched any term instead. */
+  partial: boolean;
+}
+
+/** Returns null when nothing searchable remains (e.g. input was all
+ *  punctuation), which callers must treat as "no results" rather than
+ *  "match everything". */
+export function resolveQuery(raw: string, opts: { literal?: boolean } = {}): ResolvedQuery | null {
+  const tokens = tokenizeQuery(raw);
   if (tokens.length === 0) return null;
-  return tokens.map((t, i) => `"${t}"${i === tokens.length - 1 ? "*" : ""}`).join(" AND ");
+
+  const { tokens: fixed, changed } = opts.literal
+    ? { tokens, changed: false }
+    : correctTokens(tokens);
+
+  // Falling back to "any term" is a last resort, taken only when every term
+  // together finds nothing -- otherwise a query like "steane encoding" would
+  // dilute its own precise hits with everything merely mentioning "encoding".
+  // Decided on the query alone, before code/tag filters, so that narrowing a
+  // filter to zero cannot silently widen the query underneath it.
+  const and = buildFtsExpr(fixed, "AND");
+  let match = and;
+  let partial = false;
+  if (fixed.length > 1 && countMatches(and) === 0) {
+    const or = buildFtsExpr(fixed, "OR");
+    if (countMatches(or) > 0) {
+      match = or;
+      partial = true;
+    }
+  }
+
+  return { raw, display: fixed.join(" "), match, corrected: changed, partial };
 }
 
 function rawTokenize(query: string): string[] {
@@ -197,10 +252,8 @@ export interface SearchFacets {
   tags: TagWithCount[];
 }
 
-export function searchCircuitFacets(query: string): SearchFacets {
-  const match = toFtsQuery(query);
-  if (match === null) return { codes: [], tags: [] };
-
+export function searchCircuitFacets(query: ResolvedQuery): SearchFacets {
+  const match = query.match;
   const db = getDb();
   const codes = db
     .prepare(
@@ -250,16 +303,14 @@ const BM25_WEIGHTS = [0.0, 10.0, 4.0, 6.0, 1.0];
  * never surface it. FTS5 also cannot OR a MATCH against a plain column.
  */
 export function searchCircuitsRanked(
-  query: string,
+  query: ResolvedQuery,
   opts: CircuitSearchOptions = {},
 ): RankedCircuit[] {
   const limit = opts.limit ?? 100;
-  const match = toFtsQuery(query);
-  if (match === null) return [];
 
   const db = getDb();
   const conditions: string[] = ["circuit_search MATCH ?"];
-  const params: (number | string)[] = [match];
+  const params: (number | string)[] = [query.match];
 
   if (opts.codeId != null) {
     conditions.push("c.code_id = ?");
@@ -284,7 +335,8 @@ export function searchCircuitsRanked(
   const ranked = withTags(rows, "circuit") as RankedCircuit[];
 
   // Strict: parseInt("42abc") would yield 42, making "42abc" an id lookup.
-  const idMatch = /^#?(\d+)$/.exec(query.trim());
+  // Against `raw`, not the corrected text: an id is never a misspelling.
+  const idMatch = /^#?(\d+)$/.exec(query.raw.trim());
   if (!idMatch) return ranked;
 
   // The id hit bypasses the SQL above, so it must honour the active filters too

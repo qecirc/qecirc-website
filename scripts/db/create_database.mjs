@@ -304,18 +304,30 @@ try {
 // Derived entirely from the rows just inserted, so it is rebuilt from scratch
 // here rather than maintained by triggers. `source` rides along in the notes
 // column: it is provenance prose (DOI/citation) and shares its low weight.
+const SEARCH_TEXT = `
+  SELECT c.id AS circuit_id, c.name AS name, co.name AS code_name,
+         COALESCE((SELECT group_concat(t.name, ' ')
+                   FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+                   WHERE tg.taggable_id = c.id AND tg.taggable_type = 'circuit'), '') AS tags,
+         TRIM(COALESCE(c.notes, '') || ' ' || COALESCE(c.source, '')) AS notes
+  FROM circuits c JOIN codes co ON co.id = c.code_id`;
+
 const indexed = db
   .prepare(
     `INSERT INTO circuit_search (circuit_id, name, code_name, tags, notes)
-     SELECT c.id, c.name, co.name,
-            COALESCE((SELECT group_concat(t.name, ' ')
-                      FROM taggings tg JOIN tags t ON t.id = tg.tag_id
-                      WHERE tg.taggable_id = c.id AND tg.taggable_type = 'circuit'), ''),
-            TRIM(COALESCE(c.notes, '') || ' ' || COALESCE(c.source, ''))
-     FROM circuits c JOIN codes co ON co.id = c.code_id`,
+     SELECT circuit_id, name, code_name, tags, notes FROM (${SEARCH_TEXT})`,
   )
   .run();
 
+// The unstemmed spelling dictionary over the same text (see migration 015).
+db.prepare(
+  `INSERT INTO circuit_terms (rowid, text)
+   SELECT circuit_id, name || ' ' || code_name || ' ' || tags || ' ' || notes
+   FROM (${SEARCH_TEXT})`,
+).run();
+
+const vocabSize = db.prepare("SELECT COUNT(*) AS n FROM circuit_vocab").get().n;
+
 db.close();
-console.log(`\nSearch index: ${indexed.changes} circuits.`);
+console.log(`\nSearch index: ${indexed.changes} circuits, ${vocabSize} dictionary terms.`);
 console.log("\nDatabase created successfully.");

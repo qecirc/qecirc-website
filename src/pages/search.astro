@@ -8,6 +8,7 @@ import TagList from "../components/TagList.astro";
 import {
   searchCircuitsRanked,
   searchCircuitFacets,
+  resolveQuery,
   getToolsForCircuits,
   formatCodeParams,
   MIN_QUERY_LENGTH,
@@ -23,21 +24,28 @@ const RESULT_LIMIT = 100;
 const q = Astro.url.searchParams.get("q")?.trim() ?? "";
 const selectedTags = Astro.url.searchParams.getAll("tag");
 const codeSlug = Astro.url.searchParams.get("code") ?? "";
+// `literal=1` is the escape hatch from a spelling correction ("search instead
+// for ..."), so the user is never trapped in a rewritten query.
+const literal = Astro.url.searchParams.get("literal") === "1";
 
 const hasQuery = q.length >= MIN_QUERY_LENGTH;
 const tooShort = q.length > 0 && !hasQuery;
 
+// One resolution shared by results AND facets: they must describe the same
+// search, or the filter counts belong to a different query than the list.
+const resolved = hasQuery ? resolveQuery(q, { literal }) : null;
+
 // Filter choices come from the query's matches, so we never offer a code or tag
 // that leads to an empty page.
-const facets = hasQuery ? searchCircuitFacets(q) : { codes: [], tags: [] };
+const facets = resolved ? searchCircuitFacets(resolved) : { codes: [], tags: [] };
 const selectedCode = codeSlug ? facets.codes.find((c) => c.slug === codeSlug) : undefined;
 // A ?code= that no longer matches the query yields no results; keep it in the
 // select anyway so the control still reflects the URL rather than lying.
 const codeOptions = facets.codes;
 const staleCode = codeSlug !== "" && selectedCode == null;
 
-const results = hasQuery
-  ? searchCircuitsRanked(q, {
+const results = resolved
+  ? searchCircuitsRanked(resolved, {
       codeId: selectedCode?.id,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
       limit: RESULT_LIMIT,
@@ -51,7 +59,9 @@ const codeLabel = (c: { name: string; n: number; k: number; d: number | null }) 
   const p = formatCodeParams(c);
   return p === "" || c.name === p ? c.name : `${c.name} ${p}`;
 };
-const clearHref = `/search?q=${encodeURIComponent(q)}`;
+const clearHref = `/search?q=${encodeURIComponent(q)}${literal ? "&literal=1" : ""}`;
+// Escape hatch from a correction: same query, spelling left alone.
+const literalHref = `/search?q=${encodeURIComponent(q)}&literal=1`;
 
 // Query strings must not be cached at the edge for a week like the rest of the
 // site (middleware.ts): the key space is unbounded and attacker-fillable.
@@ -182,8 +192,22 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
         {results.length === 0
           ? "No circuits found"
           : `${truncated ? `Top ${results.length}` : results.length} ${results.length === 1 ? "circuit" : "circuits"}`}
-        {" for "}<span class="font-medium text-gray-900 dark:text-gray-100">{q}</span>
+        {" for "}<span class="font-medium text-gray-900 dark:text-gray-100">{resolved?.display ?? q}</span>
       </p>
+
+      {resolved?.corrected && (
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          Showing results for <span class="font-medium text-gray-900 dark:text-gray-100">{resolved.display}</span>.
+          {" "}Search instead for{" "}
+          <a href={`${literalHref}`} class="underline hover:text-gray-900 dark:hover:text-gray-100">{resolved.raw}</a>.
+        </p>
+      )}
+
+      {resolved?.partial && (
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          No circuit matches every term, so these match at least one.
+        </p>
+      )}
 
       {results.length === 0 ? (
         <div class="text-center py-8">

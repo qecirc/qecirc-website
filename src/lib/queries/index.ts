@@ -24,8 +24,9 @@ export {
   searchTools,
   searchCircuitsRanked,
   searchCircuitFacets,
-  toFtsQuery,
+  resolveQuery,
   MIN_QUERY_LENGTH,
   type RankedCircuit,
   type SearchFacets,
+  type ResolvedQuery,
 } from "./search";
