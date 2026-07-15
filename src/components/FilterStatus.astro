@@ -1,0 +1,45 @@
+---
+/**
+ * The status slot of a filter bar, shared by CodeFilter and CircuitFilter.
+ *
+ * It shows at most one thing at a time -- a parse error, or a "Clear filters"
+ * link -- and which one is list-filter-client.ts's call (see renderStatus
+ * there). An error outranks the link.
+ */
+interface Props {
+  /** Where "Clear filters" points; must equal the page's own path. */
+  basePath: string;
+}
+
+const { basePath } = Astro.props;
+---
+
+{/* Everything in here is shown and hidden by toggling Tailwind's `hidden`, so
+    none of it may carry a display utility that sorts after `hidden`
+    alphabetically. Tailwind v4 emits them all into the `utilities` layer at
+    equal specificity, so source order decides the winner -- `.hidden` (none)
+    is beaten by `.inline`, `.inline-block`, `.inline-flex` and `.table`, and
+    an element carrying one of those simply never hides. That is why the clear
+    link below lays its icon out with `inline-block` on the *svg* instead of
+    `inline-flex` on itself. */}
+<div class="text-xs" data-filter-status>
+  <span data-filter-error class="hidden text-red-500">Invalid filter</span>
+
+  <a
+    href={basePath}
+    data-clear-filters
+    class="hidden font-medium text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
+    title="Clear all active filters"
+  >
+    <svg
+      class="inline-block w-3 h-3 mr-0.5 align-[-2px]"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M6 18L18 6M6 6l12 12" />
+    </svg>Clear filters
+  </a>
+</div>

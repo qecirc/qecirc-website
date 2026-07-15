@@ -2,6 +2,7 @@
 import type { TagWithCount, CircuitSortField } from "../types";
 import { TAG_CATEGORIES, categorizeTag } from "../lib/tag-categories";
 import TagFilterDropdowns from "./TagFilterDropdowns.astro";
+import FilterStatus from "./FilterStatus.astro";
 
 // Filtering/sorting runs client-side (list-filter-client.ts, initialised by
 // the page). Inputs render empty and sort labels render the default state;
@@ -62,20 +63,7 @@ const tagGroups = TAG_CATEGORIES.map((c) => ({
         </div>
       );
     })}
-    <div class="text-xs" data-filter-status>
-      <span data-filter-error class="text-red-500 hidden">Invalid filter</span>
-      <a
-        href={basePath}
-        data-clear-filters
-        class="hidden inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
-        title="Clear all active filters"
-      >
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        Clear filters
-      </a>
-    </div>
+    <FilterStatus basePath={basePath} />
   </div>
 
   <TagFilterDropdowns
