@@ -62,7 +62,7 @@ const cardCls =
   description="A community-driven library of quantum error correction circuits — browse, search and download STIM, QASM and Cirq circuits by code."
   jsonLd={jsonLd}
 >
-  <section class="max-w-2xl mb-10">
+  <section class="max-w-2xl mb-8">
     <h1 class="text-3xl font-bold mb-3">Quantum error correction circuits</h1>
     {/* Circuit types named here are the ones that actually exist: state
         preparation, flag gadgets and encoding. The corpus has no
@@ -80,30 +80,34 @@ const cardCls =
       together.
     </p>
 
-    {/* Labels the search box, which otherwise floats between the intro and the
-        stats with nothing tying it to the page. Matches the "Latest circuits"
-        heading below. */}
-    <h2 class="text-lg font-semibold mt-6 mb-1">Find circuits</h2>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-      Search all {fmt.format(circuitCount)} circuits by name, notes, tag or code, ranked by
-      relevance.
-    </p>
-    <form method="GET" action="/search" class="flex gap-2">
-      <input
-        type="search"
-        name="q"
-        placeholder="Search circuits by name, notes, tag or #id"
-        aria-label="Search circuits"
-        class="flex-1 rounded border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-      />
-      <button
-        type="submit"
-        class="rounded px-4 py-2 text-sm font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer"
-      >
-        Search
-      </button>
-    </form>
+  </section>
 
+  {/* Search gets the same border language as the cards below, but full width and
+      tinted: it is the primary action, so it should read as more than a fourth
+      card. Not a link, so no hover treatment. */}
+  <section class="mb-10">
+    <div class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
+      <h2 class="text-lg font-semibold mb-1">Find circuits</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+        Search all {fmt.format(circuitCount)} circuits by name, notes, tag or code, ranked
+        by relevance.
+      </p>
+      <form method="GET" action="/search" class="flex gap-2">
+        <input
+          type="search"
+          name="q"
+          placeholder="Search circuits by name, notes, tag or #id"
+          aria-label="Search circuits"
+          class="flex-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+        />
+        <button
+          type="submit"
+          class="rounded px-4 py-2 text-sm font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer"
+        >
+          Search
+        </button>
+      </form>
+    </div>
   </section>
 
   <section class="mb-10" aria-label="Library at a glance">
