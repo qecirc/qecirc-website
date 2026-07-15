@@ -1,0 +1,57 @@
+---
+/**
+ * One step of the landing page's "How QECirc works" walkthrough: a numbered
+ * explanation beside a preview of the thing being explained.
+ *
+ * Previews are passed in as the default slot and are built from the site's own
+ * live components rather than screenshots -- see the section comment in
+ * index.astro for why.
+ */
+interface Props {
+  n: number;
+  title: string;
+  /** Where the step's call-to-action goes. */
+  href: string;
+  cta: string;
+  /** Caption above the preview, saying what is being shown. */
+  previewLabel: string;
+}
+
+const { n, title, href, cta, previewLabel } = Astro.props;
+
+// Only the explanation half is filled; the preview half stays on the page
+// colour, so it is always obvious which side is the site and which side is text
+// about it. Because the halves swap sides on alternate steps, that single fill
+// is also what makes the section alternate -- no second zebra rule needed, and
+// every step still separates from its neighbour.
+//
+// Visual only: the DOM stays text-then-preview, so screen readers and narrow
+// viewports get the explanation before the thing it explains.
+const flip = n % 2 === 0;
+---
+
+{/* No padding or gap on the shell: the halves carry their own, so the fill
+    reaches the edges and the two meet flush. overflow-hidden clips the fill to
+    the rounded corners. */}
+<div
+  class="rounded border border-gray-200 dark:border-gray-800 overflow-hidden grid sm:grid-cols-2"
+>
+  <div class:list={["p-4 bg-gray-50 dark:bg-gray-900", flip && "sm:order-2"]}>
+    <h3 class="font-medium mb-1 flex items-baseline gap-2">
+      <span class="font-mono text-xs text-gray-400 dark:text-gray-500">{n}</span>
+      {title}
+    </h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+      <slot name="body" />
+    </p>
+    <a href={href} class="text-sm font-medium prose-link">{cta} &#8594;</a>
+  </div>
+  <div class:list={["p-4 min-w-0", flip && "sm:order-1"]}>
+    <p
+      class="text-[11px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1.5"
+    >
+      {previewLabel}
+    </p>
+    <slot />
+  </div>
+</div>
