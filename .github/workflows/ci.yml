@@ -68,3 +68,5 @@ jobs:
       - run: uv run ruff check scripts/
       - run: uv run ruff format --check scripts/
       - run: uv run pytest --cov=scripts/add_circuit --cov-fail-under=60
+      # Same as `npm run validate:circuits`, invoked directly (no node in this job).
+      - run: uv run python scripts/validate_circuits.py

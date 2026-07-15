@@ -198,6 +198,49 @@ def symplectic_validate(circuit: Union[str, stim.Circuit], H: np.ndarray, n: int
     return "passed"
 
 
+def _logical_expectations(
+    circuit: Union[str, stim.Circuit],
+    n: int,
+    d: int,
+    *,
+    Hx: Optional[np.ndarray] = None,
+    Hz: Optional[np.ndarray] = None,
+    H: Optional[np.ndarray] = None,
+) -> Optional[tuple[list[int], list[int]]]:
+    """``(x_exps, z_exps)``: the expectation of each X-bar and each Z-bar on the
+    state ``circuit`` prepares. Each entry is ``+1``, ``-1`` or ``0``.
+
+    The logical operators are computed from the code matrices in the **circuit's
+    own labeling** (so no permutation is needed). Returns ``None`` when they
+    cannot be pinned down: a non-CSS code with ``k != 1`` (the X-bar/Z-bar
+    ordering is not canonical), or ``k == 0`` (no logical state to speak of).
+    """
+    from .code_identify import build_symplectic_logical
+    from .compute import _compute_logicals_css, _compute_symplectic_logicals
+
+    if Hx is not None and Hz is not None:
+        Lx, Lz = _compute_logicals_css(np.asarray(Hx), np.asarray(Hz), d)
+        logical = build_symplectic_logical(Lx, Lz, n=n, k=Lx.shape[0])
+    elif H is not None:
+        k = n - np.asarray(H).shape[0]
+        if k != 1:
+            return None
+        # Only the expectation (a ±1/0) is read off below, so skip the cosmetic
+        # minimum-weight reduction — any valid logical representative agrees.
+        logical = _compute_symplectic_logicals(np.asarray(H), n, k, minimize=False)
+    else:
+        raise ValueError("Provide (Hx, Hz) or H.")
+
+    k = logical.shape[0] // 2  # rows 0..k-1 are X-bars, k..2k-1 Z-bars
+    if k == 0:
+        return None
+
+    peek = _simulate(circuit, n)  # simulate in full; ancillas may route the data
+    x_exps = [peek(_row_support(logical[i], n)) for i in range(k)]
+    z_exps = [peek(_row_support(logical[k + i], n)) for i in range(k)]
+    return x_exps, z_exps
+
+
 def logical_state_of(
     circuit: Union[str, stim.Circuit],
     n: int,
@@ -211,8 +254,7 @@ def logical_state_of(
 
     Stabilizers alone cannot tell |0_L> from |1_L> (both are +1 eigenstates of
     every stabilizer), so we evaluate the *logical* operator expectations on the
-    prepared state. The logical operators are computed from the code matrices in
-    the **circuit's own labeling** (so no permutation is needed).
+    prepared state.
 
     For CSS codes any ``k`` is supported: ``'zero'`` means the all-zeros state
     |0...0_L> (every Z-bar at +1), ``'plus'`` the all-plus state, and so on.
@@ -223,30 +265,16 @@ def logical_state_of(
     Caveat on sign: the logical operators are recomputed from binary (sign-free)
     matrices, so the *basis* (Z vs X) is robust but the absolute 0/1 (resp. +/-)
     label is only defined relative to the recomputed Z-bar (resp. X-bar) sign.
-    Two labelings of the same code can disagree on which eigenstate is |0>. Use
-    :func:`logical_basis_of` when only the basis matters (the reliable part).
+    Two labelings of the same code can disagree on which eigenstate is |0>. That
+    also makes the unanimity below fragile: a genuine |0...0_L> on a multi-k code
+    can come back with mixed Z-bar signs and land in ``'unknown'``. Use
+    :func:`logical_basis_of` when only the basis matters (the reliable part) —
+    it does not share that fragility.
     """
-    from .code_identify import build_symplectic_logical
-    from .compute import _compute_logicals_css, _compute_symplectic_logicals
-
-    if Hx is not None and Hz is not None:
-        Lx, Lz = _compute_logicals_css(np.asarray(Hx), np.asarray(Hz), d)
-        logical = build_symplectic_logical(Lx, Lz, n=n, k=Lx.shape[0])
-    elif H is not None:
-        k = n - np.asarray(H).shape[0]
-        if k != 1:
-            return "unknown"
-        # Only the expectation (a ±1/0) is read off below, so skip the cosmetic
-        # minimum-weight reduction — any valid logical representative agrees.
-        logical = _compute_symplectic_logicals(np.asarray(H), n, k, minimize=False)
-    else:
-        raise ValueError("Provide (Hx, Hz) or H.")
-
-    k = logical.shape[0] // 2  # rows 0..k-1 are X-bars, k..2k-1 Z-bars
-
-    peek = _simulate(circuit, n)  # simulate in full; ancillas may route the data
-    x_exps = [peek(_row_support(logical[i], n)) for i in range(k)]
-    z_exps = [peek(_row_support(logical[k + i], n)) for i in range(k)]
+    exps = _logical_expectations(circuit, n, d, Hx=Hx, Hz=Hz, H=H)
+    if exps is None:
+        return "unknown"
+    x_exps, z_exps = exps
     if all(x == 0 for x in x_exps):
         if all(z == 1 for z in z_exps):
             return "zero"
@@ -272,10 +300,31 @@ def logical_basis_of(
     Hz: Optional[np.ndarray] = None,
     H: Optional[np.ndarray] = None,
 ) -> str:
-    """Sign-convention-free part of :func:`logical_state_of`: returns ``'z'``
-    (a Z-basis eigenstate, |0>/|1>), ``'x'`` (an X-basis eigenstate, |+>/|->),
-    or ``'unknown'``."""
-    return _STATE_BASIS.get(logical_state_of(circuit, n, d, Hx=Hx, Hz=Hz, H=H), "unknown")
+    """Which basis the prepared logical state lives in: ``'z'`` (|0>/|1>),
+    ``'x'`` (|+>/|->), or ``'unknown'``.
+
+    The sign-convention-free part of :func:`logical_state_of`, and computed
+    directly rather than derived from it. Deriving would inherit that function's
+    demand that the Z-bar signs be *unanimous*, which the sign-free logical
+    matrices cannot guarantee: a genuine |0...0_L> on a multi-k code routinely
+    comes back with mixed signs. A state with mixed Z-bar signs is still
+    unambiguously a Z-basis eigenstate, so the basis is well-defined in exactly
+    the cases the 0/1 label is not. Hence ``abs(e) == 1`` rather than ``e == 1``.
+
+    Meaningful for CSS codes, where X-bar is pure-X and Z-bar is pure-Z and the
+    labels are therefore intrinsic. For a non-CSS code both logical operators are
+    mixed-type Paulis, so which is called X-bar is a convention and the result
+    inherits that arbitrariness — callers should not use it there.
+    """
+    exps = _logical_expectations(circuit, n, d, Hx=Hx, Hz=Hz, H=H)
+    if exps is None:
+        return "unknown"
+    x_exps, z_exps = exps
+    if all(e == 0 for e in x_exps) and all(abs(e) == 1 for e in z_exps):
+        return "z"
+    if all(e == 0 for e in z_exps) and all(abs(e) == 1 for e in x_exps):
+        return "x"
+    return "unknown"
 
 
 # ---------------------------------------------------------------------------

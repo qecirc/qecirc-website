@@ -8,6 +8,8 @@ code's symplectic ``h`` — CSS and non-CSS codes alike:
   - Encoding: validate_encoding_h (circuit maps |0...0⟩ to the code space)
             + logical_input_count (the encoder has exactly k free inputs)
   - State-prep: validate_state_prep_h (all stabilizers satisfied)
+              + logical_basis (prepares the basis its logical-state tag claims;
+                CSS codes only)
 
 Usage:
     uv run python scripts/validate_circuits.py
@@ -34,6 +36,11 @@ from scripts.add_circuit.circuit_validate import (  # noqa: E402
     validate_encoding_h,
     validate_state_prep_h,
 )
+from scripts.add_circuit.code_identify import split_h_to_css  # noqa: E402
+from scripts.add_circuit.state_prep import logical_basis_of  # noqa: E402
+
+# logical-state tag -> the basis the prepared state must live in.
+_TAG_BASIS = {"zero": "z", "one": "z", "plus": "x", "minus": "x"}
 
 
 @dataclass
@@ -136,6 +143,7 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
             _check_logical_input_count(result, circuit_text, h, n, code_data.get("k"))
         elif circuit_type == "state-preparation":
             _check_state_prep(result, circuit_text, h, n)
+            _check_logical_basis(result, circuit_text, h, n, code_data.get("d"), tags)
 
         results.append(result)
 
@@ -162,6 +170,78 @@ def _check_state_prep(result: CircuitResult, circuit_text: str, h: np.ndarray, n
             result.checks.append(CheckResult("validate_state_prep", "failed", outcome))
     except Exception as e:
         result.checks.append(CheckResult("validate_state_prep", "error", str(e)))
+
+
+def _check_logical_basis(
+    result: CircuitResult,
+    circuit_text: str,
+    h: np.ndarray,
+    n: int,
+    d: int | None,
+    tags: list[str],
+) -> None:
+    """A state-prep must prepare a logical state in the basis its tag claims.
+
+    Complementary to the codespace check, which is basis-blind: every codeword is
+    a +1 eigenstate of every stabilizer, so ``validate_state_prep`` cannot tell
+    |0>_L from |+>_L. Only the logical operators distinguish them.
+
+    Basis, not the full 0/1 label: ``codes.logical`` is sign-free, so which
+    eigenstate is called |0> is not determined by stored data (see
+    :func:`logical_state_of`'s caveat). The basis is.
+
+    CSS only, on principle rather than as a gap: for a non-CSS code both logical
+    operators are mixed-type Paulis, so which is X-bar and which is Z-bar is a
+    labeling convention and the basis inherits that arbitrariness. There is no
+    convention-independent answer to check against.
+    """
+    tag = next((t.split(":", 1)[1] for t in tags if t.startswith("logical-state:")), "")
+    if not tag:
+        result.checks.append(CheckResult("logical_basis", "skipped", "no logical-state: tag"))
+        return
+    expected = _TAG_BASIS.get(tag)
+    if expected is None:
+        result.checks.append(
+            CheckResult("logical_basis", "skipped", f"logical-state:{tag} names no basis")
+        )
+        return
+    css = split_h_to_css(h, n)
+    if css is None:
+        result.checks.append(
+            CheckResult(
+                "logical_basis",
+                "skipped",
+                "non-CSS: X-bar/Z-bar labeling is a convention, so the basis is not well-defined",
+            )
+        )
+        return
+    if d is None:
+        result.checks.append(CheckResult("logical_basis", "error", "Code YAML missing d"))
+        return
+    try:
+        got = logical_basis_of(circuit_text, n, d, Hx=css[0], Hz=css[1])
+        if got == expected:
+            result.checks.append(CheckResult("logical_basis", "passed"))
+        elif got == "unknown":
+            result.checks.append(
+                CheckResult(
+                    "logical_basis",
+                    "failed",
+                    f"failed: tagged logical-state:{tag} (basis {expected!r}), but the circuit "
+                    "prepares no uniform single-basis logical state",
+                )
+            )
+        else:
+            result.checks.append(
+                CheckResult(
+                    "logical_basis",
+                    "failed",
+                    f"failed: tagged logical-state:{tag} (basis {expected!r}), "
+                    f"but the circuit prepares a {got!r}-basis state",
+                )
+            )
+    except Exception as e:
+        result.checks.append(CheckResult("logical_basis", "error", str(e)))
 
 
 def _check_logical_input_count(
