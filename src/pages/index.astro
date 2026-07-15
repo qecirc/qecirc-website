@@ -10,17 +10,26 @@ export const prerender = false;
 import Layout from "../components/Layout.astro";
 import TagList from "../components/TagList.astro";
 import ToolCard from "../components/ToolCard.astro";
+import HowToStep from "../components/HowToStep.astro";
+import MetricBadge from "../components/MetricBadge.astro";
+import HeartIcon from "../components/HeartIcon.astro";
 import {
   countAllCodes,
   countAllCircuits,
   countAllTools,
   countCircuitPapers,
+  getAllCodes,
+  getBodiesForCircuits,
+  getCircuitTagsForCode,
+  getOriginalForCircuit,
   getLatestCircuits,
   getTagsWithCount,
   getAllTools,
   formatCircuitId,
 } from "../lib/queries";
 import { CONTRIBUTORS } from "../lib/contributors";
+import { TAG_UNSELECTED } from "../lib/constants";
+import { splitAnnotated } from "../lib/stim-format";
 
 // `/` was the codes list until v0.5.0, and client-side filtering pushed history
 // entries like /?n=>3 and /?tag=CSS. Forward those rather than silently
@@ -71,6 +80,63 @@ const FILTER_EXAMPLES: { field: string; example: string; sorted: boolean }[] = [
 // Undefined only if the tools table is empty, hence the guard at the usage.
 const EXAMPLE_TOOL = getAllTools().find((t) => t.circuit_count > 0);
 
+// The code the "narrow it down" step links to: whichever has the most circuits,
+// so the filters it demonstrates have the most to bite on. `no-code` is
+// excluded because it is the one entry that is not a code (it collects
+// standalone gadgets), which makes it a misleading example of a code page.
+const EXAMPLE_CODE = getAllCodes()
+  .filter((c) => !c.tags.includes("no-code"))
+  .toSorted((a, b) => b.circuit_count - a.circuit_count)[0];
+
+// That code's own circuit tags, not the library-wide ones: a globally common
+// tag need not appear on this code, and the chips link into this code's list --
+// so a tag from elsewhere would land the reader on "Showing 0 of N".
+// getCircuitTagsForCode sorts by name, so re-sort before slicing.
+// `tool:` tags are derived at DB-build time and belong to step 5's story.
+const EXAMPLE_CIRCUIT_TAGS = EXAMPLE_CODE
+  ? getCircuitTagsForCode(EXAMPLE_CODE.id)
+      .filter((t) => !t.name.startsWith("tool:"))
+      .toSorted((a, b) => b.count - a.count)
+      .slice(0, 5)
+      .map((t) => t.name)
+  : [];
+
+// A real circuit for the detail-page preview. Not simply the newest one: the
+// step promises Crumble and Quirk, and those links are per-circuit (728 of 833
+// have them), so a reader clicking through to one without them would find the
+// step had oversold. Prefer a recent circuit that actually has both.
+const EXAMPLE_CIRCUIT = getLatestCircuits(20).find((c) => c.crumble_url && c.quirk_url) ?? latest[0];
+
+// Derived from the example's real bodies through the same splitAnnotated the
+// FormatSwitcher tabs use, so the chips are exactly the tabs the linked page
+// shows -- `stim-annotated` is a view of the STIM body, not a format, and gets
+// no tab. Hardcoding STIM/QASM/Cirq would lie for the ~140 circuits that have
+// no Cirq conversion.
+const EXAMPLE_FORMATS = EXAMPLE_CIRCUIT
+  ? splitAnnotated(getBodiesForCircuits([EXAMPLE_CIRCUIT.id]).get(EXAMPLE_CIRCUIT.id) ?? []).tabs.map(
+      (b) => b.format.toUpperCase(),
+    )
+  : [];
+
+// Only some circuits carry a stored original (it exists where a contributor's
+// submission differed from the canonical form), so ask rather than assume:
+// otherwise the preview would advertise a section the linked page does not have.
+const EXAMPLE_HAS_ORIGINAL =
+  EXAMPLE_CIRCUIT != null && getOriginalForCircuit(EXAMPLE_CIRCUIT.id) != null;
+
+// CircuitFilter's own fields and placeholders, so the preview shows the real
+// filter syntax. Unlike step 1's, these are NOT links: the values are examples,
+// and whether any given code has a circuit with depth <=5 is data-dependent --
+// a link that lands on "Showing 0 of N" would teach the wrong thing.
+// `2Q Gates` carries the amber active-sort styling because sorting by
+// two-qubit gate count ascending is CircuitFilter's true default.
+const CIRCUIT_FILTER_EXAMPLES: { label: string; example: string; sorted: boolean }[] = [
+  { label: "Gates", example: ">10", sorted: false },
+  { label: "2Q Gates", example: ">5", sorted: true },
+  { label: "Depth", example: "<=5", sorted: false },
+  { label: "Qubits", example: "7", sorted: false },
+];
+
 const CONTRIBUTE_STEPS = [
   "You open an issue with the circuit and where it came from",
   "A maintainer checks it and runs the ingestion pipeline",
@@ -79,12 +145,26 @@ const CONTRIBUTE_STEPS = [
 
 const cardCls =
   "rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors";
-const stepCls =
-  "rounded border border-gray-200 dark:border-gray-800 p-4 grid gap-4 sm:grid-cols-2 sm:items-start";
-const stepTitleCls = "font-medium mb-1 flex items-baseline gap-2";
-const stepNumCls = "font-mono text-xs text-gray-400 dark:text-gray-500";
 const previewLabelCls =
   "text-[11px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1.5";
+
+// The preview half sits on the page colour (HowToStep fills only the text
+// half), so a border is what frames these -- a fill would compete with the
+// explanation half opposite.
+const previewCardCls = "rounded border border-gray-200 dark:border-gray-800 p-3 space-y-2";
+
+// Shared by the two filter-box previews (steps 1 and 2) so they read as the
+// same control, which on the real pages they are.
+const filterBoxCls =
+  "inline-flex items-center gap-1 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5 transition-colors";
+const filterFieldCls = "px-1 py-0.5 text-xs font-semibold";
+const filterSortedCls = "text-amber-600 dark:text-amber-400";
+const filterPlainCls = "text-gray-600 dark:text-gray-400";
+const filterValueCls = "px-1 py-0.5 text-sm font-mono text-gray-500 dark:text-gray-400";
+
+// Matches about.astro's kbd styling.
+const kbdCls =
+  "inline-block min-w-[1.25rem] text-center px-1 py-0.5 font-mono text-xs border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800";
 
 const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
 const jsonLd = {
@@ -188,116 +268,195 @@ const jsonLd = {
     </a>
   </section>
 
-  {/* Expands the three cards above into what each one actually does. The
-      previews are built from the site's own live components and queries rather
-      than screenshots: the site is alpha and changes without notice, so an
+  {/* Expands the cards above into what each one actually does, in the order a
+      reader would meet them: find, narrow, inspect, keep, generate, give back.
+      Previews are built from the site's own live components and queries rather
+      than screenshots -- the site is alpha and changes without notice, so an
       image would rot silently with nothing in CI to catch it, would need a
-      second copy for dark mode, and could not be clicked. These cannot drift --
+      second copy for dark mode, and could not be clicked. These cannot drift:
       restyle a tag and this restyles with it. */}
   <section class="mb-10">
     <h2 class="text-lg font-semibold mb-1">How QECirc works</h2>
     <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-      Three parts, and how they fit together. The examples are live, so you can click
-      straight through.
+      From finding a circuit to contributing one. Most of what you see here is live, so you
+      can click straight through.
     </p>
 
     <div class="space-y-3">
-      <div class={stepCls}>
-        <div>
-          <h3 class={stepTitleCls}>
-            <span class={stepNumCls}>1</span>Browse codes to find circuits
-          </h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            Every circuit belongs to a code, so start there. Narrow {fmt.format(codeCount)} codes
-            by any of [[n,k,d]] at once, or by family; click a parameter to sort on it instead.
-            Open a code to see its circuits with gate count, depth and qubit count.
-          </p>
-          <a href="/codes" class="text-sm font-medium prose-link">Browse codes &#8594;</a>
+      <HowToStep n={1} title="Start from a code" href="/codes" cta="Browse codes" previewLabel="Filter by parameter">
+        <Fragment slot="body">
+          Every circuit belongs to a code, so start there. Narrow {fmt.format(codeCount)} codes by
+          any of [[n,k,d]] at once, or by family; click a parameter to sort on it instead.
+        </Fragment>
+        {/* A replica of CodeFilter's control, not the control itself: CodeFilter
+            renders a form that list-filter-client binds to by id, and a second
+            one here would fight the real one for the same clicks. Each box links
+            to the filter it shows, so the example is also the way in. */}
+        <div class="flex flex-wrap gap-1.5">
+          {FILTER_EXAMPLES.map(({ field, example, sorted }) => (
+            <a
+              href={`/codes?${field}=${encodeURIComponent(example)}`}
+              class={`${filterBoxCls} hover:border-gray-400 dark:hover:border-gray-600`}
+              title={`Filter codes by ${field} ${example}`}
+            >
+              <span class:list={[filterFieldCls, sorted ? filterSortedCls : filterPlainCls]}>
+                {field}
+                {sorted && <span class="ml-0.5 text-[10px] text-gray-500">&#9650;</span>}
+              </span>
+              <span class={filterValueCls}>{example}</span>
+            </a>
+          ))}
         </div>
-        <div class="min-w-0">
-          <p class={previewLabelCls}>Filter by parameter</p>
-          {/* A replica of CodeFilter's control, not the control itself:
-              CodeFilter renders a form that list-filter-client binds to by id,
-              and a second one here would fight the real one for the same
-              clicks. Each box links to the filter it shows, so the example is
-              also the way in. */}
+        <p class={`${previewLabelCls} mt-3`}>Or by family</p>
+        <TagList tags={EXAMPLE_CODE_TAGS} basePath="/codes" />
+      </HowToStep>
+
+      {EXAMPLE_CODE && (
+        <HowToStep
+          n={2}
+          title="Narrow it down to the circuit you need"
+          href={`/codes/${EXAMPLE_CODE.slug}`}
+          cta={`See the ${EXAMPLE_CODE.name}`}
+          previewLabel="Filter by metric"
+        >
+          <Fragment slot="body">
+            A code page lists every circuit for it, each with its gate count, two-qubit gate
+            count, depth and qubit count. Filter on any of those, or by tag -- grouped by type,
+            fault tolerance, hardware and method -- and sort by the metric you care about.
+            Expand a row to read the circuit without leaving the list.
+          </Fragment>
+          {/* Not links, unlike step 1: whether a given code has a circuit with
+              depth <=5 is data-dependent, and a link landing on "Showing 0 of N"
+              would teach the wrong thing. These show the syntax; the heading
+              link goes to the real list. */}
           <div class="flex flex-wrap gap-1.5">
-            {FILTER_EXAMPLES.map(({ field, example, sorted }) => (
-              <a
-                href={`/codes?${field}=${encodeURIComponent(example)}`}
-                class="inline-flex items-center gap-1 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5 hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
-                title={`Filter codes by ${field} ${example}`}
-              >
-                <span
-                  class:list={[
-                    "px-1 py-0.5 text-xs font-semibold",
-                    sorted
-                      ? "text-amber-600 dark:text-amber-400"
-                      : "text-gray-600 dark:text-gray-400",
-                  ]}
-                >
-                  {field}
+            {CIRCUIT_FILTER_EXAMPLES.map(({ label, example, sorted }) => (
+              <span class={filterBoxCls}>
+                <span class:list={[filterFieldCls, sorted ? filterSortedCls : filterPlainCls]}>
+                  {label}
                   {sorted && <span class="ml-0.5 text-[10px] text-gray-500">&#9650;</span>}
                 </span>
-                <span class="px-1 py-0.5 text-sm font-mono text-gray-500 dark:text-gray-400">
-                  {example}
-                </span>
-              </a>
+                <span class={filterValueCls}>{example}</span>
+              </span>
             ))}
           </div>
-          <p class={`${previewLabelCls} mt-3`}>Or by family</p>
-          <TagList tags={EXAMPLE_CODE_TAGS} basePath="/codes" />
-        </div>
-      </div>
+          {EXAMPLE_CIRCUIT_TAGS.length > 0 && (
+            <Fragment>
+              <p class={`${previewLabelCls} mt-3`}>Or by tag</p>
+              <TagList tags={EXAMPLE_CIRCUIT_TAGS} basePath={`/codes/${EXAMPLE_CODE.slug}`} />
+            </Fragment>
+          )}
+        </HowToStep>
+      )}
 
-      <div class={stepCls}>
-        <div>
-          <h3 class={stepTitleCls}>
-            <span class={stepNumCls}>2</span>Browse tools to synthesise your own
-          </h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            Most circuits here were generated rather than written by hand. Every tool lists its
-            paper and repository, and its circuits carry a{" "}
-            <span class="font-mono text-xs">tool:</span>{" "}tag, so you can go from a circuit you
-            like to the software that produced it.
-          </p>
-          <a href="/tools" class="text-sm font-medium prose-link">
-            All {fmt.format(countAllTools())} tools &#8594;
-          </a>
-        </div>
-        <div class="min-w-0">
-          <p class={previewLabelCls}>A tool entry</p>
-          {/* The real ToolCard /tools renders, on real data -- so this preview
-              is the page, not a picture of it. */}
-          {EXAMPLE_TOOL && <ToolCard tool={EXAMPLE_TOOL} />}
-        </div>
-      </div>
+      {EXAMPLE_CIRCUIT && (
+        <HowToStep
+          n={3}
+          title="Open a circuit for the whole story"
+          href={`/circuits/${EXAMPLE_CIRCUIT.qec_id}`}
+          cta={`Open ${formatCircuitId(EXAMPLE_CIRCUIT.qec_id)}`}
+          previewLabel="A circuit page"
+        >
+          <Fragment slot="body">
+            A circuit page carries the body in STIM and QASM, usually Cirq too, the source to
+            cite, and links to open it in Crumble or Quirk. Its id is permanent and never reused, so{" "}
+            <span class="font-mono text-xs">{formatCircuitId(EXAMPLE_CIRCUIT.qec_id)}</span> always
+            means this circuit -- quote it in a paper or send it to a colleague. Where
+            canonicalisation changed what a contributor sent, the original is kept alongside it.
+          </Fragment>
+          <div class={previewCardCls}>
+            <div class="flex flex-wrap items-baseline gap-2">
+              <span class="font-mono text-sm text-gray-400 dark:text-gray-500">
+                {formatCircuitId(EXAMPLE_CIRCUIT.qec_id)}
+              </span>
+              <span class="font-medium text-sm">{EXAMPLE_CIRCUIT.name}</span>
+            </div>
+            {/* Real MetricBadges, the same ones the circuit page renders. */}
+            <div class="flex flex-wrap gap-2">
+              <MetricBadge value={EXAMPLE_CIRCUIT.gate_count} label="G:" title="Gate count" />
+              <MetricBadge value={EXAMPLE_CIRCUIT.two_qubit_gate_count} label="2Q:" title="Two-qubit gate count" />
+              <MetricBadge value={EXAMPLE_CIRCUIT.depth} label="D:" title="Circuit depth" />
+              <MetricBadge value={EXAMPLE_CIRCUIT.qubit_count} label="Q:" title="Qubit count" />
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              {EXAMPLE_FORMATS.map((f) => (
+                <span class={`inline-block rounded px-1.5 py-0.5 text-xs ${TAG_UNSELECTED}`}>{f}</span>
+              ))}
+            </div>
+            {EXAMPLE_HAS_ORIGINAL && (
+              <p class="text-xs text-gray-400 dark:text-gray-500">&#9656; Original submission</p>
+            )}
+          </div>
+        </HowToStep>
+      )}
 
-      <div class={stepCls}>
-        <div>
-          <h3 class={stepTitleCls}>
-            <span class={stepNumCls}>3</span>Contribute what you have
-          </h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            Found a circuit in a paper, or built one yourself? Open an issue with the STIM body
-            and its source. A maintainer reviews it and runs the ingestion, so you do not need
-            to touch the repository. Whole datasets are welcome too.
-          </p>
-          <a href="/contribute" class="text-sm font-medium prose-link">How to contribute &#8594;</a>
+      <HowToStep n={4} title="Keep the ones you need" href="/favorites" cta="Your favorites" previewLabel="Favorites">
+        <Fragment slot="body">
+          Click the heart on any circuit, or press <kbd class={kbdCls}>f</kbd>, to save it.
+          Favorites live in your browser, so there is no account and nothing to sign up for. The
+          favorites page groups them by code and downloads them all as one archive. Export the
+          list as JSON to carry it to another machine, or to hand a collaborator exactly the set
+          you used.
+        </Fragment>
+        <div class={previewCardCls}>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="text-red-400"><HeartIcon filled class="w-4 h-4" /></span>
+            <span class="font-mono text-xs text-gray-400 dark:text-gray-500">
+              {EXAMPLE_CIRCUIT ? formatCircuitId(EXAMPLE_CIRCUIT.qec_id) : "#1"}
+            </span>
+            <span class="text-gray-500 dark:text-gray-400">saved</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+            <span class="underline">Export list</span>
+            <span class="underline">Import list</span>
+            <span class="inline-flex items-center gap-1">
+              <kbd class={kbdCls}>&#8679;D</kbd> download all
+            </span>
+          </div>
         </div>
-        <div class="min-w-0">
-          <p class={previewLabelCls}>What happens next</p>
-          <ol class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-            {CONTRIBUTE_STEPS.map((s, i) => (
-              <li class="flex gap-2">
-                <span class="font-mono text-xs text-gray-400 dark:text-gray-500 pt-0.5">{i + 1}</span>
-                <span>{s}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
+      </HowToStep>
+
+      <HowToStep
+        n={5}
+        title="Or synthesise your own"
+        href="/tools"
+        cta={`All ${fmt.format(countAllTools())} tools`}
+        previewLabel="A tool entry"
+      >
+        <Fragment slot="body">
+          Most circuits here were generated rather than written by hand. Every tool lists its
+          paper and repository, and its circuits carry a{" "}
+          <span class="font-mono text-xs">tool:</span>{" "}tag, so you can go from a circuit you
+          like to the software that produced it.
+        </Fragment>
+        {/* The real ToolCard /tools renders, on real data -- so this preview is
+            the page, not a picture of it. */}
+        {EXAMPLE_TOOL && <ToolCard tool={EXAMPLE_TOOL} />}
+      </HowToStep>
+
+      <HowToStep n={6} title="Contribute what you have" href="/contribute" cta="How to contribute" previewLabel="What happens next">
+        <Fragment slot="body">
+          Found a circuit in a paper, or built one yourself? Open an issue with the STIM body and
+          its source. A maintainer reviews it and runs the ingestion, so you never touch the
+          repository. Whole datasets are welcome too.
+        </Fragment>
+        <ol class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+          {CONTRIBUTE_STEPS.map((s, i) => (
+            <li class="flex gap-2">
+              <span class="font-mono text-xs text-gray-400 dark:text-gray-500 pt-0.5">{i + 1}</span>
+              <span>{s}</span>
+            </li>
+          ))}
+        </ol>
+      </HowToStep>
     </div>
+
+    {/* Worth one line: the shortcuts are a real feature but not worth a step,
+        and `?` is self-documenting once you know it exists. */}
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+      Every listing is keyboard navigable &#8212; press <kbd class={kbdCls}>?</kbd> anywhere for
+      the shortcuts, or <kbd class={kbdCls}>/</kbd> to jump to search.
+    </p>
   </section>
 
   {latest.length > 0 && (
