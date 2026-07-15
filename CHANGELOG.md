@@ -5,6 +5,18 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+### Removed
+
+- The `Circuit-Synth Encoding (Gate-Optimized)` circuit for the Gottesman
+  [[8,3,3]] code (`#134`) — it did not encode the code it was filed under.
+  Propagating `Z` through it landed only 1 of 8 single-qubit operators inside the
+  code's stabilizer group where 5 (`n−k`) were expected, and 2 of its 5 stored
+  stabilizers came out genuinely random on the `|0…0⟩` run — checked sign-free,
+  so not a Pauli-frame difference. Its three sibling encoders are correct and
+  remain. `#134` is retired, not reused. Surfaced by the detector work: the
+  logical-input derivation is basis-independent, so it can check non-CSS codes
+  that `validate:circuits` skips (see below).
+
 ### Fixed
 
 - Qubit coordinates survive ingestion
