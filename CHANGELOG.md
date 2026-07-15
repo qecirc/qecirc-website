@@ -17,6 +17,23 @@ the source-of-truth `package.json` version.
 
 ### Added
 
+- Detectors and observables for state-preparation and encoding circuits
+  ([#108](https://github.com/qecirc/qecirc-website/issues/108)), shown with a
+  **Detectors toggle** next to Coords and hidden by default. Switching it on
+  swaps in a new `stim-annotated` body — reset prologue, terminal readout, the
+  deterministic stabilizer outcomes as `DETECTOR`s, and the logical as an
+  `OBSERVABLE_INCLUDE` — and repoints the Crumble link at the matching URL. The
+  canonical `stim` body stays unitary and untouched, because `to_tableau()` and
+  the derive/fit pipeline depend on it. 418 of 834 circuits are annotated (357
+  state prep, 61 encoders); the 62 five-qubit-code circuits are excluded,
+  because non-CSS stabilizers mix X and Z on the same qubit and no single
+  terminal readout basis reads them.
+- Encoders are annotated differently from state preps: only their ancillas are
+  reset, leaving the k logical inputs free, and they get detectors but no
+  observable. Hz is deterministic for any input, so the detectors hold whatever
+  the reader supplies; the logical is input-dependent. The input qubits are
+  unrecorded and canonicalization moves them, so they are derived from the
+  circuit.
 - Coordinates are now displayed with a **Coords toggle** on circuit bodies,
   hidden by default: a d=11 unrotated prep opens with 221 `QUBIT_COORDS` lines
   before its first gate. Copy and download follow the toggle, so what you take

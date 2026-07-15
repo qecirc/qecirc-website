@@ -7,6 +7,8 @@ interface Props {
   label?: string;
   downloadName?: string;
   source?: string;
+  /** The detector-annotated variant of `code`, when the circuit has one. */
+  annotated?: string;
   /** Render the coords switch above the block. FormatSwitcher sets this false
    *  and puts the switch in its own tab row instead. */
   coordsToggle?: boolean;
@@ -15,14 +17,19 @@ interface Props {
 // KEEP THE CODE-BLOCK MARKUP IN SYNC with CircuitBodiesTemplate.astro, which
 // is cloned client-side on code pages (this component renders only on
 // circuit detail pages).
-const { code, label, downloadName, source, coordsToggle = true } = Astro.props;
+const { code, label, downloadName, source, annotated, coordsToggle = true } = Astro.props;
 
 const raw = code.trimEnd();
-const hasCoords = hasQubitCoords(raw);
-// Render the default state server-side (coordinates hidden) so there is no
-// flash before the switch initialises, and so it reads correctly without JS.
+const annotatedRaw = annotated?.trimEnd();
+const hasCoords = hasQubitCoords(raw) || (!!annotatedRaw && hasQubitCoords(annotatedRaw));
+// Render the default state server-side (coordinates hidden, canonical body) so
+// there is no flash before the switches initialise, and so it reads correctly
+// without JS.
 const formatted = lineNumbered(bodyForDisplay(raw, false));
 const ownToggle = coordsToggle && hasCoords;
+// The switches derive what is shown from these, so the block needs the full
+// body whenever either switch is live — not only when it has coordinates.
+const needsRaw = hasCoords || !!annotatedRaw;
 ---
 
 <div data-coords-scope={ownToggle ? "" : undefined}>
@@ -35,7 +42,8 @@ const ownToggle = coordsToggle && hasCoords;
     class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden"
     data-code-block
     data-source={source ?? ""}
-    data-raw-code={hasCoords ? raw : undefined}
+    data-raw-code={needsRaw ? raw : undefined}
+    data-annotated-code={annotatedRaw}
   >
     <div class="border-b border-gray-200 dark:border-gray-800 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
       <span>{label ?? ""}</span>
@@ -78,9 +86,9 @@ const ownToggle = coordsToggle && hasCoords;
 
 <script>
   import { copyToClipboard } from "../lib/dom-helpers";
-  import { initCoordsToggles } from "../lib/coords-toggle-client";
+  import { initBodyViews } from "../lib/body-view-client";
 
-  initCoordsToggles();
+  initBodyViews();
 
   document.querySelectorAll<HTMLElement>("[data-code-block]:not([data-initialized])").forEach(function (block) {
     block.setAttribute("data-initialized", "");

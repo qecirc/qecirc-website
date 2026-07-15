@@ -1,0 +1,31 @@
+---
+// Show/hide the derived DETECTORs and their terminal readout on a STIM body.
+// Sits in the format-tab row next to the Coords switch — both are view controls
+// over the same block, like picking STIM vs QASM.
+//
+// Switching it on swaps in the `stim-annotated` body (reset prologue, terminal
+// readout, detectors, observables) and repoints the Crumble link at the matching
+// URL. Wired by body-view-client.ts, which removes it when the circuit has no
+// annotated body — most do not.
+import { TAB_INACTIVE_CLASS } from "../lib/constants";
+
+const BASE =
+  "detectors-btn flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors";
+---
+
+<button
+  class:list={[BASE, TAB_INACTIVE_CLASS]}
+  role="switch"
+  aria-checked="false"
+  title="Show detectors and readout"
+>
+  <!-- Unchecked box; swapped for the checked one by body-view-client. -->
+  <svg class="detectors-off w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="3" />
+  </svg>
+  <svg class="detectors-on hidden w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="3" />
+    <path d="M7.5 12.5l3 3 6-6.5" />
+  </svg>
+  <span>Detectors</span>
+</button>

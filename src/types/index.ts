@@ -25,6 +25,9 @@ export interface Circuit {
   qubit_count: number | null;
   weight: number | null;
   crumble_url: string | null;
+  /** Crumble link for the `stim-annotated` body. The Detectors switch points the
+   *  Crumble link here; null when the circuit has no annotated body. */
+  crumble_url_annotated: string | null;
   quirk_url: string | null;
   tool_id: number | null;
 }

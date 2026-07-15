@@ -7,8 +7,14 @@
 
 import { copyToClipboard } from "./dom-helpers";
 import { initFormatSwitchers } from "./format-switcher-client";
-import { initCoordsToggle } from "./coords-toggle-client";
-import { bodyForDisplay, hasQubitCoords, lineNumbered } from "./stim-format";
+import { initBodyView } from "./body-view-client";
+import {
+  ANNOTATED_OF,
+  bodyForDisplay,
+  hasQubitCoords,
+  lineNumbered,
+  splitAnnotated,
+} from "./stim-format";
 import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "./constants";
 
 interface BodyEntry {
@@ -51,12 +57,20 @@ function buildSwitcher(
   const stimFilename = container.dataset.stimFilename ?? "";
   const source = container.dataset.source ?? "";
 
-  // Only STIM carries coordinates, so at most one body per switcher has them.
-  // Mirrors FormatSwitcher.astro, which resolves this server-side.
+  // The annotated body is a view of the STIM body, not a format of its own, so
+  // it gets no tab. Mirrors FormatSwitcher.astro, which resolves this
+  // server-side.
+  const { tabs, annotated } = splitAnnotated(bodies);
+
+  // Only STIM carries coordinates or an annotated variant, so at most one body
+  // per switcher owns the switches.
   let coordsSlot = tabBar.querySelector<HTMLElement>(".coords-slot");
-  const coordsFormat = bodies.find((b) => hasQubitCoords(b.body))?.format;
-  if (coordsFormat) {
-    switcher.dataset.coordsFormat = coordsFormat;
+  const coordsFormat =
+    tabs.find((b) => hasQubitCoords(b.body))?.format ??
+    (annotated && hasQubitCoords(annotated) ? ANNOTATED_OF : undefined);
+  const switchFormat = coordsFormat ?? (annotated ? ANNOTATED_OF : undefined);
+  if (switchFormat) {
+    switcher.dataset.coordsFormat = switchFormat;
   } else {
     coordsSlot?.remove();
     // Must be nulled, not just detached: it is the insertBefore() reference
@@ -64,7 +78,7 @@ function buildSwitcher(
     coordsSlot = null;
   }
 
-  bodies.forEach(function (entry, i) {
+  tabs.forEach(function (entry, i) {
     const raw = entry.body.trimEnd();
 
     const tab = tabProto.cloneNode(true) as HTMLElement;
@@ -89,9 +103,10 @@ function buildSwitcher(
     const blockLabel = bodyEl.querySelector<HTMLElement>(".block-label");
     if (blockLabel) blockLabel.textContent = `${entry.format.toUpperCase()} Circuit`;
 
-    // Seed the default view (coordinates hidden); initCoordsToggle repaints it
-    // once the whole switcher is assembled. Copy and download read the copy
-    // button's data-code rather than `raw`, so they follow what is on screen.
+    // Seed the default view (coordinates hidden, canonical body); initBodyView
+    // repaints it once the whole switcher is assembled. Copy and download read
+    // the copy button's data-code rather than `raw`, so they follow what is on
+    // screen.
     const shown = bodyForDisplay(raw, false);
     const codeEl = bodyEl.querySelector<HTMLElement>("pre code");
     if (codeEl) codeEl.textContent = lineNumbered(shown);
@@ -99,7 +114,12 @@ function buildSwitcher(
     if (copyBtn) copyBtn.dataset.code = shown;
 
     const block = bodyEl.querySelector<HTMLElement>("[data-code-block]");
-    if (block && entry.format === coordsFormat) block.dataset.rawCode = raw;
+    // The switches derive what is shown from the full body, so hand it over
+    // whenever either switch is live on this format.
+    if (block && entry.format === switchFormat) {
+      block.dataset.rawCode = raw;
+      if (annotated) block.dataset.annotatedCode = annotated;
+    }
 
     const downloadBtn = bodyEl.querySelector<HTMLElement>(".download-btn");
     if (downloadBtn) {
@@ -142,16 +162,17 @@ function buildSwitcher(
   });
 
   // Match FormatSwitcher.astro: no format tabs for single-format circuits. The
-  // row itself stays if it still holds the coords switch — the server-rendered
+  // row itself stays if it still holds a body switch — the server-rendered
   // equivalent is CodeBlock.astro's lone-switch row.
-  if (bodies.length < 2) {
+  if (tabs.length < 2) {
     tabBar.querySelectorAll(".format-tab").forEach(function (t) {
       t.remove();
     });
-    if (!coordsFormat) tabBar.remove();
+    if (!switchFormat) tabBar.remove();
   }
 
-  initCoordsToggle(switcher);
+  // Drops whichever switches would do nothing for this circuit.
+  initBodyView(switcher);
   container.replaceChildren(fragment);
   initFormatSwitchers(container);
 }

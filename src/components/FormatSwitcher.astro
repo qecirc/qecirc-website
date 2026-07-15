@@ -1,9 +1,10 @@
 ---
 import type { CircuitBody } from "../types";
 import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "../lib/constants";
-import { hasQubitCoords } from "../lib/stim-format";
+import { ANNOTATED_OF, hasQubitCoords, splitAnnotated } from "../lib/stim-format";
 import CodeBlock from "./CodeBlock.astro";
 import CoordsToggle from "./CoordsToggle.astro";
+import DetectorsToggle from "./DetectorsToggle.astro";
 
 // KEEP THE TAB MARKUP IN SYNC with CircuitBodiesTemplate.astro, which is
 // cloned client-side on code pages (this component renders only on circuit
@@ -16,13 +17,24 @@ interface Props {
 }
 
 const { bodies, stimFilename, source } = Astro.props;
-const hasMultipleFormats = bodies.length > 1;
 
-// Only STIM ever carries coordinates (the QASM/CIRQ conversions drop them), so
-// at most one body per switcher has them. The switch lives in the tab row and
-// is hidden while a coordinate-less format is selected — see
+// The annotated body is a view of the STIM body, not a format of its own, so it
+// gets no tab — the Detectors switch swaps it in behind the STIM tab.
+const { tabs, annotated } = splitAnnotated(bodies);
+const hasMultipleFormats = tabs.length > 1;
+
+// Both switches belong to one format (only STIM carries coordinates or an
+// annotated variant) but share the tab row with all of them — they are hidden
+// while another format is selected, rather than left doing nothing. See
 // format-switcher-client.
-const coordsFormat = bodies.find((b) => hasQubitCoords(b.body))?.format;
+const coordsFormat = tabs.find((b) => hasQubitCoords(b.body))?.format
+  ?? (annotated && hasQubitCoords(annotated) ? ANNOTATED_OF : undefined);
+const detectorsFormat = annotated ? ANNOTATED_OF : undefined;
+const switchFormat = coordsFormat ?? detectorsFormat;
+
+function annotatedFor(format: string): string | undefined {
+  return format === ANNOTATED_OF ? annotated : undefined;
+}
 
 function downloadNameFor(format: string): string | undefined {
   if (!stimFilename) return undefined;
@@ -34,9 +46,9 @@ const TAB_BASE_CLASS =
 ---
 
 {hasMultipleFormats ? (
-  <div class="format-switcher" data-coords-format={coordsFormat}>
+  <div class="format-switcher" data-coords-format={switchFormat}>
     <div class="flex items-center gap-0.5 mb-2">
-      {bodies.map((b, i) => (
+      {tabs.map((b, i) => (
         <button
           class:list={[TAB_BASE_CLASS, i === 0 ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS]}
           data-format={b.format}
@@ -50,16 +62,18 @@ const TAB_BASE_CLASS =
           )}
         </button>
       ))}
-      {coordsFormat && (
-        <div class="ml-auto">
-          <CoordsToggle />
+      {switchFormat && (
+        <div class="ml-auto flex items-center gap-0.5" data-body-switches>
+          {detectorsFormat && <DetectorsToggle />}
+          {coordsFormat && <CoordsToggle />}
         </div>
       )}
     </div>
-    {bodies.map((b, i) => (
+    {tabs.map((b, i) => (
       <div class="format-body" data-format={b.format} style={i === 0 ? "" : "display:none"}>
         <CodeBlock
           code={b.body}
+          annotated={annotatedFor(b.format)}
           label={`${b.format.toUpperCase()} Circuit`}
           downloadName={downloadNameFor(b.format)}
           source={source}
@@ -68,11 +82,12 @@ const TAB_BASE_CLASS =
       </div>
     ))}
   </div>
-) : bodies.length === 1 ? (
+) : tabs.length === 1 ? (
   <CodeBlock
-    code={bodies[0].body}
-    label={`${bodies[0].format.toUpperCase()} Circuit`}
-    downloadName={downloadNameFor(bodies[0].format)}
+    code={tabs[0].body}
+    annotated={annotatedFor(tabs[0].format)}
+    label={`${tabs[0].format.toUpperCase()} Circuit`}
+    downloadName={downloadNameFor(tabs[0].format)}
     source={source}
   />
 ) : (
