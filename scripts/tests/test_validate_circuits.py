@@ -138,6 +138,65 @@ def test_logical_input_count_catches_what_codespace_check_cannot(tmp_path):
     assert results[0].passed is False
 
 
+# [[4,2,2]] code: Hx = Hz = [1 1 1 1], k = 2 — CSS, so the basis is meaningful.
+CODE_422 = {
+    "name": "422",
+    "n": 4,
+    "k": 2,
+    "d": 2,
+    "h": [[1, 1, 1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 1, 1]],
+    "logical": [
+        [1, 1, 0, 0, 0, 0, 0, 0],
+        [1, 0, 1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 0, 1, 0],
+        [0, 0, 0, 0, 1, 1, 0, 0],
+    ],
+    "canonical_hash": "x",
+}
+
+ZERO_PREP_422 = "H 0\nCX 0 1 0 2 0 3\n"
+PLUS_PREP_422 = ZERO_PREP_422 + "H 0 1 2 3\n"
+
+
+def test_logical_basis_passes_on_correct_tag(tmp_path):
+    results = _build(
+        tmp_path, ZERO_PREP_422, code=CODE_422, tags=("state-preparation", "logical-state:zero")
+    )
+    assert _checks(results)["logical_basis"].status == "passed"
+
+
+def test_logical_basis_catches_wrong_basis_tag(tmp_path):
+    """The error class this check exists for: the body prepares |+>_L but the
+    circuit is filed as |0>_L. The codespace check cannot see it — every codeword
+    satisfies every stabilizer regardless of logical state."""
+    results = _build(
+        tmp_path, PLUS_PREP_422, code=CODE_422, tags=("state-preparation", "logical-state:zero")
+    )
+    checks = _checks(results)
+    assert checks["validate_state_prep"].status == "passed"  # blind to this
+    assert checks["logical_basis"].status == "failed"
+    assert "'x'-basis state" in checks["logical_basis"].detail
+    assert results[0].passed is False
+
+
+def test_logical_basis_skipped_for_non_css(tmp_path):
+    """Non-CSS: X-bar/Z-bar labeling is a convention, so there is no
+    convention-independent basis to check. Skipped explicitly, with a reason."""
+    results = _build(
+        tmp_path, _FIVE_QUBIT_ENCODER, tags=("state-preparation", "logical-state:zero")
+    )
+    check = _checks(results)["logical_basis"]
+    assert check.status == "skipped"
+    assert "convention" in check.detail
+
+
+def test_logical_basis_skipped_without_tag(tmp_path):
+    results = _build(tmp_path, ZERO_PREP_422, code=CODE_422, tags=("state-preparation",))
+    check = _checks(results)["logical_basis"]
+    assert check.status == "skipped"
+    assert "no logical-state" in check.detail
+
+
 def test_all_skipped_checks_count_as_skipped_not_failed():
     """A circuit whose only check is 'skipped' must report is_skipped=True and
     passed=False, so the summary counts it as skipped rather than a failure."""
