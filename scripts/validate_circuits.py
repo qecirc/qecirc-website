@@ -2,10 +2,12 @@
 Validate encoding and state-prep circuits against stored code check matrices.
 
 Iterates over all circuit YAML files in data_yaml/circuits/, identifies encoding
-and state-preparation circuits (via tags), and verifies correctness:
+and state-preparation circuits (via tags), and verifies correctness against the
+code's symplectic ``h`` — CSS and non-CSS codes alike:
 
-  - Encoding: validate_encoding (circuit maps |0...0⟩ to the code space)
-  - State-prep: validate_state_prep (all stabilizers satisfied)
+  - Encoding: validate_encoding_h (circuit maps |0...0⟩ to the code space)
+            + logical_input_count (the encoder has exactly k free inputs)
+  - State-prep: validate_state_prep_h (all stabilizers satisfied)
 
 Usage:
     uv run python scripts/validate_circuits.py
@@ -23,13 +25,15 @@ if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
 import numpy as np  # noqa: E402
+import stim  # noqa: E402
 import yaml  # noqa: E402
 
+from scripts.add_circuit.annotate import logical_input_qubits  # noqa: E402
 from scripts.add_circuit.circuit_validate import (  # noqa: E402
-    validate_encoding,
-    validate_state_prep,
+    _widen,
+    validate_encoding_h,
+    validate_state_prep_h,
 )
-from scripts.add_circuit.code_identify import split_h_to_css  # noqa: E402
 
 
 @dataclass
@@ -56,9 +60,10 @@ class CircuitResult:
 
     @property
     def is_skipped(self) -> bool:
-        # Skipped = no runnable validation for this circuit: either it lacks a
-        # functionality tag, or every check was skipped (e.g. non-CSS codes,
-        # which have no CSS validator yet). These must not count as failures.
+        # Skipped = no runnable validation for this circuit: it lacks a
+        # functionality tag, or every check was skipped. These must not count as
+        # failures. Note the validators themselves no longer skip on non-CSS
+        # codes — they check the symplectic h directly.
         return self.circuit_type == "skipped" or (
             bool(self.checks) and all(c.status == "skipped" for c in self.checks)
         )
@@ -99,8 +104,8 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
 
         code_data = yaml.safe_load(code_yaml_path.read_text())
 
-        # CSS path is required for the existing validators. Recover Hx/Hz from
-        # the symplectic h when it is row-CSS decomposable; otherwise skip.
+        # The validators check the symplectic h directly, so no CSS split is
+        # needed — non-CSS codes take the same path as CSS ones.
         if code_data.get("h") is None:
             result.checks.append(CheckResult("load_code", "error", "Code YAML missing h"))
             results.append(result)
@@ -112,20 +117,7 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
             results.append(result)
             continue
 
-        css_split = split_h_to_css(np.array(code_data["h"], dtype=int), n)
-        if css_split is None:
-            result.checks.append(
-                CheckResult(
-                    "load_code",
-                    "skipped",
-                    "non-CSS validation not yet supported "
-                    "(only encoding/state-prep validators for CSS)",
-                )
-            )
-            results.append(result)
-            continue
-
-        Hx, Hz = css_split
+        h = np.array(code_data["h"], dtype=int)
 
         # Load STIM body
         stim_path = circ_yaml_path.with_suffix(".stim")
@@ -140,23 +132,19 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
 
         # Run checks
         if circuit_type == "encoding":
-            _check_encoding(result, circuit_text, Hx, Hz)
+            _check_encoding(result, circuit_text, h, n)
+            _check_logical_input_count(result, circuit_text, h, n, code_data.get("k"))
         elif circuit_type == "state-preparation":
-            _check_state_prep(result, circuit_text, Hx, Hz)
+            _check_state_prep(result, circuit_text, h, n)
 
         results.append(result)
 
     return results
 
 
-def _check_encoding(
-    result: CircuitResult,
-    circuit_text: str,
-    Hx: np.ndarray,
-    Hz: np.ndarray,
-) -> None:
+def _check_encoding(result: CircuitResult, circuit_text: str, h: np.ndarray, n: int) -> None:
     try:
-        outcome = validate_encoding(circuit_text, Hx, Hz)
+        outcome = validate_encoding_h(circuit_text, h, n)
         if outcome == "passed":
             result.checks.append(CheckResult("validate_encoding", "passed"))
         else:
@@ -165,20 +153,63 @@ def _check_encoding(
         result.checks.append(CheckResult("validate_encoding", "error", str(e)))
 
 
-def _check_state_prep(
-    result: CircuitResult,
-    circuit_text: str,
-    Hx: np.ndarray,
-    Hz: np.ndarray,
-) -> None:
+def _check_state_prep(result: CircuitResult, circuit_text: str, h: np.ndarray, n: int) -> None:
     try:
-        outcome = validate_state_prep(circuit_text, Hx, Hz)
+        outcome = validate_state_prep_h(circuit_text, h, n)
         if outcome == "passed":
             result.checks.append(CheckResult("validate_state_prep", "passed"))
         else:
             result.checks.append(CheckResult("validate_state_prep", "failed", outcome))
     except Exception as e:
         result.checks.append(CheckResult("validate_state_prep", "error", str(e)))
+
+
+def _check_logical_input_count(
+    result: CircuitResult,
+    circuit_text: str,
+    h: np.ndarray,
+    n: int,
+    k: int | None,
+) -> None:
+    """An encoder must expose exactly k free logical inputs.
+
+    Basis-independent, and complementary to the codespace check: it looks at the
+    encoder's *inputs* rather than its output on |0...0>, so it catches circuits
+    that land in a valid codespace but of the wrong code. That is exactly how the
+    Gottesman [[8,3,3]] gate-optimized encoder (#134) was caught — it implied 7
+    logical inputs where k=3.
+    """
+    if k is None:
+        result.checks.append(CheckResult("logical_input_count", "error", "Code YAML missing k"))
+        return
+    try:
+        # Widen to n first, as the codespace check does: an encoder that never
+        # touches its last data qubits is narrower than the code, and
+        # logical_input_qubits reports a width mismatch as "not derivable" —
+        # i.e. it would silently skip rather than check.
+        circ = _widen(stim.Circuit(circuit_text), n)
+        inputs = logical_input_qubits(circ, h, n)
+        if inputs is None:
+            result.checks.append(
+                CheckResult(
+                    "logical_input_count",
+                    "skipped",
+                    "inputs not derivable (no tableau and no resets)",
+                )
+            )
+        elif len(inputs) != k:
+            result.checks.append(
+                CheckResult(
+                    "logical_input_count",
+                    "failed",
+                    f"failed: circuit implies {len(inputs)} logical inputs {inputs}, "
+                    f"but the code has k={k}",
+                )
+            )
+        else:
+            result.checks.append(CheckResult("logical_input_count", "passed"))
+    except Exception as e:
+        result.checks.append(CheckResult("logical_input_count", "error", str(e)))
 
 
 def print_results(results: list[CircuitResult]) -> None:
