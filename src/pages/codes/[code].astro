@@ -19,12 +19,13 @@ import {
   getToolsForCircuits,
 } from "../../lib/queries";
 import type { CircuitSort, CircuitSortField } from "../../types";
+import { notFound } from "../../lib/not-found";
 
 const { code: codeSlug } = Astro.params;
 const code = getCodeBySlug(codeSlug!);
 
 if (!code) {
-  return Astro.rewrite("/404");
+  return notFound();
 }
 
 const tags = getTagsFor("code", code.id);

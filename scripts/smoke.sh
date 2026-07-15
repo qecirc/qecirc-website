@@ -21,6 +21,28 @@ check() {
   echo "OK   $path"
 }
 
+# Assert an exact status code, and (optionally) a substring in the body.
+# Unlike check(), this omits -f so non-2xx responses stay inspectable.
+# Body and status come from one request, with the status appended on its own
+# line. Never pipe curl into `grep -q`: grep exits at the first match, and the
+# resulting SIGPIPE trips `set -o pipefail` intermittently on large bodies.
+check_status() {
+  local path="$1" expected_status="$2" expected_body="${3:-}"
+  local out status body
+  if ! out=$(curl -sS -w $'\n%{http_code}' "$BASE$path" 2>&1); then
+    echo "FAIL $path: curl error"; fail=1; return
+  fi
+  status="${out##*$'\n'}"
+  body="${out%$'\n'*}"
+  if [ "$status" != "$expected_status" ]; then
+    echo "FAIL $path: expected HTTP $expected_status, got $status"; fail=1; return
+  fi
+  if [ -n "$expected_body" ] && ! grep -q "$expected_body" <<< "$body"; then
+    echo "FAIL $path: HTTP $status but body missing: $expected_body"; fail=1; return
+  fi
+  echo "OK   $path ($status)"
+}
+
 # Static / always-present routes
 check "/"            "<title"     # codes index renders SSR
 check "/about"       "QECirc"     # static prerender sanity
@@ -58,5 +80,18 @@ fi
 
 # Search query path
 check "/api/search?q=code" "{"
+
+# Unknown ids/slugs must 404 (not 500) and still serve the styled 404 page.
+# The SSR pages return a bodiless 404 and rely on Astro substituting the
+# prerendered /404 page (see src/lib/not-found.ts); a regression there shows up
+# either as a 500 or as a 404 with an empty body.
+check_status "/circuits/99999"  404 "Page Not Found"   # unknown qec_id
+check_status "/circuits/abc"    404 "Page Not Found"   # non-numeric qec_id
+check_status "/circuits/0"      404 "Page Not Found"   # out-of-range qec_id
+check_status "/codes/nope"      404 "Page Not Found"   # unknown code slug
+check_status "/not-a-page"      404 "Page Not Found"   # unmatched route (adapter)
+
+# API routes serve their own 404 body and must not be swallowed by the above.
+check_status "/api/circuits/99999/bodies" 404 "Not found"
 
 exit $fail
