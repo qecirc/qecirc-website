@@ -2,6 +2,7 @@
 import type { TagWithCount, CodeSortField } from "../types";
 import { CODE_TAG_CATEGORIES, categorizeCodeTag } from "../lib/tag-categories";
 import TagFilterDropdowns from "./TagFilterDropdowns.astro";
+import FilterStatus from "./FilterStatus.astro";
 
 // Filtering/sorting runs client-side (list-filter-client.ts, initialised by
 // the page). Inputs render empty and sort labels render the default state;
@@ -32,11 +33,9 @@ function labelInfo(field: CodeSortField) {
 
 const sortHref = (field: CodeSortField) => `${basePath}?sort=${field}&sort_dir=asc`;
 
-const FIELDS: { field: CodeSortField; placeholder: string }[] = [
-  { field: "n", placeholder: ">3,<10" },
-  { field: "k", placeholder: ">=2" },
-  { field: "d", placeholder: "!=5" },
-];
+// Inputs render with no placeholder: the examples live in FilterStatus, beside
+// the boxes rather than inside them.
+const FIELDS: CodeSortField[] = ["n", "k", "d"];
 
 const tagGroups = CODE_TAG_CATEGORIES.map((c) => ({
   label: c.label,
@@ -46,31 +45,18 @@ const tagGroups = CODE_TAG_CATEGORIES.map((c) => ({
 
 <form id="code-filter" method="GET" action={basePath} class="mb-6 space-y-2">
   <div class="flex flex-wrap items-center gap-3">
-    {FIELDS.map(({ field, placeholder }) => {
+    {FIELDS.map((field) => {
       const info = labelInfo(field);
       return (
         <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
           <a href={sortHref(field)} data-sort-field={field} class={`px-1 py-0.5 text-xs transition-colors ${info.cls}`} title={`Click to sort by ${field}`}>
             {field}<span data-sort-arrow class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{info.arrow}</span>
           </a>
-          <input id={`filter-${field}`} type="text" name={field} class={INPUT_CLASS} placeholder={placeholder} aria-label={`Filter by ${field}`} data-filter />
+          <input id={`filter-${field}`} type="text" name={field} class={INPUT_CLASS} aria-label={`Filter by ${field}`} data-filter />
         </div>
       );
     })}
-    <div class="text-xs" data-filter-status>
-      <span data-filter-error class="text-red-500 hidden">Invalid filter</span>
-      <a
-        href={basePath}
-        data-clear-filters
-        class="hidden inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
-        title="Clear all active filters"
-      >
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        Clear filters
-      </a>
-    </div>
+    <FilterStatus basePath={basePath} />
   </div>
 
   <TagFilterDropdowns

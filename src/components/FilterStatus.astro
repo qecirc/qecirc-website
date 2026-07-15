@@ -1,0 +1,68 @@
+---
+/**
+ * The status slot of a filter bar, shared by CodeFilter and CircuitFilter.
+ *
+ * It shows exactly one of three things -- a parse error, a "Clear filters"
+ * link, or the syntax hint -- and which one is list-filter-client.ts's call
+ * (see renderStatus there). The three are mutually exclusive by design: there
+ * is nothing to clear while the hint is up, and an error outranks both.
+ *
+ * The examples live here rather than in the inputs' `placeholder`s. In a box
+ * that is otherwise empty, a greyed-out `>3,<10` reads as a value the filter
+ * already has, so people took the boxes for pre-filled rather than blank.
+ */
+interface Props {
+  /** Where "Clear filters" points; must equal the page's own path. */
+  basePath: string;
+}
+
+const { basePath } = Astro.props;
+
+// Mirrors parseFilterString's grammar (queries/shared.ts and
+// list-filter-client.ts): a bare number, an operator and a number, or several
+// of those comma-separated. Ordered simplest-first.
+const EXAMPLES = ["7", ">3", "<=10", ">3,<10"];
+
+const HINT_TITLE =
+  "A number, or an operator (>, >=, <, <=, !=) and a number. Comma-separate to combine.";
+---
+
+{/* Everything in here is shown and hidden by toggling Tailwind's `hidden`, so
+    none of it may carry a display utility that sorts after `hidden`
+    alphabetically. Tailwind v4 emits them all into the `utilities` layer at
+    equal specificity, so source order decides the winner -- `.hidden` (none)
+    is beaten by `.inline`, `.inline-block`, `.inline-flex` and `.table`, and
+    an element carrying one of those simply never hides. That is why the clear
+    link below lays its icon out with `inline-block` on the *svg* instead of
+    `inline-flex` on itself. */}
+<div class="text-xs" data-filter-status>
+  <span data-filter-error class="hidden text-red-500">Invalid filter</span>
+
+  <span data-filter-hint class="text-gray-400 dark:text-gray-500" title={HINT_TITLE}>
+    e.g.{" "}
+    {EXAMPLES.map((example, i) => (
+      <Fragment>
+        {i > 0 && <span class="mx-1 opacity-60">&#183;</span>}
+        <span class="font-mono">{example}</span>
+      </Fragment>
+    ))}
+  </span>
+
+  <a
+    href={basePath}
+    data-clear-filters
+    class="hidden font-medium text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
+    title="Clear all active filters"
+  >
+    <svg
+      class="inline-block w-3 h-3 mr-0.5 align-[-2px]"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M6 18L18 6M6 6l12 12" />
+    </svg>Clear filters
+  </a>
+</div>

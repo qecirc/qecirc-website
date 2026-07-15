@@ -157,8 +157,12 @@ export function initListFilter(config: ListFilterConfig): void {
     ? Array.from(form.querySelectorAll<HTMLInputElement>("input[data-filter]"))
     : [];
   const inputByField = new Map(inputs.map((i) => [i.name, i]));
+  // All three live in the form's FilterStatus slot. Scoped to the form, not the
+  // document: the empty state carries its own [data-clear-filters] link (a
+  // plain href, so it works without JS) that must never be toggled from here.
   const errorSpan = form?.querySelector<HTMLElement>("[data-filter-error]") ?? null;
-  const clearLink = document.querySelector<HTMLElement>("[data-clear-filters]");
+  const hintEl = form?.querySelector<HTMLElement>("[data-filter-hint]") ?? null;
+  const clearLink = form?.querySelector<HTMLElement>("[data-clear-filters]") ?? null;
   const countEl = config.countSelector
     ? document.querySelector<HTMLElement>(config.countSelector)
     : null;
@@ -169,6 +173,7 @@ export function initListFilter(config: ListFilterConfig): void {
 
   let state = stateFromLocation();
   let appliedSortKey = `${config.defaultSort.field}:${config.defaultSort.dir}`;
+  let inputError = false;
 
   function stateFromLocation(): ListState {
     const params = new URLSearchParams(location.search);
@@ -218,6 +223,20 @@ export function initListFilter(config: ListFilterConfig): void {
     return (
       state.tags.length > 0 || config.fields.some((f) => (state.conditions[f]?.length ?? 0) > 0)
     );
+  }
+
+  /** The one writer of the FilterStatus slot (FilterStatus.astro).
+   *
+   *  It holds exactly one of three things, in priority order: a parse error, the
+   *  clear link, or the syntax hint. There is nothing to clear while the hint is
+   *  up, and an error outranks both — so deciding all three in one place is what
+   *  keeps them from contradicting each other.
+   */
+  function renderStatus(): void {
+    const active = hasActiveFilters();
+    errorSpan?.classList.toggle("hidden", !inputError);
+    clearLink?.classList.toggle("hidden", inputError || !active);
+    hintEl?.classList.toggle("hidden", inputError || active);
   }
 
   function rowMatches(data: RowData): boolean {
@@ -270,7 +289,7 @@ export function initListFilter(config: ListFilterConfig): void {
       countEl.textContent = config.formatCount(visible, rows.length, active);
     }
     if (emptyEl) emptyEl.classList.toggle("hidden", visible > 0);
-    if (clearLink) clearLink.classList.toggle("hidden", !active);
+    renderStatus();
   }
 
   // -------------------------------------------------------------------------
@@ -352,9 +371,8 @@ export function initListFilter(config: ListFilterConfig): void {
       input.classList.toggle("ring-1", invalid);
       input.classList.toggle("ring-red-300", invalid);
     }
-    if (errorSpan) errorSpan.classList.toggle("hidden", !hasError);
-    // The clear link shares the status area: an error message displaces it.
-    if (clearLink) clearLink.classList.toggle("hidden", hasError || !hasActiveFilters());
+    inputError = hasError;
+    renderStatus();
     return !hasError;
   }
 
