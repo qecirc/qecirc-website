@@ -1,0 +1,15 @@
+qec_id: 1030
+name: Direct zero prep
+notes: "Unitary 'stabilizer-expanding' preparation of |0>_L (gates act directly
+  between data qubits, needing next-nearest-neighbour links). Partially fault-tolerant:
+  fault distance = d=5 for X errors, bounded for Z. Source file: clean_circuits/unrotated_surface_code/unitary_encoding_without_ancilla/Z/unitary_encoding_unrotated_Z_L5_without_ancilla.stim.
+  Logical state: zero. Connectivity: 2d-grid. Gate set: CX,H. Canonicalization qubit
+  permutation (stored qubit i = original qubit permutation[i]): [35, 34, 33, 32, 26,
+  25, 24, 23, 17, 16, 15, 14, 8, 7, 6, 5, 3, 12, 21, 30, 39, 2, 11, 20, 29, 38, 1,
+  10, 19, 28, 37, 0, 9, 18, 27, 36, 4, 13, 22, 31, 40]"
+source: https://arxiv.org/abs/2601.05113
+gate_count: 72
+two_qubit_gate_count: 52
+depth: 12
+qubit_count: 41
+tags: [state-preparation, partial-ft, "distance:5", "connectivity:2d-grid", "logical-state:zero"]

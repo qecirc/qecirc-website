@@ -7,6 +7,32 @@ the source-of-truth `package.json` version.
 
 ### Added
 
+- Surface code unitary Pauli-state encodings from
+  [arXiv:2601.05113](https://arxiv.org/abs/2601.05113) — 40 circuits across 10
+  codes (`data-imports/surface-code-encodings/`). Each code gets four circuits:
+  `Ancilla-mediated` / `Direct` × `zero` / `plus`, the two variants differing in
+  whether intra-plaquette gates are routed through bridge ancillas
+  (nearest-neighbour) or run directly between data qubits
+  (next-nearest-neighbour).
+- Six new codes: `unrotated-surface-code-d-{3,5,7,9,11}` — the unrotated
+  (planar) surface code family, `[[13,1,3]]` through `[[221,1,11]]`, new to the
+  library — and `rotated-surface-code-d-11` (`[[121,1,11]]`), completing the
+  rotated family from d=3 to d=11.
+- New `partial-ft` circuit tag, for schemes that preserve the fault distance for
+  only one error type. The surface code encodings preserve it for the error that
+  flips the codeword (X for `|0>_L`, Z for `|+>_L`) but not the complementary
+  one, which `ft` / `non-ft` cannot express. Which type is protected follows from
+  the `logical-state:*` tag.
+- `import_state_prep(ancilla_role=...)` distinguishes flag qubits from routing
+  ancillas. Previously the `flag` tag was inferred from `num_qubits > n` alone,
+  which mis-tags circuits whose ancillas only bridge gates under a restricted
+  connectivity and carry no fault-tolerance role. Defaults to `"flag"`, so
+  existing importers are unaffected; pass `"routing"` to opt out.
+- Circuit notes render a long contiguous ancilla run as `221-440 (220 qubits)`
+  instead of spelling out every index. Ancilla indices are always contiguous
+  (`range(n, num_qubits)`), so the list was pure noise once a code got large.
+  Runs of 8 or fewer, and any non-contiguous set, are unchanged.
+
 - Edge caching: `s-maxage` raised from 10 minutes to 7 days (pages and API),
   paired with an automatic Cloudflare purge-everything on each deploy
   (`src/lib/cache-purge.ts`, activated by the `CLOUDFLARE_ZONE_ID` /
