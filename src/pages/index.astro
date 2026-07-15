@@ -11,9 +11,12 @@ import Layout from "../components/Layout.astro";
 import {
   countAllCodes,
   countAllCircuits,
+  countAllTools,
+  countCircuitPapers,
   getLatestCircuits,
   formatCircuitId,
 } from "../lib/queries";
+import { CONTRIBUTORS } from "../lib/contributors";
 
 // `/` was the codes list until v0.5.0, and client-side filtering pushed history
 // entries like /?n=>3 and /?tag=CSS. Forward those rather than silently
@@ -23,9 +26,18 @@ if (CODES_LIST_PARAMS.some((p) => Astro.url.searchParams.has(p))) {
   return Astro.redirect(`/codes${Astro.url.search}`, 301);
 }
 
-const codeCount = countAllCodes();
-const circuitCount = countAllCircuits();
 const fmt = new Intl.NumberFormat("en-US");
+const codeCount = countAllCodes();
+
+// Deliberately not linked, unlike the cards below: "papers" has no page to go
+// to, and a row where only some numbers are clickable reads as broken.
+const STATS: { value: number; label: string }[] = [
+  { value: countAllCircuits(), label: "Circuits" },
+  { value: codeCount, label: "Codes" },
+  { value: countAllTools(), label: "Tools" },
+  { value: countCircuitPapers(), label: "Papers" },
+  { value: CONTRIBUTORS.length, label: "Contributors" },
+];
 
 const latest = getLatestCircuits(5);
 
@@ -51,11 +63,20 @@ const cardCls =
 >
   <section class="max-w-2xl mb-10">
     <h1 class="text-3xl font-bold mb-3">Quantum error correction circuits</h1>
+    {/* Circuit types named here are the ones that actually exist: state
+        preparation, flag gadgets and encoding. The corpus has no
+        syndrome-extraction circuits yet, so the hero does not promise any. */}
+    <p class="text-gray-600 dark:text-gray-400 mb-3">
+      Find, compare and download reusable QEC circuits — state preparation, flag gadgets
+      and encoding — organised by error-correcting code. Every circuit comes with its
+      metrics and its source, stored in STIM and offered as QASM and Cirq.
+    </p>
     <p class="text-gray-600 dark:text-gray-400 mb-4">
-      A community-driven library of reusable QEC circuits — encoding, state preparation,
-      syndrome extraction and more. Stored in STIM, available as QASM and Cirq.{" "}
-      <span class="whitespace-nowrap">{fmt.format(circuitCount)} circuits</span>{" "}across{" "}
-      <span class="whitespace-nowrap">{fmt.format(codeCount)} codes</span>.
+      QECirc is built as a community project, in the open. The circuits are drawn from
+      published work and from the tools that generate them, and anyone can add one by{" "}
+      <a href="/contribute" class="prose-link">opening an issue</a> — no account, no
+      gatekeeping. See <a href="/about" class="prose-link">about</a> for the scope and
+      how it fits together.
     </p>
 
     <form method="GET" action="/search" class="flex gap-2">
@@ -74,6 +95,19 @@ const cardCls =
       </button>
     </form>
 
+  </section>
+
+  <section class="mb-10" aria-label="Library at a glance">
+    {/* Fixed columns rather than flex-wrap: with five stats, wrapping strands
+        the last one alone on its own row at narrow widths. */}
+    <dl class="grid grid-cols-3 gap-x-6 gap-y-6 sm:grid-cols-5 sm:gap-x-8">
+      {STATS.map((s) => (
+        <div>
+          <dd class="text-2xl font-bold tabular-nums">{fmt.format(s.value)}</dd>
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{s.label}</dt>
+        </div>
+      ))}
+    </dl>
   </section>
 
   <section class="grid gap-4 sm:grid-cols-3 mb-10">

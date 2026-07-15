@@ -1,5 +1,6 @@
 ---
 import Layout from "../components/Layout.astro";
+import { CONTRIBUTORS } from "../lib/contributors";
 
 const kbdCls =
   "inline-block min-w-[1.25rem] text-center px-1 py-0.5 font-mono text-xs border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800";
@@ -73,9 +74,18 @@ const kbdCls =
         helped without committing and so have no GitHub link (listed unlinked).
         Do not regenerate this from the GitHub contributor list: that would
         silently drop the unlinked names. Mirror any change here in README.md. */}
-    <h2 class="text-xl font-semibold mb-3">Contributors</h2>
+    <h2 id="contributors" class="text-xl font-semibold mb-3">Contributors</h2>
     <p class="text-gray-600 dark:text-gray-400 mb-6">
-      <a href="https://github.com/lsschmid" class="prose-link" target="_blank" rel="noopener">Ludwig Schmid</a>, <a href="https://github.com/pehamTom" class="prose-link" target="_blank" rel="noopener">Tom Peham</a>, <a href="https://github.com/remmyzen" class="prose-link" target="_blank" rel="noopener">Remmy Zen</a>, <a href="https://github.com/MaxieHelenBichmann" class="prose-link" target="_blank" rel="noopener">Maxie Helen Bichmann</a>, <a href="https://github.com/DiegoForlivesi" class="prose-link" target="_blank" rel="noopener">Diego Forlivesi</a>, <a href="https://github.com/davamaro" class="prose-link" target="_blank" rel="noopener">David Amaro</a>, Luis Colmenarez
+      {CONTRIBUTORS.map((c, i) => (
+        <>
+          {i > 0 && ", "}
+          {c.github ? (
+            <a href={`https://github.com/${c.github}`} class="prose-link" target="_blank" rel="noopener">{c.name}</a>
+          ) : (
+            c.name
+          )}
+        </>
+      ))}
     </p>
 
     <h2 class="text-xl font-semibold mb-3">License</h2>

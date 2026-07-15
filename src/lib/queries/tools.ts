@@ -25,6 +25,13 @@ export function getAllTools(): ToolWithMeta[] {
   return enrichTools(tools);
 }
 
+/** Every tool catalogued, matching what /tools lists — which includes tools
+ *  that have not contributed circuits yet ("More circuit-synthesis tools"). */
+export function countAllTools(): number {
+  const row = getDb().prepare("SELECT COUNT(*) AS count FROM tools").get() as { count: number };
+  return row.count;
+}
+
 export function filterTools(filters: ToolFilters): ToolWithMeta[] {
   const db = getDb();
   const conditions: string[] = [];

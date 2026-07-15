@@ -57,6 +57,24 @@ export function countAllCircuits(): number {
   return row.count;
 }
 
+/** Distinct published papers the circuits were taken from.
+ *
+ * `circuits.source` is free-form provenance: mostly an arXiv or DOI link, but
+ * also tool names ("circuit-synth") and repository URLs, which are not papers.
+ * Counting DISTINCT source would overcount by including those, so match the two
+ * link forms that identify a paper. Counts the circuits' own sources only --
+ * `tools.paper_urls` describes the tools, not where a circuit came from. */
+export function countCircuitPapers(): number {
+  const db = getDb();
+  const row = db
+    .prepare(
+      `SELECT COUNT(DISTINCT source) AS count FROM circuits
+       WHERE source LIKE '%arxiv.org%' OR source LIKE '%doi.org%'`,
+    )
+    .get() as { count: number };
+  return row.count;
+}
+
 /** Most recently added circuits, for the landing page.
  *
  * Ordered by `qec_id DESC`, NOT `created_at`: create_database.mjs rebuilds the
