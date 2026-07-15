@@ -236,6 +236,9 @@ export interface CircuitSearchOptions {
  * moment you picked one, making a second tag unselectable. Counts are
  * therefore "matches for this query", independent of what is selected.
  *
+ * Tags come back in name order to match the circuit tag dropdowns on a code
+ * page (getCircuitTagsForCode), which /search reuses.
+ *
  * Also computed over ALL matches, not the capped result page -- "codes in the
  * results" must not mean "codes in the first 100".
  */
@@ -276,7 +279,7 @@ export function searchCircuitFacets(query: ResolvedQuery): SearchFacets {
        JOIN tags t ON t.id = tg.tag_id
        WHERE circuit_search MATCH ?
        GROUP BY t.name
-       ORDER BY count DESC, t.name`,
+       ORDER BY t.name`,
     )
     .all(match) as TagWithCount[];
 

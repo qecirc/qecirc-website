@@ -4,7 +4,8 @@ export const prerender = false;
 import Layout from "../components/Layout.astro";
 import CircuitRow from "../components/CircuitRow.astro";
 import CircuitBodiesTemplate from "../components/CircuitBodiesTemplate.astro";
-import TagList from "../components/TagList.astro";
+import TagFilterDropdowns from "../components/TagFilterDropdowns.astro";
+import { TAG_CATEGORIES, categorizeTag } from "../lib/tag-categories";
 import {
   searchCircuitsRanked,
   searchCircuitFacets,
@@ -53,6 +54,12 @@ const results = resolved
   : [];
 const truncated = results.length === RESULT_LIMIT;
 const toolsMap = getToolsForCircuits(results.map((c) => c.id));
+
+// Grouped the same way as a code page's circuit tags (CircuitFilter.astro).
+const tagGroups = TAG_CATEGORIES.map((c) => ({
+  label: c.label,
+  tags: facets.tags.filter((t) => categorizeTag(t.name) === c.key),
+}));
 
 const hasFilters = selectedTags.length > 0 || codeSlug !== "";
 const codeLabel = (c: { name: string; n: number; k: number; d: number | null }) => {
@@ -135,18 +142,20 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
           </div>
 
           {facets.tags.length > 0 && (
-            <div>
-              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Tags</p>
-              {/* tagToggleUrl keeps ?q= and ?code= intact. Counts are per query,
-                  not per current selection -- see searchCircuitFacets. */}
-              <TagList
-                tags={facets.tags}
-                selectedTags={selectedTags}
-                showCount
-                baseUrl={Astro.url}
-                basePath="/search"
-              />
-            </div>
+            /* Same category dropdowns as a code page's circuit filter. Passing
+               baseUrl puts them in server-filtered mode: links navigate and keep
+               ?q=/?code=, and selected state is rendered rather than left to
+               list-filter-client, which this page does not run. Counts are per
+               query, not per current selection -- see searchCircuitFacets. */
+            <TagFilterDropdowns
+              allTags={facets.tags}
+              basePath="/search"
+              groups={tagGroups}
+              defaultView="grouped"
+              storageKey="qecirc:tag-view"
+              baseUrl={Astro.url}
+              selectedTags={selectedTags}
+            />
           )}
         </div>
       </details>

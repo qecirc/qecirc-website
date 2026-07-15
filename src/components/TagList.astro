@@ -1,6 +1,7 @@
 ---
 import type { TagWithCount } from "../types";
 import { tagToggleUrl } from "../lib/url";
+import { TAG_SELECTED, TAG_UNSELECTED } from "../lib/constants";
 
 interface Props {
   tags: string[] | TagWithCount[];
@@ -45,9 +46,7 @@ function tagCount(tag: string | TagWithCount): number | undefined {
           data-tag={name}
           class:list={[
             "inline-block rounded px-1.5 py-0.5 text-xs transition-colors",
-            selectedSet && isSelected
-              ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+            selectedSet && isSelected ? TAG_SELECTED : TAG_UNSELECTED,
           ]}
         >
           {name}{showCount && count != null ? ` (${count})` : ""}
