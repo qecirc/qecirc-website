@@ -116,13 +116,29 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 
 **Caching:** `src/middleware.ts` stamps `s-maxage=604800` on every response lacking its own `Cache-Control`; safe only because rendered output is immutable between deploys and each deploy purges Cloudflare (`src/lib/cache-purge.ts`). A page that varies by query string must set its own shorter value.
 
-**Search:** the header quick-search (`/api/search`) does LIKE matching over names and tags for codes, circuits and tools. `/search` is circuits-only, reads `notes` too, and ranks by BM25 over the `circuit_search` FTS5 table (`data/migrations/015`), which `scripts/db/create_database.mjs` repopulates on every build. It is forgiving in three layers, applied in this order (`src/lib/queries/search.ts` → `resolveQuery`):
+**Search — two engines, on purpose.** They share a spelling dictionary, nothing else.
+
+|          | header quick-search (`/api/search`)  | `/search`                 |
+| -------- | ------------------------------------ | ------------------------- |
+| Job      | jump to a known thing                | find things               |
+| Scope    | codes, circuits, tools               | circuits only             |
+| Matching | LIKE, **substring** — names and tags | FTS5 tokens, plus `notes` |
+| Order    | alphabetical, grouped by type        | BM25 relevance            |
+
+**Do not "unify" these by pointing the quick-search at the FTS index.** LIKE matches mid-word (`ycle` → Bivariate Bicycle Code), which token-based FTS cannot — that is what makes a type-ahead usable. There is also no FTS index for codes or tools, and pulling `notes` into a 10-item navigation list would surface circuits that merely mention the term. Enter with nothing highlighted hands over to `/search`; that is where the two meet.
+
+`/search` ranks by BM25 over the `circuit_search` FTS5 table (`data/migrations/015`), which `scripts/db/create_database.mjs` repopulates on every build, and is forgiving in three layers, applied in this order (`src/lib/queries/search.ts` → `resolveQuery`):
 
 1. **Stemming** — `circuit_search` uses the `porter` tokenizer, so `encodings`/`encode`/`encoding` meet at one term.
-2. **Spelling correction** — `src/lib/queries/spelling.ts` maps a token that matches _nothing_ to its nearest word in the `circuit_vocab` dictionary (Damerau-Levenshtein, Elasticsearch "AUTO" edit budget). Only unmatched tokens are touched, so a query that already works is never rewritten. Tokens containing digits are never corrected: `#508` is one edit from an arXiv `2508`, and `distance:3` from `distance:5`. `?literal=1` opts out.
+2. **Spelling correction** — `src/lib/queries/spelling.ts` maps a token that matches _nothing_ to its nearest word in the `search_vocab` dictionary (Damerau-Levenshtein, Elasticsearch "AUTO" edit budget). Shared with the quick-search, so the two agree on what exists. Only unmatched tokens are touched, so a query that already works is never rewritten. Tokens containing digits are never corrected: `#508` is one edit from an arXiv `2508`, and `distance:3` from `distance:5`. `?literal=1` opts out.
 3. **OR fallback** — if no circuit matches _every_ term, the query is retried as "any term" and the page says so.
 
-Two gotchas if you touch this: `circuit_vocab` must stay unstemmed (it indexes `circuit_terms`, not `circuit_search`) or suggestions become stems — porter stores "steane" as "stean"; and results and facets must be built from the _same_ `ResolvedQuery`, or the filter counts describe a different search than the list.
+Gotchas if you touch this:
+
+- `search_vocab` must stay **unstemmed** (it indexes `search_terms`, not `circuit_search`) or suggestions become stems — porter stores "steane" as "stean".
+- `search_terms` must keep covering **codes and tools**, not just circuits: a tool with no circuits appears in no circuit text, so a circuit-only dictionary cannot fix `autqce` → `autqec`.
+- The findability probe asks **both** indexes. `circuit_search` alone would call a tool name a typo; `search_terms` alone is unstemmed and would "correct" `encodings` → `encoding`. Neither answers both cases.
+- Results and facets must be built from the _same_ `ResolvedQuery`, or the filter counts describe a different search than the list.
 
 This keeps the site fast and simple while scaling comfortably to thousands of circuits.
 

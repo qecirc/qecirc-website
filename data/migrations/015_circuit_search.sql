@@ -25,19 +25,27 @@ CREATE VIRTUAL TABLE circuit_search USING fts5(
   tokenize = 'porter unicode61 remove_diacritics 2'
 );
 
--- The spelling dictionary for /search's "did you mean", kept SEPARATE from
--- circuit_search on purpose: fts5vocab reports the terms as indexed, and
--- porter indexes stems -- "steane" is stored as "stean", "preparation" as
--- "prepar". Correcting a typo against those would suggest non-words. This twin
--- indexes the same text unstemmed, so candidates are real words; porter then
--- stems the corrected word at query time anyway, so it still matches.
+-- The spelling dictionary behind typo tolerance, kept SEPARATE from
+-- circuit_search on two counts.
+--
+-- Unstemmed: fts5vocab reports the terms as indexed, and porter indexes stems
+-- -- "steane" is stored as "stean", "preparation" as "prepar". Correcting a
+-- typo against those would suggest non-words. Indexing the same text unstemmed
+-- keeps candidates real words; porter then stems the corrected word at query
+-- time anyway, so it still matches.
+--
+-- Wider than circuits: this also feeds the header quick-search (/api/search),
+-- which covers codes and tools. Those appear in circuit_search only incidentally
+-- (a code via code_name, a tool not at all), so a dictionary built from circuits
+-- alone cannot fix "autqce" -> "autqec" for a tool that has contributed no
+-- circuits. Every entity name and tag is indexed here.
 --
 -- content='' makes it contentless: FTS5 keeps only the term index and drops the
 -- text, which is all a dictionary needs.
-CREATE VIRTUAL TABLE circuit_terms USING fts5(
+CREATE VIRTUAL TABLE search_terms USING fts5(
   text,
   tokenize = 'unicode61 remove_diacritics 2',
   content = ''
 );
 
-CREATE VIRTUAL TABLE circuit_vocab USING fts5vocab(circuit_terms, 'row');
+CREATE VIRTUAL TABLE search_vocab USING fts5vocab(search_terms, 'row');

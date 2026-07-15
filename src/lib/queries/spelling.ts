@@ -1,11 +1,12 @@
-// Typo tolerance for /search ("did you mean"), built on the unstemmed
-// circuit_vocab dictionary (data/migrations/015).
+// Typo tolerance for /search and the header quick-search (/api/search), built on
+// the unstemmed search_vocab dictionary (data/migrations/015).
 //
 // Why not spellfix1/editdist3, SQLite's own fuzzy-match extensions: they are
 // loadable C extensions, not part of the amalgamation better-sqlite3 ships, so
 // using them would mean compiling and shipping a native artifact -- against
 // CLAUDE.md's "hosting-agnostic, avoid platform-specific APIs". The dictionary
-// is only ~760 terms, so scanning it in JS costs ~0.05 ms and needs nothing.
+// is under a thousand terms, so scanning it in JS costs ~0.05 ms and needs
+// nothing.
 
 import { getDb } from "../db";
 
@@ -15,7 +16,7 @@ let vocabCache: { term: string; doc: number }[] | null = null;
 
 function vocab(): { term: string; doc: number }[] {
   if (vocabCache === null) {
-    vocabCache = getDb().prepare("SELECT term, doc FROM circuit_vocab").all() as {
+    vocabCache = getDb().prepare("SELECT term, doc FROM search_vocab").all() as {
       term: string;
       doc: number;
     }[];
@@ -76,7 +77,7 @@ export function editDistance(a: string, b: string, max: number): number {
 
 /** Nearest dictionary word to `token`, or null if nothing is close enough.
  *  Ties go to the more common term -- with no other signal, the word that
- *  appears in more circuits is the likelier intent. */
+ *  appears in more entries is the likelier intent. */
 export function nearestTerm(token: string): string | null {
   const max = editBudget(token);
   if (max === 0) return null;
@@ -92,19 +93,30 @@ export function nearestTerm(token: string): string | null {
   return best?.term ?? null;
 }
 
-/** Whether the token finds anything as-is, asked of the real index rather than
- *  the dictionary.
+/** Whether the token finds anything as-is. This is the guard that stops us
+ *  "correcting" queries that already work, so it has to ask both indexes.
  *
- * This is the guard that stops us "correcting" working queries: circuit_search
- * is stemmed, so "encodings" matches (via the stem "encod") even though the
- * unstemmed dictionary has only "encoding". Testing against the dictionary
- * would call that a typo and rewrite a query that was already fine.
+ * circuit_search is porter-stemmed, so "encodings" matches via the stem "encod"
+ * even though the unstemmed dictionary holds only "encoding" — asking the
+ * dictionary alone would call that a typo and rewrite a fine query.
+ *
+ * search_terms is unstemmed but covers every entity, including tools that have
+ * contributed no circuits and so appear nowhere in circuit_search — asking
+ * circuit_search alone would call those names typos and "fix" them into
+ * something else.
+ *
+ * Neither index answers both cases, hence both.
  */
 function matchesIndex(expr: string): boolean {
-  const row = getDb()
+  const db = getDb();
+  const inCircuits = db
     .prepare("SELECT 1 FROM circuit_search WHERE circuit_search MATCH ? LIMIT 1")
     .get(expr);
-  return row !== undefined;
+  if (inCircuits !== undefined) return true;
+  const inTerms = db
+    .prepare("SELECT 1 FROM search_terms WHERE search_terms MATCH ? LIMIT 1")
+    .get(expr);
+  return inTerms !== undefined;
 }
 
 /** Replace tokens that find nothing with their nearest dictionary word.

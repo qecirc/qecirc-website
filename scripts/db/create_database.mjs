@@ -319,14 +319,27 @@ const indexed = db
   )
   .run();
 
-// The unstemmed spelling dictionary over the same text (see migration 015).
+// The unstemmed spelling dictionary (see migration 015). Covers every entity,
+// not just circuits: it also backs the header quick-search, which looks up codes
+// and tools. A tool that has contributed no circuits appears in no circuit text,
+// so without these rows its name could never be offered as a correction.
+const TAGS_OF = (type) => `
+  COALESCE((SELECT group_concat(t.name, ' ')
+            FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+            WHERE tg.taggable_id = e.id AND tg.taggable_type = '${type}'), '')`;
+
 db.prepare(
-  `INSERT INTO circuit_terms (rowid, text)
-   SELECT circuit_id, name || ' ' || code_name || ' ' || tags || ' ' || notes
-   FROM (${SEARCH_TEXT})`,
+  `INSERT INTO search_terms (text)
+   SELECT name || ' ' || code_name || ' ' || tags || ' ' || notes FROM (${SEARCH_TEXT})`,
+).run();
+db.prepare(
+  `INSERT INTO search_terms (text) SELECT e.name || ' ' || ${TAGS_OF("code")} FROM codes e`,
+).run();
+db.prepare(
+  `INSERT INTO search_terms (text) SELECT e.name || ' ' || ${TAGS_OF("tool")} FROM tools e`,
 ).run();
 
-const vocabSize = db.prepare("SELECT COUNT(*) AS n FROM circuit_vocab").get().n;
+const vocabSize = db.prepare("SELECT COUNT(*) AS n FROM search_vocab").get().n;
 
 db.close();
 console.log(`\nSearch index: ${indexed.changes} circuits, ${vocabSize} dictionary terms.`);

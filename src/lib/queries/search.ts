@@ -15,7 +15,7 @@ export const MIN_QUERY_LENGTH = 2;
  * `*` would either throw or silently mean something else. Tokens are quoted
  * into literal phrases by buildFtsExpr below.
  */
-function tokenizeQuery(raw: string): string[] {
+export function tokenizeQuery(raw: string): string[] {
   return (
     raw
       .trim()

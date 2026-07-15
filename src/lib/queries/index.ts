@@ -19,6 +19,7 @@ export {
   getOriginalForCircuit,
 } from "./circuits";
 export { getAllTools, countAllTools, filterTools, getToolsForCircuits } from "./tools";
+export { correctTokens } from "./spelling";
 export {
   searchCodes,
   searchCircuits,
@@ -26,6 +27,7 @@ export {
   searchCircuitsRanked,
   searchCircuitFacets,
   resolveQuery,
+  tokenizeQuery,
   MIN_QUERY_LENGTH,
   type RankedCircuit,
   type SearchFacets,
