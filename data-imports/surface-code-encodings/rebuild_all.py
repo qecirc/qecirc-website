@@ -133,7 +133,7 @@ def source_path(spec: Spec) -> Path:
 def prep_body(text: str) -> str:
     """The unitary preparation, in library-convention form.
 
-    Two transformations, both lossless (`originals/` keeps the file verbatim):
+    Two transformations:
 
     * Drop the terminal logical readout (M/MX on every data qubit, its DETECTORs
       and OBSERVABLE_INCLUDE). That is the paper's SPAM benchmark for figures 5
@@ -142,18 +142,33 @@ def prep_body(text: str) -> str:
       stored body). This also drops the qubits some files reset but never use,
       which would otherwise inflate qubit_count by up to 2x.
 
-    QUBIT_COORDS is dropped too: the unrotated files carry it and the rotated
-    ones do not, and no stored body in the library uses it.
+    QUBIT_COORDS is kept (the unrotated files carry the lattice layout; the
+    rotated files ship none), but only for qubits the preparation actually
+    touches. The files declare a coordinate for every grid site, including ones
+    named solely in the dropped reset layer, and a QUBIT_COORDS target counts
+    towards stim's num_qubits — so keeping all of them would put the inflated
+    qubit_count straight back (unrotated d=3 direct: 25 rather than 13).
     """
+    src = stim.Circuit(text)
+    coords = src.get_final_qubit_coordinates()
+
     out = stim.Circuit()
-    for inst in stim.Circuit(text).flattened():
+    for inst in src.flattened():
         if inst.name in ("M", "MX", "DETECTOR", "OBSERVABLE_INCLUDE", "R", "QUBIT_COORDS"):
             continue
         if inst.name == "RX":
             out.append("H", [t.value for t in inst.targets_copy()])
             continue
         out.append(inst)
-    return str(out)
+
+    used = out.num_qubits
+    keep = {q: c for q, c in coords.items() if q < used and c}
+    if not keep:
+        return str(out)
+    head = stim.Circuit()
+    for q, c in sorted(keep.items()):
+        head.append("QUBIT_COORDS", [q], c)
+    return str(head + out)
 
 
 def anchor_for(code: Code) -> np.ndarray:

@@ -5,7 +5,29 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+### Fixed
+
+- Qubit coordinates survive ingestion
+  ([#107](https://github.com/qecirc/qecirc-website/issues/107)). `QUBIT_COORDS`
+  reached the stored body intact only when a circuit had TICKs; otherwise
+  compaction kept the instruction and dropped its arguments, turning
+  `QUBIT_COORDS(3, 7) 0` into a meaningless bare `QUBIT_COORDS 0`. That path runs
+  for TICK-less circuits — most of the library. Nothing stored was corrupted,
+  because no body carried coordinates yet.
+
 ### Added
+
+- Coordinates are now displayed with a **Coords toggle** on circuit bodies,
+  hidden by default: a d=11 unrotated prep opens with 221 `QUBIT_COORDS` lines
+  before its first gate. Copy and download follow the toggle, so what you take
+  away is what you see. The toggle only appears on bodies that have
+  coordinates. Crumble links always keep them — that is where the layout is the
+  point.
+- The 20 unrotated surface code circuits now carry their lattice layout, and
+  their Crumble links render it. Only coordinates for qubits the circuit
+  actually uses are kept: a `QUBIT_COORDS` target counts towards stim's
+  `num_qubits`, so importing every declared grid site would inflate
+  `qubit_count`.
 
 - Surface code unitary Pauli-state encodings from
   [arXiv:2601.05113](https://arxiv.org/abs/2601.05113) — 40 circuits across 10

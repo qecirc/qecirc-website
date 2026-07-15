@@ -12,6 +12,16 @@ export function initFormatSwitchers(root: HTMLElement | Document = document): vo
     const tabs = switcher.querySelectorAll(".format-tab");
     const bodies = switcher.querySelectorAll(".format-body");
 
+    // The coords switch belongs to one format (only STIM carries coordinates),
+    // but shares the tab row with all of them — hide it on the others rather
+    // than leave a control that does nothing.
+    const coordsBtn = switcher.querySelector<HTMLElement>(".coords-btn");
+    const coordsFormat = (switcher as HTMLElement).dataset.coordsFormat;
+    function syncCoordsBtn(format: string | undefined): void {
+      if (coordsBtn) coordsBtn.style.visibility = format === coordsFormat ? "" : "hidden";
+    }
+    syncCoordsBtn((tabs[0] as HTMLElement | undefined)?.dataset.format);
+
     tabs.forEach(function (tab) {
       tab.addEventListener("click", function () {
         const format = (tab as HTMLElement).dataset.format;
@@ -25,6 +35,8 @@ export function initFormatSwitchers(root: HTMLElement | Document = document): vo
           (b as HTMLElement).style.display =
             (b as HTMLElement).dataset.format === format ? "" : "none";
         });
+
+        syncCoordsBtn(format);
 
         // Recalculate max-height for parent collapse container
         const detail = switcher.closest(".circuit-detail") as HTMLElement;

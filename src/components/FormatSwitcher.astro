@@ -1,7 +1,9 @@
 ---
 import type { CircuitBody } from "../types";
 import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "../lib/constants";
+import { hasQubitCoords } from "../lib/stim-format";
 import CodeBlock from "./CodeBlock.astro";
+import CoordsToggle from "./CoordsToggle.astro";
 
 // KEEP THE TAB MARKUP IN SYNC with CircuitBodiesTemplate.astro, which is
 // cloned client-side on code pages (this component renders only on circuit
@@ -16,6 +18,12 @@ interface Props {
 const { bodies, stimFilename, source } = Astro.props;
 const hasMultipleFormats = bodies.length > 1;
 
+// Only STIM ever carries coordinates (the QASM/CIRQ conversions drop them), so
+// at most one body per switcher has them. The switch lives in the tab row and
+// is hidden while a coordinate-less format is selected — see
+// format-switcher-client.
+const coordsFormat = bodies.find((b) => hasQubitCoords(b.body))?.format;
+
 function downloadNameFor(format: string): string | undefined {
   if (!stimFilename) return undefined;
   return stimFilename.replace(/\.stim$/, `.${format}`);
@@ -26,8 +34,8 @@ const TAB_BASE_CLASS =
 ---
 
 {hasMultipleFormats ? (
-  <div class="format-switcher">
-    <div class="flex gap-0.5 mb-2">
+  <div class="format-switcher" data-coords-format={coordsFormat}>
+    <div class="flex items-center gap-0.5 mb-2">
       {bodies.map((b, i) => (
         <button
           class:list={[TAB_BASE_CLASS, i === 0 ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS]}
@@ -42,6 +50,11 @@ const TAB_BASE_CLASS =
           )}
         </button>
       ))}
+      {coordsFormat && (
+        <div class="ml-auto">
+          <CoordsToggle />
+        </div>
+      )}
     </div>
     {bodies.map((b, i) => (
       <div class="format-body" data-format={b.format} style={i === 0 ? "" : "display:none"}>
@@ -50,6 +63,7 @@ const TAB_BASE_CLASS =
           label={`${b.format.toUpperCase()} Circuit`}
           downloadName={downloadNameFor(b.format)}
           source={source}
+          coordsToggle={false}
         />
       </div>
     ))}

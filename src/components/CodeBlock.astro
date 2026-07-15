@@ -1,69 +1,86 @@
 ---
+import { bodyForDisplay, hasQubitCoords, lineNumbered } from "../lib/stim-format";
+import CoordsToggle from "./CoordsToggle.astro";
+
 interface Props {
   code: string;
   label?: string;
   downloadName?: string;
   source?: string;
+  /** Render the coords switch above the block. FormatSwitcher sets this false
+   *  and puts the switch in its own tab row instead. */
+  coordsToggle?: boolean;
 }
 
 // KEEP THE CODE-BLOCK MARKUP IN SYNC with CircuitBodiesTemplate.astro, which
 // is cloned client-side on code pages (this component renders only on
 // circuit detail pages).
-const { code, label, downloadName, source } = Astro.props;
-const lines = code.trimEnd().split("\n");
-const lineCount = lines.length;
-const gutterWidth = String(lineCount).length;
+const { code, label, downloadName, source, coordsToggle = true } = Astro.props;
 
-function padNum(n: number): string {
-  return String(n).padStart(gutterWidth, " ");
-}
-
-const formatted = lines
-  .map((line, i) => `${padNum(i + 1)}  ${line}`)
-  .join("\n");
+const raw = code.trimEnd();
+const hasCoords = hasQubitCoords(raw);
+// Render the default state server-side (coordinates hidden) so there is no
+// flash before the switch initialises, and so it reads correctly without JS.
+const formatted = lineNumbered(bodyForDisplay(raw, false));
+const ownToggle = coordsToggle && hasCoords;
 ---
 
-<div class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden" data-code-block data-source={source ?? ""}>
-  <div class="border-b border-gray-200 dark:border-gray-800 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
-    <span>{label ?? ""}</span>
-    <div class="flex items-center gap-3.5">
-      {downloadName && (
+<div data-coords-scope={ownToggle ? "" : undefined}>
+  {ownToggle && (
+    <div class="flex justify-end mb-2">
+      <CoordsToggle />
+    </div>
+  )}
+  <div
+    class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden"
+    data-code-block
+    data-source={source ?? ""}
+    data-raw-code={hasCoords ? raw : undefined}
+  >
+    <div class="border-b border-gray-200 dark:border-gray-800 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
+      <span>{label ?? ""}</span>
+      <div class="flex items-center gap-3.5">
+        {downloadName && (
+          <button
+            class="download-btn flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
+            data-download-name={downloadName}
+            aria-label="Download file"
+            title={`Download ${downloadName} (d)`}
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+            </svg>
+            <span>Download</span>
+            <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+              d
+            </kbd>
+          </button>
+        )}
         <button
-          class="download-btn flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
-          data-download-name={downloadName}
-          aria-label="Download file"
-          title={`Download ${downloadName} (d)`}
+          class="copy-btn flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
+          data-code={bodyForDisplay(raw, false)}
+          aria-label="Copy to clipboard"
+          title="Copy to clipboard (c)"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
-          <span>Download</span>
+          <span class="copy-label">Copy</span>
           <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
-            d
+            c
           </kbd>
         </button>
-      )}
-      <button
-        class="copy-btn flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
-        data-code={code.trimEnd()}
-        aria-label="Copy to clipboard"
-        title="Copy to clipboard (c)"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
-        <span class="copy-label">Copy</span>
-        <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
-          c
-        </kbd>
-      </button>
+      </div>
     </div>
+    <pre class="overflow-x-auto p-4 text-sm leading-relaxed"><code set:text={formatted} /></pre>
   </div>
-  <pre class="overflow-x-auto p-4 text-sm leading-relaxed"><code set:text={formatted} /></pre>
 </div>
 
 <script>
   import { copyToClipboard } from "../lib/dom-helpers";
+  import { initCoordsToggles } from "../lib/coords-toggle-client";
+
+  initCoordsToggles();
 
   document.querySelectorAll<HTMLElement>("[data-code-block]:not([data-initialized])").forEach(function (block) {
     block.setAttribute("data-initialized", "");
