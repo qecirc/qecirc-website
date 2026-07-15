@@ -9,7 +9,7 @@
     aria-label="Search codes, circuits, and tools"
     autocomplete="off"
   />
-  <kbd aria-hidden="true" class="search-hint pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] text-gray-400 dark:text-gray-500 font-sans">/</kbd>
+  <kbd aria-hidden="true" class="search-hint pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] text-gray-500 dark:text-gray-400 font-sans">/</kbd>
   <ul
     class="search-results absolute right-0 top-full mt-1 w-96 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg hidden z-50 max-h-80 overflow-y-auto"
     role="listbox"
@@ -80,7 +80,7 @@
     cachedItems = [];
 
     if (results.length === 0) {
-      resultsList.innerHTML = '<li class="px-3 py-2 text-sm text-gray-400">No results</li>';
+      resultsList.innerHTML = '<li class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No results</li>';
       appendAdvanced(query);
       cachedItems = resultsList.querySelectorAll<HTMLLIElement>("li[data-href]");
       show();
@@ -106,7 +106,7 @@
 
       if (item.params) {
         const paramsSpan = document.createElement("span");
-        paramsSpan.className = "text-gray-400";
+        paramsSpan.className = "text-gray-500 dark:text-gray-400";
         paramsSpan.textContent = item.params;
         topRow.appendChild(paramsSpan);
       }
@@ -118,7 +118,7 @@
       if (item.qec_id) meta.push(item.qec_id);
       if (item.subtitle) meta.push(item.subtitle);
       const metaDiv = document.createElement("div");
-      metaDiv.className = "text-xs text-gray-400 dark:text-gray-500";
+      metaDiv.className = "text-xs text-gray-500 dark:text-gray-400";
       metaDiv.textContent = meta.join(" · ");
       li.appendChild(metaDiv);
 

@@ -36,7 +36,7 @@ const rowTags = JSON.stringify(tags);
     <a href={`/codes/${slug}`} class="flex items-baseline gap-2" data-list-link>
       <h3 class="font-medium">{name}</h3>
       {showParams && <span class="text-sm text-gray-500 dark:text-gray-400">{params}</span>}
-      <span class="text-xs text-gray-400 dark:text-gray-500">{circuit_count} {circuit_count === 1 ? "circuit" : "circuits"}</span>
+      <span class="text-xs text-gray-500 dark:text-gray-400">{circuit_count} {circuit_count === 1 ? "circuit" : "circuits"}</span>
     </a>
     <div class="ml-auto">
       <TagList tags={tags} basePath={basePath} baseUrl={baseUrl} selectedTags={selectedTags} />

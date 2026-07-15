@@ -92,7 +92,7 @@ const selectedInGroup = (g: { tags: TagWithCount[] }) =>
                   ]}
                 >
                   {t.name}
-                  <span class:list={[selected.has(t.name) ? "opacity-70" : "text-gray-400 dark:text-gray-500"]}>{t.count}</span>
+                  <span class:list={[selected.has(t.name) ? "opacity-70" : "text-gray-500 dark:text-gray-400"]}>{t.count}</span>
                 </a>
               ))}
             </div>
@@ -117,13 +117,13 @@ const selectedInGroup = (g: { tags: TagWithCount[] }) =>
           </a>
         ))}
       </span>
-      <button type="button" data-tag-view-toggle class="text-xs text-gray-400 dark:text-gray-500 underline hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
+      <button type="button" data-tag-view-toggle class="text-xs text-gray-500 dark:text-gray-400 underline hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
         all tags
       </button>
     </div>
     <div data-tag-cloud class:list={["min-w-0", defaultView !== "all" && "hidden"]}>
       <TagList tags={allTags} showCount basePath={basePath} baseUrl={baseUrl} selectedTags={selectedTags}>
-        <button type="button" data-tag-view-toggle class="text-xs text-gray-400 dark:text-gray-500 underline hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
+        <button type="button" data-tag-view-toggle class="text-xs text-gray-500 dark:text-gray-400 underline hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
           by category
         </button>
       </TagList>

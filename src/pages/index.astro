@@ -146,7 +146,7 @@ const CONTRIBUTE_STEPS = [
 const cardCls =
   "rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors";
 const previewLabelCls =
-  "text-[11px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1.5";
+  "text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5";
 
 // The preview half sits on the page colour (HowToStep fills only the text
 // half), so a border is what frames these -- a fill would compete with the
@@ -366,7 +366,7 @@ const jsonLd = {
           </Fragment>
           <div class={previewCardCls}>
             <div class="flex flex-wrap items-baseline gap-2">
-              <span class="font-mono text-sm text-gray-400 dark:text-gray-500">
+              <span class="font-mono text-sm text-gray-500 dark:text-gray-400">
                 {formatCircuitId(EXAMPLE_CIRCUIT.qec_id)}
               </span>
               <span class="font-medium text-sm">{EXAMPLE_CIRCUIT.name}</span>
@@ -384,7 +384,7 @@ const jsonLd = {
               ))}
             </div>
             {EXAMPLE_HAS_ORIGINAL && (
-              <p class="text-xs text-gray-400 dark:text-gray-500">&#9656; Original submission</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">&#9656; Original submission</p>
             )}
           </div>
         </HowToStep>
@@ -401,7 +401,7 @@ const jsonLd = {
         <div class={previewCardCls}>
           <div class="flex items-center gap-2 text-sm">
             <span class="text-red-400"><HeartIcon filled class="w-4 h-4" /></span>
-            <span class="font-mono text-xs text-gray-400 dark:text-gray-500">
+            <span class="font-mono text-xs text-gray-500 dark:text-gray-400">
               {EXAMPLE_CIRCUIT ? formatCircuitId(EXAMPLE_CIRCUIT.qec_id) : "#1"}
             </span>
             <span class="text-gray-500 dark:text-gray-400">saved</span>
@@ -443,7 +443,7 @@ const jsonLd = {
         <ol class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
           {CONTRIBUTE_STEPS.map((s, i) => (
             <li class="flex gap-2">
-              <span class="font-mono text-xs text-gray-400 dark:text-gray-500 pt-0.5">{i + 1}</span>
+              <span class="font-mono text-xs text-gray-500 dark:text-gray-400 pt-0.5">{i + 1}</span>
               <span>{s}</span>
             </li>
           ))}
@@ -468,7 +468,7 @@ const jsonLd = {
             href={`/circuits/${circuit.qec_id}`}
             class="rounded border border-gray-200 dark:border-gray-800 px-4 py-2.5 flex items-baseline gap-2 flex-wrap hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
           >
-            <span class="font-mono text-xs text-gray-400 dark:text-gray-500">{formatCircuitId(circuit.qec_id)}</span>
+            <span class="font-mono text-xs text-gray-500 dark:text-gray-400">{formatCircuitId(circuit.qec_id)}</span>
             <span class="font-medium text-sm">{circuit.name}</span>
             <span class="text-sm text-gray-500 dark:text-gray-400">{circuit.code_name}</span>
           </a>
