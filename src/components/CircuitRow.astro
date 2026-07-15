@@ -101,20 +101,29 @@ const stimFilename = buildStimFilename({
       <HeartIcon filled class="fav-filled w-3.5 h-3.5 hidden" />
     </button>
 
-    <span class="text-center">
-      <MetricBadge value={circuit.gate_count} title="Gate count" />
-    </span>
-    <span class="text-center">
-      <MetricBadge value={circuit.two_qubit_gate_count} title="Two-qubit gate count" />
-    </span>
-    <span class="text-center">
-      <MetricBadge value={circuit.depth} title="Circuit depth" />
-    </span>
-    <span class="text-center">
-      <MetricBadge value={circuit.qubit_count} title="Qubit count" />
-    </span>
+    {/* `md:contents` dissolves this wrapper above md, so the four spans go back
+        to being grid items in their own columns and the desktop row is
+        unchanged. Below md the wrapper is one item on a line of its own
+        (order-1) carrying the labels the desktop column headers supply.
+        col-start-4 is the name's column, so the metrics line up under the name
+        without hard-coding the width of the three columns before it.
+        See --circuit-grid in global.css. */}
+    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 col-start-4 order-1 mt-1.5 md:contents">
+      <span class="text-center">
+        <MetricBadge value={circuit.gate_count} label="G:" labelClass="md:hidden" title="Gate count" />
+      </span>
+      <span class="text-center">
+        <MetricBadge value={circuit.two_qubit_gate_count} label="2Q:" labelClass="md:hidden" title="Two-qubit gate count" />
+      </span>
+      <span class="text-center">
+        <MetricBadge value={circuit.depth} label="D:" labelClass="md:hidden" title="Circuit depth" />
+      </span>
+      <span class="text-center">
+        <MetricBadge value={circuit.qubit_count} label="Q:" labelClass="md:hidden" title="Qubit count" />
+      </span>
+    </div>
 
-    <span></span>
+    <span class="hidden md:block"></span>
     <div class="flex items-baseline gap-2 min-w-0">
       <a href={`/circuits/${circuit.qec_id}`} class="circuit-detail-link font-medium text-sm hover:underline inline-flex items-baseline gap-1 w-fit max-w-full min-w-0" data-list-detail-link>
         <span class="truncate">{circuit.name}</span>
@@ -130,7 +139,7 @@ const stimFilename = buildStimFilename({
     </div>
 
     {circuit.tags.length > 0 && (
-      <div class="flex flex-wrap gap-1 justify-end col-span-full mt-1.5 md:col-auto md:mt-0 md:justify-self-end">
+      <div class="flex flex-wrap gap-1 justify-end col-span-full order-2 mt-1.5 md:col-auto md:order-none md:mt-0 md:justify-self-end">
         {circuit.tags.map((tag) => (
           <a
             href={tagHref(tag)}

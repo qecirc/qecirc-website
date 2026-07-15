@@ -193,8 +193,11 @@ const jsonLd = [
     </div>
   ) : (
     <div>
+      {/* Headers only above md: below it the row has no metric columns to head,
+          and the numbers carry their own labels. Sorting stays reachable there
+          through the filter boxes, whose labels are the same sort links. */}
       <div
-        class="grid items-center gap-x-1.5 px-4 py-1.5 text-[11px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400"
+        class="hidden md:grid items-center gap-x-1.5 px-4 py-1.5 text-[11px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400"
         style="grid-template-columns: var(--circuit-grid);"
       >
         <span></span>

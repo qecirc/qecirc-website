@@ -6,8 +6,24 @@
   @apply underline text-gray-900 dark:text-gray-100 hover:text-gray-600 dark:hover:text-gray-300;
 }
 
+/* Circuit row tracks. The row's inline `grid-template-columns: var(--circuit-grid)`
+   reads whichever definition the viewport matches, so the two layouts stay in
+   one place.
+
+   Below md the row is chevron | id | heart | name, and the metrics drop to a
+   line of their own (CircuitRow wraps them in `flex md:contents`, so above md
+   they go back to being grid items in their own columns). The metric columns
+   are worth 96px, which on a 375px screen left the name track 91px -- about ten
+   characters of a name that routinely runs past sixty. The numbers are worth
+   less than knowing which circuit you are looking at. */
 :root {
-  /* Last column (tags) caps at 40% of the row so long tag lists wrap
-     instead of forcing a horizontal scroll. */
-  --circuit-grid: 1rem 1.5rem 1.25rem 1.5rem 1.5rem 1.5rem 1.5rem 0.5rem 1fr fit-content(40%);
+  --circuit-grid: 1rem 1.5rem 1.25rem 1fr;
+}
+
+@media (width >= 48rem) {
+  :root {
+    /* Last column (tags) caps at 40% of the row so long tag lists wrap
+       instead of forcing a horizontal scroll. */
+    --circuit-grid: 1rem 1.5rem 1.25rem 1.5rem 1.5rem 1.5rem 1.5rem 0.5rem 1fr fit-content(40%);
+  }
 }
