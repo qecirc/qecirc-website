@@ -47,7 +47,7 @@ from typing import TYPE_CHECKING, Optional, Union
 import numpy as np
 import stim
 
-from .circuit_validate import _classify_generators, _propagate_z
+from .circuit_validate import _XZ_TO_PAULI, _classify_generators, _propagate_z
 from .code_identify import is_css
 
 if TYPE_CHECKING:
@@ -138,9 +138,6 @@ def derive_matrices_self_dual(
 # ---------------------------------------------------------------------------
 
 
-_XZ_TO_PAULI = {(0, 0): 0, (1, 0): 1, (1, 1): 2, (0, 1): 3}  # (x,z) -> stim pauli
-
-
 def _row_support(row: np.ndarray, n: int) -> list[tuple[int, int]]:
     """A symplectic row -> ``[(data-qubit role j, stim pauli)]`` over the ``n``
     data qubits, dropping identity positions."""
@@ -178,8 +175,15 @@ def _simulate(circuit: Union[str, stim.Circuit], n: int):
 
 def symplectic_validate(circuit: Union[str, stim.Circuit], H: np.ndarray, n: int) -> str:
     """Check every stabilizer row of a symplectic ``H`` (shape ``(m, 2n)``) is a
-    ``+1`` eigenvalue of the state the circuit prepares. Works for non-CSS codes
-    (the CSS-only counterpart is :func:`scripts.add_circuit.validate_state_prep`).
+    ``+1`` eigenvalue of the state the circuit prepares.
+
+    **Strict on sign**, which is the difference from
+    :func:`scripts.add_circuit.validate_state_prep_h`. Use this one only when
+    ``H`` comes with a known sign frame — an importer's own matrices, where a
+    ``-1`` really is a discrepancy worth failing on. A stored ``codes.h`` is
+    *not* such a matrix: canonicalization row-reduces it over GF(2), which
+    cannot preserve signs, so its frame is arbitrary and this check would reject
+    valid circuits. Validate against a stored ``h`` with ``validate_state_prep_h``.
 
     Row layout: columns ``0..n-1`` are the X-half, ``n..2n-1`` the Z-half. The
     circuit may act on more than ``n`` qubits (flag / routing ancillas at indices

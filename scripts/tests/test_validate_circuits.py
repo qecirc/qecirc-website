@@ -1,47 +1,150 @@
 """Tests for validate_circuits.py."""
 
+from pathlib import Path
+
 import yaml
 
 from scripts.validate_circuits import validate_all
 
+# The five-qubit perfect code: non-CSS (every stabilizer mixes X and Z, e.g.
+# YZIZY), so it has no Hx/Hz split and used to be skipped entirely.
+FIVE_QUBIT_CODE = {
+    "name": "Five-Qubit Perfect Code",
+    "n": 5,
+    "k": 1,
+    "d": 3,
+    "h": [
+        [1, 0, 0, 0, 1, 1, 1, 0, 1, 1],
+        [0, 1, 0, 0, 1, 0, 0, 1, 1, 0],
+        [0, 0, 1, 0, 1, 1, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0, 1, 1, 1],
+    ],
+    "logical": [[1, 0, 1, 1, 0, 0, 0, 1, 1, 0], [0, 0, 1, 1, 0, 1, 0, 0, 0, 0]],
+    "canonical_hash": "sym:5:1:abc",
+}
 
-def test_skips_non_css_with_explanatory_message(tmp_path):
-    # Set up a minimal non-CSS code + tagged encoding circuit.
-    (tmp_path / "tools").mkdir()
-    (tmp_path / "codes").mkdir()
-    (tmp_path / "circuits").mkdir()
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+_FIVE_QUBIT_ENCODER = (
+    _REPO_ROOT / "data_yaml/circuits/five-qubit-code--circuit-synth-encoding-depth-optimized.stim"
+).read_text()
 
-    code_yaml = {
-        "name": "Test Code",
-        "n": 5,
-        "k": 1,
-        "h": [[1, 0, 0, 0, 1, 1, 1, 0, 1, 1]],
-        "logical": [[1, 1, 1, 1, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]],
-        "canonical_hash": "sym:5:1:abc",
-    }
-    (tmp_path / "codes" / "test-code.yaml").write_text(yaml.dump(code_yaml))
 
-    circ_yaml = {
-        "qec_id": 9999,
-        "name": "Stub",
-        "source": "test",
-        "tags": ["encoding"],
-    }
+def _build(tmp_path, stim_body, code=None, tags=("encoding",)):
+    """Lay out a minimal data_yaml tree with one code and one circuit."""
+    for sub in ("tools", "codes", "circuits"):
+        (tmp_path / sub).mkdir()
+    (tmp_path / "codes" / "test-code.yaml").write_text(yaml.dump(code or FIVE_QUBIT_CODE))
+    circ_yaml = {"qec_id": 9999, "name": "Stub", "source": "test", "tags": list(tags)}
     (tmp_path / "circuits" / "test-code--stub.yaml").write_text(yaml.dump(circ_yaml))
-    (tmp_path / "circuits" / "test-code--stub.stim").write_text("I 0 1 2 3 4")
+    (tmp_path / "circuits" / "test-code--stub.stim").write_text(stim_body)
+    return validate_all(data_dir=str(tmp_path))
 
-    results = validate_all(data_dir=str(tmp_path))
-    statuses = [c.status for r in results for c in r.checks]
-    assert "skipped" in statuses
+
+def _checks(results):
+    return {c.name: c for r in results for c in r.checks}
+
+
+def test_non_css_encoder_is_validated_and_passes(tmp_path):
+    """A correct non-CSS encoder must be checked, not skipped."""
+    results = _build(tmp_path, _FIVE_QUBIT_ENCODER)
+    checks = _checks(results)
+    assert checks["validate_encoding"].status == "passed"
+    assert checks["logical_input_count"].status == "passed"
+    assert results[0].passed is True
+    assert results[0].is_skipped is False
+
+
+def test_non_css_bad_encoder_fails(tmp_path):
+    """The gap this closes: an identity circuit does not encode the five-qubit
+    code, and must now be reported as failed rather than skipped."""
+    results = _build(tmp_path, "I 0 1 2 3 4")
+    checks = _checks(results)
+    assert checks["validate_encoding"].status == "failed"
+    assert results[0].is_skipped is False
+    assert results[0].passed is False
+
+
+def test_logical_input_count_catches_wrong_k(tmp_path):
+    """The #134 failure mode: a circuit whose implied logical-input count
+    disagrees with the code's k. Here the encoder is genuinely the five-qubit
+    code's, but the code claims k=2, so exactly one input goes unaccounted for."""
+    code = {**FIVE_QUBIT_CODE, "k": 2}
+    results = _build(tmp_path, _FIVE_QUBIT_ENCODER, code=code)
+    check = _checks(results)["logical_input_count"]
+    assert check.status == "failed"
+    assert "implies 1 logical inputs" in check.detail
+    assert "k=2" in check.detail
+
+
+def test_non_css_state_prep_is_validated(tmp_path):
+    """State-prep on a non-CSS code takes the same symplectic path."""
+    results = _build(tmp_path, "I 0 1 2 3 4", tags=("state-preparation",))
+    checks = _checks(results)
+    # |00000> is not a five-qubit codeword, so this must be a real verdict.
+    assert checks["validate_state_prep"].status == "failed"
+    assert "logical_input_count" not in checks  # encoder-only invariant
+
+
+# A [[3,2,1]] toy: qubit 2 is held at |0> by the lone stabilizer Z2, and qubits
+# 0-1 carry the two logical inputs. An encoder need never touch qubit 2, so stim
+# sizes it at 2 qubits — narrower than n = 3.
+NARROW_CODE = {
+    "name": "Narrow",
+    "n": 3,
+    "k": 2,
+    "d": 1,
+    "h": [[0, 0, 0, 0, 0, 1]],
+    "logical": [
+        [1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0],
+        [0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 0],
+    ],
+    "canonical_hash": "x",
+}
+
+# The 3-qubit repetition code: k=1, stabilizers Z0Z1 and Z1Z2.
+REPETITION_CODE = {
+    "name": "Rep",
+    "n": 3,
+    "k": 1,
+    "d": 1,
+    "h": [[0, 0, 0, 1, 1, 0], [0, 0, 0, 0, 1, 1]],
+    "logical": [[0, 0, 0, 0, 0, 1], [1, 1, 1, 0, 0, 0]],
+    "canonical_hash": "x",
+}
+
+
+def test_encoder_narrower_than_code_still_checks_inputs(tmp_path):
+    """stim sizes a circuit by its highest touched qubit, so a valid encoder can
+    be narrower than n. That must not make logical_input_count silently skip —
+    silent skipping is the exact failure this check exists to prevent."""
+    results = _build(tmp_path, "CX 0 1", code=NARROW_CODE)  # num_qubits = 2 < n = 3
+    check = _checks(results)["logical_input_count"]
+    assert check.status != "skipped", check.detail
+    assert check.status == "passed"
+
+
+def test_logical_input_count_catches_what_codespace_check_cannot(tmp_path):
+    """An all-Z stabilizer group stabilizes |0...0> no matter what the circuit
+    does, so the codespace check passes any CNOT circuit on the repetition code.
+    Only the input-count invariant notices the encoder is incomplete."""
+    # A correct encoder is CX 0 1 + CX 0 2; this one leaves qubit 2 unentangled.
+    results = _build(tmp_path, "CX 0 1", code=REPETITION_CODE)
+    checks = _checks(results)
+    assert checks["validate_encoding"].status == "passed"  # blind to this
+    assert checks["logical_input_count"].status == "failed"
+    assert "implies 2 logical inputs" in checks["logical_input_count"].detail
+    assert results[0].passed is False
 
 
 def test_all_skipped_checks_count_as_skipped_not_failed():
-    """A circuit whose only check is 'skipped' (e.g. a non-CSS code) must report
-    is_skipped=True and passed=False, so the summary counts it as skipped."""
+    """A circuit whose only check is 'skipped' must report is_skipped=True and
+    passed=False, so the summary counts it as skipped rather than a failure."""
     from scripts.validate_circuits import CheckResult, CircuitResult
 
     r = CircuitResult(stem="x--y", circuit_type="state-preparation")
-    r.checks.append(CheckResult("load_code", "skipped", "non-CSS validation not yet supported"))
+    r.checks.append(CheckResult("load_code", "skipped", "not derivable"))
     assert r.is_skipped is True
     assert r.passed is False
 

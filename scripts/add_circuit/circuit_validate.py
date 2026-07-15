@@ -16,6 +16,9 @@ from .models import CircuitProperties, ExtractedCode
 # Gate data for classification (computed once at module level)
 _ALL_GATES = stim.gate_data()
 
+# (x, z) bit pair from a symplectic row -> stim Pauli code (0=I, 1=X, 2=Y, 3=Z)
+_XZ_TO_PAULI = {(0, 0): 0, (1, 0): 1, (1, 1): 2, (0, 1): 3}
+
 
 def _is_entangling(name: str) -> bool:
     """True for genuinely-entangling two-qubit gates.
@@ -182,89 +185,176 @@ def _to_stim_circuit(circuit: Union[stim.Circuit, str]) -> stim.Circuit:
     return stim.Circuit(circuit)
 
 
-def _check_codespace_on_zero_input(circ: stim.Circuit, Hx: np.ndarray, Hz: np.ndarray) -> str:
-    """Simulate ``circ`` on ``|0...0>`` and check every code stabilizer is +1.
+def _widen(circ: stim.Circuit, n: int) -> stim.Circuit:
+    """Ensure ``circ`` declares at least ``n`` qubits.
+
+    ``num_qubits`` is the highest index stim *sees*, so a code whose last data
+    qubits are never touched yields a narrower circuit than the code it encodes.
+    Padding with an identity keeps those qubits addressable instead of making a
+    legitimate circuit look like a width mismatch.
+    """
+    if circ.num_qubits >= n:
+        return circ
+    return circ + stim.Circuit(f"I {n - 1}")
+
+
+def _row_to_pauli_string(row: np.ndarray, n: int, width: int) -> stim.PauliString:
+    """A symplectic row (X-half ``0..n-1`` | Z-half ``n..2n-1``) as a Pauli string.
+
+    ``width`` may exceed ``n``: flag / routing ancillas live at indices ``>= n``
+    and carry identity in a code stabilizer.
+    """
+    ps = stim.PauliString(width)
+    for i in range(n):
+        pauli = _XZ_TO_PAULI[(int(row[i]), int(row[i + n]))]
+        if pauli:
+            ps[i] = pauli
+    return ps
+
+
+def _css_to_h(Hx: np.ndarray, Hz: np.ndarray) -> tuple[np.ndarray, int]:
+    """Assemble CSS halves into a symplectic ``h``, returning ``(h, n)``.
+
+    Lets the CSS entry points share the general symplectic implementation rather
+    than keeping a parallel X/Z-specific one.
+    """
+    Hx = np.atleast_2d(np.asarray(Hx, dtype=int))
+    Hz = np.atleast_2d(np.asarray(Hz, dtype=int))
+    n = Hx.shape[1] if Hx.size else Hz.shape[1]
+    zx = np.zeros_like(Hx)
+    zz = np.zeros_like(Hz)
+    rows = []
+    if Hx.size:
+        rows.append(np.hstack([Hx, zx]))
+    if Hz.size:
+        rows.append(np.hstack([zz, Hz]))
+    if not rows:
+        return np.zeros((0, 2 * n), dtype=int), n
+    return np.vstack(rows), n
+
+
+def _check_codespace_on_zero_input(circ: stim.Circuit, h: np.ndarray, n: int) -> str:
+    """Simulate ``circ`` on ``|0...0>`` and check every stabilizer row of ``h``
+    fixes the output state, up to sign.
 
     Reset-tolerant: uses a ``TableauSimulator`` (which supports ``R``/``RX``)
     rather than ``to_tableau``, so it works for ancilla-initialising circuits.
-    Shared by :func:`validate_state_prep` and by :func:`validate_encoding`'s
+    Shared by :func:`validate_state_prep_h` and by :func:`validate_encoding_h`'s
     non-unitary fallback.
+
+    **Sign.** The test is ``|<S>| == 1``, not ``<S> == +1``. ``codes.h`` is a
+    sign-free binary matrix, so it names a stabilizer *group* only up to a choice
+    of signs: a circuit that prepares a codeword in a different Pauli frame
+    (``-YZIZY`` where the frame ``h`` was written in has ``+YZIZY``) encodes the
+    same code and must pass. Since the generators commute, ``|<S>| == 1`` on each
+    row means the state is a simultaneous eigenstate of all of them — i.e. it
+    lies in the codespace of *some* signing of ``h``, which is exactly as much as
+    a sign-free ``h`` can assert. Demanding ``+1`` would reject valid circuits.
+    ``logical_state_of`` is what pins down the frame when that actually matters.
 
     Returns 'passed' or 'failed: <reason>'.
     """
+    circ = _widen(circ, n)
     sim = stim.TableauSimulator()
     sim.do_circuit(circ)
-    n = Hx.shape[1]
+    width = max(circ.num_qubits, n)
 
-    for row in Hz:
-        ps = stim.PauliString(n)
-        for i, v in enumerate(row):
-            if v:
-                ps[i] = 3  # Z
-        if sim.peek_observable_expectation(ps) != 1:
-            return "failed: Z-stabilizer not satisfied"
-
-    for row in Hx:
-        ps = stim.PauliString(n)
-        for i, v in enumerate(row):
-            if v:
-                ps[i] = 1  # X
-        if sim.peek_observable_expectation(ps) != 1:
-            return "failed: X-stabilizer not satisfied"
+    for row in h:
+        ps = _row_to_pauli_string(row, n, width)
+        # 0 = not an eigenstate at all; ±1 = eigenstate in some Pauli frame.
+        if abs(sim.peek_observable_expectation(ps)) != 1:
+            return f"failed: stabilizer {ps} does not fix the prepared state"
 
     return "passed"
 
 
-def validate_encoding(circuit: Union[stim.Circuit, str], Hx: np.ndarray, Hz: np.ndarray) -> str:
-    """Verify encoding circuit maps |0...0> to the code space.
+def validate_encoding_h(circuit: Union[stim.Circuit, str], h: np.ndarray, n: int) -> str:
+    """Verify an encoding circuit maps |0...0> into the code space of ``h``.
+
+    ``h`` is the symplectic stabilizer matrix (shape ``(m, 2n)``, X-half then
+    Z-half) — the form stored in ``codes.h``. Works for CSS and non-CSS codes
+    alike; :func:`validate_encoding` is the CSS-shaped wrapper.
 
     An encoding circuit U should satisfy: for every stabilizer S of the code,
-    U^dag S U stabilizes |0...0> (only Z and I components, no X or Y).
+    U^dag S U stabilizes |0...0> (only Z and I components, no X or Y). That test
+    ignores sign by construction, matching the sign-free ``h`` — see
+    :func:`_check_codespace_on_zero_input`.
 
     Ancilla-initialising encoders contain reset instructions (``R``/``RX`` on
     the ancilla qubits) and so have no unitary tableau. For those we fall back
     to simulating on |0...0>: the encoder then prepares |0_L>, so every code
-    stabilizer must be a +1 eigenstate of the output — the same
-    ``|0...0> -> codespace`` property the unitary path checks, just evaluated by
-    simulation instead of by pulling the stabilizers back through U.
+    stabilizer must fix the output — the same ``|0...0> -> codespace`` property
+    the unitary path checks, just evaluated by simulation instead of by pulling
+    the stabilizers back through U.
 
     Returns 'passed' or 'failed: <reason>'.
     """
-    circ = _to_stim_circuit(circuit)
+    h = np.atleast_2d(np.asarray(h, dtype=int)) % 2
+    if h.size and h.shape[1] != 2 * n:
+        raise ValueError(f"Expected h with 2n={2 * n} columns, got {h.shape[1]}")
+
+    circ = _widen(_to_stim_circuit(circuit), n)
     try:
         tableau = circ.to_tableau()
     except ValueError:
         # Non-unitary (contains resets/measurements) — use the reset-tolerant
         # simulation check.
-        return _check_codespace_on_zero_input(circ, Hx, Hz)
+        return _check_codespace_on_zero_input(circ, h, n)
 
-    num_qubits = len(tableau)
+    width = len(tableau)
     inv = tableau.inverse()
 
-    for label, H, pauli_val in [("Z", Hz, 3), ("X", Hx, 1)]:
-        for row in H:
-            ps = stim.PauliString(num_qubits)
-            for i, v in enumerate(row):
-                if v:
-                    # stim Pauli encoding: 0=I, 1=X, 2=Y, 3=Z
-                    ps[i] = pauli_val
-            propagated = inv(ps)
-            for i in range(num_qubits):
-                if propagated[i] in (1, 2):  # X or Y -> doesn't stabilize |0>
-                    return f"failed: {label}-stabilizer does not stabilize input"
+    for row in h:
+        ps = _row_to_pauli_string(row, n, width)
+        propagated = inv(ps)
+        for i in range(width):
+            if propagated[i] in (1, 2):  # X or Y -> doesn't stabilize |0>
+                return f"failed: stabilizer {ps} does not stabilize input"
 
     return "passed"
 
 
-def validate_state_prep(circuit: Union[stim.Circuit, str], Hx: np.ndarray, Hz: np.ndarray) -> str:
-    """Verify state-prep circuit creates correct stabilizer state.
+def validate_state_prep_h(circuit: Union[stim.Circuit, str], h: np.ndarray, n: int) -> str:
+    """Verify a state-prep circuit creates a state in the code space of ``h``.
 
-    Simulates the circuit on |0...0> and checks that all stabilizer
-    generators have expectation value +1.
+    ``h`` is the symplectic stabilizer matrix (shape ``(m, 2n)``) — see
+    :func:`validate_encoding_h`. Works for CSS and non-CSS codes alike;
+    :func:`validate_state_prep` is the CSS-shaped wrapper.
+
+    Simulates the circuit on |0...0> and checks every stabilizer generator fixes
+    the result (eigenvalue ±1 — see :func:`_check_codespace_on_zero_input` on why
+    the sign is free). This says the output is *a* codeword; it does not say
+    which one — use ``logical_state_of`` for that.
 
     Returns 'passed' or 'failed: <reason>'.
     """
-    return _check_codespace_on_zero_input(_to_stim_circuit(circuit), Hx, Hz)
+    h = np.atleast_2d(np.asarray(h, dtype=int)) % 2
+    if h.size and h.shape[1] != 2 * n:
+        raise ValueError(f"Expected h with 2n={2 * n} columns, got {h.shape[1]}")
+    return _check_codespace_on_zero_input(_to_stim_circuit(circuit), h, n)
+
+
+def validate_encoding(circuit: Union[stim.Circuit, str], Hx: np.ndarray, Hz: np.ndarray) -> str:
+    """Verify encoding circuit maps |0...0> to the code space (CSS codes).
+
+    Thin wrapper over :func:`validate_encoding_h` for callers holding CSS halves.
+
+    Returns 'passed' or 'failed: <reason>'.
+    """
+    h, n = _css_to_h(Hx, Hz)
+    return validate_encoding_h(circuit, h, n)
+
+
+def validate_state_prep(circuit: Union[stim.Circuit, str], Hx: np.ndarray, Hz: np.ndarray) -> str:
+    """Verify state-prep circuit creates correct stabilizer state (CSS codes).
+
+    Thin wrapper over :func:`validate_state_prep_h` for callers holding CSS
+    halves.
+
+    Returns 'passed' or 'failed: <reason>'.
+    """
+    h, n = _css_to_h(Hx, Hz)
+    return validate_state_prep_h(circuit, h, n)
 
 
 def validate_syndrome_extraction(
