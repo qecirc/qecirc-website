@@ -167,8 +167,10 @@ const jsonLd = [
     )}
   </div>
 
+  {/* break-words: many notes cite a source path of 100+ characters and no
+      spaces, which `normal` overflow-wrap has nowhere to break. */}
   {circuit.notes && (
-    <p class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line mb-4">{circuit.notes}</p>
+    <p class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line break-words mb-4">{circuit.notes}</p>
   )}
 
   {circuit.tags.length > 0 && (

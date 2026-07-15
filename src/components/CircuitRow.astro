@@ -207,7 +207,10 @@ const stimFilename = buildStimFilename({
 
       {circuit.notes && (
         <div class="notes-wrapper">
-          <p class="notes-text text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line line-clamp-1">{circuit.notes}</p>
+          {/* break-words: 311 of the 756 circuits with notes cite a source path
+              of 100+ characters and no spaces, which `normal` overflow-wrap has
+              nowhere to break -- it runs straight out of the column. */}
+          <p class="notes-text text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line break-words line-clamp-1">{circuit.notes}</p>
           <button
             class="notes-toggle text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer mt-0.5 hidden"
             type="button"
