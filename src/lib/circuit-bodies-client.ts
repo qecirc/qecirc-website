@@ -5,7 +5,7 @@
 // fills in tabs + line-numbered bodies. Mirrors the CodeMatrices lazy-load
 // pattern: fetch-once guard, error text, retry on next expand.
 
-import { copyToClipboard } from "./dom-helpers";
+import { copyToClipboard, syncDetailHeight } from "./dom-helpers";
 import { initFormatSwitchers } from "./format-switcher-client";
 import { initBodyView } from "./body-view-client";
 import {
@@ -175,14 +175,6 @@ function buildSwitcher(
   initBodyView(switcher);
   container.replaceChildren(fragment);
   initFormatSwitchers(container);
-}
-
-/** Re-sync the expand animation height after content changes. */
-function syncDetailHeight(container: HTMLElement): void {
-  const detail = container.closest<HTMLElement>(".circuit-detail");
-  if (detail && detail.style.maxHeight !== "0px") {
-    detail.style.maxHeight = detail.scrollHeight + "px";
-  }
 }
 
 async function loadBodies(container: HTMLElement, template: HTMLTemplateElement): Promise<void> {

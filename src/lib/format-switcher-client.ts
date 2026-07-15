@@ -1,4 +1,5 @@
 import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "./constants";
+import { syncDetailHeight } from "./dom-helpers";
 
 // `format-tab` is the query selector used to find these buttons; it MUST be
 // part of the className we re-apply on toggle, hence it's repeated here.
@@ -39,13 +40,12 @@ export function initFormatSwitchers(root: HTMLElement | Document = document): vo
 
         syncSwitches(format);
 
-        // Recalculate max-height for parent collapse container
-        const detail = switcher.closest(".circuit-detail") as HTMLElement;
-        if (detail && detail.style.maxHeight !== "0px") {
-          requestAnimationFrame(function () {
-            detail.style.maxHeight = detail.scrollHeight + "px";
-          });
-        }
+        // Formats differ in length, so the row's collapse container has to be
+        // re-measured. Deferred a frame: the newly shown body has just had its
+        // `display` flipped, and this lets that settle first.
+        requestAnimationFrame(function () {
+          syncDetailHeight(switcher);
+        });
       });
     });
   });

@@ -23,6 +23,7 @@
 // something different from what is displayed.
 
 import { bodyForDisplay, hasDetectors, hasQubitCoords, lineNumbered } from "./stim-format";
+import { syncDetailHeight } from "./dom-helpers";
 import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "./constants";
 
 const ACTIVE = TAB_ACTIVE_CLASS.split(" ");
@@ -90,6 +91,10 @@ function paint(scope: HTMLElement, block: HTMLElement, raw: string, view: View):
   setSwitch(scope.querySelector<HTMLElement>(".coords-btn"), view.coords, "coords");
   setSwitch(scope.querySelector<HTMLElement>(".detectors-btn"), view.detectors, "detectors");
   paintCrumble(scope, view.detectors);
+
+  // Both switches change how many lines are on screen, so the row's collapse
+  // container has to be re-measured or the extra lines are clipped away.
+  syncDetailHeight(block);
 }
 
 /**
