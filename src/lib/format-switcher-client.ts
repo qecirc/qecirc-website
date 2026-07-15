@@ -1,4 +1,5 @@
 import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "./constants";
+import { syncDetailHeight } from "./dom-helpers";
 
 // `format-tab` is the query selector used to find these buttons; it MUST be
 // part of the className we re-apply on toggle, hence it's repeated here.
@@ -12,15 +13,16 @@ export function initFormatSwitchers(root: HTMLElement | Document = document): vo
     const tabs = switcher.querySelectorAll(".format-tab");
     const bodies = switcher.querySelectorAll(".format-body");
 
-    // The coords switch belongs to one format (only STIM carries coordinates),
-    // but shares the tab row with all of them — hide it on the others rather
-    // than leave a control that does nothing.
-    const coordsBtn = switcher.querySelector<HTMLElement>(".coords-btn");
+    // The body switches (Coords, Detectors) belong to one format — only STIM
+    // carries coordinates or an annotated variant — but share the tab row with
+    // all of them. Hide them on the others rather than leave controls that do
+    // nothing.
+    const switches = switcher.querySelector<HTMLElement>("[data-body-switches]");
     const coordsFormat = (switcher as HTMLElement).dataset.coordsFormat;
-    function syncCoordsBtn(format: string | undefined): void {
-      if (coordsBtn) coordsBtn.style.visibility = format === coordsFormat ? "" : "hidden";
+    function syncSwitches(format: string | undefined): void {
+      if (switches) switches.style.visibility = format === coordsFormat ? "" : "hidden";
     }
-    syncCoordsBtn((tabs[0] as HTMLElement | undefined)?.dataset.format);
+    syncSwitches((tabs[0] as HTMLElement | undefined)?.dataset.format);
 
     tabs.forEach(function (tab) {
       tab.addEventListener("click", function () {
@@ -36,15 +38,14 @@ export function initFormatSwitchers(root: HTMLElement | Document = document): vo
             (b as HTMLElement).dataset.format === format ? "" : "none";
         });
 
-        syncCoordsBtn(format);
+        syncSwitches(format);
 
-        // Recalculate max-height for parent collapse container
-        const detail = switcher.closest(".circuit-detail") as HTMLElement;
-        if (detail && detail.style.maxHeight !== "0px") {
-          requestAnimationFrame(function () {
-            detail.style.maxHeight = detail.scrollHeight + "px";
-          });
-        }
+        // Formats differ in length, so the row's collapse container has to be
+        // re-measured. Deferred a frame: the newly shown body has just had its
+        // `display` flipped, and this lets that settle first.
+        requestAnimationFrame(function () {
+          syncDetailHeight(switcher);
+        });
       });
     });
   });

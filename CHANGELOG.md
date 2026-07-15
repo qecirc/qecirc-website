@@ -5,6 +5,18 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+### Removed
+
+- The `Circuit-Synth Encoding (Gate-Optimized)` circuit for the Gottesman
+  [[8,3,3]] code (`#134`) — it did not encode the code it was filed under.
+  Propagating `Z` through it landed only 1 of 8 single-qubit operators inside the
+  code's stabilizer group where 5 (`n−k`) were expected, and 2 of its 5 stored
+  stabilizers came out genuinely random on the `|0…0⟩` run — checked sign-free,
+  so not a Pauli-frame difference. Its three sibling encoders are correct and
+  remain. `#134` is retired, not reused. Surfaced by the detector work: the
+  logical-input derivation is basis-independent, so it can check non-CSS codes
+  that `validate:circuits` skips (see below).
+
 ### Fixed
 
 - Qubit coordinates survive ingestion
@@ -17,6 +29,30 @@ the source-of-truth `package.json` version.
 
 ### Added
 
+- Detectors and observables for state-preparation and encoding circuits
+  ([#108](https://github.com/qecirc/qecirc-website/issues/108)), shown with a
+  **Detectors toggle** next to Coords and hidden by default. Switching it on
+  swaps in a new `stim-annotated` body — reset prologue, terminal readout, the
+  deterministic stabilizer outcomes as `DETECTOR`s, and the logical as an
+  `OBSERVABLE_INCLUDE` — and repoints the Crumble link at the matching URL. The
+  canonical `stim` body stays unitary and untouched, because `to_tableau()` and
+  the derive/fit pipeline depend on it. 418 of 834 circuits are annotated (357
+  state prep, 61 encoders); the 62 five-qubit-code circuits are excluded,
+  because non-CSS stabilizers mix X and Z on the same qubit and no single
+  terminal readout basis reads them — but they still get the reset prologue,
+  since being non-CSS blocks the readout, not the initialisation.
+- State-prep and encoding circuits now state their `|0…0⟩` input explicitly with
+  a reset prologue, in both toggle states, instead of leaving it implied.
+  Encoders reset only their non-input qubits, since those are the ones actually
+  fixed in `|0⟩`. Circuits that act on an already-encoded state (syndrome
+  extraction, gadgets) get no prologue — a reset there would be wrong, not
+  merely unhelpful.
+- Encoders are annotated differently from state preps: only their ancillas are
+  reset, leaving the k logical inputs free, and they get detectors but no
+  observable. Hz is deterministic for any input, so the detectors hold whatever
+  the reader supplies; the logical is input-dependent. The input qubits are
+  unrecorded and canonicalization moves them, so they are derived from the
+  circuit.
 - Coordinates are now displayed with a **Coords toggle** on circuit bodies,
   hidden by default: a d=11 unrotated prep opens with 221 `QUBIT_COORDS` lines
   before its first gate. Copy and download follow the toggle, so what you take

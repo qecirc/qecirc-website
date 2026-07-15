@@ -5,6 +5,7 @@
 // CodeBlock.astro (server-rendered on circuit detail pages).
 import { TAB_INACTIVE_CLASS } from "../lib/constants";
 import CoordsToggle from "./CoordsToggle.astro";
+import DetectorsToggle from "./DetectorsToggle.astro";
 
 const TAB_BASE_CLASS =
   "format-tab px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors";
@@ -19,7 +20,8 @@ const TAB_BASE_CLASS =
           class="ml-1.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-300 dark:border-gray-700 bg-white/60 dark:bg-gray-900/60 text-[10px] text-gray-400 dark:text-gray-500 font-mono"
         ></kbd>
       </button>
-      <div class="coords-slot ml-auto">
+      <div class="coords-slot ml-auto flex items-center gap-0.5" data-body-switches>
+        <DetectorsToggle />
         <CoordsToggle />
       </div>
     </div>

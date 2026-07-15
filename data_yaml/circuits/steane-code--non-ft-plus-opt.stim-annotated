@@ -1,0 +1,10 @@
+R 0 1 2 3 4 5 6
+TICK
+H 0 3 4 5
+CX 3 1 0 2 4 3 5 0 4 6 2 3 5 6 3 5
+TICK
+MX 0 1 2 3 4 5 6
+DETECTOR rec[-7] rec[-5] rec[-3] rec[-1]
+DETECTOR rec[-6] rec[-5] rec[-2] rec[-1]
+DETECTOR rec[-4] rec[-3] rec[-2] rec[-1]
+OBSERVABLE_INCLUDE(0) rec[-7] rec[-6] rec[-5] rec[-4] rec[-3] rec[-2] rec[-1]

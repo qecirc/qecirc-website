@@ -10,6 +10,7 @@ gate_count: 17
 two_qubit_gate_count: 11
 depth: 8
 qubit_count: 7
-crumble_url: https://algassert.com/crumble#circuit=SQRT_X_0_6;CX_0_2_6_5;S_6_0;CX_0_3_3_5_0_1_5_4;SQRT_X_3;CX_3_0_3_5_5_3_0_3_0_2;S_0_
+crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6;TICK;SQRT_X_0_6;CX_0_2_6_5;S_6_0;CX_0_3_3_5_0_1_5_4;SQRT_X_3;CX_3_0_3_5_5_3_0_3_0_2;S_0_
+crumble_url_annotated: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6;TICK;SQRT_X_0_6;CX_0_2_6_5;S_6_0;CX_0_3_3_5_0_1_5_4;SQRT_X_3;CX_3_0_3_5_5_3_0_3_0_2;S_0;TICK;M_0_1_2_3_4_5_6;DT_rec[-7]_rec[-5]_rec[-3]_rec[-1];DT_rec[-6]_rec[-5]_rec[-2]_rec[-1];DT_rec[-4]_rec[-3]_rec[-2]_rec[-1];OI(0)rec[-7]_rec[-6]_rec[-5]_rec[-4]_rec[-3]_rec[-2]_rec[-1]_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["X^½",1,1,1,1,1,"X^½"],["•",1,"X"],[1,1,1,1,1,"X","•"],["Z^½",1,1,1,1,1,"Z^½"],["•",1,1,"X"],[1,1,1,"•",1,"X"],["•","X"],[1,1,1,1,"X","•"],[1,1,1,"X^½"],["X",1,1,"•"],[1,1,1,"•",1,"X"],[1,1,1,"X",1,"•"],["•",1,1,"X"],["•",1,"X"],["Z^½"]]}
 tags: [state-preparation, non-ft, "connectivity:ibm", "device:jakarta", "logical-state:zero"]

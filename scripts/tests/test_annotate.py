@@ -1,0 +1,608 @@
+"""Detectors and observables derived for state-prep and encoding circuits.
+
+The load-bearing claim is that a derived detector is *deterministic*. Several
+tests therefore assert the negative — a wrong-basis or corrupted check set must
+be rejected — because a validator that accepts everything proves nothing.
+
+Steane is the CSS workhorse here; the five-qubit code stands in for non-CSS,
+whose mixed X/Z stabilizers no single terminal basis can read.
+"""
+
+import numpy as np
+import stim
+
+from scripts.add_circuit.annotate import (
+    build_annotated,
+    logical_input_qubits,
+    map_original_h,
+    sparsify_basis,
+    strip_readout,
+    validate_annotated,
+)
+from scripts.add_circuit.circuit_validate import extract_code
+from scripts.add_circuit.code_identify import build_symplectic_h, build_symplectic_logical
+from scripts.annotate_circuits import _with_urls
+
+# The Steane encoder from test_circuit_validate, which that module already
+# asserts maps |0...0> into the code space. Deriving the check matrices from it
+# with extract_code keeps circuit and matrices consistent by construction rather
+# than by hand-transcription.
+STEANE_STIM = """\
+H 4 5 6
+TICK
+CX 5 1
+TICK
+CX 1 2 4 0
+TICK
+CX 6 4 5 3 2 0
+TICK
+CX 6 3 4 5 0 1
+"""
+
+_steane = extract_code(STEANE_STIM, circuit_type="encoding", k=1)
+STEANE_HX, STEANE_HZ = _steane.Hx, _steane.Hz
+STEANE_H = build_symplectic_h(STEANE_HX, STEANE_HZ)
+
+# Steane is self-dual and its logical is the all-ones string in both bases
+# (weight-7 overlaps every weight-4 check evenly, so it commutes).
+STEANE_LX = np.array([[1] * 7], dtype=int)
+STEANE_LZ = np.array([[1] * 7], dtype=int)
+STEANE_LOGICAL = build_symplectic_logical(STEANE_LX, STEANE_LZ, 7, 1)
+
+# An encoder run on |0...0> *is* a |0>_L prep, and build_annotated supplies the
+# reset prologue itself — so the same text serves both fixtures.
+STEANE_ZERO = STEANE_STIM
+
+
+# Shor [[9,1,3]] encoder. Needed because Steane is SELF-DUAL: its Hx and Hz span
+# the same row space, so Hx rows are perfectly valid Z-checks and a wrong-basis
+# control against Steane would vacuously pass. Shor is asymmetric (six weight-2
+# Z checks, two weight-6 X checks), so the halves are genuinely distinguishable.
+SHOR_STIM = """\
+CX 0 3 0 6
+H 0 3 6
+CX 0 1 0 2 3 4 3 5 6 7 6 8
+"""
+
+_shor = extract_code(SHOR_STIM, circuit_type="encoding", k=1)
+SHOR_HX, SHOR_HZ = _shor.Hx, _shor.Hz
+SHOR_H = build_symplectic_h(SHOR_HX, SHOR_HZ)
+
+
+def _five_qubit_h():
+    """The [[5,1,3]] code: every stabilizer mixes X and Z (XZZXI and cyclic)."""
+    rows = ["XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"]
+    x = np.array([[1 if c in "XY" else 0 for c in r] for r in rows], dtype=int)
+    z = np.array([[1 if c in "ZY" else 0 for c in r] for r in rows], dtype=int)
+    return np.hstack([x, z])
+
+
+# A five-qubit encoder in the library's own labeling — needed because the input
+# derivation only makes sense against the matching h, and a hand-rolled circuit
+# would not encode this code. Its logical input sits at qubit 4.
+FIVE_ENCODER = """\
+H 4 0
+S 3 0
+H 1 2 3 0
+SWAP 4 0 0 1 4 2
+S_DAG 0
+H 2
+S_DAG 4
+SWAP 1 3
+S_DAG 2
+H 3 1
+S 3 1
+H 3 1
+CZ 1 0 3 2
+H 0 1
+S 2
+S_DAG 0
+H 2
+S_DAG 3
+H 3
+CZ 2 4 3 0
+S_DAG 4
+H 2 0 3
+CZ 1 4
+S_DAG 0
+CZ 2 0
+"""
+
+
+# --- the derived annotation is actually correct -----------------------------
+
+
+def test_zero_prep_detectors_are_deterministic():
+    circ = build_annotated(
+        STEANE_ZERO,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    assert circ is not None
+    assert validate_annotated(circ) is None
+    assert circ.num_detectors == 3  # the Z half of the stabilizers
+    assert circ.num_observables == 1
+
+
+def test_zero_prep_observable_reads_zero():
+    circ = build_annotated(
+        STEANE_ZERO,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    dets, obs = circ.compile_detector_sampler().sample(200, separate_observables=True)
+    assert dets.sum() == 0  # no detector fires on a noiseless run
+    assert obs.mean() == 0.0  # |0>_L has logical Z = 0
+
+
+def test_zero_prep_resets_every_qubit_and_reads_out_in_z():
+    circ = build_annotated(
+        STEANE_ZERO,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    names = [op.name for op in circ]
+    assert names[0] == "R"
+    assert "M" in names and "MX" not in names
+
+
+def test_plus_prep_uses_x_basis_readout():
+    # Transversal H after the |0>_L prep gives |+>_L.
+    circ = build_annotated(
+        STEANE_ZERO + "H 0 1 2 3 4 5 6\n",
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="plus",
+    )
+    assert circ is not None
+    assert validate_annotated(circ) is None
+    assert "MX" in [op.name for op in circ]
+
+
+# --- the negative controls: a validator that accepts everything is useless ---
+
+
+def test_shor_halves_are_distinguishable():
+    """Guards the control below: if Shor ever looked self-dual, it would vacuously pass."""
+    assert sorted(int(r.sum()) for r in SHOR_HZ) == [2, 2, 2, 2, 2, 2]
+    assert sorted(int(r.sum()) for r in SHOR_HX) == [6, 6]
+
+
+def test_wrong_basis_detectors_are_rejected():
+    """X-type checks are not deterministic under a Z-basis readout of |0>_L."""
+    out = stim.Circuit()
+    out.append("R", list(range(9)))
+    for op in stim.Circuit(SHOR_STIM):
+        out.append(op.name, op.targets_copy(), op.gate_args_copy())
+    out.append("M", list(range(9)))
+    for row in SHOR_HX:  # wrong half on purpose
+        out.append("DETECTOR", [stim.target_rec(i - 9) for i in range(9) if row[i]])
+    assert validate_annotated(out) is not None
+
+
+def test_right_basis_detectors_are_accepted_on_the_same_code():
+    """The other side of the control: Shor's Z half must pass where its X half failed."""
+    out = stim.Circuit()
+    out.append("R", list(range(9)))
+    for op in stim.Circuit(SHOR_STIM):
+        out.append(op.name, op.targets_copy(), op.gate_args_copy())
+    out.append("M", list(range(9)))
+    for row in SHOR_HZ:
+        out.append("DETECTOR", [stim.target_rec(i - 9) for i in range(9) if row[i]])
+    assert validate_annotated(out) is None
+
+
+def test_build_annotated_picks_the_z_half_on_an_asymmetric_code():
+    """End-to-end on the asymmetric code: it must choose Hz, not Hx.
+
+    Uses the encoder shape so no observable is involved — this isolates the
+    detector-half choice from the logical convention tested below.
+    """
+    circ = build_annotated(
+        SHOR_STIM, SHOR_H, np.zeros((0, 18), dtype=int), n=9, k=1, kind="encoding"
+    )
+    assert circ is not None
+    assert validate_annotated(circ) is None
+    assert circ.num_detectors == 6  # the six weight-2 Z checks, not the two X ones
+
+
+def test_a_non_deterministic_observable_is_rejected():
+    """The observable is checked as strictly as the detectors.
+
+    Worth pinning: the Pauli type of a logical is a property of the code's
+    convention, not of the state's name. This fixture is Shor in the phase-flip
+    -outer orientation, where the |0>_L-deterministic logical is X-type — so a
+    Z-type logical is not a logical of this code at all, and must be caught.
+    """
+    logical = build_symplectic_logical(
+        np.array([[1] * 9], dtype=int), np.array([[1, 0, 0, 1, 0, 0, 1, 0, 0]], dtype=int), 9, 1
+    )
+    circ = build_annotated(
+        SHOR_STIM,
+        SHOR_H,
+        logical,
+        n=9,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    assert circ is not None
+    assert circ.num_detectors == 6  # detectors are still right ...
+    assert validate_annotated(circ) is not None  # ... but the observable is not
+
+
+def test_corrupted_check_row_is_rejected():
+    """One flipped bit must break determinism, or the check proves nothing."""
+    bad = STEANE_HZ.copy()
+    bad[0][0] ^= 1
+    circ = stim.Circuit(STEANE_ZERO)
+    out = stim.Circuit()
+    out.append("R", list(range(7)))
+    for op in circ:
+        out.append(op.name, op.targets_copy(), op.gate_args_copy())
+    out.append("M", list(range(7)))
+    for row in bad:
+        out.append("DETECTOR", [stim.target_rec(i - 7) for i in range(7) if row[i]])
+    assert validate_annotated(out) is not None
+
+
+# --- scope: prologue always, readout only where a basis exists ---------------
+
+_FIVE_LOGICAL = build_symplectic_logical(
+    np.array([[1, 1, 1, 1, 1]], dtype=int), np.array([[1, 1, 1, 1, 1]], dtype=int), 5, 1
+)
+
+
+def test_non_css_code_gets_a_prologue_but_no_readout():
+    """Non-CSS blocks the readout, not the initialisation. The five-qubit code's
+    stabilizers mix X and Z, so nothing reads them in one basis — but its preps
+    start from |0...0> like any other, and should say so."""
+    circ = build_annotated(
+        "H 0\n",
+        _five_qubit_h(),
+        _FIVE_LOGICAL,
+        n=5,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    assert circ is not None
+    names = [op.name for op in circ]
+    assert names[0] == "R"
+    assert circ.num_detectors == 0
+    assert circ.num_observables == 0
+    assert "M" not in names and "MX" not in names
+
+
+def test_non_css_encoder_resets_only_its_ancillas():
+    """Input derivation is basis-independent — it asks whether Z_q propagates
+    outside the stabilizer group, which is defined for non-CSS codes too."""
+    circ = build_annotated(FIVE_ENCODER, _five_qubit_h(), _FIVE_LOGICAL, n=5, k=1, kind="encoding")
+    assert circ is not None
+    reset = next(op for op in circ if op.name == "R")
+    assert len(reset.targets_copy()) == 4  # the one logical input stays free
+    assert circ.num_detectors == 0
+
+
+def test_unsupported_logical_state_gets_a_prologue_but_no_readout():
+    """Only |0>_L and |+>_L map onto a transversal Z/X readout. An unknown state
+    still starts from |0...0>, so it keeps the prologue."""
+    circ = build_annotated(
+        STEANE_ZERO,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="magic",
+    )
+    assert circ is not None
+    assert [op.name for op in circ][0] == "R"
+    assert circ.num_detectors == 0
+
+
+def test_prologue_only_body_has_nothing_for_the_detectors_switch_to_do():
+    """The UI drops the switch when the body has no detectors, so a prologue-only
+    body must be a fixed point of strip_readout."""
+    circ = build_annotated(
+        "H 0\n",
+        _five_qubit_h(),
+        _FIVE_LOGICAL,
+        n=5,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    assert str(strip_readout(circ)) == str(circ)
+
+
+def test_unknown_kind_is_still_refused():
+    """A syndrome-extraction gadget acts on an already-encoded state, so a reset
+    prologue would be actively wrong — not merely unhelpful."""
+    assert (
+        build_annotated(
+            STEANE_ZERO,
+            STEANE_H,
+            STEANE_LOGICAL,
+            n=7,
+            k=1,
+            kind="syndrome-extraction",
+        )
+        is None
+    )
+
+
+def test_unknown_kind_is_refused():
+    assert (
+        build_annotated(STEANE_ZERO, STEANE_H, STEANE_LOGICAL, n=7, k=1, kind="syndrome-extraction")
+        is None
+    )
+
+
+# --- encoders ---------------------------------------------------------------
+
+
+def test_encoder_input_derived_from_tableau():
+    """Z on an input propagates to a logical, not a stabilizer."""
+    # Steane encoder: qubit 0 carries the logical, 1..6 are |0> ancillas.
+    encoder = STEANE_STIM
+    inputs = logical_input_qubits(stim.Circuit(encoder), STEANE_H, 7)
+    assert inputs is not None and len(inputs) == 1
+
+
+def test_encoder_input_derived_from_resets_when_no_tableau():
+    """Reset-bearing encoders have no tableau; their free qubits are the inputs."""
+    circ = stim.Circuit("R 1 2 3 4 5 6\nCX 0 1\n")
+    assert logical_input_qubits(circ, STEANE_H, 7) == [0]
+
+
+def test_encoder_leaves_inputs_unreset_and_emits_no_observable():
+    encoder = STEANE_STIM
+    circ = build_annotated(encoder, STEANE_H, STEANE_LOGICAL, n=7, k=1, kind="encoding")
+    assert circ is not None
+    assert validate_annotated(circ) is None
+    # The logical is whatever the reader supplies, so nothing is deterministic.
+    assert circ.num_observables == 0
+    reset = next(op for op in circ if op.name == "R")
+    assert len(reset.targets_copy()) == 6  # the input qubit is left free
+
+
+def test_encoder_detectors_hold_for_any_input_state():
+    """Hz is deterministic for every input, which is the whole basis of the design."""
+    encoder = STEANE_STIM
+    circ = build_annotated(encoder, STEANE_H, STEANE_LOGICAL, n=7, k=1, kind="encoding")
+    inputs = logical_input_qubits(stim.Circuit(encoder), STEANE_H, 7)
+    for prep in ([], [("X", inputs[0])], [("H", inputs[0])], [("H", inputs[0]), ("S", inputs[0])]):
+        probe = stim.Circuit()
+        for op in circ:
+            probe.append(op.name, op.targets_copy(), op.gate_args_copy())
+            if op.name == "R":
+                for gate, q in prep:
+                    probe.append(gate, [q])
+        assert validate_annotated(probe) is None
+
+
+# --- basis mapping ----------------------------------------------------------
+
+
+def test_map_original_direct_when_labelings_match():
+    mapped = map_original_h(STEANE_H, STEANE_H, 7)
+    assert mapped is not None and mapped[1] == "direct"
+
+
+def test_map_original_via_notes_permutation():
+    perm = [6, 5, 4, 3, 2, 1, 0]
+    idx = np.array(perm)
+    permuted = np.hstack([STEANE_H[:, :7][:, idx], STEANE_H[:, 7:][:, idx]])
+    notes = (
+        "Canonicalization qubit permutation "
+        f"(stored qubit i = original qubit permutation[i]): {perm}"
+    )
+    mapped = map_original_h(permuted, STEANE_H, 7, notes)
+    assert mapped is not None
+    # Applying the recorded permutation must land back on the stored row space.
+    assert mapped[1] in ("notes", "recomputed")
+
+
+def test_map_original_rejects_a_different_code():
+    """Row-space verification is what makes a wrong permutation fail loudly."""
+    other = build_symplectic_h(
+        np.array([[1, 1, 0, 0, 0, 0, 0]], dtype=int),
+        np.array([[0, 0, 0, 0, 0, 1, 1]], dtype=int),
+    )
+    assert map_original_h(other, STEANE_H, 7) is None
+
+
+def test_map_original_rejects_wrong_width():
+    assert map_original_h(np.zeros((3, 8), dtype=int), STEANE_H, 7) is None
+
+
+def test_map_original_ignores_a_malformed_notes_permutation():
+    notes = "permutation[i]): [0, 0, 0, 0, 0, 0, 0]"  # not a permutation
+    mapped = map_original_h(STEANE_H, STEANE_H, 7, notes)
+    assert mapped is not None and mapped[1] == "direct"
+
+
+# --- sparsification ---------------------------------------------------------
+
+
+def test_sparsify_preserves_rowspace_and_lowers_weight():
+    from scripts.add_circuit.code_identify import gf2_rank
+
+    dense = np.array(
+        [[1, 1, 1, 1, 0, 0, 0], [0, 1, 1, 1, 1, 0, 0], [1, 0, 0, 0, 1, 0, 0]], dtype=int
+    )
+    out = sparsify_basis(dense)
+    stacked = np.vstack([dense, out])
+    assert gf2_rank(stacked) == gf2_rank(dense)  # same row space
+    assert out.sum() <= dense.sum()  # no worse
+    assert not np.any(~out.any(axis=1))  # no row collapsed to zero
+
+
+def test_sparsify_handles_empty():
+    empty = np.zeros((0, 7), dtype=int)
+    assert sparsify_basis(empty).shape == (0, 7)
+
+
+# --- stripping the readout back off ------------------------------------------
+
+
+def test_strip_readout_keeps_resets_and_drops_annotations():
+    circ = build_annotated(
+        STEANE_ZERO,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    stripped = strip_readout(circ)
+    names = [op.name for op in stripped]
+    assert names[0] == "R"  # the reset prologue is the point; it stays
+    assert "M" not in names
+    assert "DETECTOR" not in names
+    assert "OBSERVABLE_INCLUDE" not in names
+
+
+def test_strip_readout_preserves_a_body_ending_in_a_flag_measurement():
+    """The regression this guards: 399 of 834 bodies carry flag/verification
+    measurements. Only the ONE readout the generator appends may be removed."""
+    body = STEANE_ZERO + "MR 6\n"
+    circ = build_annotated(
+        body,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    assert circ is not None
+    stripped = strip_readout(circ)
+    names = [op.name for op in stripped]
+    assert "MR" in names  # the flag measurement survives
+    assert "M" not in names  # the added readout does not
+    assert names[0] == "R"
+
+
+def test_strip_readout_leaves_the_body_gates_untouched():
+    circ = build_annotated(
+        STEANE_ZERO,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    stripped = strip_readout(circ)
+    original = stim.Circuit(STEANE_ZERO)
+    gates = [op.name for op in stripped if op.name not in ("R", "TICK")]
+    assert gates == [op.name for op in original if op.name != "TICK"]
+
+
+def test_strip_readout_of_an_encoder_keeps_only_the_ancilla_resets():
+    circ = build_annotated(STEANE_STIM, STEANE_H, STEANE_LOGICAL, n=7, k=1, kind="encoding")
+    stripped = strip_readout(circ)
+    reset = next(op for op in stripped if op.name == "R")
+    assert len(reset.targets_copy()) == 6  # the input qubit stays free
+
+
+def test_strip_readout_is_still_a_unitary_free_circuit_stim_accepts():
+    circ = build_annotated(
+        STEANE_ZERO,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    # No detectors left, so the DEM is trivially fine — the point is it parses
+    # and round-trips as valid STIM.
+    text = str(strip_readout(circ))
+    assert stim.Circuit(text).num_detectors == 0
+    assert "R 0 1 2 3 4 5 6" in text
+
+
+# --- the YAML edit in the backfill script ------------------------------------
+
+_YAML = "qec_id: 1\ncrumble_url: https://a\nquirk_url: https://q\ntags: [encoding]\n"
+
+
+def test_both_urls_are_written_in_order():
+    out = _with_urls(_YAML, "https://plain", "https://ann")
+    lines = out.splitlines()
+    assert lines[1] == "crumble_url: https://plain"
+    assert lines[2] == "crumble_url_annotated: https://ann"
+    assert lines[3] == "quirk_url: https://q"
+
+
+def test_plain_url_is_overwritten_not_left_stale():
+    """`crumble_url` must follow the default view, which now carries the reset
+    prologue — the stored canonical body's link would no longer match."""
+    out = _with_urls(_YAML, "https://with-resets", "https://ann")
+    assert "https://a\n" not in out
+    assert out.count("crumble_url:") == 1
+
+
+def test_url_edit_is_idempotent():
+    """The regression: a single-pass edit wrote the key twice on re-run, and the
+    duplicate parsed to the same value — so a value-based change check missed it."""
+    once = _with_urls(_YAML, "https://p", "https://b")
+    twice = _with_urls(once, "https://p", "https://b")
+    assert once == twice
+    assert twice.count("crumble_url_annotated:") == 1
+    assert twice.count("crumble_url:") == 1
+
+
+def test_annotated_url_replaces_a_stale_value():
+    stale = _with_urls(_YAML, "https://p", "https://old")
+    fresh = _with_urls(stale, "https://p", "https://new")
+    assert "https://old" not in fresh
+    assert fresh.count("crumble_url_annotated:") == 1
+
+
+def test_empty_annotated_url_removes_the_key():
+    """Wide circuits have no Crumble link; the key must not linger as an empty."""
+    present = _with_urls(_YAML, "https://p", "https://b")
+    removed = _with_urls(present, "", "")
+    assert "crumble_url_annotated" not in removed
+
+
+def test_annotated_url_appended_when_no_crumble_url_key():
+    text = "qec_id: 1\ntags: [encoding]\n"
+    out = _with_urls(text, "", "https://b")
+    assert out.count("crumble_url_annotated:") == 1
+    assert out.startswith(text)
+
+
+def test_sparsified_basis_still_validates():
+    circ = build_annotated(
+        STEANE_ZERO,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+        original_h=STEANE_H,
+    )
+    assert circ is not None
+    assert validate_annotated(circ) is None
