@@ -9,7 +9,9 @@ from scripts.add_circuit.circuit_validate import (
     circuit_properties,
     extract_code,
     validate_encoding,
+    validate_encoding_h,
     validate_state_prep,
+    validate_state_prep_h,
 )
 
 # ---------------------------------------------------------------------------
@@ -206,6 +208,111 @@ class TestValidateStatePrep:
         result = validate_state_prep("", Hx, Hz)
         # Empty circuit has no instructions, so TableauSimulator stays at |0>
         assert result == "passed"
+
+
+# ---------------------------------------------------------------------------
+# Symplectic (non-CSS-capable) validators
+# ---------------------------------------------------------------------------
+
+# The five-qubit perfect code: non-CSS, so it has no Hx/Hz split at all.
+FIVE_QUBIT_H = np.array(
+    [
+        [1, 0, 0, 0, 1, 1, 1, 0, 1, 1],
+        [0, 1, 0, 0, 1, 0, 0, 1, 1, 0],
+        [0, 0, 1, 0, 1, 1, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0, 1, 1, 1],
+    ]
+)
+
+FIVE_QUBIT_ENCODER = """\
+S 4
+X 0
+S_DAG 1
+H 2
+Z 3
+H 4 0 1
+SWAP 4 0 1 3
+S_DAG 0
+SWAP 4 2
+H 3 1
+S_DAG 2 4
+S 3
+S_DAG 1
+H 3
+CZ 1 0
+H 0
+S_DAG 1
+CZ 3 4
+S 0
+S_DAG 4
+Y 3
+H 0
+S_DAG 3
+H 3
+CZ 2 0 3 1
+H 0
+S_DAG 2
+H 1 3
+CZ 2 4
+S_DAG 3
+CZ 3 0
+"""
+
+
+class TestSymplecticValidators:
+    def test_non_css_encoder_passes(self):
+        assert validate_encoding_h(FIVE_QUBIT_ENCODER, FIVE_QUBIT_H, 5) == "passed"
+
+    def test_non_css_bad_encoder_fails(self):
+        assert validate_encoding_h("I 0 1 2 3 4", FIVE_QUBIT_H, 5).startswith("failed:")
+
+    def test_non_css_state_prep_fails_on_product_state(self):
+        assert validate_state_prep_h("I 0 1 2 3 4", FIVE_QUBIT_H, 5).startswith("failed:")
+
+    def test_css_wrapper_agrees_with_symplectic(self):
+        # Steane via the CSS wrapper and via an explicitly assembled h.
+        zeros = np.zeros_like(STEANE_H)
+        h = np.vstack([np.hstack([STEANE_H, zeros]), np.hstack([zeros, STEANE_H])])
+        assert validate_encoding_h(STEANE_STIM, h, 7) == "passed"
+        assert validate_encoding(STEANE_STIM, STEANE_H, STEANE_H) == "passed"
+
+    def test_wrong_h_width_raises(self):
+        with pytest.raises(ValueError, match="columns"):
+            validate_encoding_h(FIVE_QUBIT_ENCODER, FIVE_QUBIT_H, 4)
+
+    def test_circuit_narrower_than_code_is_padded(self):
+        # stim sizes a circuit by its highest touched qubit, so an encoder that
+        # never touches the last data qubits is narrower than n. That must not
+        # be mistaken for a width mismatch.
+        h = np.array([[0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1]])
+        assert validate_state_prep_h("I 0", h, 3) == "passed"
+
+
+class TestSignTolerance:
+    """``codes.h`` is sign-free, so a codeword prepared in a different Pauli
+    frame is still a valid preparation of the same code and must pass."""
+
+    def test_state_prep_accepts_negative_frame(self):
+        # |1> is stabilized by -Z; h names the sign-free row "Z".
+        h = np.array([[0, 1]])
+        assert validate_state_prep_h("X 0", h, 1) == "passed"
+
+    def test_state_prep_rejects_non_eigenstate(self):
+        # |+> is not a Z eigenstate at all: expectation 0, not ±1.
+        assert validate_state_prep_h("H 0", np.array([[0, 1]]), 1).startswith("failed:")
+
+    def test_encoding_accepts_negative_frame(self):
+        # Same for the reset-fallback path (X 0 after a reset -> -Z frame).
+        h = np.array([[0, 1]])
+        assert validate_encoding_h("R 0\nX 0", h, 1) == "passed"
+
+    def test_negative_frame_steane_state_prep(self):
+        # Flipping a data qubit of a Steane |0_L> prep lands in the codespace
+        # with some stabilizer signs flipped — still a codeword of the same code.
+        flipped = STEANE_STATE_PREP + "Z 0\n"
+        zeros = np.zeros_like(STEANE_H)
+        h = np.vstack([np.hstack([STEANE_H, zeros]), np.hstack([zeros, STEANE_H])])
+        assert validate_state_prep_h(flipped, h, 7) == "passed"
 
 
 # ---------------------------------------------------------------------------

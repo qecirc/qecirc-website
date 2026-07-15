@@ -6,6 +6,6 @@ gate_count: 39
 two_qubit_gate_count: 5
 depth: 3
 qubit_count: 5
-crumble_url: https://algassert.com/crumble#circuit=Y_4;H_0_1;S_2;Y_3;H_4;S_DAG_0;S_1;H_2_1;S_DAG_2;SWAP_4_0;S_DAG_0;SWAP_4_1_1_2_4_3;S_DAG_2;H_1_3_4;S_DAG_1_3;S_4;CZ_2_0;H_4_0;S_0;CZ_1_4;H_0_4;S_DAG_1;CZ_3_0;Y_0;S_3;S_DAG_0;H_3_0;CZ_3_4_1_0;H_3_0_1;S_3_
+crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3_4;TICK;Y_4;H_0_1;S_2;Y_3;H_4;S_DAG_0;S_1;H_2_1;S_DAG_2;SWAP_4_0;S_DAG_0;SWAP_4_1_1_2_4_3;S_DAG_2;H_1_3_4;S_DAG_1_3;S_4;CZ_2_0;H_4_0;S_0;CZ_1_4;H_0_4;S_DAG_1;CZ_3_0;Y_0;S_3;S_DAG_0;H_3_0;CZ_3_4_1_0;H_3_0_1;S_3_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H","Z^½","Y","Y"],["Z^-½","Z^½","H",1,"H"],[1,"H","Z^-½"],["Swap",1,1,1,"Swap"],[1,1,1,1,1],["Z^-½"],[1,"Swap",1,1,"Swap"],[1,1,1,1,1],[1,"Swap","Swap"],[1,1,1],[1,1,1,"Swap","Swap"],[1,1,1,1,1],[1,"H","Z^-½","H","H"],[1,"Z^-½",1,"Z^-½","Z^½"],["Z",1,"•"],["H",1,1,1,"H"],["Z^½"],[1,"•",1,1,"Z"],["H","Z^-½",1,1,"H"],["Z",1,1,"•"],["Y",1,1,"Z^½"],["Z^-½",1,1,"H"],["H"],[1,1,1,"•","Z"],["Z","•"],["H","H",1,"H"],[1,1,1,"Z^½"]]}
 tags: [state-preparation, non-ft, "logical-state:zero"]

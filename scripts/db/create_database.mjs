@@ -38,8 +38,8 @@ const stmts = {
     INSERT INTO codes (name, slug, n, k, d, zoo_url, h, logical, canonical_hash)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertCircuit: db.prepare(`
-    INSERT INTO circuits (qec_id, code_id, name, slug, notes, source, gate_count, two_qubit_gate_count, depth, qubit_count, weight, crumble_url, quirk_url, tool_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+    INSERT INTO circuits (qec_id, code_id, name, slug, notes, source, gate_count, two_qubit_gate_count, depth, qubit_count, weight, crumble_url, crumble_url_annotated, quirk_url, tool_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertBody: db.prepare(`
     INSERT INTO circuit_bodies (circuit_id, format, body)
     VALUES (?, ?, ?)`),
@@ -71,8 +71,10 @@ function listYamlFiles(dir) {
     .sort();
 }
 
-// Body format extensions
-const BODY_EXTENSIONS = new Set(["stim", "qasm", "cirq"]);
+// Body format extensions. `stim-annotated` is the canonical STIM body plus a
+// reset prologue, a terminal readout and derived detectors/observables; the
+// canonical `stim` body stays unitary because the derive/fit pipeline needs it.
+const BODY_EXTENSIONS = new Set(["stim", "qasm", "cirq", "stim-annotated"]);
 
 // --- 4. Insert data ---
 const toolSlugToId = new Map();
@@ -239,6 +241,7 @@ try {
         data.qubit_count ?? null,
         data.weight ?? null,
         data.crumble_url || null,
+        data.crumble_url_annotated || null,
         data.quirk_url || null,
         toolId,
       );
@@ -300,7 +303,7 @@ try {
   throw e;
 }
 
-// --- 4. Populate the full-text search index (data/migrations/015) ---
+// --- 4. Populate the full-text search index (data/migrations/016) ---
 // Derived entirely from the rows just inserted, so it is rebuilt from scratch
 // here rather than maintained by triggers. `source` rides along in the notes
 // column: it is provenance prose (DOI/citation) and shares its low weight.

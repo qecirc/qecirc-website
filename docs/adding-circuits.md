@@ -92,6 +92,21 @@ print(validate_state_prep(circuit, Hx, Hz)) # 'passed' or 'failed: ...'
 
 Validation uses your provided Hx/Hz (same source as the circuit). If the code already exists in the library with a different qubit ordering, `add_circuit()` handles the relabeling separately.
 
+For a **non-CSS** code there is no Hx/Hz split; pass the symplectic `h` (shape
+`(m, 2n)`, X-half then Z-half — the form stored in `codes.h`) instead:
+
+```python
+from scripts.add_circuit import validate_encoding_h, validate_state_prep_h
+
+print(validate_encoding_h(circuit, h, n))    # 'passed' or 'failed: ...'
+print(validate_state_prep_h(circuit, h, n))  # 'passed' or 'failed: ...'
+```
+
+These are the general implementations — the Hx/Hz pair above is a thin wrapper —
+so CSS codes may use either. Both check each stabilizer up to **sign** (`|⟨S⟩| = 1`,
+not `⟨S⟩ = +1`): a sign-free binary `h` names a stabilizer group only up to a Pauli
+frame, so a circuit preparing a codeword in a different frame is still valid.
+
 ### Extract code from circuit (optional)
 
 If you have a circuit but no check matrices, you can derive Hx/Hz directly:
@@ -276,7 +291,7 @@ Hx, Hz = derive_matrices_self_dual(zero_circuit, n)
 Hx, Hz = derive_matrices_two_circuit(zero_circuit, plus_circuit, n)
 ```
 
-`n` is the number of **data** qubits; flag/ancilla qubits live at indices `≥ n` and are handled automatically (`strip_flags(circuit, n)` exposes the data-only sub-circuit if you need it). `logical_state_of(circuit, n, d, Hx=Hx, Hz=Hz)` reports which basis state the circuit prepares (`'zero'` / `'one'` / `'plus'` / `'minus'`), and `symplectic_validate(circuit, H, n)` checks the prepared state is a `+1` eigenstate of every stabilizer (the non-CSS counterpart of `validate_state_prep`).
+`n` is the number of **data** qubits; flag/ancilla qubits live at indices `≥ n` and are handled automatically (`strip_flags(circuit, n)` exposes the data-only sub-circuit if you need it). `logical_state_of(circuit, n, d, Hx=Hx, Hz=Hz)` reports which basis state the circuit prepares (`'zero'` / `'one'` / `'plus'` / `'minus'`), and `symplectic_validate(circuit, H, n)` checks the prepared state is a strict `+1` eigenstate of every stabilizer — use it when `H` is in a **known** sign frame (e.g. an importer's own matrices). Against a stored `codes.h`, whose frame is arbitrary, use the sign-tolerant `validate_state_prep_h` instead.
 
 ### Import
 
@@ -392,6 +407,15 @@ tags: [encoding]
 The `qec_id` is a **permanent, globally unique** integer identifier for the circuit (displayed as `#1` in the UI). It is auto-assigned by the generation pipeline (`max(existing IDs) + 1`). Once assigned, a `qec_id` must **never be reused or reassigned**, even if a circuit is removed.
 
 Body files (`.stim`, `.qasm`, `.cirq`) share the same stem as the circuit YAML.
+
+State-prep and encoding circuits get one more, `.stim-annotated`, written by
+`uv run python scripts/annotate_circuits.py` (idempotent — run it after adding
+such a circuit). It restates the `|0…0⟩` input that the canonical `.stim` body
+leaves implied, and adds a terminal readout with detectors where a readout basis
+exists. It is a view of the STIM body rather than a display format, so it gets no
+format tab; the Detectors toggle derives both views from it. The canonical
+`.stim` body must stay reset-free — `to_tableau()` and the derive/fit machinery
+depend on that.
 
 ### Original submission (`data_yaml/circuits/originals/`)
 

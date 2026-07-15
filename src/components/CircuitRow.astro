@@ -144,7 +144,9 @@ const stimFilename = buildStimFilename({
     )}
   </div>
 
-  <div class="circuit-detail overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;">
+  <!-- data-circuit-scope: the Detectors switch lives in the format-tab row but
+       repoints the Crumble link above it, so they need a common ancestor. -->
+  <div class="circuit-detail overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;" data-circuit-scope>
     <div class="border-t border-gray-200 dark:border-gray-800 px-4 py-4 space-y-3">
       <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
         <div>
@@ -182,7 +184,15 @@ const stimFilename = buildStimFilename({
           <div class="flex items-center gap-3">
             <span class="text-gray-500 dark:text-gray-400">View in:</span>
             {circuit.crumble_url && (
-              <a href={circuit.crumble_url} class="underline hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
+              <a
+                href={circuit.crumble_url}
+                class="underline hover:text-gray-900 dark:hover:text-gray-100"
+                target="_blank"
+                rel="noopener"
+                data-crumble-link
+                data-crumble-url={circuit.crumble_url}
+                data-crumble-url-annotated={circuit.crumble_url_annotated ?? undefined}
+              >
                 Crumble &#x2197;
               </a>
             )}

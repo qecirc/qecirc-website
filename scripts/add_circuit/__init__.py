@@ -29,7 +29,9 @@ import stim
 from .circuit_validate import (  # noqa: F401
     extract_code,
     validate_encoding,
+    validate_encoding_h,
     validate_state_prep,
+    validate_state_prep_h,
     validate_syndrome_extraction,
 )
 from .code_identify import gf2_row_basis
@@ -461,7 +463,9 @@ __all__ = [  # noqa: F822  (names defined above / re-exported)
     "preview_circuit",
     "summarize_circuit",
     "validate_encoding",
+    "validate_encoding_h",
     "validate_state_prep",
+    "validate_state_prep_h",
     "validate_syndrome_extraction",
     "extract_code",
     "ExtractedCode",

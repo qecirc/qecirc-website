@@ -107,6 +107,9 @@ result = validate_encoding(circuit_text, Hx, Hz)
 result = validate_state_prep(circuit_text, Hx, Hz)
 ```
 
+For a non-CSS code (no Hx/Hz split) pass the symplectic `h` instead:
+`validate_encoding_h(circuit_text, h, n)` / `validate_state_prep_h(circuit_text, h, n)`.
+
 If validation fails, report details and stop. Do not proceed with invalid circuits unless the user explicitly overrides.
 
 ### 2d. Dry-run preview

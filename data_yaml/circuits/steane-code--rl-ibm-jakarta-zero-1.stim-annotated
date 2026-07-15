@@ -1,0 +1,14 @@
+R 0 1 2 3 4 5 6
+TICK
+SQRT_X 3 1 4
+CX 3 0 3 5 1 0 5 6 0 3
+S 5
+CX 0 2 4 5 1 0 3 5
+S 4 1
+CX 5 3 5 6
+TICK
+M 0 1 2 3 4 5 6
+DETECTOR rec[-7] rec[-5] rec[-3] rec[-1]
+DETECTOR rec[-6] rec[-5] rec[-2] rec[-1]
+DETECTOR rec[-4] rec[-3] rec[-2] rec[-1]
+OBSERVABLE_INCLUDE(0) rec[-7] rec[-6] rec[-5] rec[-4] rec[-3] rec[-2] rec[-1]

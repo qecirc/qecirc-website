@@ -1,5 +1,5 @@
 // Typo tolerance for /search and the header quick-search (/api/search), built on
-// the unstemmed search_vocab dictionary (data/migrations/015).
+// the unstemmed search_vocab dictionary (data/migrations/016).
 //
 // Why not spellfix1/editdist3, SQLite's own fuzzy-match extensions: they are
 // loadable C extensions, not part of the amalgamation better-sqlite3 ships, so
