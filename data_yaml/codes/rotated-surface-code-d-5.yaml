@@ -3,6 +3,15 @@ n: 25
 k: 1
 d: 5
 zoo_url: https://errorcorrectionzoo.org/c/rotated_surface
+aliases:
+  - "[[25,1,5]]"
+  - "checkerboard code"
+  - "medial surface code"
+  - "rectified surface code"
+  - "Kitaev surface code"
+  - "planar code"
+related:
+  - "toric code"
 canonical_hash: b5827bf49d685907afebdf420860c19230763aa93ab642c53cf0dcb9b35c4dbc
 h:
   - [

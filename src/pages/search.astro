@@ -11,6 +11,7 @@ import {
   searchCircuitFacets,
   resolveQuery,
   getToolsForCircuits,
+  getPapersForCircuits,
   formatCodeParams,
   MIN_QUERY_LENGTH,
 } from "../lib/queries";
@@ -54,6 +55,7 @@ const results = resolved
   : [];
 const truncated = results.length === RESULT_LIMIT;
 const toolsMap = getToolsForCircuits(results.map((c) => c.id));
+const papersMap = getPapersForCircuits(results.map((c) => c.id));
 
 // Grouped the same way as a code page's circuit tags (CircuitFilter.astro).
 const tagGroups = TAG_CATEGORIES.map((c) => ({
@@ -81,8 +83,9 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
 >
   <h1 class="text-2xl font-bold mb-2">Search circuits</h1>
   <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-    Searches circuit names, notes, tags and code names. For codes and tools, use the
-    quick search in the header.
+    Searches circuit names, notes, tags, code names, and the title, authors and arXiv
+    id of the paper a circuit is taken from. For codes and tools, use the quick search
+    in the header.
   </p>
 
   <form method="GET" action="/search" class="mb-6">
@@ -212,6 +215,13 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
         </p>
       )}
 
+      {resolved?.relatedOnly && (
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          No code goes by that name here. These are closely related codes that people
+          often mean by it &mdash; check the code on each result before relying on it.
+        </p>
+      )}
+
       {resolved?.partial && (
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
           No circuit matches every term, so these match at least one.
@@ -253,6 +263,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
               <CircuitRow
                 circuit={circuit}
                 tool={toolsMap.get(circuit.id)}
+                paper={papersMap.get(circuit.id)}
                 codeSlug={circuit.code_slug}
                 codeLabel={codeLabel({
                   name: circuit.code_name,

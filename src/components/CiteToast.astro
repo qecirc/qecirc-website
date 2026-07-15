@@ -32,7 +32,11 @@
       toast.classList.remove("translate-y-0", "opacity-100", "pointer-events-auto");
     }
 
-    function show(text, sourceUrl) {
+    // `linkLabel` is what the link reads as; the URL is the fallback. Set to a
+    // citation ("Zen et al. (2024), <title>") where the source resolved to a
+    // paper — a reader can act on that, where a bare arxiv.org/abs/2402.17761
+    // only tells them to go look.
+    function show(text, sourceUrl, linkLabel) {
       clearTimeout(timer);
       msg.textContent = "";
       msg.appendChild(document.createTextNode(text));
@@ -43,7 +47,7 @@
         link.target = "_blank";
         link.rel = "noopener";
         link.className = "underline hover:text-gray-900 dark:hover:text-gray-100";
-        link.textContent = sourceUrl;
+        link.textContent = linkLabel || sourceUrl;
         msg.appendChild(link);
       }
       toast.classList.remove("translate-y-4", "opacity-0", "pointer-events-none");

@@ -17,6 +17,7 @@ import {
   getCircuitTagsForCode,
   getCircuitsForCode,
   getToolsForCircuits,
+  getPapersForCircuits,
 } from "../../lib/queries";
 import type { CircuitSort, CircuitSortField } from "../../types";
 import { notFound } from "../../lib/not-found";
@@ -46,6 +47,7 @@ const circuits = getCircuitsForCode(code.id, DEFAULT_SORT);
 const totalCount = circuits.length;
 const allCircuitTags = getCircuitTagsForCode(code.id);
 const toolsMap = getToolsForCircuits(circuits.map((c) => c.id));
+const papersMap = getPapersForCircuits(circuits.map((c) => c.id));
 
 const countLabel = `${totalCount} circuit${totalCount !== 1 ? "s" : ""}`;
 
@@ -216,7 +218,7 @@ const jsonLd = [
       </div>
       <div class="space-y-2" data-list-container>
         {circuits.map((circuit) => (
-          <CircuitRow circuit={circuit} tool={toolsMap.get(circuit.id)} codeSlug={codeSlug!} />
+          <CircuitRow circuit={circuit} tool={toolsMap.get(circuit.id)} paper={papersMap.get(circuit.id)} codeSlug={codeSlug!} />
         ))}
       </div>
     </div>

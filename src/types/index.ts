@@ -30,6 +30,10 @@ export interface Circuit {
   crumble_url_annotated: string | null;
   quirk_url: string | null;
   tool_id: number | null;
+  /** The paper this circuit is taken from, resolved from `source` at build time
+   *  (scripts/db/create_database.mjs). Null when the source names a tool rather
+   *  than a paper, or cites a work data_yaml/papers/ has no record of. */
+  paper_id: number | null;
 }
 
 export interface CircuitBody {
@@ -41,6 +45,22 @@ export interface CircuitOriginal {
   original_stim: string;
   original_h: string | null;
   original_logical: string | null;
+}
+
+/** A published work a circuit is taken from. Its text is what makes a circuit
+ *  findable by title, author or arXiv id — `circuits.source` holds only a link. */
+export interface Paper {
+  id: number;
+  slug: string;
+  title: string;
+  /** In author order — the citation renders "<first author> et al." */
+  authors: string[];
+  year: number | null;
+  /** Bare id, no "arXiv:" prefix or version suffix. */
+  arxiv_id: string | null;
+  doi: string | null;
+  journal_ref: string | null;
+  url: string;
 }
 
 export interface Tool {

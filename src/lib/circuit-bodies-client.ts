@@ -8,6 +8,7 @@
 import { copyToClipboard, syncDetailHeight } from "./dom-helpers";
 import { initFormatSwitchers } from "./format-switcher-client";
 import { initBodyView } from "./body-view-client";
+import { citeNotice } from "./cite-client";
 import {
   ANNOTATED_OF,
   bodyForDisplay,
@@ -28,18 +29,6 @@ const TAB_BASE_CLASS =
 
 const loaded = new WeakSet<HTMLElement>();
 
-/** Same cite-toast behavior as CodeBlock.astro's copy/download handlers. */
-function citeNotice(source: string): void {
-  if (typeof window.showCiteToast !== "function") return;
-  if (source && source.startsWith("http")) {
-    window.showCiteToast("Please cite the source when using this circuit:", source);
-  } else if (source) {
-    window.showCiteToast("Please cite the source when using this circuit: " + source);
-  } else {
-    window.showCiteToast("Please check and cite the corresponding source when using this circuit.");
-  }
-}
-
 function buildSwitcher(
   container: HTMLElement,
   template: HTMLTemplateElement,
@@ -56,6 +45,7 @@ function buildSwitcher(
 
   const stimFilename = container.dataset.stimFilename ?? "";
   const source = container.dataset.source ?? "";
+  const citation = container.dataset.citation || undefined;
 
   // The annotated body is a view of the STIM body, not a format of its own, so
   // it gets no tab; it supersedes the plain STIM body for display. Mirrors
@@ -135,7 +125,7 @@ function buildSwitcher(
           a.download = downloadName;
           a.click();
           URL.revokeObjectURL(url);
-          citeNotice(source);
+          citeNotice(source, citation);
         });
       } else {
         downloadBtn.remove();
@@ -154,7 +144,7 @@ function buildSwitcher(
             label.textContent = original;
           }, 1500);
         }
-        citeNotice(source);
+        citeNotice(source, citation);
       });
     }
 

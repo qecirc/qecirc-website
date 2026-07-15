@@ -1,0 +1,48 @@
+---
+import type { Paper } from "../types";
+import { formatCitation, formatPaperId } from "../lib/queries";
+
+interface Props {
+  /** The circuit's raw provenance string. Rendered as-is when no paper resolved
+   *  from it — as a link if it looks like one, plain text otherwise (a tool
+   *  name such as "circuit-synth"). */
+  source: string;
+  /** The paper `source` resolved to, when the library holds one. */
+  paper?: Paper;
+  /** Detail pages have a column to themselves and show the full title; list
+   *  rows sit in a dense flex line and keep it to the citation, with the title
+   *  on hover. */
+  detailed?: boolean;
+}
+
+const { source, paper, detailed = false } = Astro.props;
+
+const linkClass = "underline hover:text-gray-900 dark:hover:text-gray-100";
+const paperId = paper ? formatPaperId(paper) : null;
+// The row link's tooltip carries what the visible label omits, so a search hit
+// that matched on title text can still be explained by hovering it.
+const hoverTitle = paper ? [paper.title, paperId].filter(Boolean).join(" — ") : undefined;
+---
+
+<div>
+  <span class="text-gray-500 dark:text-gray-400">Source:</span>{" "}
+  {
+    paper ? (
+      <span>
+        <a href={paper.url} class={linkClass} title={hoverTitle} target="_blank" rel="noopener">
+          {formatCitation(paper)}
+        </a>
+        {detailed && <span>, {paper.title}</span>}
+        {paperId && (
+          <span class="text-gray-500 dark:text-gray-400"> &middot; {paperId}</span>
+        )}
+      </span>
+    ) : source.startsWith("http") ? (
+      <a href={source} class={linkClass} target="_blank" rel="noopener">
+        {source}
+      </a>
+    ) : (
+      <span>{source}</span>
+    )
+  }
+</div>

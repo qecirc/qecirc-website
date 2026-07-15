@@ -1,13 +1,16 @@
 ---
-import type { Circuit, Tool } from "../types";
-import { formatCircuitId } from "../lib/queries";
+import type { Circuit, Paper, Tool } from "../types";
+import { formatCircuitId, formatCitation } from "../lib/queries";
 import { buildStimFilename } from "../lib/filename";
 import HeartIcon from "./HeartIcon.astro";
 import MetricBadge from "./MetricBadge.astro";
+import SourceLine from "./SourceLine.astro";
 
 interface Props {
   circuit: Circuit & { tags: string[] };
   tool?: Tool;
+  /** The paper this circuit is taken from, when it has one. */
+  paper?: Paper;
   codeSlug: string;
   /** Shown next to the name on cross-code lists (/search), where the row would
    *  otherwise not say which code it belongs to. Omitted on code pages, where
@@ -22,11 +25,13 @@ interface Props {
   permalinkPath?: string;
 }
 
-const { circuit, tool, codeSlug, codeLabel, tagHrefFor, permalinkPath } = Astro.props;
+const { circuit, tool, paper, codeSlug, codeLabel, tagHrefFor, permalinkPath } = Astro.props;
 
 const basePath = `/codes/${codeSlug}`;
 const tagHref = tagHrefFor ?? ((tag: string) => `${basePath}?tag=${encodeURIComponent(tag)}`);
 const displayId = formatCircuitId(circuit.qec_id);
+// Handed to the cite toast when a body is copied/downloaded from this row.
+const citationLabel = paper ? `${formatCitation(paper)}, ${paper.title}` : undefined;
 
 // Row data consumed by list-filter-client.ts (client-side filtering/sorting).
 const rowMetrics = JSON.stringify({
@@ -171,16 +176,7 @@ const stimFilename = buildStimFilename({
             </svg>
           </button>
         </div>
-        <div>
-          <span class="text-gray-500 dark:text-gray-400">Source:</span>{" "}
-          {circuit.source.startsWith("http") ? (
-            <a href={circuit.source} class="underline hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
-              {circuit.source}
-            </a>
-          ) : (
-            <span>{circuit.source}</span>
-          )}
-        </div>
+        <SourceLine source={circuit.source} paper={paper} />
         {tool && (
           <div>
             <span class="text-gray-500 dark:text-gray-400">Tool:</span>{" "}
@@ -234,6 +230,7 @@ const stimFilename = buildStimFilename({
         data-qec-id={anchorId}
         data-stim-filename={stimFilename}
         data-source={circuit.source}
+        data-citation={citationLabel}
       >
         <p class="circuit-bodies-status text-sm text-gray-500 dark:text-gray-400">Loading circuit&hellip;</p>
       </div>

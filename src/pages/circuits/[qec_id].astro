@@ -8,12 +8,15 @@ import CollapsibleSection from "../../components/CollapsibleSection.astro";
 import FormatSwitcher from "../../components/FormatSwitcher.astro";
 import HeartIcon from "../../components/HeartIcon.astro";
 import MetricBadge from "../../components/MetricBadge.astro";
+import SourceLine from "../../components/SourceLine.astro";
 import {
   getCircuitByQecId,
   getOriginalForCircuit,
   getBodiesForCircuits,
   getToolsForCircuits,
+  getPapersForCircuits,
   formatCircuitId,
+  formatCitation,
 } from "../../lib/queries";
 import { buildStimFilename } from "../../lib/filename";
 import { notFound } from "../../lib/not-found";
@@ -32,9 +35,11 @@ const bodiesMap = getBodiesForCircuits([circuit.id]);
 const bodies = bodiesMap.get(circuit.id) ?? [];
 const toolsMap = getToolsForCircuits([circuit.id]);
 const tool = toolsMap.get(circuit.id);
+const paper = getPapersForCircuits([circuit.id]).get(circuit.id);
 const original = getOriginalForCircuit(circuit.id);
 
 const displayId = formatCircuitId(circuit.qec_id);
+const citationLabel = paper ? `${formatCitation(paper)}, ${paper.title}` : undefined;
 
 const stimFilename = buildStimFilename({
   codeSlug: circuit.code_slug,
@@ -68,7 +73,22 @@ const jsonLd = [
     },
     license: "https://creativecommons.org/licenses/by-sa/4.0/",
     ...(circuit.tags.length ? { keywords: circuit.tags.join(", ") } : {}),
-    ...(circuit.source.startsWith("http") ? { citation: circuit.source } : {}),
+    // A resolved paper cites as a ScholarlyArticle with its real authors; a bare
+    // URL is all schema.org can be told about an unresolved source.
+    ...(paper
+      ? {
+          citation: {
+            "@type": "ScholarlyArticle",
+            name: paper.title,
+            author: paper.authors.map((name) => ({ "@type": "Person", name })),
+            url: paper.url,
+            ...(paper.year != null ? { datePublished: String(paper.year) } : {}),
+            ...(paper.doi ? { identifier: `https://doi.org/${paper.doi}` } : {}),
+          },
+        }
+      : circuit.source.startsWith("http")
+        ? { citation: circuit.source }
+        : {}),
   },
   {
     "@context": "https://schema.org",
@@ -124,16 +144,7 @@ const jsonLd = [
   </div>
 
   <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm mb-4">
-    <div>
-      <span class="text-gray-500 dark:text-gray-400">Source:</span>{" "}
-      {circuit.source.startsWith("http") ? (
-        <a href={circuit.source} class="underline hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
-          {circuit.source}
-        </a>
-      ) : (
-        <span>{circuit.source}</span>
-      )}
-    </div>
+    <SourceLine source={circuit.source} paper={paper} detailed />
     {tool && (
       <div>
         <span class="text-gray-500 dark:text-gray-400">Tool:</span>{" "}
@@ -189,7 +200,7 @@ const jsonLd = [
 
   <h2 class="text-lg font-semibold mb-2">Circuit</h2>
   <div class="mb-6">
-    <FormatSwitcher bodies={bodies} stimFilename={stimFilename} source={circuit.source} />
+    <FormatSwitcher bodies={bodies} stimFilename={stimFilename} source={circuit.source} citation={citationLabel} />
   </div>
 
   {original && (
@@ -197,7 +208,7 @@ const jsonLd = [
       <CollapsibleSection id="originals" label="Original submission (before canonicalization)">
         <div class="space-y-4">
           {original?.original_stim && (
-            <CodeBlock code={original.original_stim} label="Original STIM Circuit" source={circuit.source} />
+            <CodeBlock code={original.original_stim} label="Original STIM Circuit" source={circuit.source} citation={citationLabel} />
           )}
           {hasOriginalMatrices && (
             <CodeMatrices

@@ -3,6 +3,9 @@ n: 8
 k: 3
 d: 3
 zoo_url: https://errorcorrectionzoo.org/c/stab_8_3_3
+aliases:
+  - "[[8,3,3]]"
+  - "eight-qubit Gottesman code"
 canonical_hash: d50681ae8ac254e7648b98c88e63434fb273877f98106ac214b637a349b53d5f
 h:
   - [1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0]

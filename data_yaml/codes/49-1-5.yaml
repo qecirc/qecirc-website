@@ -3,6 +3,8 @@ n: 49
 k: 1
 d: 5
 zoo_url: https://errorcorrectionzoo.org/c/triorthogonal
+aliases:
+  - "[[49,1,5]]"
 canonical_hash: b3493631e108460a487d8c56bafe024548421bd7ccbb6b3206d0f33bcacae9c2
 h:
   - [

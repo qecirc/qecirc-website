@@ -3,6 +3,12 @@ n: 145
 k: 1
 d: 9
 zoo_url: https://errorcorrectionzoo.org/c/surface
+aliases:
+  - "[[145,1,9]]"
+  - "Kitaev surface code"
+  - "planar code"
+related:
+  - "toric code"
 canonical_hash: 593b693778ed1cf69e20f09389365e9d985955358e68fa044ad24488772decbd
 h:
   - [

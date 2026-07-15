@@ -1,5 +1,7 @@
 name: Flag at Origin
 description: Code and circuits for modular fault-tolerant state preparation of CSS codes using flag gadgets, with results on Quantinuum H2-1.
 github_url: https://github.com/Quantinuum/flag_at_origin_paper
+aliases:
+  - "flag_at_origin"
 paper_urls: [https://arxiv.org/abs/2508.14200]
 tags: [Python, fault-tolerant, state-preparation, flag]

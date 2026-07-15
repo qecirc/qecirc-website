@@ -1,6 +1,6 @@
 declare global {
   interface Window {
-    showCiteToast?: (msg: string, url?: string) => void;
+    showCiteToast?: (msg: string, url?: string, linkLabel?: string) => void;
   }
 }
 

@@ -1,5 +1,7 @@
 name: Rustiq
 description: Rust-based synthesis engine for Clifford operators and isometries, stabilizer and graph states, and Pauli networks, producing gate-count- or depth-optimized circuits such as encoders from stabilizers.
 github_url: https://github.com/qiskit-community/rustiq
+aliases:
+  - "rustiq-core"
 paper_urls: [https://arxiv.org/abs/2212.06928, https://arxiv.org/abs/2404.03280]
 tags: [Rust, Python, encoding, state-preparation, Clifford]

@@ -5,6 +5,70 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+### Added
+
+- **Search aliases** (`data/migrations/017`). Codes and tools gain optional
+  `aliases:`, and codes `related:`, hand-written with the Error Correction Zoo as
+  reference. `laflamme` → the five-qubit code, `kitaev` → surface codes,
+  `bb codes` → 28 circuits instead of 824. `related` names a _different, adjacent_
+  code (`toric` → planar surface codes) and `/search` says so rather than
+  silently equating them. See
+  [docs/superpowers/plans/2026-07-15-search-aliases.md](docs/superpowers/plans/2026-07-15-search-aliases.md).
+- **Code tags reach `/search`** (`data/migrations/019`). `circuit_search.tags`
+  was built only from `taggable_type = 'circuit'`, so every code-level tag was
+  invisible: `LDPC`, `topological`, `self-dual`, `surface-code` and `color-code`
+  each matched zero circuits despite 4 codes being tagged LDPC and 10
+  surface-code. They now ride in their own `code_tags` column — separate from
+  `tags` so a name used at both levels cannot double-count. It failed silently
+  because `search_terms` already indexed code tags, so spelling correction
+  considered `topological` a real word and left the dead query alone.
+- **`scripts/add_paper.py`** — fetches paper metadata from arXiv/Crossref into
+  `data_yaml/papers/`, so it is never hand-written or recalled from memory.
+  `npm run papers:add -- <arXiv id | DOI | link>` for one;
+  `npm run papers:missing` scans every circuit `source` and fetches whatever has
+  no paper yet (idempotent — the one to run after a bulk import). Refuses to
+  write a record with no authors rather than emit a half-citation. Stdlib only,
+  no new dependency.
+  - This is the **only** part of the repo that touches the network, and it is a
+    maintainer tool whose output is committed — the same shape as
+    `annotate_circuits.py`. `db:create` and the site read committed YAML only and
+    build identically offline.
+- **Papers are searchable.** A circuit taken from a paper can now be found on
+  `/search` by the paper's title, authors and arXiv id — none of which existed
+  anywhere in the library before, since `circuits.source` holds only a link.
+  Searching `reinforcement learning`, `Forlivesi` or `boolean satisfiability`
+  now finds the circuits from those papers.
+  - New `data_yaml/papers/` (7 files) and a `papers` table, with `circuits.paper_id`.
+  - **Circuits do not declare their paper.** `db:create` resolves `source` against
+    each paper's `url`/`arxiv_id`/`doi`, tolerating http/https, trailing slashes,
+    `dx.doi.org`, `/pdf/` vs `/abs/`, and arXiv version suffixes. Adding a paper file
+    enriches every circuit citing it; no circuit YAML changes. 724 of 833 circuits
+    link; the remaining 109 carry `source: circuit-synth`, a tool rather than a work.
+  - `circuit_search` gains a weighted `paper` column (migration 017 recreates the
+    FTS5 table — it has no `ADD COLUMN`), and `search_terms` indexes paper titles and
+    authors so spelling correction knows author names.
+  - Paper text is `/search`-only. The header quick-search is for jumping to a known
+    thing, and one paper backs up to 370 circuits.
+
+### Changed
+
+- **BM25 weights and the strict column set are derived from the table**
+  (`src/lib/queries/search-schema.ts`), not restated by hand. Both drifted from
+  `circuit_search` while this branch was being built — a 7-entry weight array for
+  8 columns (silently scoring `paper` as `notes`), and a strict set missing
+  `paper` (which announced "no code goes by that name" for an exact author
+  match). Weights are now keyed by column name and ordered from
+  `PRAGMA table_info`; a column with no weight throws and names itself instead of
+  being silently scored 1.0. `scripts/smoke.sh` additionally asserts that a query
+  reaching each of `aliases`, `code_tags` and `paper` still returns circuits.
+- A circuit's source now renders as a citation ("Zen et al. (2024) · arXiv:2402.17761")
+  instead of a bare URL, on circuit rows, detail pages and the cite toast. Detail pages
+  emit the paper as a schema.org `ScholarlyArticle` with its real authors, rather than a
+  URL string.
+- The landing page's "Papers" stat counts the `papers` table instead of inferring papers
+  from distinct `source` values that are not a tool's own links. Same number today, but
+  it no longer guesses.
+
 ### Removed
 
 - The `Circuit-Synth Encoding (Gate-Optimized)` circuit for the Gottesman

@@ -2,6 +2,7 @@ import { getDb } from "../db";
 import type { Circuit, CodeListItem, TagWithCount, Tool } from "../../types";
 import { withTags, addTagConditions } from "./shared";
 import { correctTokens } from "./spelling";
+import { bm25Weights, strictColumns } from "./search-schema";
 import { parseToolRow, type ToolRow } from "./tools";
 
 /** Shortest query we will run. Below this, LIKE/FTS scans match near-everything
@@ -29,9 +30,16 @@ export function tokenizeQuery(raw: string): string[] {
 }
 
 /** Quote each token as a literal phrase and join them. The final token gets a
- *  `*` so partial words still match ("encod" -> "encoding"). */
-function buildFtsExpr(tokens: string[], op: "AND" | "OR"): string {
-  return tokens.map((t, i) => `"${t}"${i === tokens.length - 1 ? "*" : ""}`).join(` ${op} `);
+ *  `*` so partial words still match ("encod" -> "encoding").
+ *
+ * `scope` restricts the whole expression to a column set. Applied around the
+ * group rather than per token so that AND/OR still range over the expression:
+ * `{a b} : (x AND y)` means "x and y, each in a or b", whereas repeating the
+ * filter per token would nest filters and change what the operators bind to.
+ */
+function buildFtsExpr(tokens: string[], op: "AND" | "OR", scope?: string): string {
+  const expr = tokens.map((t, i) => `"${t}"${i === tokens.length - 1 ? "*" : ""}`).join(` ${op} `);
+  return scope ? `${scope} : (${expr})` : expr;
 }
 
 function countMatches(expr: string): number {
@@ -55,6 +63,11 @@ export interface ResolvedQuery {
   corrected: boolean;
   /** No circuit had every term, so we matched any term instead. */
   partial: boolean;
+  /** Nothing matched by name/alias, so we fell back to `related` -- these
+   *  circuits are a DIFFERENT code to the one asked for (a planar surface code
+   *  for "toric"). The page must say so; silently equating them would assert
+   *  something untrue. */
+  relatedOnly: boolean;
 }
 
 /** Returns null when nothing searchable remains (e.g. input was all
@@ -68,23 +81,40 @@ export function resolveQuery(raw: string, opts: { literal?: boolean } = {}): Res
     ? { tokens, changed: false }
     : correctTokens(tokens);
 
-  // Falling back to "any term" is a last resort, taken only when every term
-  // together finds nothing -- otherwise a query like "steane encoding" would
-  // dilute its own precise hits with everything merely mentioning "encoding".
+  // Widening is a last resort, and the order below is the whole design: each
+  // step gives up less than the one after it.
+  //
+  //   1. every term, by name/alias        -- what was asked for
+  //   2. every term, allowing `related`   -- a neighbouring code, flagged
+  //   3. any term, by name/alias          -- a weaker answer to the question
+  //   4. any term, allowing `related`
+  //
+  // (2) precedes (3) because dropping to "any term" is the bigger concession:
+  // "toric code" widened to ANY term matches every circuit with "code" in it
+  // (824 of 833), while allowing `related` returns surface codes -- which is
+  // what the user meant. Ranking (3) first would answer a precise query with the
+  // catalogue.
+  //
   // Decided on the query alone, before code/tag filters, so that narrowing a
   // filter to zero cannot silently widen the query underneath it.
-  const and = buildFtsExpr(fixed, "AND");
-  let match = and;
-  let partial = false;
-  if (fixed.length > 1 && countMatches(and) === 0) {
-    const or = buildFtsExpr(fixed, "OR");
-    if (countMatches(or) > 0) {
-      match = or;
-      partial = true;
-    }
+  const attempts: { match: string; partial: boolean; relatedOnly: boolean }[] = [
+    { match: buildFtsExpr(fixed, "AND", strictColumns()), partial: false, relatedOnly: false },
+    { match: buildFtsExpr(fixed, "AND"), partial: false, relatedOnly: true },
+  ];
+  if (fixed.length > 1) {
+    attempts.push(
+      { match: buildFtsExpr(fixed, "OR", strictColumns()), partial: true, relatedOnly: false },
+      { match: buildFtsExpr(fixed, "OR"), partial: true, relatedOnly: true },
+    );
   }
 
-  return { raw, display: fixed.join(" "), match, corrected: changed, partial };
+  const base = { raw, display: fixed.join(" "), corrected: changed };
+  for (const attempt of attempts) {
+    if (countMatches(attempt.match) > 0) return { ...base, ...attempt };
+  }
+  // Nothing matched anywhere. Return the strictest expression so the page
+  // reports "no results" for what was actually asked, not for a widened query.
+  return { ...base, ...attempts[0] };
 }
 
 function rawTokenize(query: string): string[] {
@@ -108,16 +138,20 @@ function searchByType<T extends { id: number }>(
   const patterns = tokenize(query);
   if (patterns.length === 0) return [];
 
+  // `aliases` is matched here but `related` deliberately is not: the quick-search
+  // is a jump-to-a-known-thing list with no room to explain itself, and offering
+  // "Rotated Surface Code" under the heading of a `toric` search would read as a
+  // claim that they are the same code. /search has the space to say otherwise.
   const db = getDb();
   const tokenClauses = patterns.map(
     () =>
-      `(c.name LIKE ? ESCAPE '\\' OR EXISTS (
+      `(c.name LIKE ? ESCAPE '\\' OR c.aliases LIKE ? ESCAPE '\\' OR EXISTS (
         SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
         WHERE tg.taggable_id = c.id AND tg.taggable_type = ? AND t.name LIKE ? ESCAPE '\\'
       ))`,
   );
   const params: string[] = [];
-  for (const p of patterns) params.push(p, taggableType, p);
+  for (const p of patterns) params.push(p, p, taggableType, p);
 
   const rows = db
     .prepare(
@@ -153,30 +187,35 @@ export function searchCircuits(
     const stripped = raw.replace(/^#/, "");
     const asInt = /^\d+$/.test(stripped) ? parseInt(stripped, 10) : null;
 
+    // As in searchByType: code aliases match, code `related` names do not.
     if (asInt !== null) {
       tokenClauses.push(
         `(ci.qec_id = ? OR ci.name LIKE ? ESCAPE '\\' OR co.name LIKE ? ESCAPE '\\'
+          OR co.aliases LIKE ? ESCAPE '\\'
           OR EXISTS (
             SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
             WHERE tg.taggable_id = ci.id AND tg.taggable_type = 'circuit' AND t.name LIKE ? ESCAPE '\\'
           )
           OR EXISTS (
-            SELECT 1 FROM tools tl WHERE tl.id = ci.tool_id AND tl.name LIKE ? ESCAPE '\\'
+            SELECT 1 FROM tools tl WHERE tl.id = ci.tool_id
+              AND (tl.name LIKE ? ESCAPE '\\' OR tl.aliases LIKE ? ESCAPE '\\')
           ))`,
       );
-      params.push(asInt, p, p, p, p);
+      params.push(asInt, p, p, p, p, p, p);
     } else {
       tokenClauses.push(
         `(ci.name LIKE ? ESCAPE '\\' OR co.name LIKE ? ESCAPE '\\'
+          OR co.aliases LIKE ? ESCAPE '\\'
           OR EXISTS (
             SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
             WHERE tg.taggable_id = ci.id AND tg.taggable_type = 'circuit' AND t.name LIKE ? ESCAPE '\\'
           )
           OR EXISTS (
-            SELECT 1 FROM tools tl WHERE tl.id = ci.tool_id AND tl.name LIKE ? ESCAPE '\\'
+            SELECT 1 FROM tools tl WHERE tl.id = ci.tool_id
+              AND (tl.name LIKE ? ESCAPE '\\' OR tl.aliases LIKE ? ESCAPE '\\')
           ))`,
       );
-      params.push(p, p, p, p);
+      params.push(p, p, p, p, p, p);
     }
   }
 
@@ -286,13 +325,6 @@ export function searchCircuitFacets(query: ResolvedQuery): SearchFacets {
   return { codes, tags };
 }
 
-// BM25 column weights. ONE PER COLUMN OF circuit_search, INCLUDING THE
-// UNINDEXED circuit_id -- FTS5 counts it as a column, and passing too few
-// weights is silently accepted (the rest default to 1.0) rather than erroring,
-// so a missing leading 0.0 would quietly mis-rank every result.
-//   circuit_id, name, code_name, tags, notes
-const BM25_WEIGHTS = [0.0, 10.0, 4.0, 6.0, 1.0];
-
 /** Circuit search for /search: full-text over name/code name/tags/notes,
  *  ranked by relevance, optionally restricted to one code.
  *
@@ -330,7 +362,7 @@ export function searchCircuitsRanked(
        JOIN circuits c ON c.id = circuit_search.circuit_id
        JOIN codes co ON co.id = c.code_id
        WHERE ${conditions.join(" AND ")}
-       ORDER BY bm25(circuit_search, ${BM25_WEIGHTS.join(", ")}), c.name
+       ORDER BY bm25(circuit_search, ${bm25Weights().join(", ")}), c.name
        LIMIT ?`,
     )
     .all(...params, limit) as Omit<RankedCircuit, "tags">[];
