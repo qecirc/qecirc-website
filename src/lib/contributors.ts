@@ -22,5 +22,5 @@ export const CONTRIBUTORS: readonly Contributor[] = [
   { name: "Maxie Helen Bichmann", github: "MaxieHelenBichmann" },
   { name: "Diego Forlivesi", github: "DiegoForlivesi" },
   { name: "David Amaro", github: "davamaro" },
-  { name: "Luis Colmenarez" },
+  { name: "Luis Colmenarez", github: "luis2colmena" },
 ];
