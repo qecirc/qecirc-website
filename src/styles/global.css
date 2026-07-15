@@ -16,6 +16,13 @@
    are worth 96px, which on a 375px screen left the name track 91px -- about ten
    characters of a name that routinely runs past sixty. The numbers are worth
    less than knowing which circuit you are looking at. */
+/* Muted text is `text-gray-500 dark:text-gray-400`, and not the reverse.
+   gray-400 measures 2.6:1 on white -- under the 4.5:1 WCAG AA asks for at the
+   sizes it gets used at -- while gray-500 manages 4.84:1 on white and gray-400
+   manages 7.74:1 on gray-950. The inverted pair is wrong at both ends, so if
+   you find yourself typing `text-gray-400 dark:text-gray-500`, swap it.
+   gray-400 on its own is fine for decorative svg, which carries no text. */
+
 :root {
   --circuit-grid: 1rem 1.5rem 1.25rem 1fr;
 }
