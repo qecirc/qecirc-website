@@ -20,7 +20,9 @@ const basePath = `/codes/${codeSlug}`;
 // Matches the server's default ordering (parseCircuitParams).
 const DEFAULT_SORT_FIELD: CircuitSortField = "two_qubit_gate_count";
 
-const INPUT_CLASS = "w-24 px-2 py-1 text-sm focus:outline-none bg-transparent";
+// w-full below sm so the box fills its grid column; the fixed w-24 above it
+// keeps the flex-wrap row as it was.
+const INPUT_CLASS = "w-full min-w-0 sm:w-24 px-2 py-1 text-sm focus:outline-none bg-transparent";
 
 function labelInfo(field: CircuitSortField) {
   const isActive = field === DEFAULT_SORT_FIELD;
@@ -53,19 +55,25 @@ const tagGroups = TAG_CATEGORIES.map((c) => ({
 ---
 
 <form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2 sm:sticky sm:top-0 sm:z-20 bg-white dark:bg-gray-950 sm:border-b sm:border-gray-200 sm:dark:border-gray-800 sm:pb-4 sm:-mb-2">
-  <div class="flex flex-wrap items-center gap-3">
+  {/* An even 2-up grid below sm. Left to flex-wrap, the boxes measure 160-188px
+      against a 343px line -- close enough to differ, too wide to pair -- so they
+      landed one, one, two down the page. Above sm they all fit and flex-wrap is
+      the simpler thing. */}
+  <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
     {FIELDS.map(({ field, label, aria }) => {
       const info = labelInfo(field);
       return (
-        <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5">
-          <a href={sortHref(field)} data-sort-field={field} class={`px-1 py-0.5 text-xs transition-colors ${info.cls}`} title={`Sort by ${label}`}>
+        <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5 min-w-0">
+          {/* nowrap: "2Q Gates" is two words and broke over two lines in the
+              narrow grid column, making that box taller than its neighbours. */}
+          <a href={sortHref(field)} data-sort-field={field} class={`px-1 py-0.5 text-xs whitespace-nowrap transition-colors ${info.cls}`} title={`Sort by ${label}`}>
             {label}<span data-sort-arrow class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{info.arrow}</span>
           </a>
           <input type="text" name={field} class={INPUT_CLASS} aria-label={aria} data-filter />
         </div>
       );
     })}
-    <FilterStatus basePath={basePath} />
+    <FilterStatus basePath={basePath} class="col-span-2 sm:col-auto" />
   </div>
 
   <TagFilterDropdowns
