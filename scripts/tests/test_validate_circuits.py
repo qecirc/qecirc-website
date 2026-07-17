@@ -29,12 +29,13 @@ _FIVE_QUBIT_ENCODER = (
 ).read_text()
 
 
-def _build(tmp_path, stim_body, code=None, tags=("encoding",)):
+def _build(tmp_path, stim_body, code=None, tags=("encoding",), circ_extra=None):
     """Lay out a minimal data_yaml tree with one code and one circuit."""
     for sub in ("tools", "codes", "circuits"):
         (tmp_path / sub).mkdir()
     (tmp_path / "codes" / "test-code.yaml").write_text(yaml.dump(code or FIVE_QUBIT_CODE))
     circ_yaml = {"qec_id": 9999, "name": "Stub", "source": "test", "tags": list(tags)}
+    circ_yaml.update(circ_extra or {})
     (tmp_path / "circuits" / "test-code--stub.yaml").write_text(yaml.dump(circ_yaml))
     (tmp_path / "circuits" / "test-code--stub.stim").write_text(stim_body)
     return validate_all(data_dir=str(tmp_path))
@@ -195,6 +196,88 @@ def test_logical_basis_skipped_without_tag(tmp_path):
     check = _checks(results)["logical_basis"]
     assert check.status == "skipped"
     assert "no logical-state" in check.detail
+
+
+# --- logical-gate circuits (autqec import) ----------------------------------
+#
+# On the [[4,2,2]] code, transversal S enacts a logical CZ (up to logical
+# Paulis, which the binary-symplectic check quotients out).
+S_TRANSVERSAL_422 = "S 0 1 2 3"
+
+
+def test_logical_gate_passes_on_correct_claim(tmp_path):
+    results = _build(
+        tmp_path,
+        S_TRANSVERSAL_422,
+        code=CODE_422,
+        tags=("logical-gate", "transversal"),
+        circ_extra={"logical_action": "CZ 0 1"},
+    )
+    checks = _checks(results)
+    assert checks["validate_logical_gate"].status == "passed"
+    assert results[0].passed is True
+    assert results[0].is_skipped is False
+
+
+def test_logical_gate_catches_wrong_claim(tmp_path):
+    """The error class this check exists for: the circuit is a valid stabilizer
+    automorphism, but the YAML claims a different logical gate."""
+    results = _build(
+        tmp_path,
+        S_TRANSVERSAL_422,
+        code=CODE_422,
+        tags=("logical-gate",),
+        circ_extra={"logical_action": "SWAP 0 1"},
+    )
+    check = _checks(results)["validate_logical_gate"]
+    assert check.status == "failed"
+    assert "different logical action" in check.detail
+
+
+def test_logical_gate_catches_stabilizer_breakage(tmp_path):
+    """H on one qubit maps XXXX to ZXXX, which is not in the stabilizer group."""
+    results = _build(
+        tmp_path,
+        "H 0",
+        code=CODE_422,
+        tags=("logical-gate",),
+        circ_extra={"logical_action": "CZ 0 1"},
+    )
+    check = _checks(results)["validate_logical_gate"]
+    assert check.status == "failed"
+    assert "image of stabilizer" in check.detail
+
+
+def test_logical_gate_requires_logical_action_field(tmp_path):
+    """A logical-gate circuit with no logical_action has no checkable claim —
+    that is a data error, not a skip."""
+    results = _build(tmp_path, S_TRANSVERSAL_422, code=CODE_422, tags=("logical-gate",))
+    check = _checks(results)["validate_logical_gate"]
+    assert check.status == "error"
+    assert "logical_action" in check.detail
+
+
+def test_logical_gate_rejects_non_unitary_circuit(tmp_path):
+    results = _build(
+        tmp_path,
+        "M 0",
+        code=CODE_422,
+        tags=("logical-gate",),
+        circ_extra={"logical_action": "CZ 0 1"},
+    )
+    check = _checks(results)["validate_logical_gate"]
+    assert check.status == "failed"
+    assert "not unitary" in check.detail
+
+
+def test_transversality_class():
+    """Structure only — SWAP is not entangling, everything else two-qubit is."""
+    from scripts.add_circuit import transversality_class
+
+    assert transversality_class("H 0 1 2") == "transversal"
+    assert transversality_class("S 0\nSWAP 0 1") == "swap-transversal"
+    assert transversality_class("H 0\nCX 0 1") == "general"
+    assert transversality_class("SWAP 0 1\nXCX 0 1") == "general"
 
 
 def test_all_skipped_checks_count_as_skipped_not_failed():

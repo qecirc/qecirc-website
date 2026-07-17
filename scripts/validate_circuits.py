@@ -10,10 +10,19 @@ code's symplectic ``h`` — CSS and non-CSS codes alike:
   - State-prep: validate_state_prep_h (all stabilizers satisfied)
               + logical_basis (prepares the basis its logical-state tag claims;
                 CSS codes only)
+  - Logical gate: validate_logical_gate_h (unitary circuit preserves the
+                  stabilizer group and induces the logical Clifford claimed
+                  by its logical_action field)
+
+Results are cached in .cache/validate-circuits.json keyed by the content of
+every input (circuit YAML, STIM body, code YAML) plus a fingerprint of the
+validator sources, so re-runs only recompute circuits whose inputs changed.
+Pass --no-cache to force a full recompute.
 
 Usage:
     uv run python scripts/validate_circuits.py
     uv run python scripts/validate_circuits.py --data-dir data_yaml
+    uv run python scripts/validate_circuits.py --no-cache
 """
 
 import argparse
@@ -34,13 +43,41 @@ from scripts.add_circuit.annotate import logical_input_qubits  # noqa: E402
 from scripts.add_circuit.circuit_validate import (  # noqa: E402
     _widen,
     validate_encoding_h,
+    validate_logical_gate_h,
     validate_state_prep_h,
 )
 from scripts.add_circuit.code_identify import split_h_to_css  # noqa: E402
 from scripts.add_circuit.state_prep import logical_basis_of  # noqa: E402
+from scripts.result_cache import ResultCache, source_fingerprint, text_or_missing  # noqa: E402
 
 # logical-state tag -> the basis the prepared state must live in.
 _TAG_BASIS = {"zero": "z", "one": "z", "plus": "x", "minus": "x"}
+
+# C-backed loader when available: ~15x faster over the whole corpus, and this
+# script parses every circuit YAML even on a fully-warm cache run.
+_FastLoader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
+
+def _load_yaml(text: str):
+    return yaml.load(text, Loader=_FastLoader)
+
+
+DEFAULT_CACHE_PATH = Path(_PROJECT_ROOT) / ".cache" / "validate-circuits.json"
+
+# Every module whose logic determines a validation verdict. Their combined
+# hash is mixed into each cache key, so editing any of them invalidates the
+# whole cache automatically — no version constant to bump.
+_SOURCE_DEPS = [
+    Path(__file__),
+    Path(_PROJECT_ROOT) / "scripts" / "add_circuit" / "annotate.py",
+    Path(_PROJECT_ROOT) / "scripts" / "add_circuit" / "circuit_validate.py",
+    Path(_PROJECT_ROOT) / "scripts" / "add_circuit" / "code_identify.py",
+    Path(_PROJECT_ROOT) / "scripts" / "add_circuit" / "state_prep.py",
+]
+
+
+def open_cache(path: Path = DEFAULT_CACHE_PATH) -> ResultCache:
+    return ResultCache(path, source_fingerprint(*_SOURCE_DEPS))
 
 
 @dataclass
@@ -76,15 +113,35 @@ class CircuitResult:
         )
 
 
-def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
+def _to_cacheable(result: CircuitResult) -> dict:
+    return {
+        "circuit_type": result.circuit_type,
+        "checks": [[c.name, c.status, c.detail] for c in result.checks],
+    }
+
+
+def _from_cacheable(stem: str, data: dict) -> CircuitResult:
+    return CircuitResult(
+        stem=stem,
+        circuit_type=data["circuit_type"],
+        checks=[CheckResult(*c) for c in data["checks"]],
+    )
+
+
+def validate_all(
+    data_dir: str = "data_yaml", cache: ResultCache | None = None
+) -> list[CircuitResult]:
     data_path = Path(data_dir)
     circuits_dir = data_path / "circuits"
     codes_dir = data_path / "codes"
     results: list[CircuitResult] = []
+    seen_stems: set[str] = set()
+    code_texts: dict[str, str] = {}  # slug -> YAML text; ~30 codes serve ~900 circuits
 
     for circ_yaml_path in sorted(circuits_dir.glob("*.yaml")):
         stem = circ_yaml_path.stem
-        circ_data = yaml.safe_load(circ_yaml_path.read_text())
+        circ_text = circ_yaml_path.read_text()
+        circ_data = _load_yaml(circ_text)
         tags = circ_data.get("tags", [])
 
         # Determine circuit type from tags
@@ -92,62 +149,95 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
             circuit_type = "encoding"
         elif "state-preparation" in tags:
             circuit_type = "state-preparation"
+        elif "logical-gate" in tags:
+            circuit_type = "logical-gate"
         else:
             results.append(CircuitResult(stem=stem, circuit_type="skipped"))
             continue
 
-        result = CircuitResult(stem=stem, circuit_type=circuit_type)
-
         # Extract code slug from filename
         code_slug = stem.split("--")[0]
         code_yaml_path = codes_dir / f"{code_slug}.yaml"
-
-        if not code_yaml_path.exists():
-            result.checks.append(
-                CheckResult("load_code", "error", f"Code YAML not found: {code_yaml_path}")
-            )
-            results.append(result)
-            continue
-
-        code_data = yaml.safe_load(code_yaml_path.read_text())
-
-        # The validators check the symplectic h directly, so no CSS split is
-        # needed — non-CSS codes take the same path as CSS ones.
-        if code_data.get("h") is None:
-            result.checks.append(CheckResult("load_code", "error", "Code YAML missing h"))
-            results.append(result)
-            continue
-
-        n = code_data.get("n")
-        if n is None:
-            result.checks.append(CheckResult("load_code", "error", "Code YAML missing n"))
-            results.append(result)
-            continue
-
-        h = np.array(code_data["h"], dtype=int)
-
-        # Load STIM body
         stim_path = circ_yaml_path.with_suffix(".stim")
-        if not stim_path.exists():
-            result.checks.append(
-                CheckResult("load_stim", "error", f"STIM file not found: {stim_path}")
-            )
-            results.append(result)
-            continue
 
-        circuit_text = stim_path.read_text()
+        # The verdict is a pure function of these three texts (plus validator
+        # sources, hashed into the cache fingerprint), so an unchanged key
+        # means the stored result is exact — replay it.
+        if cache is not None:
+            seen_stems.add(stem)
+            if code_slug not in code_texts:
+                code_texts[code_slug] = text_or_missing(code_yaml_path)
+            key = cache.key(circ_text, text_or_missing(stim_path), code_texts[code_slug])
+            hit = cache.get(stem, key)
+            if hit is not None:
+                results.append(_from_cacheable(stem, hit))
+                continue
 
-        # Run checks
-        if circuit_type == "encoding":
-            _check_encoding(result, circuit_text, h, n)
-            _check_logical_input_count(result, circuit_text, h, n, code_data.get("k"))
-        elif circuit_type == "state-preparation":
-            _check_state_prep(result, circuit_text, h, n)
-            _check_logical_basis(result, circuit_text, h, n, code_data.get("d"), tags)
-
+        result = _validate_one(stem, circuit_type, circ_data, tags, code_yaml_path, stim_path)
+        if cache is not None:
+            cache.put(stem, key, _to_cacheable(result))
         results.append(result)
 
+    if cache is not None:
+        cache.save(prune_to=seen_stems)
     return results
+
+
+def _validate_one(
+    stem: str,
+    circuit_type: str,
+    circ_data: dict,
+    tags: list[str],
+    code_yaml_path: Path,
+    stim_path: Path,
+) -> CircuitResult:
+    result = CircuitResult(stem=stem, circuit_type=circuit_type)
+
+    if not code_yaml_path.exists():
+        result.checks.append(
+            CheckResult("load_code", "error", f"Code YAML not found: {code_yaml_path}")
+        )
+        return result
+
+    code_data = _load_yaml(code_yaml_path.read_text())
+
+    # The validators check the symplectic h directly, so no CSS split is
+    # needed — non-CSS codes take the same path as CSS ones.
+    if code_data.get("h") is None:
+        result.checks.append(CheckResult("load_code", "error", "Code YAML missing h"))
+        return result
+
+    n = code_data.get("n")
+    if n is None:
+        result.checks.append(CheckResult("load_code", "error", "Code YAML missing n"))
+        return result
+
+    h = np.array(code_data["h"], dtype=int)
+
+    if not stim_path.exists():
+        result.checks.append(CheckResult("load_stim", "error", f"STIM file not found: {stim_path}"))
+        return result
+
+    circuit_text = stim_path.read_text()
+
+    # Run checks
+    if circuit_type == "encoding":
+        _check_encoding(result, circuit_text, h, n)
+        _check_logical_input_count(result, circuit_text, h, n, code_data.get("k"))
+    elif circuit_type == "state-preparation":
+        _check_state_prep(result, circuit_text, h, n)
+        _check_logical_basis(result, circuit_text, h, n, code_data.get("d"), tags)
+    elif circuit_type == "logical-gate":
+        _check_logical_gate(
+            result,
+            circuit_text,
+            h,
+            n,
+            code_data.get("logical"),
+            circ_data.get("logical_action"),
+        )
+
+    return result
 
 
 def _check_encoding(result: CircuitResult, circuit_text: str, h: np.ndarray, n: int) -> None:
@@ -244,6 +334,47 @@ def _check_logical_basis(
         result.checks.append(CheckResult("logical_basis", "error", str(e)))
 
 
+def _check_logical_gate(
+    result: CircuitResult,
+    circuit_text: str,
+    h: np.ndarray,
+    n: int,
+    logical: "list | None",
+    logical_action: "str | None",
+) -> None:
+    """A logical-gate circuit must preserve the stabilizer group and induce the
+    logical Clifford its ``logical_action`` field claims.
+
+    Both properties are checked at the binary symplectic level (mod stabilizers,
+    signs free) — a logical gate is only defined up to logical Paulis, and the
+    stored matrices carry no sign frame. See :func:`validate_logical_gate_h`.
+    """
+    if logical is None:
+        result.checks.append(
+            CheckResult("validate_logical_gate", "error", "Code YAML missing logical")
+        )
+        return
+    if not logical_action:
+        result.checks.append(
+            CheckResult(
+                "validate_logical_gate",
+                "error",
+                "logical-gate circuit has no logical_action field to check against",
+            )
+        )
+        return
+    try:
+        outcome = validate_logical_gate_h(
+            circuit_text, h, np.array(logical, dtype=int), n, logical_action
+        )
+        if outcome == "passed":
+            result.checks.append(CheckResult("validate_logical_gate", "passed"))
+        else:
+            result.checks.append(CheckResult("validate_logical_gate", "failed", outcome))
+    except Exception as e:
+        result.checks.append(CheckResult("validate_logical_gate", "error", str(e)))
+
+
 def _check_logical_input_count(
     result: CircuitResult,
     circuit_text: str,
@@ -292,7 +423,7 @@ def _check_logical_input_count(
         result.checks.append(CheckResult("logical_input_count", "error", str(e)))
 
 
-def print_results(results: list[CircuitResult]) -> None:
+def print_results(results: list[CircuitResult], cache: ResultCache | None = None) -> None:
     checked = [r for r in results if not r.is_skipped]
     skipped = [r for r in results if r.is_skipped]
     passed = [r for r in checked if r.passed]
@@ -310,8 +441,9 @@ def print_results(results: list[CircuitResult]) -> None:
                 line += f" ({c.detail})"
             print(line)
 
+    cached = f" ({cache.hits} from cache)" if cache is not None and cache.hits else ""
     print(
-        f"\nSummary: {len(checked)} checked, {len(passed)} passed, "
+        f"\nSummary: {len(checked)} checked{cached}, {len(passed)} passed, "
         f"{len(failed)} failed, {len(skipped)} skipped"
     )
 
@@ -319,11 +451,17 @@ def print_results(results: list[CircuitResult]) -> None:
 def main():
     parser = argparse.ArgumentParser(description="Validate circuits against stored check matrices")
     parser.add_argument("--data-dir", default="data_yaml", help="Path to data_yaml directory")
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Recompute every circuit instead of replaying cached results",
+    )
     args = parser.parse_args()
 
+    cache = None if args.no_cache else open_cache()
     print(f"Validating circuits in {args.data_dir}/...")
-    results = validate_all(args.data_dir)
-    print_results(results)
+    results = validate_all(args.data_dir, cache=cache)
+    print_results(results, cache=cache)
 
     failed = [r for r in results if not r.is_skipped and not r.passed]
     sys.exit(1 if failed else 0)
