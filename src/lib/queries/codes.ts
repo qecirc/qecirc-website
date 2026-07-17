@@ -1,4 +1,5 @@
 import { getDb } from "../db";
+import { HIDDEN_CODE_TAG } from "../constants";
 import type {
   Code,
   CodeDetail,
@@ -65,10 +66,22 @@ export function filterCodes(filters: CodeFilters, sort?: CodeSort): CodeWithMeta
   return withCircuitCounts(withTags(codes, "code"), "code_id");
 }
 
+// Codes tagged HIDDEN_CODE_TAG (and their circuits) are left out of every
+// displayed count and of the homepage discovery surfaces — they are a
+// reference shelf, not part of the curated library the numbers advertise.
+// `codesAlias` is the codes table's alias in the calling query; the caller
+// must bind HIDDEN_CODE_TAG for the `?`.
+export function visibleCodePredicate(codesAlias = "c"): string {
+  return `NOT EXISTS (
+    SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+    WHERE tg.taggable_id = ${codesAlias}.id AND tg.taggable_type = 'code' AND t.name = ?
+  )`;
+}
+
 export function countAllCodes(): number {
   const db = getDb();
-  const row = db.prepare("SELECT COUNT(*) as count FROM codes").get() as {
-    count: number;
-  };
+  const row = db
+    .prepare(`SELECT COUNT(*) as count FROM codes c WHERE ${visibleCodePredicate()}`)
+    .get(HIDDEN_CODE_TAG) as { count: number };
   return row.count;
 }

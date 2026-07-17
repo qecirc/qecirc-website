@@ -4,14 +4,19 @@ export const prerender = false;
 import Layout from "../../components/Layout.astro";
 import CodeCard from "../../components/CodeCard.astro";
 import CodeFilter from "../../components/CodeFilter.astro";
+import HiddenCodesToggle from "../../components/HiddenCodesToggle.astro";
 import { filterCodes, getTagsWithCount, formatCodeParams } from "../../lib/queries";
+import { HIDDEN_CODE_TAG } from "../../lib/constants";
 
 // Filtering/sorting happens client-side (list-filter-client.ts): the page
 // always renders the full list in default order and ignores filter params,
-// so every visit shares one cached document.
+// so every visit shares one cached document. Hidden (codetables) codes are
+// rendered too — the client filter suppresses them until their tag is
+// selected — but the advertised count and the JSON-LD list exclude them.
 const allTags = getTagsWithCount("code");
 const codes = filterCodes({});
-const totalCount = codes.length;
+const visibleCodes = codes.filter((c) => !c.tags.includes(HIDDEN_CODE_TAG));
+const totalCount = visibleCodes.length;
 
 const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
 const pageUrl = `${siteUrl}/codes`;
@@ -29,7 +34,7 @@ const jsonLd = [
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: totalCount,
-      itemListElement: codes.slice(0, 200).map((code, i) => {
+      itemListElement: visibleCodes.slice(0, 200).map((code, i) => {
         const params = formatCodeParams(code);
         return {
           "@type": "ListItem",
@@ -53,9 +58,12 @@ const jsonLd = [
 
   <CodeFilter allTags={allTags} basePath="/codes" />
 
-  <p data-list-count class="text-sm text-gray-500 mb-4">
-    {totalCount} {totalCount === 1 ? "code" : "codes"}
-  </p>
+  <div class="flex items-center justify-between mb-4">
+    <p data-list-count class="text-sm text-gray-500">
+      {totalCount} {totalCount === 1 ? "code" : "codes"}
+    </p>
+    <HiddenCodesToggle />
+  </div>
 
   <div data-list-empty class="hidden text-center py-8">
     <p class="text-gray-500 dark:text-gray-400 mb-2">No codes match the current filters.</p>
@@ -72,6 +80,7 @@ const jsonLd = [
 <script>
   import { initListFilter } from "../../lib/list-filter-client";
   import { initListKeynav } from "../../lib/list-keynav-client";
+  import { HIDDEN_CODE_TAG } from "../../lib/constants";
 
   initListFilter({
     formSelector: "#code-filter",
@@ -86,6 +95,10 @@ const jsonLd = [
         : `${total} ${total === 1 ? "code" : "codes"}`,
     emptyStateSelector: "[data-list-empty]",
     defaultSort: { field: "n", dir: "asc" },
+    // codetables record codes are a reference shelf: hidden until the
+    // "Show codetables" switch is ticked (or their tag selected).
+    hiddenTags: [HIDDEN_CODE_TAG],
+    hiddenToggleSelector: "[data-hidden-toggle]",
   });
 
   initListKeynav({
