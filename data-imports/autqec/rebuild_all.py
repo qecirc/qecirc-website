@@ -1,0 +1,480 @@
+#!/usr/bin/env python
+"""autqec logical Clifford gates from code automorphisms (arXiv:2409.18175).
+
+Sayginel/Koutsioumpas/Webster/Rajput/Browne find logical Clifford gates of
+stabilizer codes from the automorphism groups of associated binary linear
+codes. The expensive step (MAGMA/Bliss automorphism search) is already done —
+the ``autqec`` repository commits the generators as ``examples/auts_data/*.pkl``
+— so this importer only replays the cheap, deterministic circuit synthesis:
+
+  aut generator -> physical circuit (1q Cliffords + SWAPs, or H/S/sqrt(X)+SWAP
+  for the duality families) -> Pauli corrections fixing stabilizer signs ->
+  STIM, relabeled to the stored code's canonical qubit order.
+
+For each circuit the logical action is recomputed *in the stored code's
+logical basis* (the paper's basis differs) and written to the YAML as
+``logical_action`` — the machine-checked claim that ``npm run
+validate:circuits`` verifies via ``validate_logical_gate_h``. Generators whose
+logical action is the identity (mod logical Paulis) are skipped: they permute
+stabilizers without acting on the logical qubits.
+
+Requires a checkout of https://github.com/hsayginel/autqec next to the
+website repository (or pass --dataset). Uses only committed pickles + numpy;
+no MAGMA, Bliss, or igraph needed.
+
+Usage:
+  python rebuild_all.py                 # classify only (no writes)
+  python rebuild_all.py --write
+  python rebuild_all.py --dataset PATH  # autqec checkout (default: sibling)
+"""
+
+from __future__ import annotations
+
+import argparse
+import pickle
+import re
+import sys
+from pathlib import Path
+
+import numpy as np
+import stim
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[1]
+
+
+def _default_dataset() -> Path:
+    """Find the autqec checkout: sibling of the repo, walking up for worktrees."""
+    for base in (REPO.parent, *REPO.parents):
+        cand = base / "autqec"
+        if (cand / "examples" / "auts_data").is_dir():
+            return cand
+    return REPO.parent / "autqec"
+
+
+sys.path.insert(0, str(REPO))
+
+from scripts.add_circuit.circuit_validate import (  # noqa: E402
+    induced_logical_action,
+    transversality_class,
+    validate_logical_gate_h,
+)
+from scripts.add_circuit.code_identify import split_h_to_css  # noqa: E402
+from scripts.add_circuit.compute import compute_code_data_h  # noqa: E402
+from scripts.add_circuit.compute_circuit import compute_circuit_data  # noqa: E402
+from scripts.add_circuit.ids import next_qec_id  # noqa: E402
+from scripts.add_circuit.perm_find import find_code_permutation  # noqa: E402
+from scripts.add_circuit.yaml_helpers import (  # noqa: E402
+    build_circuit_yaml,
+    build_code_yaml,
+    build_original_yaml,
+    dump_yaml,
+    load_yaml,
+    write_file,
+)
+
+SOURCE = "https://arxiv.org/abs/2409.18175"
+TOOL = "autqec"
+
+# autqec gate tuple name -> stim gate. Verified exactly (binary action AND
+# signs) against autqec's clifford_circ_stab_update on every 1-/2-qubit Pauli.
+GATE_MAP = {
+    "H": "H",
+    "S": "S",
+    "Xsqrt": "SQRT_X",
+    "GammaXYZ": "C_XYZ",  # X->Y->Z->X
+    "GammaXZY": "C_ZYX",  # X->Z->Y->X
+    "SWAP": "SWAP",
+    "CNOT": "CX",
+    "CZ": "CZ",
+    "C(X,X)": "XCX",
+    "X": "X",
+    "Y": "Y",
+    "Z": "Z",
+}
+
+PRETTY = {
+    "H": "H",
+    "S": "S",
+    "SQRT_X": "√X",
+    "C_XYZ": "Γ(XYZ)",
+    "C_ZYX": "Γ(XZY)",
+    "CX": "CNOT",
+    "CZ": "CZ",
+    "XCX": "C(X,X)",
+    "SWAP": "SWAP",
+    "X": "X",
+    "Y": "Y",
+    "Z": "Z",
+}
+
+_qec_id_re = re.compile(r"^qec_id:\s*(\d+)\s*$", re.MULTILINE)
+
+
+def autqec_to_stim(gates: list, n: int) -> stim.Circuit:
+    """autqec gate-tuple list (1-indexed) -> stim.Circuit on n qubits."""
+    out = stim.Circuit()
+    for gate, q in gates:
+        name = GATE_MAP[gate]
+        if isinstance(q, tuple):
+            out.append(name, [int(q[0]) - 1, int(q[1]) - 1])
+        else:
+            out.append(name, [int(q) - 1])
+    if out.num_qubits < n:
+        out.append("I", [n - 1])
+    return out
+
+
+# Tagging policy on top of the structural transversality_class fact: transversal
+# circuits are unconditionally FT (errors cannot spread), SWAP-transversal ones
+# are FT only architecture-dependently so they get no `ft` tag (the circuit
+# notes explain), and general Clifford circuits make no FT claim.
+STRUCTURE_POLICY = {
+    "transversal": ("Transversal", ["transversal", "ft"]),
+    "swap-transversal": ("SWAP-transversal", ["swap-transversal"]),
+    "general": ("Short-depth", []),
+}
+
+
+def action_from_u(u: np.ndarray, k: int, circ_from_symp_mat) -> tuple[str, str, list[str]]:
+    """Decompose a binary symplectic logical action into gates.
+
+    Returns (stim_text, pretty_name, logical_op_tags). Uses autqec's own
+    ``circ_from_symp_mat`` decomposition (H-CNOT-S-CZ layers), so the claim is
+    produced by the same algebra as the physical circuits.
+    """
+    gates = circ_from_symp_mat(u).run()
+    circ = autqec_to_stim(gates, k)
+    # drop the widening I, if any, from the claim text
+    text = "\n".join(line for line in str(circ).splitlines() if not line.startswith("I "))
+    parts = []
+    ops = []
+    for gate, q in gates:
+        name = GATE_MAP[gate]
+        if k == 1:
+            parts.append(PRETTY[name])
+        elif isinstance(q, tuple):
+            parts.append(f"{PRETTY[name]}({q[0]},{q[1]})")
+        else:
+            parts.append(f"{PRETTY[name]}({q})")
+        ops.append(name)
+    pretty = "·".join(parts)
+    tags = [f"logical-op:{name}" for name in dict.fromkeys(ops)]
+    return text, pretty, tags
+
+
+def load_auts(path: Path) -> list:
+    with open(path, "rb") as f:
+        return pickle.load(f)["auts"]
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--write", action="store_true")
+    ap.add_argument("--dataset", default=str(_default_dataset()))
+    ap.add_argument("--data-dir", default=str(REPO / "data_yaml"))
+    ap.add_argument("--codes", nargs="*", help="only process these pickle stems (e.g. n5k1d3)")
+    args = ap.parse_args()
+
+    dataset = Path(args.dataset)
+    auts_dir = dataset / "examples" / "auts_data"
+    if not auts_dir.is_dir():
+        sys.exit(f"autqec checkout not found at {dataset} — clone hsayginel/autqec there")
+    data_dir = Path(args.data_dir)
+
+    sys.path.insert(0, str(dataset))
+    from autqec.automorphisms import (  # noqa: E402
+        circ_from_aut,
+        circ_from_symp_mat,
+        logical_circ_and_pauli_correct,
+    )
+    from autqec.utils.linalg import inv_mod2, rref_mod2  # noqa: E402
+    from autqec.utils.qec import compute_standard_form, stabs_to_H_symp  # noqa: E402
+
+    def independent_generating_set(H: np.ndarray) -> np.ndarray:
+        """Row-reduce a (possibly redundant) stabilizer matrix to a full-rank
+        generating set expressed in the original qubit basis — the same step the
+        paper's bivariate-bicycle notebooks apply, since ``circ_from_aut`` and
+        ``compute_standard_form`` require independent rows."""
+        rref, _, _, transform_cols = rref_mod2(H)
+        rref = rref[~np.all(rref == 0, axis=1)]
+        if rref.shape[0] == H.shape[0]:
+            return H
+        return (rref @ inv_mod2(transform_cols)) % 2
+    from autqec.XY_dualities import circ_from_XY_duality  # noqa: E402
+    from autqec.ZX_dualities import circ_from_ZX_duality  # noqa: E402
+    from autqec.ZY_dualities import circ_from_ZY_duality  # noqa: E402
+
+    steane_hamming = np.array(
+        [[1, 0, 0, 1, 0, 1, 1], [0, 1, 0, 1, 1, 0, 1], [0, 0, 1, 0, 1, 1, 1]], dtype=int
+    )
+    zeros7 = np.zeros_like(steane_hamming)
+
+    # Paper-labeled codes, exactly as the autqec example notebooks define them.
+    CODES = [
+        {
+            "stem": "n4k2d2",
+            "name": "[[4,2,2]]",
+            "slug": "4-2-2",
+            "n": 4,
+            "d": 2,
+            "zoo_url": "https://errorcorrectionzoo.org/c/stab_4_2_2",
+            "H": stabs_to_H_symp(["XXXX", "ZZZZ"]),
+        },
+        {
+            "stem": "n5k1d3",
+            "name": "Five-Qubit Perfect Code",
+            "slug": "five-qubit-code",  # the stored slug — dedup must land here
+            "n": 5,
+            "d": 3,
+            "zoo_url": "",
+            "H": stabs_to_H_symp(["XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"]),
+        },
+        {
+            "stem": "n7k1d3",
+            "name": "Steane Code",
+            "slug": "steane-code",  # the stored slug — dedup must land here
+            "n": 7,
+            "d": 3,
+            "zoo_url": "",
+            "H": np.vstack(
+                [np.hstack([steane_hamming, zeros7]), np.hstack([zeros7, steane_hamming])]
+            ).astype(int),
+        },
+        {
+            "stem": "n17k1d7",
+            "name": "[[17,1,7]]",
+            "slug": "17-1-7",
+            "n": 17,
+            "d": 7,
+            "zoo_url": "",
+            "H": np.array(
+                np.load(dataset / "codetables" / "parity_checks" / "H_symp_n17k1.npy"), dtype=int
+            ),
+        },
+    ]
+
+    # Bivariate bicycle codes (paper Sec. on BB codes; full ⟨H,S⟩+SWAP groups in
+    # full_aut_groups/). Only [[72,12,6]] is imported: its autqec construction
+    # shares the stored code's qubit labeling, so the hash dedup fits it. The
+    # other three are SKIPPED for now:
+    #   - 90-8-10: the stored (circuit-synth) code is a genuinely different
+    #     construction — its X-space has 90 weight-4 + 600 weight-6 codewords
+    #     vs autqec's 45 weight-6 (a permutation invariant), so no relabeling
+    #     can attach autqec's circuits to it.
+    #   - 108-8-10, 144-12-12: low-weight invariants look compatible, but the
+    #     qubit permutation onto the stored labeling has not been found yet
+    #     (hash dedup misses; the structural finder exceeds its budget on
+    #     these automorphism-rich codes). A canonical-generator incidence-graph
+    #     isomorphism would likely resolve them — future work.
+    bb_dir = dataset / "examples" / "bivariate_bicycle_codes"
+    for stem, slug, name, d in [
+        ("n72k12d6", "72-12-6", "Bivariate Bicycle Code", 6),
+    ]:
+        hx = np.array(np.load(bb_dir / "code_data" / f"HX_{stem}.npy"), dtype=int)
+        hz = np.array(np.load(bb_dir / "code_data" / f"HZ_{stem}.npy"), dtype=int)
+        zx, zz = np.zeros_like(hx), np.zeros_like(hz)
+        CODES.append(
+            {
+                "stem": stem,
+                "name": name,
+                "slug": slug,
+                "n": hx.shape[1],
+                "d": d,
+                "zoo_url": "",
+                "H": np.vstack([np.hstack([hx, zx]), np.hstack([zz, hz])]),
+                "auts_dir": bb_dir / "full_aut_groups",
+                "families": ("automorphism",),
+            }
+        )
+
+    FAMILIES = [
+        ("automorphism", "auts_{stem}.pkl", circ_from_aut),
+        ("ZX-duality", "ZX_dualities_{stem}.pkl", circ_from_ZX_duality),
+        ("XY-duality", "XY_dualities_{stem}.pkl", circ_from_XY_duality),
+        ("YZ-duality", "YZ_dualities_{stem}.pkl", circ_from_ZY_duality),
+    ]
+
+    written = skipped_trivial = deduped = 0
+    for spec in CODES:
+        if args.codes and spec["stem"] not in args.codes:
+            continue
+        H, n, d = independent_generating_set(spec["H"]), spec["n"], spec["d"]
+        code_result = compute_code_data_h(
+            H,
+            n,
+            d,
+            code_name=spec["name"],
+            zoo_url=spec["zoo_url"],
+            data_dir=str(data_dir),
+            code_slug=spec["slug"],
+        )
+        code = code_result["code"]
+        slug = code["slug"]
+        perm = code_result["qubit_permutation"]
+        print(f"\n== {spec['name']} -> {slug} ({code['status']}, perm={perm}) ==")
+
+        code_path = data_dir / "codes" / f"{slug}.yaml"
+        if code["status"] == "new" and not code_path.exists():
+            if args.write:
+                write_file(code_path, dump_yaml(build_code_yaml(code)), quiet=True)
+                print(f"  seeded code {code_path.name}")
+            else:
+                print(f"  would seed code {code_path.name}")
+
+        # Logical action is claimed against the STORED basis, so load it.
+        if code_path.exists():
+            stored = load_yaml(code_path.read_text())
+            if code["status"] == "new":
+                # The hash dedup missed (permutation-heavy codes like BB are
+                # exactly where the canonical hash is not a true invariant);
+                # fit against the stored code with the structural finder.
+                css_mine = split_h_to_css(H, n)
+                css_stored = split_h_to_css(np.array(stored["h"], dtype=int), n)
+                sigma = None
+                if css_mine is not None and css_stored is not None:
+                    sigma = find_code_permutation(*css_mine, *css_stored)
+                if sigma is None:
+                    sys.exit(
+                        f"{slug}: stored code exists but no qubit permutation onto it "
+                        "was found — different code, or search budget exceeded"
+                    )
+                perm = sigma
+                print(f"  (hash dedup missed; structural fit found perm={perm})")
+        elif code["status"] == "existing":
+            sys.exit(f"dedup matched an existing code but {code_path} is missing — wrong slug?")
+        else:
+            stored = code  # dry run for a new code: canonical form not yet on disk
+        h_stored = np.array(stored["h"], dtype=int)
+        logical_stored = np.array(stored["logical"], dtype=int)
+        k = logical_stored.shape[0] // 2
+
+        # Paper-frame matrices for the originals/ record.
+        G, LX, LZ, _D = compute_standard_form(H)
+        original_matrices = {"h": H.tolist(), "logical": np.vstack([LX, LZ]).tolist()}
+
+        seen_bodies: set[str] = set()
+        slug_counts: dict[str, int] = {}
+        all_families = tuple(f for f, _, _ in FAMILIES)
+        for family, pattern, ctor in FAMILIES:
+            if family not in spec.get("families", all_families):
+                continue
+            pkl = spec.get("auts_dir", auts_dir) / pattern.format(stem=spec["stem"])
+            if not pkl.exists():
+                print(f"  ({family}: no pickle, skipped)")
+                continue
+            for gen_idx, aut in enumerate(load_auts(pkl)):
+                aut = [tuple(int(x) for x in cyc) for cyc in aut]
+                phys_circ, _symp = ctor(H, aut).circ()
+                _log_act, full_circ = logical_circ_and_pauli_correct(H, phys_circ).run()
+                paper_stim = autqec_to_stim(full_circ, n)
+
+                # Relabel to the stored code's canonical qubit order and get
+                # the induced logical action in the stored basis.
+                circ_data = compute_circuit_data(
+                    str(paper_stim), qubit_permutation=perm, circuit_name="tmp"
+                )
+                body = next(b["body"] for b in circ_data["bodies"] if b["format"] == "stim")
+                u = induced_logical_action(body, h_stored, logical_stored, n)
+                if isinstance(u, str):
+                    raise AssertionError(f"{slug} {family} gen {gen_idx}: {u}")
+                if np.array_equal(u, np.eye(2 * k, dtype=int)):
+                    skipped_trivial += 1
+                    continue
+                if body in seen_bodies:
+                    deduped += 1
+                    continue
+                seen_bodies.add(body)
+
+                action_text, pretty, op_tags = action_from_u(u, k, circ_from_symp_mat)
+                check = validate_logical_gate_h(body, h_stored, logical_stored, n, action_text)
+                if check != "passed":
+                    raise AssertionError(f"{slug} {family} gen {gen_idx}: {check}")
+
+                struct, struct_tags = STRUCTURE_POLICY[transversality_class(paper_stim)]
+                # Large-k codes induce logical actions dozens of gates long —
+                # name those by provenance and leave the full action to the
+                # notes and the logical_action field.
+                if len(pretty) <= 48:
+                    name = f"{struct} logical {pretty}"
+                else:
+                    name = f"{struct} logical Clifford ({family} gen {gen_idx})"
+                notes = (
+                    f"Logical {pretty} (gates in application order) from generator "
+                    f"{gen_idx} of the code's {family} group, computed by autqec "
+                    f"(arXiv:2409.18175). Physical circuit is "
+                    f"{struct.lower()} — single-qubit Cliffords"
+                    + (" + SWAPs" if struct == "SWAP-transversal" else "")
+                    + (" + entangling gates" if struct == "Short-depth" else "")
+                    + ", with Pauli corrections that fix the stabilizer signs. "
+                    "The logical_action field states the claim in the stored "
+                    "code's logical basis; validate:circuits checks it."
+                )
+                if struct == "SWAP-transversal":
+                    notes += (
+                        " SWAP-transversal circuits are fault-tolerant on "
+                        "architectures where SWAPs are error-benign (shuttling "
+                        "ion traps, atom arrays), hence no unconditional ft tag."
+                    )
+                tags = ["logical-gate", *struct_tags, *op_tags]
+
+                final = compute_circuit_data(
+                    str(paper_stim),
+                    qubit_permutation=perm,
+                    circuit_name=name,
+                    source=SOURCE,
+                    tool=TOOL,
+                    notes=notes,
+                    tags=tags,
+                )
+                final["logical_action"] = action_text
+                base_slug = final["slug"]
+                slug_counts[base_slug] = slug_counts.get(base_slug, 0) + 1
+                if slug_counts[base_slug] > 1:
+                    name = f"{name} ({slug_counts[base_slug]})"
+                    final = compute_circuit_data(
+                        str(paper_stim),
+                        qubit_permutation=perm,
+                        circuit_name=name,
+                        source=SOURCE,
+                        tool=TOOL,
+                        notes=notes,
+                        tags=tags,
+                    )
+                    final["logical_action"] = action_text
+
+                stem = f"{slug}--{final['slug']}"
+                if args.write:
+                    circuits_dir = data_dir / "circuits"
+                    existing = circuits_dir / f"{stem}.yaml"
+                    prev = _qec_id_re.search(existing.read_text()) if existing.exists() else None
+                    final["qec_id"] = int(prev.group(1)) if prev else next_qec_id(data_dir)
+                    write_file(
+                        circuits_dir / f"{stem}.yaml",
+                        dump_yaml(build_circuit_yaml(final)),
+                        quiet=True,
+                    )
+                    for b in final.get("bodies", []):
+                        if b.get("body"):
+                            write_file(
+                                circuits_dir / f"{stem}.{b['format']}", b["body"], quiet=True
+                            )
+                    originals = circuits_dir / "originals"
+                    write_file(originals / f"{stem}.original.stim", str(paper_stim), quiet=True)
+                    write_file(
+                        originals / f"{stem}.original.yaml",
+                        dump_yaml(build_original_yaml(original_matrices)),
+                        quiet=True,
+                    )
+                written += 1
+                verb = "wrote" if args.write else "ok   "
+                print(f"  {verb} {stem} [{family} gen {gen_idx}] logical={pretty} ({struct})")
+
+    print(
+        f"\n{'wrote' if args.write else 'classified'} {written} circuits "
+        f"({skipped_trivial} trivial-action generators skipped, {deduped} duplicates)."
+    )
+
+
+if __name__ == "__main__":
+    main()
