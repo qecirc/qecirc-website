@@ -1,0 +1,36 @@
+qec_id: 1118
+name: SWAP-transversal logical Clifford (automorphism gen 6)
+tool: autqec
+notes: Logical CNOT(2,3)·CNOT(1,3)·SWAP(3,2)·CNOT(3,1)·SWAP(2,1)·√X(3)·C(X,X)(1,3)·√X(1)·√X(2)
+  (gates in application order) from generator 6 of the code's automorphism group,
+  computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
+  Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
+  field states the claim in the stored code's logical basis; validate:circuits checks
+  it. SWAP-transversal circuits are fault-tolerant on architectures where SWAPs are
+  error-benign (shuttling ion traps, atom arrays), hence no unconditional ft tag.
+  The code is the best-known-distance [[10,3]] stabilizer code from Grassl's codetables.de
+  tables (snapshotted in the autqec repository).
+source: https://arxiv.org/abs/2409.18175
+logical_action: |-
+  CX 1 2 0 2
+  SWAP 2 1
+  CX 2 0
+  SWAP 1 0
+  SQRT_X 2
+  XCX 0 2
+  SQRT_X 0 1
+gate_count: 14
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 10
+crumble_url: https://algassert.com/crumble#circuit=Z_4_3;X_9;Z_5;Y_7;C_XYZ_6_2_8;I_0;C_XYZ_4_3_9_5_7;SWAP_9_7_3_5_4_9_6_3_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,"~Cxyz","Z","Z","Z","~Cxyz","Y","~Cxyz","X"],[1,1,1,"~Cxyz","~Cxyz","~Cxyz",1,"~Cxyz",1,"~Cxyz"],[1,1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"}]}
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:SQRT_X",
+    "logical-op:XCX",
+  ]

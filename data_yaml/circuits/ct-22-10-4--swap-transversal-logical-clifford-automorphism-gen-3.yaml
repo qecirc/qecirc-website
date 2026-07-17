@@ -1,0 +1,45 @@
+qec_id: 1728
+name: SWAP-transversal logical Clifford (automorphism gen 3)
+tool: autqec
+notes:
+  Logical SWAP(10,9)·CNOT(10,8)·CNOT(7,8)·CNOT(5,8)·CNOT(9,7)·CNOT(5,7)·CNOT(3,7)·SWAP(8,7)·CNOT(10,6)·CNOT(9,6)·CNOT(3,6)·CNOT(1,6)·SWAP(8,6)·CNOT(10,5)·CNOT(8,5)·CNOT(3,5)·CNOT(1,5)·SWAP(7,5)·CNOT(8,4)·CNOT(7,4)·CNOT(3,4)·CNOT(1,4)·CNOT(8,2)·CNOT(7,2)·CNOT(1,2)·SWAP(4,2)·CNOT(9,1)·CNOT(8,1)·CNOT(7,1)·SWAP(5,1)·C(X,X)(6,7)·C(X,X)(4,5)·C(X,X)(1,8)·√X(1)·C(X,X)(7,10)·C(X,X)(4,9)·C(X,X)(6,9)·C(X,X)(7,8)·C(X,X)(4,7)·C(X,X)(1,5)·C(X,X)(1,9)·C(X,X)(1,7)·C(X,X)(4,8)·C(X,X)(2,10)·C(X,X)(6,8)·C(X,X)(4,6)·C(X,X)(5,6)·√X(8)
+  (gates in application order) from generator 3 of the code's automorphism group,
+  computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
+  Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
+  field states the claim in the stored code's logical basis; validate:circuits checks
+  it. SWAP-transversal circuits are fault-tolerant on architectures where SWAPs are
+  error-benign (shuttling ion traps, atom arrays), hence no unconditional ft tag.
+  The code is the best-known-distance [[22,10]] stabilizer code from Grassl's codetables.de
+  tables (snapshotted in the autqec repository).
+source: https://arxiv.org/abs/2409.18175
+logical_action: |-
+  SWAP 9 8
+  CX 9 7 6 7 4 7 8 6 4 6 2 6
+  SWAP 7 6
+  CX 9 5 8 5 2 5 0 5
+  SWAP 7 5
+  CX 9 4 7 4 2 4 0 4
+  SWAP 6 4
+  CX 7 3 6 3 2 3 0 3 7 1 6 1 0 1
+  SWAP 3 1
+  CX 8 0 7 0 6 0
+  SWAP 4 0
+  XCX 5 6 3 4 0 7
+  SQRT_X 0
+  XCX 6 9 3 8 5 8 6 7 3 6 0 4 0 8 0 6 3 7 1 9 5 7 3 5 4 5
+  SQRT_X 7
+gate_count: 1
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 22
+crumble_url: https://algassert.com/crumble#circuit=SWAP_11_16_21_20_7_19_3_15_4_13_5_10_6_18_12_8_17_14;I_0_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],["…"]]}
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:SWAP",
+    "logical-op:CX",
+    "logical-op:XCX",
+    "logical-op:SQRT_X",
+  ]

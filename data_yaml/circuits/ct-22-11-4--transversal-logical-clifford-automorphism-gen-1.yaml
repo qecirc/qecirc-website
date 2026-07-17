@@ -1,0 +1,57 @@
+qec_id: 1731
+name: Transversal logical Clifford (automorphism gen 1)
+tool: autqec
+notes:
+  Logical H(2)·CNOT(10,11)·CNOT(9,11)·CNOT(5,11)·CNOT(2,11)·CNOT(1,11)·CNOT(7,10)·CNOT(10,9)·CNOT(7,9)·CNOT(6,9)·CNOT(5,9)·CNOT(2,9)·CNOT(10,8)·CNOT(5,8)·CNOT(4,8)·CNOT(3,8)·CNOT(2,8)·CNOT(10,7)·CNOT(8,7)·CNOT(5,7)·CNOT(10,6)·CNOT(9,6)·CNOT(5,6)·CNOT(4,6)·CNOT(3,6)·CNOT(10,5)·CNOT(9,5)·CNOT(7,5)·CNOT(4,5)·CNOT(1,5)·CNOT(10,4)·CNOT(9,4)·CNOT(7,4)·CNOT(11,3)·CNOT(9,3)·CNOT(8,3)·CNOT(7,3)·CNOT(6,3)·CNOT(4,3)·CNOT(1,3)·CNOT(8,2)·SWAP(6,2)·CNOT(10,1)·CNOT(5,1)·CNOT(3,1)·SWAP(2,1)·CZ(6,10)·CZ(2,9)·CZ(5,8)·CZ(3,6)·CZ(5,9)·CZ(1,7)·S(11)·CZ(4,8)·CZ(3,11)·CZ(1,8)·CZ(8,10)·CZ(7,8)·CZ(1,9)·CZ(1,4)·S(7)·S(10)·CZ(1,5)·CZ(3,8)·CZ(5,11)·CZ(1,6)·CZ(4,10)·CZ(6,8)·CZ(6,9)·S(6)·CZ(2,8)·CZ(5,7)·CZ(1,2)·CZ(1,11)·C(X,X)(6,7)·C(X,X)(1,8)·C(X,X)(9,11)·√X(3)·C(X,X)(1,9)·C(X,X)(8,11)·C(X,X)(1,4)·C(X,X)(7,9)·C(X,X)(2,10)·C(X,X)(4,5)·C(X,X)(7,10)·C(X,X)(3,8)·C(X,X)(1,5)·C(X,X)(2,6)·C(X,X)(5,11)·√X(2)·C(X,X)(3,9)·√X(5)·C(X,X)(2,7)·C(X,X)(10,11)·√X(11)·C(X,X)(6,9)·C(X,X)(3,10)·C(X,X)(4,11)·C(X,X)(2,8)·C(X,X)(4,6)·C(X,X)(6,10)·C(X,X)(2,9)·C(X,X)(5,8)·√X(4)·C(X,X)(2,4)·√X(7)·C(X,X)(5,9)·C(X,X)(8,9)·C(X,X)(4,8)
+  (gates in application order) from generator 1 of the code's automorphism group,
+  computed by autqec (arXiv:2409.18175). Physical circuit is transversal — single-qubit
+  Cliffords, with Pauli corrections that fix the stabilizer signs. The logical_action
+  field states the claim in the stored code's logical basis; validate:circuits checks
+  it. The code is the best-known-distance [[22,11]] stabilizer code from Grassl's
+  codetables.de tables (snapshotted in the autqec repository).
+source: https://arxiv.org/abs/2409.18175
+logical_action: |-
+  H 1
+  CX 9 10 8 10 4 10 1 10 0 10 6 9 9 8 6 8 5 8 4 8 1 8 9 7 4 7 3 7 2 7 1 7 9 6 7 6 4 6 9 5 8 5 4 5 3 5 2 5 9 4 8 4 6 4 3 4 0 4 9 3 8 3 6 3 10 2 8 2 7 2 6 2 5 2 3 2 0 2 7 1
+  SWAP 5 1
+  CX 9 0 4 0 2 0
+  SWAP 1 0
+  CZ 5 9 1 8 4 7 2 5 4 8 0 6
+  S 10
+  CZ 3 7 2 10 0 7 7 9 6 7 0 8 0 3
+  S 6 9
+  CZ 0 4 2 7 4 10 0 5 3 9 5 7 5 8
+  S 5
+  CZ 1 7 4 6 0 1 0 10
+  XCX 5 6 0 7 8 10
+  SQRT_X 2
+  XCX 0 8 7 10 0 3 6 8 1 9 3 4 6 9 2 7 0 4 1 5 4 10
+  SQRT_X 1
+  XCX 2 8
+  SQRT_X 4
+  XCX 1 6 9 10
+  SQRT_X 10
+  XCX 5 8 2 9 3 10 1 7 3 5 5 9 1 8 4 7
+  SQRT_X 3
+  XCX 1 3
+  SQRT_X 6
+  XCX 4 8 7 8 3 7
+gate_count: 27
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 22
+crumble_url: https://algassert.com/crumble#circuit=Z_10_8_6_5_4;C_XYZ_15_7_3_2_1_20_13_11_17_18_16_14_9_12_19_21;I_0;C_XYZ_10_8_6_5_4_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["…","~Cxyz","~Cxyz","~Cxyz","Z","Z","Z","~Cxyz","Z","~Cxyz","Z","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz"],[1,1,1,1,"~Cxyz","~Cxyz","~Cxyz",1,"~Cxyz",1,"~Cxyz"]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"}]}
+tags:
+  [
+    logical-gate,
+    transversal,
+    ft,
+    "logical-op:H",
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:CZ",
+    "logical-op:S",
+    "logical-op:XCX",
+    "logical-op:SQRT_X",
+  ]

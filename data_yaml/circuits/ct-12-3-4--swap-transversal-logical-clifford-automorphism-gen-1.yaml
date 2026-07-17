@@ -1,0 +1,37 @@
+qec_id: 1162
+name: SWAP-transversal logical Clifford (automorphism gen 1)
+tool: autqec
+notes: Logical H(2)·CNOT(2,3)·CNOT(1,3)·CNOT(3,2)·CNOT(1,2)·SWAP(3,1)·S(3)·√X(3)·C(X,X)(1,3)
+  (gates in application order) from generator 1 of the code's automorphism group,
+  computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
+  Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
+  field states the claim in the stored code's logical basis; validate:circuits checks
+  it. SWAP-transversal circuits are fault-tolerant on architectures where SWAPs are
+  error-benign (shuttling ion traps, atom arrays), hence no unconditional ft tag.
+  The code is the best-known-distance [[12,3]] stabilizer code from Grassl's codetables.de
+  tables (snapshotted in the autqec repository).
+source: https://arxiv.org/abs/2409.18175
+logical_action: |-
+  H 1
+  CX 1 2 0 2 2 1 0 1
+  SWAP 2 0
+  S 2
+  SQRT_X 2
+  XCX 0 2
+gate_count: 17
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 12
+crumble_url: https://algassert.com/crumble#circuit=Z_8_6_5_3;Y_11;Z_0;X_7;C_ZYX_4;C_XYZ_2_10_1_9_6_3;C_ZYX_11;C_XYZ_0_7;SWAP_1_9_0_7_10_9_3_11_6_4_2_0_5_3_8_4_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["Z","~Cxyz","~Cxyz","Z","~Czyx","Z","Z","X","Z","~Cxyz","~Cxyz","Y"],["~Cxyz",1,1,"~Cxyz",1,1,"~Cxyz","~Cxyz",1,1,1,"~Czyx"],[1,"Swap",1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],["Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1],["Swap",1,"Swap"],[1,1,1],[1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"},{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:H",
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:S",
+    "logical-op:SQRT_X",
+    "logical-op:XCX",
+  ]

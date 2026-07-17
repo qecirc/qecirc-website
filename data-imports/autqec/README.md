@@ -61,11 +61,47 @@ and relabel to the stored code's canonical qubit order.
   codeword sets) is the likely resolution — the aut pickles
   (`full_aut_groups/auts_n{108k8d10,144k12d12}.pkl`) are ready once σ is found.
 
-Also not yet imported: the full n ≤ 30 codetables sweep
-(`codetables/logical_gates/`, ~2,850 precomputed nontrivial gate circuits
-across ~214 codes — needs distance values and a curation decision) and the
-two-block embedded-code gates (`examples/embedded_codes/` — circuits act on an
-embedded larger code, needs a data-model decision).
+Also not yet imported: the two-block embedded-code gates
+(`examples/embedded_codes/` — circuits act on an embedded larger code, needs a
+data-model decision).
+
+## The codetables section (`--section codetables`)
+
+The paper's n ≤ 28 sweep over the **best-known-distance [[n,k]] stabilizer
+codes** from Grassl's [codetables.de](https://codetables.de). Unlike the
+examples, the dataset commits _finished circuits_ (Pauli corrections included)
+in `codetables/logical_gates/gates_n{n}k{k}.pkl` (automorphism family) and
+`codetables/ZX_dualities/logical_gates/` (ZX family); parity checks ship as
+`codetables/parity_checks/H_symp_n{n}k{k}.npy`.
+
+Curation decisions (all deliberate):
+
+- **Only d ≥ 3 codes are imported.** Distances are not in the dataset; they
+  are fetched once from codetables.de by `fetch_codetables_distances.py` into
+  the committed cache `codetables_distances.json` (`d_lower` = best known
+  construction; 31 of 214 pairs have non-tight bounds). The d ≤ 2 tail (95
+  codes, 82% of the circuits) is detection-only-or-worse and stays out.
+- **Hidden by default.** These are mostly anonymous record-holders (103 of
+  119 root in an unnamed "stored generator matrix" on codetables.de), so
+  their code entries get the `codetables` tag: excluded from the /codes
+  listing until the tag is selected in the filter, excluded from every
+  displayed count, fully searchable (see `HIDDEN_CODE_TAG` in
+  `src/lib/constants.ts`). Slugs are prefixed `ct-` (`ct-15-7-3`) because
+  four parameter-twins of _different_ stored codes exist (`15-7-3`,
+  `16-6-4`, `20-2-6`, and the [[5,1,3]] frame twin below).
+- **Identified codes are imported as normal, visible codes** (see
+  `CT_IDENTIFIED` in `rebuild_all.py`): [[7,1,3]] _is_ the Steane code and
+  [[8,3,3]] _is_ the Gottesman code (verified permutation-equivalent via the
+  site's dedup machinery — their codetables circuits attach to the existing
+  entries); [[17,1,7]] is the same dataset code as the examples section;
+  [[6,1,3]] is THE six-qubit code (unique up to equivalence) and seeds the
+  normal code `6-1-3`.
+- **Two near-identifications stay hidden:** the codetables [[5,1,3]] is
+  local-Clifford-equivalent to `five-qubit-code` (the code is unique) but not
+  permutation-equivalent, so its circuits cannot be relabeled onto the stored
+  entry — it lives as `ct-5-1-3`. The [[11,1,5]] is plausibly the quantum
+  dodecacode (Gottesman thesis, Table 8.5) but no machine-readable reference
+  tableau was available to verify; identification welcome (`ct-11-1-5`).
 
 ## Gate translation (verified, not assumed)
 

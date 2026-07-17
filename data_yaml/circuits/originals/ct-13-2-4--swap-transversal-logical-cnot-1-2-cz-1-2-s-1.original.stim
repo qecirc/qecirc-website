@@ -1,0 +1,6 @@
+C_ZYX 1
+C_XYZ 2 4
+C_ZYX 5 7
+C_XYZ 8
+SWAP 5 8 4 7 3 6 1 2
+I 12
