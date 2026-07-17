@@ -367,6 +367,169 @@ def validate_syndrome_extraction(
     raise NotImplementedError("Syndrome extraction validation not yet implemented")
 
 
+def transversality_class(circuit: Union[stim.Circuit, str]) -> str:
+    """Structural class of a logical-gate circuit, per arXiv:2409.18175.
+
+    - ``"transversal"`` — single-qubit gates only: inherently fault-tolerant,
+      since no gate can spread an error between qubits.
+    - ``"swap-transversal"`` — single-qubit gates plus SWAPs: fault-tolerant
+      exactly where SWAPs are error-benign primitives (shuttling ion traps,
+      atom arrays).
+    - ``"general"`` — contains entangling gates.
+
+    This reports circuit *structure* only; whether it earns an ``ft`` tag is a
+    policy decision left to the caller (the pipeline never infers ``ft``).
+    """
+    circ = _to_stim_circuit(circuit)
+    names = {inst.name for inst in circ.flattened() if inst.name != "I"}
+    if any(_is_entangling(g) for g in names):
+        return "general"
+    if "SWAP" in names:
+        return "swap-transversal"
+    return "transversal"
+
+
+def _gf2_membership(target: np.ndarray, gens: np.ndarray) -> "np.ndarray | None":
+    """Coefficients expressing ``target`` over the rows of ``gens`` mod 2, or None.
+
+    Plain Gaussian elimination with a coefficient tracker; ``gens`` need not be
+    independent (the first spanning combination wins).
+    """
+    m = gens.copy() % 2
+    rhs = np.eye(len(gens), dtype=int)
+    piv_cols = []
+    r = 0
+    for c in range(m.shape[1]):
+        rr = next((i for i in range(r, m.shape[0]) if m[i, c]), None)
+        if rr is None:
+            continue
+        m[[r, rr]] = m[[rr, r]]
+        rhs[[r, rr]] = rhs[[rr, r]]
+        for i in range(m.shape[0]):
+            if i != r and m[i, c]:
+                m[i] = (m[i] + m[r]) % 2
+                rhs[i] = (rhs[i] + rhs[r]) % 2
+        piv_cols.append(c)
+        r += 1
+    coeff = np.zeros(len(gens), dtype=int)
+    t = target.copy() % 2
+    for idx, c in enumerate(piv_cols):
+        if t[c]:
+            coeff = (coeff + rhs[idx]) % 2
+            t = (t + m[idx]) % 2
+    return None if t.any() else coeff
+
+
+def _pauli_image_row(tableau: stim.Tableau, row: np.ndarray, n: int) -> np.ndarray:
+    """Binary symplectic vector (X-half | Z-half) of a stabilizer row's image
+    under conjugation by ``tableau``. Signs are dropped — see
+    :func:`validate_logical_gate_h` on why the check is sign-free."""
+    img = tableau(_row_to_pauli_string(row, n, n))
+    xs, zs = img.to_numpy()
+    return np.concatenate([xs.astype(int), zs.astype(int)])
+
+
+def induced_logical_action(
+    circuit: Union[stim.Circuit, str], h: np.ndarray, logical: np.ndarray, n: int
+) -> "np.ndarray | str":
+    """The binary symplectic action a unitary circuit induces on the logicals.
+
+    ``h`` is the code's symplectic stabilizer matrix (``(m, 2n)``), ``logical``
+    its logical operators (``(2k, 2n)``, X-bars then Z-bars) — the forms stored
+    in ``codes.h`` / ``codes.logical``.
+
+    Returns the ``2k x 2k`` matrix ``U`` with ``U[i]`` the coefficients of
+    logical row ``i``'s image over the logical rows (mod stabilizers), or a
+    ``'failed: ...'`` string when the circuit is not unitary, touches qubits
+    outside the code block, or does not preserve the stabilizer group.
+    """
+    h = np.atleast_2d(np.asarray(h, dtype=int)) % 2
+    logical = np.atleast_2d(np.asarray(logical, dtype=int)) % 2
+    circ = _widen(_to_stim_circuit(circuit), n)
+    if circ.num_qubits > n:
+        return f"failed: circuit touches qubit {circ.num_qubits - 1}, but the code has n={n}"
+    try:
+        tableau = circ.to_tableau()
+    except ValueError:
+        return "failed: circuit is not unitary (contains resets or measurements)"
+
+    for row in h:
+        img = _pauli_image_row(tableau, row, n)
+        if _gf2_membership(img, h) is None:
+            ps = _row_to_pauli_string(row, n, n)
+            return f"failed: image of stabilizer {ps} is not in the stabilizer group"
+
+    gens = np.vstack([h, logical]) if h.size else logical
+    two_k = logical.shape[0]
+    u = np.zeros((two_k, two_k), dtype=int)
+    for i, row in enumerate(logical):
+        img = _pauli_image_row(tableau, row, n)
+        coeff = _gf2_membership(img, gens)
+        if coeff is None:
+            ps = _row_to_pauli_string(row, n, n)
+            return f"failed: image of logical {ps} leaves the code's Pauli group"
+        u[i] = coeff[-two_k:]
+    return u
+
+
+def validate_logical_gate_h(
+    circuit: Union[stim.Circuit, str],
+    h: np.ndarray,
+    logical: np.ndarray,
+    n: int,
+    logical_action: str = "",
+) -> str:
+    """Verify a logical-gate circuit against the code stored as ``h``/``logical``.
+
+    Two properties are checked:
+
+    1. The (unitary) circuit preserves the stabilizer group of ``h`` — each
+       generator's image lies back in the group.
+    2. The induced action on the logical operators equals the claimed
+       ``logical_action``, a stim circuit on the ``k`` logical qubits
+       (e.g. ``"S 0"``; empty claims the identity).
+
+    **Sign.** Both checks compare binary symplectic data only. ``codes.h`` and
+    ``codes.logical`` are sign-free, so the stabilizer group and the logical
+    action are each pinned down only up to a Pauli frame — a logical gate is
+    likewise only defined up to logical Paulis. Checking signs against
+    arbitrary stored frames would reject valid circuits.
+
+    Returns 'passed' or 'failed: <reason>'.
+    """
+    logical = np.atleast_2d(np.asarray(logical, dtype=int)) % 2
+    two_k = logical.shape[0]
+    if two_k % 2 != 0:
+        raise ValueError(f"Expected logical with 2k rows, got {two_k}")
+    k = two_k // 2
+
+    got = induced_logical_action(circuit, h, logical, n)
+    if isinstance(got, str):
+        return got
+
+    claim_circ = _widen(_to_stim_circuit(logical_action or ""), k)
+    if claim_circ.num_qubits > k:
+        return f"failed: logical_action touches qubit {claim_circ.num_qubits - 1}, but k={k}"
+    try:
+        claim_tab = claim_circ.to_tableau()
+    except ValueError:
+        return "failed: logical_action is not unitary"
+    claimed = np.zeros((two_k, two_k), dtype=int)
+    for j in range(k):
+        for half, pauli in ((0, 1), (k, 3)):  # X-bar rows, then Z-bar rows
+            base = stim.PauliString(k)
+            base[j] = pauli
+            xs, zs = claim_tab(base).to_numpy()
+            claimed[half + j] = np.concatenate([xs.astype(int), zs.astype(int)])
+
+    if not np.array_equal(got, claimed):
+        return (
+            "failed: circuit induces a different logical action than claimed "
+            f"(induced U={got.tolist()}, claimed U={claimed.tolist()})"
+        )
+    return "passed"
+
+
 # ---------------------------------------------------------------------------
 # Code extraction from circuits
 # ---------------------------------------------------------------------------

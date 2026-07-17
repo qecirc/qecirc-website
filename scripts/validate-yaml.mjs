@@ -31,6 +31,10 @@ const SCHEMAS = {
     optional: {
       tool: "string",
       notes: "string",
+      // For logical-gate circuits: the claimed logical Clifford as a stim
+      // circuit on the k logical qubits (e.g. "S 0"). Checked by
+      // validate:circuits against the code's h/logical matrices.
+      logical_action: "string",
       gate_count: "number",
       two_qubit_gate_count: "number",
       depth: "number",
