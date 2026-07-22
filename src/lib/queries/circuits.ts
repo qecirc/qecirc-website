@@ -1,6 +1,6 @@
 import { getDb } from "../db";
 import { HIDDEN_CODE_TAG } from "../constants";
-import { visibleCodePredicate } from "./codes";
+import { visibleCodePredicate } from "./shared";
 import type {
   Circuit,
   CircuitBody,

@@ -9,7 +9,17 @@ export function parseToolRow(row: ToolRow): Tool {
 }
 
 function enrichTools(rows: ToolRow[]): ToolWithMeta[] {
-  return withCircuitCounts(withTags(rows.map(parseToolRow), "tool"), "tool_id");
+  // Tool counts describe the curated library: circuits of hidden
+  // (HIDDEN_CODE_TAG) codes are excluded, matching every other displayed
+  // count — a bulk reference import would otherwise dwarf every other tool.
+  // Re-sort by the visible count so the order matches the numbers shown
+  // (the SQL pre-sort counts all circuits).
+  const enriched = withCircuitCounts(withTags(rows.map(parseToolRow), "tool"), "tool_id", {
+    visibleCodesOnly: true,
+  });
+  return enriched.toSorted(
+    (a, b) => b.circuit_count - a.circuit_count || a.name.localeCompare(b.name),
+  );
 }
 
 export function getAllTools(): ToolWithMeta[] {

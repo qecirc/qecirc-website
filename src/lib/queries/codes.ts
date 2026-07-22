@@ -14,6 +14,7 @@ import {
   addConditions,
   addTagConditions,
   buildCodeOrderBy,
+  visibleCodePredicate,
 } from "./shared";
 
 // Columns to select for list/search views. Excludes `h` and `logical` which
@@ -64,18 +65,6 @@ export function filterCodes(filters: CodeFilters, sort?: CodeSort): CodeWithMeta
     .prepare(`SELECT ${CODE_LIST_COLUMNS} FROM codes c ${where} ${orderBy}`)
     .all(...params) as CodeListItem[];
   return withCircuitCounts(withTags(codes, "code"), "code_id");
-}
-
-// Codes tagged HIDDEN_CODE_TAG (and their circuits) are left out of every
-// displayed count and of the homepage discovery surfaces — they are a
-// reference shelf, not part of the curated library the numbers advertise.
-// `codesAlias` is the codes table's alias in the calling query; the caller
-// must bind HIDDEN_CODE_TAG for the `?`.
-export function visibleCodePredicate(codesAlias = "c"): string {
-  return `NOT EXISTS (
-    SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
-    WHERE tg.taggable_id = ${codesAlias}.id AND tg.taggable_type = 'code' AND t.name = ?
-  )`;
 }
 
 export function countAllCodes(): number {
