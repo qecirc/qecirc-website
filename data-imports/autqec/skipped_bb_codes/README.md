@@ -1,8 +1,11 @@
-# Skipped BB codes — matrices for external equivalence checking
+# BB equivalence data — matrices for external verification
 
-Check matrices of the three bivariate bicycle codes whose autqec circuits are
-**not** imported yet (see `../README.md`, "Deliberately skipped"). Regenerate
-with `uv run python data-imports/autqec/dump_skipped_bb.py`.
+Check matrices of the three bivariate bicycle codes whose autqec labeling did
+not match the stored code directly. All three are now resolved —
+`108-8-10` / `144-12-12` via verified permutations (`../sigma_precomputed.json`),
+`90-8-10` as the distinct code `90-8-10-autqec` — but the matrices stay here
+so the equivalence claims can be checked independently. Regenerate with
+`uv run python data-imports/autqec/dump_skipped_bb.py`.
 
 Per code `<slug>` (`90-8-10`, `108-8-10`, `144-12-12`):
 
