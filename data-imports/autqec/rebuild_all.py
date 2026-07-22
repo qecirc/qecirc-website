@@ -334,33 +334,44 @@ def main() -> None:
     # in full_aut_groups/). [[72,12,6]] fits the stored code directly (shared
     # labeling, hash dedup); [[108,8,10]] and [[144,12,12]] fit via the
     # offline-precomputed sigmas in sigma_precomputed.json (weight-6-codeword
-    # incidence-graph isomorphism; re-verified on every run). Still SKIPPED:
-    #   - 90-8-10: the stored code is a genuinely different construction —
-    #     its X-space has 90 weight-4 + 600 weight-6 codewords vs autqec's
-    #     45 weight-6 (a permutation invariant), so no relabeling can attach
-    #     autqec's circuits to it.
+    # incidence-graph isomorphism; re-verified on every run).
+    #
+    # autqec's [[90,8,10]] is a genuinely DIFFERENT code than the stored
+    # 90-8-10: its X-space has 45 weight-6 codewords and none of weight 4, vs
+    # the stored code's 90 weight-4 + 600 weight-6 — weight enumerators are
+    # permutation invariants, so no relabeling can reconcile them. It is
+    # imported as a second, distinct code entry with its own slug and a
+    # disambiguating name.
     bb_dir = dataset / "examples" / "bivariate_bicycle_codes"
     for stem, slug, name, d in [
         ("n72k12d6", "72-12-6", "Bivariate Bicycle Code", 6),
+        ("n90k8d10", "90-8-10-autqec", "Bivariate Bicycle Code (autqec)", 10),
         ("n108k8d10", "108-8-10", "Bivariate Bicycle Code", 10),
         ("n144k12d12", "144-12-12", "Gross Code", 12),
     ]:
         hx = np.array(np.load(bb_dir / "code_data" / f"HX_{stem}.npy"), dtype=int)
         hz = np.array(np.load(bb_dir / "code_data" / f"HZ_{stem}.npy"), dtype=int)
         zx, zz = np.zeros_like(hx), np.zeros_like(hz)
-        EXAMPLE_CODES.append(
-            {
-                "stem": stem,
-                "name": name,
-                "slug": slug,
-                "n": hx.shape[1],
-                "d": d,
-                "zoo_url": "",
-                "H": np.vstack([np.hstack([hx, zx]), np.hstack([zz, hz])]),
-                "auts_dir": bb_dir / "full_aut_groups",
-                "families": ("automorphism",),
-            }
-        )
+        spec = {
+            "stem": stem,
+            "name": name,
+            "slug": slug,
+            "n": hx.shape[1],
+            "d": d,
+            "zoo_url": "",
+            "H": np.vstack([np.hstack([hx, zx]), np.hstack([zz, hz])]),
+            "auts_dir": bb_dir / "full_aut_groups",
+            "families": ("automorphism",),
+        }
+        if slug == "90-8-10-autqec":
+            spec["notes_suffix"] = (
+                " Note: this code shares its [[90,8,10]] parameters with, but is "
+                "provably inequivalent to, the library's other bivariate bicycle "
+                "code 90-8-10 — their X-space weight enumerators differ (45 "
+                "weight-6 codewords here vs 90 weight-4 + 600 weight-6 there), "
+                "which no qubit relabeling can reconcile."
+            )
+        EXAMPLE_CODES.append(spec)
 
     FAMILIES = [
         ("automorphism", "auts_{stem}.pkl", circ_from_aut),

@@ -61,14 +61,17 @@ every run before it is used (`sigma_verifies`), so a stale or wrong entry
 fails loudly. Convention: `sigma[new] = old`, matching
 `compute_circuit_data(qubit_permutation=...)`.
 
-### Deliberately skipped (for now)
+### The two [[90,8,10]] codes
 
-- **BB `90-8-10`** — the stored (circuit-synth) code is a **genuinely
-  different construction**: its X-space has 90 weight-4 + 600 weight-6
-  codewords, while autqec's [[90,8,10]] has exactly 45 weight-6 ones. Low-weight
-  enumerators are permutation invariants, so no relabeling can attach autqec's
-  circuits to the stored code. Importing them would need a second, distinct
-  [[90,8,10]] code entry.
+autqec's [[90,8,10]] is a **genuinely different construction** than the
+stored `90-8-10`: the stored code's X-space has 90 weight-4 + 600 weight-6
+codewords, while autqec's has exactly 45 weight-6 and none of weight 4.
+Low-weight enumerators are permutation invariants, so no relabeling can
+reconcile them — this is a proof of inequivalence, not a search failure.
+autqec's version is therefore imported as its own visible code entry,
+`90-8-10-autqec` ("Bivariate Bicycle Code (autqec)"), with circuit notes
+spelling out the distinction. The check matrices of both stay dumped under
+`skipped_bb_codes/` for independent verification.
 
 Also not yet imported: the two-block embedded-code gates
 (`examples/embedded_codes/` — circuits act on an embedded larger code, needs a
