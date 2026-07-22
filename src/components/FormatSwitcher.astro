@@ -14,9 +14,11 @@ interface Props {
   bodies: CircuitBody[];
   stimFilename?: string;
   source?: string;
+  /** Human-readable citation for `source`; forwarded to the cite toast. */
+  citation?: string;
 }
 
-const { bodies, stimFilename, source } = Astro.props;
+const { bodies, stimFilename, source, citation } = Astro.props;
 
 // The annotated body is a view of the STIM body, not a format of its own, so it
 // gets no tab. It supersedes the plain STIM body for display; the switches
@@ -82,6 +84,7 @@ const TAB_BASE_CLASS =
           label={`${b.format.toUpperCase()} Circuit`}
           downloadName={downloadNameFor(b.format)}
           source={source}
+          citation={citation}
           coordsToggle={false}
         />
       </div>
@@ -94,6 +97,7 @@ const TAB_BASE_CLASS =
     label={`${tabs[0].format.toUpperCase()} Circuit`}
     downloadName={downloadNameFor(tabs[0].format)}
     source={source}
+    citation={citation}
   />
 ) : (
   <p class="text-sm text-gray-500 dark:text-gray-400">No circuit body available.</p>

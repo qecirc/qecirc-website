@@ -3,6 +3,8 @@ n: 95
 k: 1
 d: 7
 zoo_url: https://errorcorrectionzoo.org/c/triorthogonal
+aliases:
+  - "[[95,1,7]]"
 canonical_hash: 70f239e80beb873426d52316a6f32b297fa0344e0d1ae59673311d6a567e6531
 h:
   - [

@@ -372,6 +372,12 @@ n: 7
 k: 1
 d: 3
 zoo_url: https://errorcorrectionzoo.org/c/steane
+aliases:
+  - "[[7,1,3]]"
+  - "seven-qubit code"
+  - "6.6.6 color code"
+related:
+  - "triangular color code"
 canonical_hash: d326fbcca125a5c717a7d4d1d0b4acc8da8e3b9d3ad123bfc705bc14d85f9ca4
 h:
   - [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]
@@ -385,6 +391,12 @@ logical:
   - [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]
 tags: [CSS, stabilizer, color-code]
 ```
+
+`aliases` are **other names for this same code** — every name a reader might type for it. They are matched silently, exactly as the stored `name` is, by both `/search` and the header quick-search. `tags` are code-level tags (`CSS`, `topological`, `LDPC`); these reach `/search` too, via the `code_tags` column.
+
+`related` is **a different, adjacent code** people commonly mean by a name that is not strictly this code — `toric` for a planar surface code. It matches only when nothing else does, and `/search` tells the user the results are a related code. Do not put a true alias here, or a taxonomy ancestor there: two parents above the rotated surface code sits "Quantum Tanner code", which is neither.
+
+Both are **hand-written**. The [Error Correction Zoo](https://errorcorrectionzoo.org) publishes `alternative_names` and is the right reference, but `eczoo_data` is CC-BY-SA 4.0 while this repo is MIT — use it to research, never add an import script. Only alias something the library actually holds: an alias for a concept with no circuits behind it resolves to nothing.
 
 `h` is the symplectic stabilizer matrix of shape `(n−k) × 2n`: columns `0..n-1` are the X-half, columns `n..2n-1` are the Z-half. `logical` has shape `2k × 2n`; for CSS codes the top `k` rows are X-bar logicals (Z-half zero) and the bottom `k` rows are Z-bar logicals (X-half zero). The Hx/Hz/Lx/Lz view shown in the UI is derived from `h` and `logical` at render time.
 
@@ -443,10 +455,75 @@ description: Tools for quantum error correcting codes.
 homepage_url: https://mqt.readthedocs.io/projects/qecc/en/latest/
 github_url: https://github.com/munich-quantum-toolkit/qecc
 paper_urls: [https://arxiv.org/abs/2408.11894]
+aliases: ["mqt.qecc", "Munich Quantum Toolkit", "QECC"]
 tags: [Python, encoding, state-preparation]
 ```
 
 Tools must be added manually before circuits can reference them.
+
+Tool `aliases` work like a code's, with one difference in how they are indexed: they ride in the low-weight `notes` column of `circuit_search`, because every circuit a tool produced would otherwise match every one of that tool's aliases as strongly as its own name. Tools have no `related`.
+
+### Paper (`data_yaml/papers/<slug>.yaml`)
+
+**Do not write these by hand — fetch them:**
+
+```bash
+npm run papers:add -- 2402.17761                 # arXiv id, DOI, or any abs/pdf/doi.org link
+npm run papers:missing                           # every circuit source with no paper yet
+npm run papers:missing -- --dry-run              # ...report without writing
+npm run db:create                                # link circuits to the new papers
+```
+
+`papers:missing` is the one to reach for after a bulk import: it scans every
+circuit's `source`, skips the ones already covered, and fetches the rest from
+arXiv (or Crossref for a DOI-only source). It is idempotent, so running it again
+costs nothing.
+
+The result looks like this — `scripts/add_paper.py` writes it:
+
+```yaml
+title: Quantum Circuit Discovery for Fault-Tolerant Logical State Preparation with Reinforcement Learning
+authors: [Remmy Zen, Jan Olle, Luis Colmenarez, Matteo Puviani, Markus Müller, Florian Marquardt]
+year: 2024
+arxiv_id: "2402.17761"
+doi: 10.1103/gqpr-dgz7
+url: https://arxiv.org/abs/2402.17761
+```
+
+Required: `title`, `authors` (a non-empty list, **in author order**), `url`.
+Optional: `year`, `arxiv_id`, `doi`, `journal_ref`.
+
+**Why fetched and not typed:** author lists are facts about real people, and a
+wrong one is a misattribution that then renders on the page and in the circuit's
+schema.org JSON-LD. They are also often newer than any given model's training
+data, and second-hand sources drift — one import README in this repo paraphrases
+its own paper's title inaccurately. If the script cannot fetch a work, add it by
+hand from the publisher's page, not from memory.
+
+The script refuses to write a paper with no authors rather than emit a half
+record. Crossref genuinely lacks authors on some older DOIs (the 1996 Steane
+paper among them) — pass the arXiv id instead, which has them.
+
+This is the **only** part of the repo that touches the network, and it is a
+maintainer tool whose output you commit. `npm run db:create` and the site itself
+read committed YAML only, and build identically offline.
+
+A paper makes its circuits findable on `/search` by title, author and arXiv id — none of
+which appear anywhere else, since a circuit's `source` is just a link. It also turns the
+bare URL in the UI into a real citation ("Zen et al. (2024)").
+
+**Circuits do not reference papers.** There is no `paper:` key. `npm run db:create` matches
+each circuit's `source` against every paper's `url`, `arxiv_id` and `doi`, tolerating
+http/https, a trailing slash, `dx.doi.org`, `/pdf/` vs `/abs/`, and arXiv version suffixes
+(`2402.17761v2`). So:
+
+- To make an existing circuit's paper searchable, just add the paper file — nothing else.
+- A `source` that matches no paper is fine, not an error. `npm run db:create` and
+  `npm run validate:yaml` both list such sources so you know what is missing.
+
+**Quote `arxiv_id`.** Unquoted, `arxiv_id: 2402.17761` is a YAML float, and an id ending in
+`0` would silently lose it. `validate:yaml` rejects a non-string, so this fails loudly — but
+quote it and save yourself the round trip.
 
 ## Notes
 

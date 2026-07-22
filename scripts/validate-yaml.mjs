@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import * as yaml from "js-yaml";
+import { paperKey, paperLinks, isPaperSource } from "./paper-links.mjs";
 
 const DATA_DIR = path.join(process.cwd(), "data_yaml");
 
@@ -21,6 +22,8 @@ const SCHEMAS = {
       d: "number",
       canonical_hash: "string",
       zoo_url: "string",
+      aliases: "tags",
+      related: "tags",
       h: "matrix",
       logical: "matrix",
       tags: "tags",
@@ -53,7 +56,20 @@ const SCHEMAS = {
       homepage_url: "string",
       github_url: "string",
       paper_urls: "urls",
+      aliases: "tags",
       tags: "tags",
+    },
+  },
+  papers: {
+    required: { title: "string", authors: "names", url: "string" },
+    optional: {
+      year: "number",
+      // Typed `string` deliberately, and the reason is a real trap: unquoted,
+      // `arxiv_id: 2402.17761` is a YAML FLOAT, and 2601.05110 would silently
+      // lose its trailing zero. The type check is what forces the quotes.
+      arxiv_id: "string",
+      doi: "string",
+      journal_ref: "string",
     },
   },
 };
@@ -64,6 +80,12 @@ function checkType(value, type) {
   if (type === "string") return typeof value === "string";
   if (type === "number") return typeof value === "number" && Number.isFinite(value);
   if (type === "tags") return Array.isArray(value) && value.every((v) => typeof v === "string");
+  if (type === "names")
+    return (
+      Array.isArray(value) &&
+      value.length > 0 &&
+      value.every((v) => typeof v === "string" && v.trim() !== "")
+    );
   if (type === "urls")
     return (
       Array.isArray(value) && value.every((v) => typeof v === "string" && /^https?:\/\//.test(v))
@@ -181,6 +203,81 @@ for (const [dir, schema] of Object.entries(SCHEMAS)) {
         }
       }
     }
+
+    if (dir === "papers") {
+      if (typeof data?.url === "string" && !/^https?:\/\//.test(data.url)) {
+        allErrors.push(`${relPath}: url must be an http(s) link, got '${data.url}'`);
+      }
+      // The id is the match key, so its shape is load-bearing: "arXiv:2402.17761"
+      // or "2402.17761v2" would build a link no circuit source equals.
+      if (typeof data?.arxiv_id === "string") {
+        if (/^arxiv:/i.test(data.arxiv_id)) {
+          allErrors.push(`${relPath}: arxiv_id must not carry an 'arXiv:' prefix`);
+        }
+        if (/v\d+$/.test(data.arxiv_id)) {
+          allErrors.push(`${relPath}: arxiv_id must not carry a version suffix`);
+        }
+      }
+      if (typeof data?.doi === "string" && /^https?:\/\//.test(data.doi)) {
+        allErrors.push(`${relPath}: doi must be a bare DOI, not a link (use url for the link)`);
+      }
+    }
+  }
+}
+
+// --- Papers: link collisions, and circuit sources that will not resolve ---
+//
+// Both are warnings, not errors: a source with no paper still renders and still
+// searches by URL, it just cannot be found by title or author. Failing the build
+// over it would make adding a circuit depend on cataloguing its paper first.
+const warnings = [];
+{
+  const papersDir = path.join(DATA_DIR, "papers");
+  const circuitsDir = path.join(DATA_DIR, "circuits");
+  const claimed = new Map(); // paperKey -> paper file
+
+  if (fs.existsSync(papersDir)) {
+    for (const file of fs.readdirSync(papersDir).filter((f) => f.endsWith(".yaml"))) {
+      let data;
+      try {
+        data = yaml.load(fs.readFileSync(path.join(papersDir, file), "utf8"));
+      } catch {
+        continue; // parse error already reported above
+      }
+      if (!data) continue;
+      for (const link of paperLinks(data)) {
+        const key = paperKey(link);
+        if (claimed.has(key) && claimed.get(key) !== file) {
+          allErrors.push(
+            `papers/${file}: link '${link}' is also claimed by papers/${claimed.get(key)}`,
+          );
+        } else {
+          claimed.set(key, file);
+        }
+      }
+    }
+  }
+
+  if (fs.existsSync(circuitsDir)) {
+    const unmatched = new Map(); // source -> circuit count
+    for (const file of fs.readdirSync(circuitsDir).filter((f) => f.endsWith(".yaml"))) {
+      let data;
+      try {
+        data = yaml.load(fs.readFileSync(path.join(circuitsDir, file), "utf8"));
+      } catch {
+        continue;
+      }
+      if (!data || !isPaperSource(data.source)) continue;
+      if (!claimed.has(paperKey(data.source))) {
+        unmatched.set(data.source, (unmatched.get(data.source) ?? 0) + 1);
+      }
+    }
+    for (const [source, count] of [...unmatched].sort((a, b) => b[1] - a[1])) {
+      warnings.push(
+        `${count} circuit${count === 1 ? "" : "s"} cite '${source}', which has no file in ` +
+          `data_yaml/papers/ — they are searchable by URL but not by title or author`,
+      );
+    }
   }
 }
 
@@ -207,6 +304,14 @@ for (const [dir, schema] of Object.entries(SCHEMAS)) {
       }
     }
   }
+}
+
+if (warnings.length > 0) {
+  console.warn("Warnings:\n");
+  for (const w of warnings) {
+    console.warn(`  ! ${w}`);
+  }
+  console.warn("");
 }
 
 if (allErrors.length > 0) {

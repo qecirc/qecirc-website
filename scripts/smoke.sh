@@ -63,6 +63,28 @@ fi
 # Advanced search: server-filtered, so results must appear in the HTML itself.
 check "/search?q=code" "<title"
 
+# Each of these reaches circuits through a DIFFERENT circuit_search column, so
+# together they assert the index still has all of them wired up. Any of them
+# returning nothing means a column stopped being populated or stopped being
+# matched -- both of which have shipped before, and neither of which shows up as
+# an error: /search just quietly answers "no circuits found".
+#
+# `search-schema.ts` throws on a column with no weight, so a broken deploy fails
+# these as HTTP 500 rather than a wrong ranking.
+search_finds() { # <query> <what it proves>
+  if ! body=$(curl -fsS "$BASE/search?q=$1" 2>&1); then
+    echo "FAIL /search?q=$1: HTTP error"; fail=1; return
+  fi
+  if grep -q "No circuits found" <<< "$body"; then
+    echo "FAIL /search?q=$1: no results ($2)"; fail=1; return
+  fi
+  echo "OK   /search?q=$1 ($2)"
+}
+search_finds "laflamme"      "aliases column"
+search_finds "topological"   "code_tags column"
+search_finds "forlivesi"     "paper column (authors)"
+search_finds "reinforcement" "paper column (title)"
+
 # Discover a code slug from the sitemap
 slug=$(curl -fsS "$BASE/sitemap.xml" \
        | grep -oE "/codes/[a-z0-9-]+" | head -1 | sed "s|/codes/||")

@@ -28,6 +28,7 @@ All library data lives in `data_yaml/` as human-editable YAML files:
 ```
 data_yaml/
 ├── tools/              # one YAML file per tool
+├── papers/             # one YAML file per cited paper
 ├── codes/              # one YAML file per code
 └── circuits/           # YAML metadata + body files per circuit
     └── originals/      # original (pre-canonicalization) STIM and matrices
@@ -52,6 +53,23 @@ npm run db:clear:tools -- --yes     # Remove tools only from DB
 ```
 
 After any of these commands, run `npm run db:create` to restore data from YAML, then restart the dev server.
+
+## Papers
+
+`data_yaml/papers/` holds one file per published work the library's circuits are taken from.
+Circuits are linked to them by **matching `circuits.source` against each paper's
+`url`/`arxiv_id`/`doi`** during `npm run db:create` — circuit YAML carries no paper
+reference, so adding a paper file is enough to enrich every circuit that cites it.
+
+The build prints how many circuits linked, and lists any link-shaped `source` with no paper
+behind it:
+
+```
+Papers: 7, linked to 724 circuits.
+```
+
+Those unlinked circuits still render and still search by URL; they just cannot be found by
+title or author. `npm run validate:yaml` reports the same thing as a warning.
 
 ## Original Circuit Data
 
