@@ -105,6 +105,13 @@ SOURCE = "https://arxiv.org/abs/2409.18175"
 TOOL = "autqec"
 HIDDEN_CODE_TAG = "codetables"  # keep in sync with src/lib/constants.ts
 
+# Qubit permutations onto stored codes that the structural finder cannot
+# recover within budget (automorphism-rich BB codes). Found offline via the
+# weight-6-codeword incidence-graph isomorphism (see README) and verified by
+# row-space equality both there and again on every load below. Convention
+# matches compute_circuit_data's qubit_permutation: sigma[new] = old.
+SIGMA_PRECOMPUTED = HERE / "sigma_precomputed.json"
+
 # autqec gate tuple name -> stim gate. Verified exactly (binary action AND
 # signs) against autqec's clifford_circ_stab_update on every 1-/2-qubit Pauli.
 GATE_MAP = {
@@ -169,6 +176,37 @@ STRUCTURE_POLICY = {
 def load_auts(path: Path) -> list:
     with open(path, "rb") as f:
         return pickle.load(f)["auts"]
+
+
+def _gf2_rref(mat: np.ndarray) -> np.ndarray:
+    """Reduced row echelon form over F2 with zero rows dropped — a canonical
+    representative of the row space, so equality of RREFs is equality of
+    spaces."""
+    m = (np.array(mat, dtype=np.uint8) % 2).copy()
+    r = 0
+    for c in range(m.shape[1]):
+        piv = next((i for i in range(r, m.shape[0]) if m[i, c]), None)
+        if piv is None:
+            continue
+        m[[r, piv]] = m[[piv, r]]
+        for i in range(m.shape[0]):
+            if i != r and m[i, c]:
+                m[i] ^= m[r]
+        r += 1
+        if r == m.shape[0]:
+            break
+    return m[:r]
+
+
+def sigma_verifies(H: np.ndarray, stored_h: np.ndarray, n: int, sigma: list[int]) -> bool:
+    """Does relabeling H's qubits by sigma (sigma[new] = old, both symplectic
+    halves moving together) give exactly the stored code's row space?"""
+    perm = np.array(sigma, dtype=int)
+    H_p = np.zeros_like(H)
+    H_p[:, np.arange(n)] = H[:, perm]
+    H_p[:, np.arange(n) + n] = H[:, perm + n]
+    a, b = _gf2_rref(H_p), _gf2_rref(stored_h)
+    return a.shape == b.shape and np.array_equal(a, b)
 
 
 def main() -> None:
@@ -292,22 +330,20 @@ def main() -> None:
         },
     ]
 
-    # Bivariate bicycle codes (paper Sec. on BB codes; full ⟨H,S⟩+SWAP groups in
-    # full_aut_groups/). Only [[72,12,6]] is imported: its autqec construction
-    # shares the stored code's qubit labeling, so the hash dedup fits it. The
-    # other three are SKIPPED for now:
-    #   - 90-8-10: the stored (circuit-synth) code is a genuinely different
-    #     construction — its X-space has 90 weight-4 + 600 weight-6 codewords
-    #     vs autqec's 45 weight-6 (a permutation invariant), so no relabeling
-    #     can attach autqec's circuits to it.
-    #   - 108-8-10, 144-12-12: low-weight invariants look compatible, but the
-    #     qubit permutation onto the stored labeling has not been found yet
-    #     (hash dedup misses; the structural finder exceeds its budget on
-    #     these automorphism-rich codes). A canonical-generator incidence-graph
-    #     isomorphism would likely resolve them — future work.
+    # Bivariate bicycle codes (paper Sec. on BB codes; full ⟨H,S⟩+SWAP groups
+    # in full_aut_groups/). [[72,12,6]] fits the stored code directly (shared
+    # labeling, hash dedup); [[108,8,10]] and [[144,12,12]] fit via the
+    # offline-precomputed sigmas in sigma_precomputed.json (weight-6-codeword
+    # incidence-graph isomorphism; re-verified on every run). Still SKIPPED:
+    #   - 90-8-10: the stored code is a genuinely different construction —
+    #     its X-space has 90 weight-4 + 600 weight-6 codewords vs autqec's
+    #     45 weight-6 (a permutation invariant), so no relabeling can attach
+    #     autqec's circuits to it.
     bb_dir = dataset / "examples" / "bivariate_bicycle_codes"
     for stem, slug, name, d in [
         ("n72k12d6", "72-12-6", "Bivariate Bicycle Code", 6),
+        ("n108k8d10", "108-8-10", "Bivariate Bicycle Code", 10),
+        ("n144k12d12", "144-12-12", "Gross Code", 12),
     ]:
         hx = np.array(np.load(bb_dir / "code_data" / f"HX_{stem}.npy"), dtype=int)
         hz = np.array(np.load(bb_dir / "code_data" / f"HZ_{stem}.npy"), dtype=int)
@@ -470,20 +506,34 @@ def main() -> None:
             # compute_code_data_h already maps onto it.
             if code["status"] == "new" and pre_existing:
                 # The hash dedup missed (permutation-heavy codes like BB are
-                # exactly where the canonical hash is not a true invariant);
-                # fit against the stored code with the structural finder.
-                css_mine = split_h_to_css(H, n)
-                css_stored = split_h_to_css(np.array(stored["h"], dtype=int), n)
+                # exactly where the canonical hash is not a true invariant).
+                # Try the offline-precomputed sigma first, then the finder.
+                h_stored_arr = np.array(stored["h"], dtype=int)
                 sigma = None
-                if css_mine is not None and css_stored is not None:
-                    sigma = find_code_permutation(*css_mine, *css_stored)
+                precomputed = (
+                    json.loads(SIGMA_PRECOMPUTED.read_text())
+                    if SIGMA_PRECOMPUTED.exists()
+                    else {}
+                )
+                if slug in precomputed:
+                    cand = precomputed[slug]
+                    if not sigma_verifies(H, h_stored_arr, n, cand):
+                        sys.exit(f"{slug}: precomputed sigma failed row-space verification")
+                    sigma = cand
+                    print("  (hash dedup missed; precomputed sigma verified)")
+                else:
+                    css_mine = split_h_to_css(H, n)
+                    css_stored = split_h_to_css(h_stored_arr, n)
+                    if css_mine is not None and css_stored is not None:
+                        sigma = find_code_permutation(*css_mine, *css_stored)
+                    if sigma is not None:
+                        print(f"  (hash dedup missed; structural fit found perm={sigma})")
                 if sigma is None:
                     sys.exit(
                         f"{slug}: stored code exists but no qubit permutation onto it "
                         "was found — different code, or search budget exceeded"
                     )
                 perm = sigma
-                print(f"  (hash dedup missed; structural fit found perm={perm})")
         elif code["status"] == "existing":
             sys.exit(f"dedup matched an existing code but {code_path} is missing — wrong slug?")
         else:

@@ -44,6 +44,22 @@ and relabel to the stored code's canonical qubit order.
 | [[7,1,3]] Steane                      | `steane-code`     | existing (fitted, perm `[2,1,4,0,5,3,6]`)                                                         |
 | [[17,1,7]] (codetables best-distance) | `17-1-7`          | seeded by this import (its `H_symp_n17k1.npy` ships in the dataset's `codetables/parity_checks/`) |
 | [[72,12,6]] bivariate bicycle         | `72-12-6`         | existing (autqec's labeling matches the stored code, so the hash dedup fits it directly)          |
+| [[108,8,10]] bivariate bicycle        | `108-8-10`        | existing (fitted via `sigma_precomputed.json`, see below)                                         |
+| [[144,12,12]] Gross code              | `144-12-12`       | existing (fitted via `sigma_precomputed.json`, see below)                                         |
+
+### Precomputed qubit permutations (`sigma_precomputed.json`)
+
+For `108-8-10` and `144-12-12` the canonical-hash dedup misses and the
+structural permutation finder exceeds its budget (automorphism-rich BB
+codes), so their σ was computed offline: enumerate **all** weight-6 codewords
+of each X/Z row space (ISD sweeps until stable; they span the full spaces and
+counts match across sides — 54 each for n=108, 72 each for n=144), build the
+colored qubit/codeword incidence graphs, and extract the isomorphism by
+composing BLISS canonical permutations. Each σ is verified by exact
+symplectic row-space equality — both offline and again by `rebuild_all.py` on
+every run before it is used (`sigma_verifies`), so a stale or wrong entry
+fails loudly. Convention: `sigma[new] = old`, matching
+`compute_circuit_data(qubit_permutation=...)`.
 
 ### Deliberately skipped (for now)
 
@@ -53,13 +69,6 @@ and relabel to the stored code's canonical qubit order.
   enumerators are permutation invariants, so no relabeling can attach autqec's
   circuits to the stored code. Importing them would need a second, distinct
   [[90,8,10]] code entry.
-- **BB `108-8-10`, `144-12-12`** — low-weight invariants match the stored
-  codes (plausibly equivalent), but the qubit permutation onto the stored
-  labeling is still missing: the canonical-hash dedup misses and the
-  structural permutation finder exceeds its budget on these automorphism-rich
-  codes. A canonical-generator incidence-graph isomorphism (on the weight-6
-  codeword sets) is the likely resolution — the aut pickles
-  (`full_aut_groups/auts_n{108k8d10,144k12d12}.pkl`) are ready once σ is found.
 
 Also not yet imported: the two-block embedded-code gates
 (`examples/embedded_codes/` — circuits act on an embedded larger code, needs a
