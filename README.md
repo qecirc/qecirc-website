@@ -9,7 +9,7 @@ A community-driven library for quantum error correction circuits.
 ## What QECirc is
 
 - A place to find and share reusable quantum error correction circuits
-- A fast, simple way to grab standard circuits for common tasks — encoding, state preparation, syndrome extraction, and more
+- A fast, simple way to grab standard circuits for common tasks — encoding, state preparation, logical gates, syndrome extraction, and more
 - A hub for the QEC circuit community, highlighting well-crafted circuits and the tools used to create them
 - Simple to use and open to everyone
 

@@ -359,7 +359,7 @@ npm run format                      # Auto-format with Prettier
 npm run papers:add -- 2402.17761    # Fetch a paper (arXiv id/DOI/link) into data_yaml/papers/
 npm run papers:missing              # Fetch every circuit source that has no paper yet
 npm run validate:yaml               # Validate data_yaml/ schemas
-npm run validate:circuits           # Validate encoding/state-prep circuits against the code's symplectic h (CSS and non-CSS alike)
+npm run validate:circuits           # Validate encoding/state-prep/logical-gate circuits against the code's symplectic h (CSS and non-CSS alike)
 uv run ruff check scripts/          # Lint Python code
 uv run ruff format scripts/          # Format Python code
 npm run db:create                   # Build database from data_yaml/ (restart dev server after)
