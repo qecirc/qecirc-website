@@ -124,7 +124,10 @@ const needsRaw = hasCoords || hasDetectors(raw);
     block.querySelectorAll(".download-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         const el = btn as HTMLElement;
-        const copyBtn = el.closest(".flex")?.querySelector(".copy-btn") as HTMLElement | null;
+        // Query within the block, not via closest(".flex"): the download button's
+        // own class list contains "flex", so closest() would match the button
+        // itself and find no copy button inside it.
+        const copyBtn = block.querySelector(".copy-btn") as HTMLElement | null;
         const body = copyBtn?.dataset.code || "";
         const name = el.dataset.downloadName || "circuit.stim";
         const blob = new Blob([body], { type: "text/plain" });
