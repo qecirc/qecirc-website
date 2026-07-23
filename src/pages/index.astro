@@ -16,6 +16,8 @@ import HeartIcon from "../components/HeartIcon.astro";
 import {
   countAllCodes,
   countAllCircuits,
+  countAllCodesTotal,
+  countAllCircuitsTotal,
   countAllTools,
   countCircuitPapers,
   getAllCodes,
@@ -42,12 +44,24 @@ if (CODES_LIST_PARAMS.some((p) => Astro.url.searchParams.has(p))) {
 const fmt = new Intl.NumberFormat("en-US");
 const codeCount = countAllCodes();
 const circuitCount = countAllCircuits();
+const codeTotal = countAllCodesTotal();
+const circuitTotal = countAllCircuitsTotal();
 
 // Deliberately not linked, unlike the cards below: "papers" has no page to go
 // to, and a row where only some numbers are clickable reads as broken.
-const STATS: { value: number; label: string }[] = [
-  { value: circuitCount, label: "Circuits" },
-  { value: codeCount, label: "Codes" },
+// `sub` states the grand total including the hidden codetables shelf; it is
+// omitted when the shelf is empty so the tile collapses back to two lines.
+const STATS: { value: number; label: string; sub?: string }[] = [
+  {
+    value: circuitCount,
+    label: "Circuits",
+    sub: circuitTotal > circuitCount ? `${fmt.format(circuitTotal)} incl. codetables` : undefined,
+  },
+  {
+    value: codeCount,
+    label: "Codes",
+    sub: codeTotal > codeCount ? `${fmt.format(codeTotal)} incl. codetables` : undefined,
+  },
   { value: countAllTools(), label: "Tools" },
   { value: countCircuitPapers(), label: "Papers" },
   { value: CONTRIBUTORS.length, label: "Contributors" },
@@ -216,7 +230,7 @@ const jsonLd = {
     <div class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
       <h2 class="text-lg font-semibold mb-1">Find circuits</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
-        Search all {fmt.format(circuitCount)} circuits by name, notes, tag or code, ranked
+        Search all {fmt.format(circuitTotal)} circuits by name, notes, tag or code, ranked
         by relevance.
       </p>
       <form method="GET" action="/search" class="flex gap-2">
@@ -245,6 +259,9 @@ const jsonLd = {
         <div>
           <dd class="text-2xl font-bold tabular-nums">{fmt.format(s.value)}</dd>
           <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{s.label}</dt>
+          {s.sub && (
+            <dd class="text-[11px] tabular-nums text-gray-400 dark:text-gray-500 mt-0.5">{s.sub}</dd>
+          )}
         </div>
       ))}
     </dl>

@@ -43,8 +43,11 @@ export interface ListFilterConfig {
   containerSelector: string;
   basePath: string;
   // Element whose textContent shows the count; formatCount renders it.
+  // `hiddenExcluded` is how many rows the hidden-tag rule is currently
+  // suppressing (0 unless hiddenTags is configured), so the text can state
+  // both the curated and the full number.
   countSelector?: string;
-  formatCount?: (visible: number, total: number, active: boolean) => string;
+  formatCount?: (visible: number, total: number, active: boolean, hiddenExcluded: number) => string;
   // Block shown when filters hide every row.
   emptyStateSelector?: string;
   // The sort the server rendered the rows in (never null).
@@ -317,7 +320,7 @@ export function initListFilter(config: ListFilterConfig): void {
 
     const active = hasActiveFilters();
     if (countEl && config.formatCount) {
-      countEl.textContent = config.formatCount(visible, eligible, active);
+      countEl.textContent = config.formatCount(visible, eligible, active, rows.length - eligible);
     }
     if (emptyEl) emptyEl.classList.toggle("hidden", visible > 0);
     renderStatus();

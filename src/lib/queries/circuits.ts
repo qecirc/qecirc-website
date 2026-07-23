@@ -65,6 +65,15 @@ export function countAllCircuits(): number {
   return row.count;
 }
 
+/** Every circuit including those of hidden (codetables) codes — shown
+ * alongside the curated count where both numbers are stated, and the honest
+ * total for anything describing search, which spans the full library. */
+export function countAllCircuitsTotal(): number {
+  const db = getDb();
+  const row = db.prepare("SELECT COUNT(*) as count FROM circuits").get() as { count: number };
+  return row.count;
+}
+
 /** Most recently added circuits, for the landing page.
  *
  * Ordered by `qec_id DESC`, NOT `created_at`: create_database.mjs rebuilds the

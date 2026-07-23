@@ -17,6 +17,7 @@ const allTags = getTagsWithCount("code");
 const codes = filterCodes({});
 const visibleCodes = codes.filter((c) => !c.tags.includes(HIDDEN_CODE_TAG));
 const totalCount = visibleCodes.length;
+const hiddenCount = codes.length - totalCount;
 
 const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
 const pageUrl = `${siteUrl}/codes`;
@@ -60,7 +61,8 @@ const jsonLd = [
 
   <div class="flex items-center justify-between mb-4">
     <p data-list-count class="text-sm text-gray-500">
-      {totalCount} {totalCount === 1 ? "code" : "codes"}
+      {totalCount}
+      {totalCount === 1 ? "code" : "codes"}{hiddenCount > 0 ? ` (+${hiddenCount} codetables)` : ""}
     </p>
     <HiddenCodesToggle />
   </div>
@@ -89,10 +91,11 @@ const jsonLd = [
     containerSelector: "[data-list-container]",
     basePath: "/codes",
     countSelector: "[data-list-count]",
-    formatCount: (visible, total, active) =>
+    formatCount: (visible, total, active, hiddenExcluded) =>
       active
         ? `Showing ${visible} of ${total} codes`
-        : `${total} ${total === 1 ? "code" : "codes"}`,
+        : `${total} ${total === 1 ? "code" : "codes"}` +
+          (hiddenExcluded > 0 ? ` (+${hiddenExcluded} codetables)` : ""),
     emptyStateSelector: "[data-list-empty]",
     defaultSort: { field: "n", dir: "asc" },
     // codetables record codes are a reference shelf: hidden until the

@@ -74,3 +74,11 @@ export function countAllCodes(): number {
     .get(HIDDEN_CODE_TAG) as { count: number };
   return row.count;
 }
+
+/** Every code including the hidden (codetables) shelf — shown alongside the
+ * curated count where both numbers are stated. */
+export function countAllCodesTotal(): number {
+  const db = getDb();
+  const row = db.prepare("SELECT COUNT(*) as count FROM codes").get() as { count: number };
+  return row.count;
+}

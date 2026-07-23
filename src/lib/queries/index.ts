@@ -1,11 +1,19 @@
 export { getTagsFor, parseFilterString, hasActiveFilters, getTagsWithCount } from "./shared";
-export { formatCodeParams, getAllCodes, getCodeBySlug, filterCodes, countAllCodes } from "./codes";
+export {
+  formatCodeParams,
+  getAllCodes,
+  getCodeBySlug,
+  filterCodes,
+  countAllCodes,
+  countAllCodesTotal,
+} from "./codes";
 export {
   formatCircuitId,
   getCircuitsForCode,
   countCircuitsForCode,
   codeHasWeightedCircuits,
   countAllCircuits,
+  countAllCircuitsTotal,
   getLatestCircuits,
   getCircuitTagsForCode,
   filterCircuitsForCode,

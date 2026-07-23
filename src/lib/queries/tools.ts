@@ -9,17 +9,20 @@ export function parseToolRow(row: ToolRow): Tool {
 }
 
 function enrichTools(rows: ToolRow[]): ToolWithMeta[] {
-  // Tool counts describe the curated library: circuits of hidden
-  // (HIDDEN_CODE_TAG) codes are excluded, matching every other displayed
-  // count — a bulk reference import would otherwise dwarf every other tool.
-  // Re-sort by the visible count so the order matches the numbers shown
-  // (the SQL pre-sort counts all circuits).
-  const enriched = withCircuitCounts(withTags(rows.map(parseToolRow), "tool"), "tool_id", {
+  // circuit_count describes the curated library (circuits of hidden
+  // HIDDEN_CODE_TAG codes excluded, matching every other displayed count);
+  // hidden_circuit_count carries the codetables remainder so surfaces can
+  // state both numbers. Ordering follows the curated count so a bulk
+  // reference import cannot dominate the list.
+  const visible = withCircuitCounts(withTags(rows.map(parseToolRow), "tool"), "tool_id", {
     visibleCodesOnly: true,
   });
-  return enriched.toSorted(
-    (a, b) => b.circuit_count - a.circuit_count || a.name.localeCompare(b.name),
+  const totals = new Map(
+    withCircuitCounts(rows.map(parseToolRow), "tool_id").map((t) => [t.id, t.circuit_count]),
   );
+  return visible
+    .map((t) => ({ ...t, hidden_circuit_count: (totals.get(t.id) ?? 0) - t.circuit_count }))
+    .toSorted((a, b) => b.circuit_count - a.circuit_count || a.name.localeCompare(b.name));
 }
 
 export function getAllTools(): ToolWithMeta[] {
