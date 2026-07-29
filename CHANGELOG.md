@@ -185,6 +185,45 @@ the source-of-truth `package.json` version.
   each ancilla is prepared in, pulls back that operator rather than always `Z`, and
   requires the measurement basis to match the reset basis — a round reset in X and read
   in Z has a random outcome however correct its check pattern looks.
+- **QUITS syndrome-extraction schedules** (69 of them), imported from
+  [QUITS](https://github.com/mkangquantum/quits)
+  ([arXiv:2504.02673](https://arxiv.org/abs/2504.02673), Quantum 9, 1931 (2025)) by
+  [data-imports/quits/](data-imports/quits/README.md). These are the library's first
+  circuits for **balanced-product, hypergraph-product, lifted-product and
+  lift-connected-surface codes** — 22 new codes, from [[36,8,4]] to
+  [[1428,184,<=24]] — and its first competing schedules for the same code from an
+  independent source: a bivariate bicycle round is 7 CX layers under the code's own
+  schedule and 12 under ZX-coloration.
+  - QUITS ships no circuits; it is a generator, so the importer calls it. One stored
+    circuit is one round, lifted out of the memory experiment's `REPEAT` block. The
+    `custom` bivariate bicycle schedule needed two normalisations, both identities on
+    a steady-state round: it renumbers the qubits (X-checks first) and ends on `MR`.
+  - Source is the paper that defines the **schedule**, not the code: only `cardinal`
+    and its N/S-merged variant are QUITS' own, while ZX-coloration is
+    [arXiv:2308.08648](https://arxiv.org/abs/2308.08648) and the bivariate bicycle
+    schedule is [arXiv:2308.07915](https://arxiv.org/abs/2308.07915).
+  - Schedules are tagged `schedule:interleaved` or `schedule:xz-separated` by
+    **measuring** the emitted circuit — reading the check type off each two-qubit gate
+    and asking whether any tick mixes them — rather than by trusting the strategy's
+    name. The source's own vocabulary lives in the circuit name instead.
+  - Two balanced-product codes share [[n,k,d]] with an unrelated stored code and are
+    refuted rather than merged into it: [[36,8,4]] against the hyperbolic surface code
+    (row-space ranks 14/14 against 11/17), and [[108,8,8]] against the bivariate
+    bicycle [[108,8,10]] (different distance). Both get distinct slugs.
+
+### Changed
+
+- **Prettier no longer parses the generated matrix YAML** (`data_yaml/codes/`,
+  `data_yaml/circuits/originals/`). Those files are written by `add_circuit` and are
+  already in Prettier's style, so checking them only cost time — until the
+  [[1428,184,<=24]] code made its entry 14 MB and ran the Node heap out of memory,
+  which would have failed CI. `npm run validate:yaml` still covers them.
+- **A code too large to display offers its matrices as a download** instead of
+  rendering them. The stored `h` is (n-k) x 2n, so the lifted product code
+  [[1428,184,<=24]] is 3.6M entries and ~14 MB of JSON — neither readable as text nor
+  worth sending to everyone who expands the section. Below
+  `MATRIX_INLINE_ENTRY_LIMIT` nothing changes; matrices were already fetched lazily,
+  so no page ever shipped them in its HTML.
 
 ### Added
 

@@ -10,3 +10,11 @@ uv.lock
 # blanket `.claude/` — the tracked agents/ and commands/ markdown stays formatted.
 .claude/worktrees/
 **/.cache/
+
+# Generated matrix data. `add_circuit` writes these files and they are already
+# in Prettier's style, so checking them only costs time — and at qLDPC sizes it
+# costs more than that: the stored `h` is (n-k) x 2n, so the [[1428,184,<=24]]
+# lifted product code's entry is 14 MB of YAML and Prettier runs the Node heap
+# out of memory parsing it. `npm run validate:yaml` covers these files.
+data_yaml/codes/
+data_yaml/circuits/originals/

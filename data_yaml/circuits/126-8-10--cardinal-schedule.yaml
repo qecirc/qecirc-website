@@ -1,0 +1,13 @@
+qec_id: 1127
+name: Cardinal schedule
+tool: quits
+notes: "One syndrome-extraction round. Tanner edges split into cardinal directions,
+  each direction edge-coloured. Data qubits 0-125, then the ancillas (Z-checks first),
+  measured in index order. X- and Z-checks share ticks. Code construction: Tiew and
+  Breuckmann, arXiv:2411.03302."
+source: https://arxiv.org/abs/2504.02673
+gate_count: 882
+two_qubit_gate_count: 756
+depth: 8
+qubit_count: 252
+tags: [syndrome-extraction, "schedule:interleaved"]

@@ -1,0 +1,14 @@
+qec_id: 1152
+name: ZX-coloration schedule
+tool: quits
+notes: "One syndrome-extraction round. Z-checks and X-checks in two separate edge-coloured
+  passes. Data qubits 0-359, then the ancillas (Z-checks first), measured in index
+  order. X- and Z-checks run in separate passes. Code construction: Bravyi et al.,
+  arXiv:2308.07915, Table 3. Stored d=24 is the source's upper bound, not a proven
+  distance."
+source: https://arxiv.org/abs/2308.08648
+gate_count: 2520
+two_qubit_gate_count: 2160
+depth: 12
+qubit_count: 720
+tags: [syndrome-extraction, "schedule:xz-separated"]

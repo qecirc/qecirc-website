@@ -1,0 +1,13 @@
+qec_id: 1171
+name: Cardinal schedule (N/S merged)
+tool: quits
+notes: "One syndrome-extraction round. As the cardinal schedule, with the north and
+  south edges coloured together. Data qubits 0-1427, then the ancillas (Z-checks first),
+  measured in index order. X- and Z-checks share ticks. Code construction: Xu et al.,
+  arXiv:2308.08648. Stored d=24 is the source's upper bound, not a proven distance."
+source: https://arxiv.org/abs/2504.02673
+gate_count: 11340
+two_qubit_gate_count: 10080
+depth: 11
+qubit_count: 2688
+tags: [syndrome-extraction, "schedule:interleaved"]
