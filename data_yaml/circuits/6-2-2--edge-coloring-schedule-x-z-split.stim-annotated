@@ -1,0 +1,56 @@
+R 0 1 2 3 4 5
+TICK
+RX 6 7 8 9
+TICK
+CX 6 2 7 0
+TICK
+CX 6 0 7 1
+TICK
+CX 6 1 7 4
+TICK
+CX 6 3 7 5
+TICK
+TICK
+CZ 8 2 9 0
+TICK
+CZ 8 1 9 5
+TICK
+CZ 8 3 9 1
+TICK
+CZ 8 0 9 4
+TICK
+MX 6 7 8 9
+DETECTOR rec[-2]
+DETECTOR rec[-1]
+REPEAT 1 {
+    RX 6 7 8 9
+    TICK
+    CX 6 2 7 0
+    TICK
+    CX 6 0 7 1
+    TICK
+    CX 6 1 7 4
+    TICK
+    CX 6 3 7 5
+    TICK
+    TICK
+    CZ 8 2 9 0
+    TICK
+    CZ 8 1 9 5
+    TICK
+    CZ 8 3 9 1
+    TICK
+    CZ 8 0 9 4
+    TICK
+    MX 6 7 8 9
+    DETECTOR rec[-4] rec[-8]
+    DETECTOR rec[-3] rec[-7]
+    DETECTOR rec[-2] rec[-6]
+    DETECTOR rec[-1] rec[-5]
+}
+TICK
+M 0 1 2 3 4 5
+DETECTOR rec[-6] rec[-5] rec[-4] rec[-3] rec[-8]
+DETECTOR rec[-6] rec[-5] rec[-2] rec[-1] rec[-7]
+OBSERVABLE_INCLUDE(0) rec[-6] rec[-4] rec[-2]
+OBSERVABLE_INCLUDE(1) rec[-6] rec[-5]

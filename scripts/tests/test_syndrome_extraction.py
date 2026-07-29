@@ -272,6 +272,37 @@ class TestRoundCheckMatrix:
         bad = TestInterleaving._pair({0})
         assert round_check_matrix(bad, N) is None
 
+    def test_reads_a_round_that_holds_its_ancillas_in_the_x_basis(self):
+        """`RX` … `MX` with `CZ` for the Z-checks is the same construction in a
+        different frame — it is what qLDPC emits — and it has to be readable, or
+        those rounds silently lose their annotated memory experiment."""
+        circ = stim.Circuit()
+        circ.append("RX", [7, 8, 9, 10, 11, 12])
+        for row, anc in enumerate((7, 8, 9)):  # X-checks: ancilla controls a CX
+            for q in np.flatnonzero(STEANE_CHECKS[row]):
+                circ.append("CX", [anc, int(q)])
+        for row, anc in enumerate((10, 11, 12)):  # Z-checks: CZ from the X-basis ancilla
+            for q in np.flatnonzero(STEANE_CHECKS[row]):
+                circ.append("CZ", [anc, int(q)])
+        circ.append("MX", [7, 8, 9, 10, 11, 12])
+
+        assert validate_syndrome_extraction_h(circ, STEANE_H, N, logical=STEANE_LOGICAL) == "passed"
+        checks = round_check_matrix(circ, N)
+        assert checks is not None
+        assert np.array_equal(checks[:3, :N], STEANE_CHECKS)
+        assert not checks[:3, N:].any()
+        assert np.array_equal(checks[3:, N:], STEANE_CHECKS)
+        assert not checks[3:, :N].any()
+
+    def test_returns_none_when_an_ancilla_changes_basis_between_reset_and_measure(self):
+        """Reset in X and read in Z and the outcome is random, however correct
+        the check pattern in between looks."""
+        circ = stim.Circuit()
+        circ.append("RX", [7])
+        circ.append("CX", [7, 0])
+        circ.append("M", [7])
+        assert round_check_matrix(circ, N) is None
+
 
 class TestAnnotatedMemoryExperiment:
     @staticmethod

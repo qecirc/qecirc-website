@@ -1,0 +1,12 @@
+qec_id: 1161
+name: Tableau |0> preparation
+tool: qldpc
+notes: Prepares the logical |0> state. Synthesised from the code's tableau, so it
+  carries no flag qubits and no distance guarantee; the library states its encoders
+  are not fault-tolerant.
+source: qldpc
+gate_count: 2186
+two_qubit_gate_count: 2126
+depth: 436
+qubit_count: 241
+tags: [state-preparation, non-ft, "logical-state:zero"]

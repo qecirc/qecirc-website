@@ -1,0 +1,15 @@
+qec_id: 1143
+name: Edge-coloring schedule (X/Z split)
+tool: qldpc
+notes: One syndrome-extraction round. The X- and Z-check subgraphs are coloured separately,
+  then run one colour per tick. Data qubits 0-3, then the ancillas, measured in index
+  order; every ancilla is prepared and read in the X basis. The library states this
+  strategy is not guaranteed to be distance-preserving or fault-tolerant.
+source: https://arxiv.org/abs/2109.14609
+gate_count: 8
+two_qubit_gate_count: 8
+depth: 8
+qubit_count: 6
+crumble_url: https://algassert.com/crumble#circuit=RX_4_5;TICK;CX_4_0;TICK;CX_4_1;TICK;CX_4_3;TICK;CX_4_2;TICK;TICK;CZ_5_1;TICK;CZ_5_2;TICK;CZ_5_3;TICK;CZ_5_0;TICK;MX_4_5_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,"XDetectControlReset","XDetectControlReset"],[1,1,1,1,"H","H"],["X",1,1,1,"•"],[1,"X",1,1,"•"],[1,1,1,"X","•"],[1,1,"X",1,"•"],[1,"Z",1,1,1,"•"],[1,1,"Z",1,1,"•"],[1,1,1,"Z",1,"•"],["Z",1,1,1,1,"•"],[1,1,1,1,"XDetector","XDetector"]]}
+tags: [syndrome-extraction, "schedule:xz-separated"]

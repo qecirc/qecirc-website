@@ -473,18 +473,30 @@ def round_check_matrix(circuit: Union[stim.Circuit, str], n: int) -> Optional[np
     circ = _widen(_to_stim_circuit(circuit), n)
     width = circ.num_qubits
 
+    # Both bases are in scope. A round may hold its ancillas in Z (`R` … `M`,
+    # with the basis change on the data side) or in X (`RX` … `MX`, with
+    # Z-checks applied as `CZ`) — the second is what qLDPC emits, and the two are
+    # the same construction seen from different frames. What matters is only that
+    # an ancilla is measured in the basis it was reset in, since that is what
+    # makes its outcome a function of the data.
     unitary = stim.Circuit()
     measured: list[int] = []
-    reset: set[int] = set()
+    reset_basis: dict[int, int] = {}  # qubit -> stim Pauli code (1 = X, 3 = Z)
+    measured_basis: dict[int, int] = {}
     for op in circ:
         if isinstance(op, stim.CircuitRepeatBlock):
             return None
-        if op.name in ("R", "RZ"):
+        if op.name in ("R", "RZ", "RX"):
             if measured:
                 return None  # a reset after a measurement: not a single simple round
-            reset.update(t.value for t in op.targets_copy())
-        elif op.name in ("M", "MZ"):
-            measured.extend(t.value for t in op.targets_copy())
+            pauli = 1 if op.name == "RX" else 3
+            for t in op.targets_copy():
+                reset_basis[t.value] = pauli
+        elif op.name in ("M", "MZ", "MX"):
+            pauli = 1 if op.name == "MX" else 3
+            for t in op.targets_copy():
+                measured.append(t.value)
+                measured_basis[t.value] = pauli
         elif op.name == "TICK" or op.name == "QUBIT_COORDS":
             continue
         elif _ALL_GATES.get(op.name) is not None and _ALL_GATES[op.name].is_unitary:
@@ -492,10 +504,12 @@ def round_check_matrix(circuit: Union[stim.Circuit, str], n: int) -> Optional[np
         else:
             return None  # some other non-unitary op; out of scope
 
-    if not measured or not set(measured) <= reset:
+    if not measured or not set(measured) <= set(reset_basis):
         return None
     if len(set(measured)) != len(measured) or any(q < n for q in measured):
         return None
+    if any(measured_basis[q] != reset_basis[q] for q in measured):
+        return None  # measured in a different basis than it was prepared in
 
     try:
         inverse = _widen(unitary, width).to_tableau().inverse()
@@ -504,16 +518,17 @@ def round_check_matrix(circuit: Union[stim.Circuit, str], n: int) -> Optional[np
 
     rows = np.zeros((len(measured), 2 * n), dtype=int)
     for row, anc in enumerate(measured):
+        basis = reset_basis[anc]
         ps = stim.PauliString(width)
-        ps[anc] = 3  # Z
+        ps[anc] = basis  # the operator the reset fixes to +1
         pulled = inverse(ps)
         for q in range(width):
             p = pulled[q]
             if not p:
                 continue
             if q >= n:
-                if q != anc or p != 3:
-                    return None  # entangled with another ancilla, or not a Z
+                if q != anc or p != basis:
+                    return None  # entangled with another ancilla, or basis-changed
                 continue
             rows[row, q] = p in (1, 2)
             rows[row, n + q] = p in (2, 3)

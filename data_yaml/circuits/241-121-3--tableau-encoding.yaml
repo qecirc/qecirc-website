@@ -1,0 +1,12 @@
+qec_id: 1160
+name: Tableau encoding
+tool: qldpc
+notes: Encodes 121 logical qubits; the first 121 qubits are the input. Synthesised
+  from the code's tableau, so it carries no flag qubits and no distance guarantee;
+  the library states its encoders are not fault-tolerant.
+source: qldpc
+gate_count: 1971
+two_qubit_gate_count: 1911
+depth: 427
+qubit_count: 241
+tags: [encoding, non-ft]

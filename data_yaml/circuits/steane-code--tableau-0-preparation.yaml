@@ -1,0 +1,14 @@
+qec_id: 1107
+name: Tableau |0> preparation
+tool: qldpc
+notes: Prepares the logical |0> state. Synthesised from the code's tableau, so it
+  carries no flag qubits and no distance guarantee; the library states its encoders
+  are not fault-tolerant.
+source: qldpc
+gate_count: 26
+two_qubit_gate_count: 23
+depth: 17
+qubit_count: 7
+crumble_url: https://algassert.com/crumble#circuit=CX_5_0;H_2_1;CX_0_5_5_0_2_0_3_0_1_2_6_0_1_4_5_3_1_6_2_4_3_5_5_3;H_3;CX_3_5_3_6_5_4_4_5_5_4_5_4_6_5_5_6_6_5_5_6_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["X",1,1,1,1,"•"],[1,"H","H"],["•",1,1,1,1,"X"],["X",1,1,1,1,"•"],["X",1,"•"],["X",1,1,"•"],[1,"•","X"],["X",1,1,1,1,1,"•"],[1,"•",1,1,"X"],[1,1,1,"X",1,"•"],[1,"•",1,1,1,1,"X"],[1,1,"•",1,"X"],[1,1,1,"•",1,"X"],[1,1,1,"X",1,"•"],[1,1,1,"H"],[1,1,1,"•",1,"X"],[1,1,1,"•",1,1,"X"],[1,1,1,1,"X","•"],[1,1,1,1,"•","X"],[1,1,1,1,"X","•"],[1,1,1,1,"X","•"],[1,1,1,1,1,"X","•"],[1,1,1,1,1,"•","X"],[1,1,1,1,1,"X","•"],[1,1,1,1,1,"•","X"]]}
+tags: [state-preparation, non-ft, "logical-state:zero"]
