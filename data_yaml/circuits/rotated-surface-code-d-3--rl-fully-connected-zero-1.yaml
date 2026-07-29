@@ -15,3 +15,4 @@ crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6_7_8_9;TICK;H_
 crumble_url_annotated: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6_7_8_9;TICK;H_3_7_5_8;CX_3_0_7_1_8_2_5_0_3_1_5_6_3_4_5_2_5_9_3_9_0_9;TICK;M_0_1_2_3_4_5_6_7_8;DT_rec[-6]_rec[-5];DT_rec[-9]_rec[-8]_rec[-3]_rec[-2];DT_rec[-9]_rec[-7]_rec[-5]_rec[-1];DT_rec[-4]_rec[-3];OI(0)rec[-9]_rec[-6]_rec[-4]_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,"H",1,"H",1,"H","H"],["X",1,1,"•"],[1,"X",1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,"•"],["X",1,1,1,1,"•"],[1,"X",1,"•"],[1,1,1,1,1,"•","X"],[1,1,1,"•","X"],[1,1,"X",1,1,"•"],[1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,"•",1,1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,"X"]]}
 tags: [state-preparation, ft, "logical-state:zero", flag]
+original_matrices: 9f095f9c8cf8db0f

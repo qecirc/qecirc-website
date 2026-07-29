@@ -41,3 +41,4 @@ two_qubit_gate_count: 1175
 depth: 386
 qubit_count: 475
 tags: [state-preparation, ft, flag, "logical-state:plus", "distance:7", "connectivity:all-to-all"]
+original_matrices: 49db6018ae6f1de4

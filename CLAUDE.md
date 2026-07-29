@@ -94,7 +94,10 @@ circuit_originals
   original_stim, original_h, original_logical
   -- pre-canonicalization data as submitted by contributors
   -- matrix fields are JSON-encoded (same format as codes.h / codes.logical)
-  -- populated from data_yaml/circuits/originals/
+  -- original_stim from data_yaml/circuits/originals/ (one per circuit);
+  --   matrices from data_yaml/matrices/<digest>.yaml, shared by every circuit
+  --   of a code and referenced by the circuit YAML's `original_matrices`.
+  --   create_database.mjs resolves the reference, so this table is unchanged.
 
 tags
   id, name                          -- e.g. "CSS", "distance:3", "encoding"
@@ -111,6 +114,14 @@ taggings
 Circuits are stored in STIM format and converted to QASM/Cirq for display.
 The STIM body is the canonical source; QASM/Cirq are generated as alternate
 views in `circuit_bodies`.
+
+**Matrices are stored once, and sparsely when large.** A code's `h`/`logical` and the
+matrices a circuit was submitted against are written as plain 0/1 rows up to
+`SPARSE_MIN_ENTRIES` (`scripts/add_circuit/matrix_format.py`) and as nonzero column
+indices above it — `h` is (n−k) × 2n, so a dense encoding costs O(n²) characters whatever
+the code's density. Submitted matrices are shared: they live once in
+`data_yaml/matrices/<digest>.yaml` and circuits reference them by digest. Readers call
+`matrix_format.decode` / `decodeMatrix` and never need to know which encoding was used.
 
 The canonical STIM body is **reset-free** — `to_tableau()` and the derive/fit
 machinery need a circuit with no resets — so it leaves the `|0…0⟩` input implied.
@@ -241,7 +252,8 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 │   ├── papers/            # One YAML per cited paper (e.g. zen-2024-rl-state-prep.yaml)
 │   ├── codes/             # One YAML per code (e.g. steane-code.yaml)
 │   └── circuits/          # YAML + body files per circuit (e.g. steane-code--standard-encoding.yaml/.stim)
-│       └── originals/     # Original (pre-canonicalization) STIM and matrices per circuit
+│       └── originals/     # Original (pre-canonicalization) STIM, one per circuit
+│   └── matrices/          # Submitted check matrices, stored once, content-addressed
 ├── .github/
 │   └── ISSUE_TEMPLATE/    # Circuit submission issue template
 ├── docs/

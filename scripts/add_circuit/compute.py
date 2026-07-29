@@ -26,6 +26,7 @@ from .code_identify import (
     is_permutation_equivalent,
     split_h_to_css,
 )
+from .matrix_format import decode as decode_matrix
 from .models import CodeParams, TagEntry
 from .tag_suggest import suggest_code_tags
 from .yaml_helpers import load_yaml
@@ -506,7 +507,7 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz) -> DedupResult:
         n_stored = data.get("n")
         if n_stored is None:
             raise ValueError(f"Code '{slug}' is missing required field 'n'")
-        H_stored = np.array(data["h"], dtype=int)
+        H_stored = decode_matrix(data["h"])
         css_split = split_h_to_css(H_stored, n_stored)
         if css_split is None:
             raise ValueError(
@@ -544,7 +545,7 @@ def _phase2_permutation_scan(
     for slug, data in stored:
         if data.get("n") != n or data.get("h") is None:
             continue
-        H_stored = np.array(data["h"], dtype=int) % 2
+        H_stored = decode_matrix(data["h"])
         if H_stored.shape[1] != 2 * n or gf2_rank(H_stored) != rank_user:
             continue
         status, sigma = is_permutation_equivalent(
@@ -584,7 +585,7 @@ def _check_yaml_dedup_h(data_dir, c_hash, H, n) -> DedupResult:
             continue
         if data.get("h") is None:
             raise ValueError(f"Code '{slug}' matches non-CSS hash but has no 'h' field")
-        canon_stored = np.array(data["h"], dtype=int) % 2
+        canon_stored = decode_matrix(data["h"])
         if canon_stored.shape == canon_user.shape and np.array_equal(canon_stored, canon_user):
             perm = perm_to_canon if perm_to_canon != list(range(n)) else None
             return DedupResult("match", slug, perm, [])

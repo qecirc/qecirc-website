@@ -1,11 +1,11 @@
-name: "4.8.8 Color Code"
+name: 4.8.8 Color Code
 n: 31
 k: 1
 d: 7
 zoo_url: https://errorcorrectionzoo.org/c/488_color
 aliases:
   - "[[31,1,7]]"
-  - "square-octagon color code"
+  - square-octagon color code
 canonical_hash: 1b5dc1be7fdf8253b645d9b2f7f588bb4cc10dc5b346987ff7a4364824268d9b
 h:
   - [

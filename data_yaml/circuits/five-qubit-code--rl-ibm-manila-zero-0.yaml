@@ -13,3 +13,4 @@ qubit_count: 5
 crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3_4;TICK;SQRT_X_3_4_2;CX_3_1_1_0_4_3;SQRT_X_1;CX_4_2_3_1_0_1_3_4;S_0;SQRT_X_4;X_3;CX_1_0;S_1;SQRT_X_1;X_1_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"X^½","X^½","X^½"],[1,"X",1,"•"],["X","•"],[1,1,1,"X","•"],[1,"X^½"],[1,1,"X",1,"•"],[1,"X",1,"•"],["•","X"],[1,1,1,"•","X"],["Z^½",1,1,"X","X^½"],["X","•"],[1,"Z^½"],[1,"X^½"],[1,"X"]]}
 tags: [state-preparation, non-ft, "connectivity:ibm", "device:manila", "logical-state:zero"]
+original_matrices: 063c4d18c5fe5001

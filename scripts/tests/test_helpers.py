@@ -199,7 +199,9 @@ class TestPreviewCircuit:
         assert result.code_name == "Test Code"
         assert result.circuit_name == "Test Encoding"
         assert any(".original.stim" in f for f in result.files_written)
-        assert any(".original.yaml" in f for f in result.files_written)
+        # The submitted matrices are shared, so they are written under
+        # data_yaml/matrices/<digest>.yaml rather than beside the circuit.
+        assert any("/matrices/" in f and f.endswith(".yaml") for f in result.files_written)
 
 
 class TestPreviewCircuitH:

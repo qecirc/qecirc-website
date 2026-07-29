@@ -1,10 +1,13 @@
 """YAML formatting helpers for code and circuit data."""
 
+import hashlib
 import os
 import tempfile
 from pathlib import Path
 
 import yaml
+
+from .matrix_format import encode as encode_matrix
 
 # Prefer the libyaml-backed C loader — ~7x faster on the large check-matrix code
 # YAMLs, which are re-parsed on every dedup scan during bulk imports.
@@ -15,6 +18,11 @@ def load_yaml(text: str):
     """Parse YAML with the fast C loader when available (same result as
     ``yaml.safe_load``)."""
     return yaml.load(text, Loader=_FastLoader)
+
+
+def _encoded(value):
+    """A matrix field as it should be stored — sparse above the size threshold."""
+    return None if value is None else encode_matrix(value)
 
 
 def build_code_yaml(code):
@@ -33,7 +41,7 @@ def build_code_yaml(code):
 
     for field in ("h", "logical"):
         if code.get(field) is not None:
-            data[field] = code[field]
+            data[field] = _encoded(code[field])
 
     tags = [t["name"] for t in code.get("tags", [])]
     if tags:
@@ -79,8 +87,19 @@ def build_original_yaml(matrices):
     data = {}
     for field in ("h", "logical"):
         if matrices.get(field) is not None:
-            data[field] = matrices[field]
+            data[field] = _encoded(matrices[field])
     return data
+
+
+def matrices_digest(data) -> str:
+    """Content address for a stored matrix pair.
+
+    Hashing the *rendered* YAML rather than the arrays keeps the address in step
+    with the file: two submissions land on the same file only if the bytes they
+    would write are identical, so a change of encoding can never silently alias
+    two different matrices onto one address.
+    """
+    return hashlib.sha256(dump_yaml(data).encode("utf-8")).hexdigest()[:16]
 
 
 class _FlowList(list):
@@ -117,7 +136,14 @@ def _convert_matrices(data):
     """Convert matrix fields (lists of lists) to flow-style representation."""
     result = {}
     for key, value in data.items():
-        if key in ("h", "logical", "tags") and isinstance(value, list):
+        if key in ("h", "logical") and isinstance(value, dict):
+            # Sparse form: one flow-style list of column indices per row.
+            result[key] = {
+                "rows": value["rows"],
+                "cols": value["cols"],
+                "nonzero": [_FlowList(indices) for indices in value["nonzero"]],
+            }
+        elif key in ("h", "logical", "tags") and isinstance(value, list):
             if key == "tags":
                 result[key] = _FlowList(value)
             else:

@@ -13,3 +13,4 @@ qubit_count: 8
 crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6_7;TICK;H_0_1_2_3_4_5_7;CZ_0_1_2_3_1_2_3_4_0_4;CX_7_1_5_4;CZ_5_0_7_0;CX_5_6;CZ_7_2;CX_5_2;H_7;CZ_5_1;CX_5_6;H_5_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H","H","H","H","H",1,"H"],["•","Z"],[1,1,"•","Z"],[1,"•","Z"],[1,1,1,"•","Z"],["•",1,1,1,"Z"],[1,"X",1,1,1,1,1,"•"],[1,1,1,1,"X","•"],["Z",1,1,1,1,"•"],["Z",1,1,1,1,1,1,"•"],[1,1,1,1,1,"•","X"],[1,1,"Z",1,1,1,1,"•"],[1,1,"X",1,1,"•"],[1,1,1,1,1,1,1,"H"],[1,"Z",1,1,1,"•"],[1,1,1,1,1,"•","X"],[1,1,1,1,1,"H"]]}
 tags: [state-preparation, ft, "logical-state:zero", flag]
+original_matrices: 063c4d18c5fe5001

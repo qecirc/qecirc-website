@@ -5,10 +5,10 @@ d: 11
 zoo_url: https://errorcorrectionzoo.org/c/surface
 aliases:
   - "[[221,1,11]]"
-  - "Kitaev surface code"
-  - "planar code"
+  - Kitaev surface code
+  - planar code
 related:
-  - "toric code"
+  - toric code
 canonical_hash: 0269f9279bb72c252592a9544b251040c6ee3d4d177c40767d56b02b498521b8
 h:
   - [

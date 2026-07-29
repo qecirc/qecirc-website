@@ -37,6 +37,7 @@ from scripts.add_circuit.circuit_validate import (  # noqa: E402
     validate_state_prep_h,
 )
 from scripts.add_circuit.code_identify import split_h_to_css  # noqa: E402
+from scripts.add_circuit.matrix_format import decode as decode_matrix  # noqa: E402
 from scripts.add_circuit.state_prep import logical_basis_of  # noqa: E402
 
 # logical-state tag -> the basis the prepared state must live in.
@@ -124,7 +125,7 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
             results.append(result)
             continue
 
-        h = np.array(code_data["h"], dtype=int)
+        h = decode_matrix(code_data["h"])
 
         # Load STIM body
         stim_path = circ_yaml_path.with_suffix(".stim")

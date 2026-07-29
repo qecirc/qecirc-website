@@ -5,7 +5,7 @@ d: 3
 zoo_url: https://errorcorrectionzoo.org/c/shor_nine
 aliases:
   - "[[9,1,3]]"
-  - "nine-qubit code"
+  - nine-qubit code
 canonical_hash: 9d2910fada2d925f502df9e5fbf0cc2400fe0c676ae4a1efa3511280f671e050
 h:
   - [1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]

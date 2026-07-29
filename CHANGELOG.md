@@ -5,6 +5,27 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+### Changed
+
+- **Submitted check matrices are stored once instead of once per circuit.** They are a
+  property of the code and the labelling it was submitted in, so every circuit of one
+  code wrote the same bytes — 479 files collapse to **68**. They now live in
+  `data_yaml/matrices/<digest>.yaml`, content addressed, with the circuit YAML naming
+  the one it uses via `original_matrices`. The original _circuit_ stays beside the
+  circuit, since that genuinely differs. `db:create` resolves the reference and inlines
+  both halves, so `circuit_originals`, the API and the circuit page are unchanged.
+- **Large matrices are written sparsely.** Above `SPARSE_MIN_ENTRIES` a matrix is stored
+  as the nonzero column indices of each row rather than dense 0/1 rows. `h` is
+  (n-k) x 2n, so a dense encoding costs O(n^2) characters however sparse the code is.
+  Small codes stay dense deliberately — they are the ones a person reads, and the
+  threshold sits above every code the library had before the qLDPC imports, so no
+  existing small file is rewritten. Readers call `matrix_format.decode` (Python) or
+  `decodeMatrix` (`scripts/matrix-format.mjs`) and cannot tell which was used.
+
+  Together these take `data_yaml/` from **49 MB to 32 MB** on the current data, and
+  matter far more as qLDPC codes arrive: the two effects compound, and the saving on a
+  single [[1428,184]] code is larger than the whole repository is today.
+
 ### Fixed
 
 - **A non-CSS circuit for an existing code is filed under that code's slug.** On a dedup

@@ -5,12 +5,12 @@ d: 6
 zoo_url: https://errorcorrectionzoo.org/c/bb72
 aliases:
   - "[[72,12,6]]"
-  - "bb72"
-  - "(6,6) BB6 code"
-  - "BB6 code"
-  - "BB code"
-  - "qLDPC code"
-  - "LDPC code"
+  - bb72
+  - (6,6) BB6 code
+  - BB6 code
+  - BB code
+  - qLDPC code
+  - LDPC code
 canonical_hash: 6c063cd873cc43fdeb309d3a8184f897e5c713e2dd1b947f48d80dbf4e0189ca
 h:
   - [
