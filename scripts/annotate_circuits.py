@@ -51,6 +51,7 @@ from scripts.add_circuit.annotate import (  # noqa: E402
     validate_annotated,
 )
 from scripts.add_circuit.compute_circuit import LARGE_CIRCUIT_MAX_QUBITS  # noqa: E402
+from scripts.add_circuit.matrix_format import decode as decode_matrix  # noqa: E402
 from scripts.result_cache import ResultCache, source_fingerprint, text_or_missing  # noqa: E402
 
 ANNOTATED_FORMAT = "stim-annotated"
@@ -112,7 +113,7 @@ def annotate_all(
 ) -> list[Result]:
     codes_dir = data_dir / "codes"
     circuits_dir = data_dir / "circuits"
-    originals_dir = circuits_dir / "originals"
+    matrices_dir = data_dir / "matrices"
 
     codes = {p.stem: _load_yaml(p.read_text(encoding="utf-8")) for p in codes_dir.glob("*.yaml")}
     code_texts = {p.stem: p.read_text(encoding="utf-8") for p in codes_dir.glob("*.yaml")}
@@ -144,11 +145,17 @@ def annotate_all(
         key = None
         if cache is not None:
             seen_stems.add(stem)
+            # The submitted matrices seed the detector sparsifier, so the key
+            # tracks the shared matrices file the circuit references (the
+            # reference itself is part of current_yaml).
+            matrices_ref = data.get("original_matrices")
             key = cache.key(
                 current_yaml,
                 text_or_missing(body_path),
                 code_texts.get(slug, "<no-code>"),
-                text_or_missing(originals_dir / f"{stem}.original.yaml"),
+                text_or_missing(matrices_dir / f"{matrices_ref}.yaml")
+                if matrices_ref
+                else "<no-originals>",
                 text_or_missing(circuits_dir / f"{stem}.{ANNOTATED_FORMAT}"),
             )
             hit = cache.get(stem, key)
@@ -166,15 +173,18 @@ def annotate_all(
             continue
 
         n, k = code["n"], code["k"]
-        stored_h = np.array(code["h"], dtype=int)
-        logical = np.array(code["logical"], dtype=int)
+        stored_h = decode_matrix(code["h"])
+        logical = decode_matrix(code["logical"])
 
+        # The submitted matrices are shared by every circuit of one code, so the
+        # circuit names the file rather than carrying its own copy.
         original_h = None
-        original_path = originals_dir / f"{stem}.original.yaml"
-        if original_path.exists():
-            original = _load_yaml(original_path.read_text(encoding="utf-8")) or {}
-            if original.get("h"):
-                original_h = np.array(original["h"], dtype=int)
+        if data.get("original_matrices"):
+            original_path = matrices_dir / f"{data['original_matrices']}.yaml"
+            if original_path.exists():
+                original = _load_yaml(original_path.read_text(encoding="utf-8")) or {}
+                if original.get("h"):
+                    original_h = decode_matrix(original["h"])
 
         circ = build_annotated(
             body=body_path.read_text(encoding="utf-8"),

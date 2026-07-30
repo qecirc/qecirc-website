@@ -17,6 +17,7 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import * as yaml from "js-yaml";
 import { paperKey, paperLinks, isPaperSource } from "../paper-links.mjs";
+import { decodeMatrix } from "../matrix-format.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const dbPath = path.join(root, "data", "qecirc.db");
@@ -73,6 +74,19 @@ function addTag(name, taggableId, taggableType) {
   stmts.insertTag.run(name);
   const { id } = stmts.getTagId.get(name);
   stmts.insertTagging.run(id, taggableId, taggableType);
+}
+
+/**
+ * A shared matrix file, by the content address a circuit refers to. Missing is
+ * an error rather than a silent skip: the circuit says it has originals, and
+ * publishing it without them would quietly lose the provenance they exist for.
+ */
+function readMatrices(dir, digest, stem) {
+  const file = path.join(dir, "matrices", `${digest}.yaml`);
+  if (!fs.existsSync(file)) {
+    throw new Error(`Circuit ${stem} references matrices ${digest}, which does not exist`);
+  }
+  return readYaml(file);
 }
 
 function readYaml(filePath) {
@@ -211,8 +225,8 @@ try {
         data.zoo_url || null,
         joinAliases(data.aliases),
         joinAliases(data.related),
-        data.h == null ? null : JSON.stringify(data.h),
-        data.logical == null ? null : JSON.stringify(data.logical),
+        data.h == null ? null : JSON.stringify(decodeMatrix(data.h)),
+        data.logical == null ? null : JSON.stringify(decodeMatrix(data.logical)),
         data.canonical_hash || null,
       );
       codeSlugToId.set(slug, Number(lastInsertRowid));
@@ -334,18 +348,37 @@ try {
         stmts.insertBody.run(circuitId, ext, body);
       }
 
-      // Original files (pre-canonicalization data)
+      // Original files (pre-canonicalization data).
+      //
+      // The original circuit sits beside the circuit; the original matrices are
+      // shared — every circuit of one code was submitted against the same ones —
+      // so they live once under data_yaml/matrices/ and the circuit names the
+      // one it uses. Resolved and inlined here, so the database and everything
+      // downstream of it see exactly what they saw before.
       const originalsDir = path.join(circuitsDir, "originals");
       const origStimPath = path.join(originalsDir, `${stem}.original.stim`);
-      const origYamlPath = path.join(originalsDir, `${stem}.original.yaml`);
-      if (fs.existsSync(origStimPath) && fs.existsSync(origYamlPath)) {
+      if (fs.existsSync(origStimPath)) {
         const origStim = fs.readFileSync(origStimPath, "utf-8");
-        const origData = readYaml(origYamlPath);
+        // A branch written before this format still carries the matrices in a
+        // per-circuit `<stem>.original.yaml`. Merging it produces no conflict —
+        // the file simply reappears — and without this the build would read no
+        // reference, store null matrices and say nothing. Run
+        // `scripts/migrate_matrix_storage.py --write`.
+        const legacyPath = path.join(originalsDir, `${stem}.original.yaml`);
+        if (!data.original_matrices && fs.existsSync(legacyPath)) {
+          throw new Error(
+            `Circuit ${stem} has ${stem}.original.yaml but no 'original_matrices' reference. ` +
+              `Run: uv run python scripts/migrate_matrix_storage.py --write`,
+          );
+        }
+        const origData = data.original_matrices
+          ? readMatrices(dataDir, data.original_matrices, stem)
+          : {};
         stmts.insertOriginal.run(
           circuitId,
           origStim,
-          origData.h == null ? null : JSON.stringify(origData.h),
-          origData.logical == null ? null : JSON.stringify(origData.logical),
+          origData.h == null ? null : JSON.stringify(decodeMatrix(origData.h)),
+          origData.logical == null ? null : JSON.stringify(decodeMatrix(origData.logical)),
         );
       }
 
@@ -363,7 +396,7 @@ try {
       }
 
       const bodyFormats = Object.keys(bodies).join(", ") || "none";
-      const hasOriginals = fs.existsSync(origStimPath) && fs.existsSync(origYamlPath);
+      const hasOriginals = fs.existsSync(origStimPath);
       console.log(
         `  Circuit: ${data.name} (${codeSlug}/${circuitSlug}) [bodies: ${bodyFormats}]${hasOriginals ? " [originals]" : ""}`,
       );

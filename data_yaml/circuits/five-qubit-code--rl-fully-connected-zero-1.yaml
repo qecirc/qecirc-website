@@ -9,6 +9,7 @@ gate_count: 14
 two_qubit_gate_count: 6
 depth: 4
 qubit_count: 5
-crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3_4;TICK;H_3_4;CX_4_0_3_1;H_3;CX_4_2;H_0;CX_0_2_3_4_1_0;S_3_3_1_1_
+crumble_url: https://algassert.com/crumble#circuit=H_3_4;CX_4_0_3_1;H_3;CX_4_2;H_0;CX_0_2_3_4_1_0;S_3_3_1_1_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,"H","H"],["X",1,1,1,"•"],[1,"X",1,"•"],[1,1,1,"H"],[1,1,"X",1,"•"],["H"],["•",1,"X"],[1,1,1,"•","X"],["X","•"],[1,1,1,"Z^½"],[1,"Z^½",1,"Z^½"],[1,"Z^½"]]}
 tags: [state-preparation, non-ft, "logical-state:zero"]
+original_matrices: 063c4d18c5fe5001

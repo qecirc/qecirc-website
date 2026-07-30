@@ -115,6 +115,40 @@ class TestComputeCodeDataHCssAutoDetect:
         tag_names = [t["name"] for t in code["tags"]]
         assert "CSS" in tag_names
 
+    def test_original_h_is_submission_verbatim(self):
+        """Issue #138: the H= path must store the submitted H as the original,
+        not the RREF basis split_h_to_css produces to detect CSS structure."""
+        H = _steane_block_diagonal_H()
+        # Scramble away from RREF without changing the row space: add row 1
+        # into row 0, append a redundant row, and reverse the row order.
+        scrambled = H.copy()
+        scrambled[0] = (scrambled[0] + scrambled[1]) % 2
+        scrambled = np.vstack([scrambled, (scrambled[2] + scrambled[3]) % 2])[::-1]
+
+        result = compute_code_data_h(scrambled, n=7, d=3)
+        assert result["code"]["is_css"] is True
+        om = result["original_matrices"]
+        assert np.array_equal(om["h"], scrambled.tolist())
+        # The original logicals are in the submitted column order and must
+        # commute with the submitted stabilizers: logical · Λ · Hᵀ = 0.
+        orig_logical = np.array(om["logical"])
+        H_swap = np.hstack([scrambled[:, 7:], scrambled[:, :7]])
+        assert np.all((orig_logical @ H_swap.T) % 2 == 0)
+
+    def test_original_h_verbatim_with_mixed_rows(self):
+        """A submitted row may mix X and Z (sum of an X- and a Z-check) while
+        the row *space* is still CSS. The original must keep that row as-is."""
+        H = _steane_block_diagonal_H()
+        mixed = H.copy()
+        mixed[0] = (mixed[0] + mixed[3]) % 2  # X-check + Z-check
+        assert mixed[0, :7].any() and mixed[0, 7:].any()  # genuinely mixed
+
+        result = compute_code_data_h(mixed, n=7, d=3)
+        # Still detected as CSS (row space unchanged) ...
+        assert result["code"]["is_css"] is True
+        # ... but the stored original is the submission, mixed row included.
+        assert np.array_equal(result["original_matrices"]["h"], mixed.tolist())
+
 
 class TestComputeCodeDataCssGuard:
     def test_non_css_hxhz_rejected(self):
@@ -353,4 +387,64 @@ class TestAddCircuitH:
         paths = [Path(p).name for p in result.files_written]
         assert any(p.endswith(".yaml") and "five-qubit" in p for p in paths)
         assert any(p.endswith(".stim") for p in paths)
-        assert any(p.endswith(".original.yaml") for p in paths)
+        assert any(p.endswith(".original.stim") for p in paths)
+        # Shared matrices file, named by content digest.
+        assert any("/matrices/" in p for p in result.files_written)
+
+
+class TestExistingNonCssCodeSlug:
+    """A non-CSS submission that matches a stored code must file under the
+    stored slug.
+
+    It used not to: `code_slug` — or a slug derived from `code_name` — won over
+    the code the submission actually matched, so the circuit was written as
+    `five-qubit-perfect-code--<circuit>.yaml` while the code lives at
+    `five-qubit-code`. No code YAML was written under that name (there was no
+    new code), leaving circuit files that reference an entry which does not
+    exist; `annotate_circuits.py` reported `code '...' not found` and
+    `db:create` rejected them. The CSS path never had this — these tests pin the
+    two paths to the same behaviour.
+    """
+
+    @staticmethod
+    def _five_qubit_h():
+        Hx, Hz = _five_qubit_matrices()
+        return np.hstack([Hx, Hz])
+
+    def _add(self, tmp_path, **kwargs):
+        from scripts.add_circuit import add_circuit
+
+        return add_circuit(
+            circuit="I 0 1 2 3 4",
+            circuit_name="Slug Probe",
+            d=3,
+            H=self._five_qubit_h(),
+            n=5,
+            source="test://example",
+            data_dir="data_yaml",
+            dry_run=True,
+            **kwargs,
+        )
+
+    def test_code_name_does_not_override_the_matched_slug(self, tmp_path):
+        result = self._add(tmp_path, code_name="Five-Qubit Perfect Code")
+        assert result.code_status == "existing"
+        assert result.code_slug == "five-qubit-code"
+
+    def test_code_slug_does_not_override_the_matched_slug(self, tmp_path):
+        """`code_slug` is documented as naming a *new* code, and on a match
+        there is no new code to name."""
+        result = self._add(tmp_path, code_name="Anything", code_slug="5-1-3")
+        assert result.code_status == "existing"
+        assert result.code_slug == "five-qubit-code"
+
+    def test_the_circuit_files_are_named_after_the_code_that_exists(self, tmp_path):
+        from pathlib import Path
+
+        result = self._add(tmp_path, code_name="Five-Qubit Perfect Code")
+        stems = {Path(p).name.split("--")[0] for p in result.files_written if "--" in p}
+        assert stems == {"five-qubit-code"}
+        # and nothing is written for a code that does not exist
+        assert not any(
+            Path(p).name.startswith("five-qubit-perfect-code") for p in result.files_written
+        )

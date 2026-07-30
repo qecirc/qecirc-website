@@ -44,6 +44,7 @@ from scripts.add_circuit import (  # noqa: E402
     fit_circuit_to_candidates,
     import_state_prep,
 )
+from scripts.add_circuit.matrix_format import decode as decode_matrix  # noqa: E402
 
 SOURCE = "https://arxiv.org/abs/2402.17761"
 
@@ -130,7 +131,7 @@ def family_of(path: Path) -> str | None:
 
 def anchor_H(code: Code, data_dir: Path) -> np.ndarray:
     doc = yaml.safe_load((data_dir / "codes" / f"{code.slug}.yaml").read_text())
-    return np.asarray(doc["h"], dtype=int)
+    return decode_matrix(doc["h"])
 
 
 # --- metadata from the path -------------------------------------------------
@@ -218,7 +219,7 @@ def short_name(fam: str, m: dict, counter: dict) -> str:
     return f"{prefix} {idx}"
 
 
-def run(write: bool, data_dir: Path) -> None:
+def run(write: bool, data_dir: Path, overwrite: bool = False) -> None:
     anchors = {k: anchor_H(c, data_dir) for k, c in CODES.items()}
     stims = sorted(p for p in DATASET.rglob("*.stim") if not p.name.endswith("_flag.stim"))
     per_code: dict[str, Stats] = defaultdict(Stats)
@@ -275,6 +276,7 @@ def run(write: bool, data_dir: Path) -> None:
                 qubit_placement=m["placement"],
                 tags=["state-preparation", "ft" if m["ft"] else "non-ft"],
                 data_dir=str(data_dir),
+                overwrite=overwrite,
             )
             if method == "anchor":
                 kwargs.update(anchor_H=H, permutation=sigma)
@@ -311,8 +313,13 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--data-dir", default=str(REPO / "data_yaml"))
+    ap.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="replace already-imported circuits in place (data refresh), keeping qec_ids",
+    )
     args = ap.parse_args()
-    run(args.write, Path(args.data_dir))
+    run(args.write, Path(args.data_dir), overwrite=args.overwrite)
 
 
 if __name__ == "__main__":

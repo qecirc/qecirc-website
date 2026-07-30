@@ -29,8 +29,6 @@ import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import numpy as np
-
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 DATASET = REPO.parent / "flag_at_origin_paper"  # clone of the paper repo
@@ -42,6 +40,7 @@ from anchors import anchor_for  # noqa: E402
 from convert import dict_to_stim, load_pytket_dict  # noqa: E402
 
 from scripts.add_circuit import import_state_prep  # noqa: E402
+from scripts.add_circuit.matrix_format import decode as decode_matrix  # noqa: E402
 
 SOURCE = "https://arxiv.org/abs/2508.14200"
 TOOL = "flag-at-origin"
@@ -326,7 +325,9 @@ def prep_body(circuit_dict: dict, n: int) -> tuple[str, dict]:
     return str(out) + "\n", meta
 
 
-def import_one(spec: Spec, zf: zipfile.ZipFile, write: bool, data_dir: str) -> str:
+def import_one(
+    spec: Spec, zf: zipfile.ZipFile, write: bool, data_dir: str, overwrite: bool = False
+) -> str:
     d = read_circuit(zf, spec.fname)
     body, _ = prep_body(d, spec.n)
     # Conceptual note only; the pipeline appends source_file / logical_state /
@@ -361,13 +362,13 @@ def import_one(spec: Spec, zf: zipfile.ZipFile, write: bool, data_dir: str) -> s
         notes=notes,
         data_dir=data_dir,
         dry_run=not write,
+        overwrite=overwrite,
     )
     if spec.mode == "perm":
         import yaml  # noqa: PLC0415
 
-        sH = np.asarray(
-            yaml.safe_load((Path(data_dir) / "codes" / f"{spec.slug}.yaml").read_text())["h"],
-            dtype=int,
+        sH = decode_matrix(
+            yaml.safe_load((Path(data_dir) / "codes" / f"{spec.slug}.yaml").read_text())["h"]
         )
         sigma = SIGMA.get(spec.slug)
         if sigma is None:
@@ -400,6 +401,11 @@ def main() -> None:
     ap.add_argument("--dataset", default=str(DATASET))
     ap.add_argument("--data-dir", default=str(REPO / "data_yaml"))
     ap.add_argument("--only", default=None, help="substring filter on spec.key")
+    ap.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="replace already-imported circuits in place (data refresh), keeping qec_ids",
+    )
     args = ap.parse_args()
 
     zip_path = Path(args.dataset) / "Notebook_1.zip"
@@ -409,7 +415,7 @@ def main() -> None:
     specs = [s for s in SPECS if not args.only or args.only in s.key]
     with zipfile.ZipFile(zip_path) as zf:
         for spec in specs:
-            print(import_one(spec, zf, args.write, args.data_dir), flush=True)
+            print(import_one(spec, zf, args.write, args.data_dir, args.overwrite), flush=True)
     print(f"\n{'wrote' if args.write else 'classified'} {len(specs)} circuits.")
 
 

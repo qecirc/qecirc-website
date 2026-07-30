@@ -429,14 +429,25 @@ format tab; the Detectors toggle derives both views from it. The canonical
 `.stim` body must stay reset-free — `to_tableau()` and the derive/fit machinery
 depend on that.
 
-### Original submission (`data_yaml/circuits/originals/`)
+### Original submission
 
-For each circuit, the pipeline generates two files preserving the original (pre-canonicalization) data:
+The pipeline preserves what a circuit was submitted with, before any canonicalization or
+qubit relabeling. It lives in two places, because the two halves have different owners:
 
-- `<code-slug>--<circuit-slug>.original.stim` — the STIM circuit as submitted
-- `<code-slug>--<circuit-slug>.original.yaml` — the contributor's symplectic stabilizer / logical matrices, before any canonicalization or qubit relabeling:
+- `data_yaml/circuits/originals/<code-slug>--<circuit-slug>.original.stim` — the STIM
+  circuit as submitted. Per circuit, since every circuit has its own.
+- `data_yaml/matrices/<digest>.yaml` — the contributor's symplectic stabilizer / logical
+  matrices. **Shared**: every circuit of one code was submitted against the same matrices,
+  so they are written once and named by a content digest, and the circuit YAML points at
+  them with `original_matrices: <digest>`.
 
 ```yaml
+# data_yaml/circuits/steane-code--standard-encoding.yaml
+original_matrices: 4f9a1c02b7e3d518
+```
+
+```yaml
+# data_yaml/matrices/4f9a1c02b7e3d518.yaml
 h:
   - [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]
   - ...
@@ -445,7 +456,33 @@ logical:
   - [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]
 ```
 
-These files are loaded into the `circuit_originals` database table during `npm run db:create` and displayed on the circuit detail page (`/circuits/[qec_id]`).
+`npm run db:create` resolves the reference and inlines both halves into the
+`circuit_originals` table, so the database, the API and the circuit detail page
+(`/circuits/[qec_id]`) see exactly what they saw when every circuit carried its own copy.
+
+### How a matrix is written (`h`, `logical`, and the files above)
+
+A matrix is stored as a plain list of 0/1 rows, as above — until it gets big. Past
+`SPARSE_MIN_ENTRIES` (`scripts/add_circuit/matrix_format.py`) it is written as the nonzero
+column indices of each row instead:
+
+```yaml
+h:
+  rows: 1244
+  cols: 2856
+  nonzero:
+    - [3, 17, 402]
+    - [1, 88]
+```
+
+`h` is (n−k) × 2n, so a dense encoding costs O(n²) characters however sparse the code is —
+for the lifted product code [[1428,184,≤24]] that is 3.5M entries and 13.5 MB. Small codes
+stay dense on purpose: they are the ones a person reads, and the threshold sits above every
+code the library had before the qLDPC imports.
+
+Nothing needs to know which was used. `matrix_format.decode` (Python) and `decodeMatrix`
+(`scripts/matrix-format.mjs`, for the build) accept either — a list is dense, a mapping is
+sparse.
 
 ### Tool (`data_yaml/tools/<slug>.yaml`)
 

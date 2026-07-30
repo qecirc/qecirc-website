@@ -2,30 +2,19 @@ qec_id: 529
 name: FT zero (flag at origin)
 tool: flag-at-origin
 notes: "Fault-tolerant |0>_L preparation via the 'flag at origin' construction (arXiv:2508.14200).
-  Flag-verification measurements are included (post-selection); the terminal logical-Z
+  Flag-verification measurements are included (post-selection); the terminal data-qubit
   readout of the SPAM benchmark is not part of the prep.. Source file: Notebook_1/Code_[[81,1,9]].json.
   Logical state: zero. Connectivity: all-to-all. Gate set: CX,H,M. Flag/ancilla qubits:
-  [81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100,
-  101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
-  117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132,
-  133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148,
-  149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164,
-  165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180,
-  181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196,
-  197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212,
-  213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228,
-  229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244,
-  245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260,
-  261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276,
-  277, 278, 279, 280, 281, 282, 283, 284, 285, 286]. Canonicalization qubit permutation
-  (stored qubit i = original qubit permutation[i]): [79, 77, 75, 73, 69, 67, 65, 63,
-  72, 61, 59, 57, 55, 51, 49, 47, 54, 45, 64, 74, 43, 41, 39, 37, 33, 31, 29, 36,
-  27, 46, 56, 66, 76, 25, 23, 21, 19, 15, 13, 11, 18, 9, 80, 28, 38, 48, 58, 68, 78,
-  7, 6, 16, 5, 4, 14, 24, 34, 3, 2, 12, 22, 32, 42, 52, 1, 0, 62, 71, 10, 20, 30,
-  40, 50, 60, 70, 44, 53, 26, 35, 8, 17]"
+  81-286 (206 qubits). Canonicalization qubit permutation (stored qubit i = original
+  qubit permutation[i]): [79, 77, 75, 73, 69, 67, 65, 63, 72, 61, 59, 57, 55, 51,
+  49, 47, 54, 45, 64, 74, 43, 41, 39, 37, 33, 31, 29, 36, 27, 46, 56, 66, 76, 25,
+  23, 21, 19, 15, 13, 11, 18, 9, 80, 28, 38, 48, 58, 68, 78, 7, 6, 16, 5, 4, 14, 24,
+  34, 3, 2, 12, 22, 32, 42, 52, 1, 0, 62, 71, 10, 20, 30, 40, 50, 60, 70, 44, 53,
+  26, 35, 8, 17]"
 source: https://arxiv.org/abs/2508.14200
 gate_count: 858
 two_qubit_gate_count: 614
 depth: 126
 qubit_count: 287
 tags: [state-preparation, ft, flag, "logical-state:zero", "distance:9", "connectivity:all-to-all"]
+original_matrices: f3299ea2ba64f0de

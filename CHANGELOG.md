@@ -5,6 +5,66 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+### Changed
+
+- **Submitted check matrices are stored once instead of once per circuit.** They are a
+  property of the code and the labelling it was submitted in, so every circuit of one
+  code wrote the same bytes — 479 files collapse to **68**. They now live in
+  `data_yaml/matrices/<digest>.yaml`, content addressed, with the circuit YAML naming
+  the one it uses via `original_matrices`. The original _circuit_ stays beside the
+  circuit, since that genuinely differs. `db:create` resolves the reference and inlines
+  both halves, so `circuit_originals`, the API and the circuit page are unchanged.
+- **Large matrices are written sparsely.** Above `SPARSE_MIN_ENTRIES` a matrix is stored
+  as the nonzero column indices of each row rather than dense 0/1 rows. `h` is
+  (n-k) x 2n, so a dense encoding costs O(n^2) characters however sparse the code is.
+  Small codes stay dense deliberately — they are the ones a person reads, and the
+  threshold sits above every code the library had before the qLDPC imports, so no
+  existing small file is rewritten. Readers call `matrix_format.decode` (Python) or
+  `decodeMatrix` (`scripts/matrix-format.mjs`) and cannot tell which was used.
+
+  On the current data `data_yaml/` goes **35.2 MB to 24.2 MB**, all of it from sharing:
+  `circuits/originals/` drops 15.7 MB to 0.3 MB and the shared `matrices/` costs 4.3 MB
+  back. The sparse encoding saves **nothing today** and is meant to — no code the library
+  has reaches the threshold, and rewriting the small files a person reads would be a cost
+  with no benefit. It is what makes the qLDPC codes affordable when they land: on a single
+  [[1428,184]] code it is worth more than this whole repository.
+
+  `db:create` refuses to build a circuit that still carries a per-circuit
+  `originals/<stem>.original.yaml` with no `original_matrices` reference. Merging a
+  branch written before this format produces no git conflict — the old file simply
+  reappears — and the build would otherwise store null matrices and say nothing.
+  `scripts/migrate_matrix_storage.py --write` converts such a branch.
+
+### Fixed
+
+- **Importing a circuit no longer costs a full re-read of the library.** Dedup compares a
+  submission against every stored code, and re-parsed all of them from YAML on _every_
+  call — so a bulk import paid O(library) per circuit and got slower as the library grew.
+  Measured on the 74-code, 43 MB library the qLDPC imports produce: **29.3 s per
+  circuit**. Parsed codes are now cached across calls, keyed on each file's
+  (mtime, size) so a code written mid-import is still picked up — `add_circuit` creates
+  code files as it goes, and a cache that could not see them would be worse than none.
+  Every circuit after the first now pays a `stat`. Sparse storage compounds it: the same
+  first parse drops to 3.6 s.
+- **The submitted-order logical operators are no longer recomputed from scratch.**
+  `canonical_form` only permutes columns and row-reduces, neither of which changes the
+  code, so the canonical logicals permuted back _are_ the originals — worth ~25 s per
+  circuit on a [[544,80]] code, and it makes the two sets agree about which logical qubit
+  is which, where a second independent computation would pick some other equally valid
+  basis. The permuted operators are verified against the submitted matrices before use,
+  with recomputation as the fallback.
+- **A non-CSS circuit for an existing code is filed under that code's slug.** On a dedup
+  match the CSS path has always used the stored slug; the non-CSS path only used it when
+  nothing else had set one, so `code_slug` — or a slug derived from `code_name` — won
+  instead. A five-qubit-code circuit submitted with
+  `code_name="Five-Qubit Perfect Code"` was written as
+  `five-qubit-perfect-code--<circuit>.yaml` while the code itself lives at
+  `five-qubit-code`; no code YAML was written under that name, because there was no new
+  code, so the circuit referenced an entry that does not exist —
+  `annotate_circuits.py` reported `code '...' not found` and `db:create` rejected it.
+  `code_slug` is documented as naming a _new_ code, and on a match there is no new code
+  to name.
+
 ### Added
 
 - **Search aliases** (`data/migrations/017`). Codes and tools gain optional

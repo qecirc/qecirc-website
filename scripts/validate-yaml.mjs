@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import * as yaml from "js-yaml";
 import { paperKey, paperLinks, isPaperSource } from "./paper-links.mjs";
+import { isMatrix } from "./matrix-format.mjs";
 
 const DATA_DIR = path.join(process.cwd(), "data_yaml");
 
@@ -46,6 +47,7 @@ const SCHEMAS = {
       crumble_url: "string",
       crumble_url_annotated: "string",
       quirk_url: "string",
+      original_matrices: "string",
       tags: "tags",
     },
   },
@@ -90,11 +92,7 @@ function checkType(value, type) {
     return (
       Array.isArray(value) && value.every((v) => typeof v === "string" && /^https?:\/\//.test(v))
     );
-  if (type === "matrix")
-    return (
-      Array.isArray(value) &&
-      value.every((row) => Array.isArray(row) && row.every((v) => typeof v === "number"))
-    );
+  if (type === "matrix") return isMatrix(value);
   return false;
 }
 

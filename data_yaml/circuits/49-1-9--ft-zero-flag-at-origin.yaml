@@ -2,24 +2,17 @@ qec_id: 528
 name: FT zero (flag at origin)
 tool: flag-at-origin
 notes: "Fault-tolerant |0>_L preparation via the 'flag at origin' construction (arXiv:2508.14200).
-  Flag-verification measurements are included (post-selection); the terminal logical-Z
+  Flag-verification measurements are included (post-selection); the terminal data-qubit
   readout of the SPAM benchmark is not part of the prep.. Source file: Notebook_1/Code_[[49,1,9]].json.
   Logical state: zero. Connectivity: all-to-all. Gate set: CX,H,M. Flag/ancilla qubits:
-  [49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68,
-  69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
-  89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107,
-  108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
-  124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139,
-  140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155,
-  156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171,
-  172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184]. Canonicalization
-  qubit permutation (stored qubit i = original qubit permutation[i]): [38, 36, 34,
-  32, 30, 28, 26, 25, 24, 33, 22, 20, 18, 17, 16, 39, 31, 23, 14, 12, 10, 8, 6, 5,
-  4, 19, 13, 35, 27, 9, 2, 1, 45, 0, 37, 29, 11, 7, 43, 44, 41, 42, 40, 47, 46, 48,
-  21, 15, 3]"
+  49-184 (136 qubits). Canonicalization qubit permutation (stored qubit i = original
+  qubit permutation[i]): [38, 36, 34, 32, 30, 28, 26, 25, 24, 33, 22, 20, 18, 17,
+  16, 39, 31, 23, 14, 12, 10, 8, 6, 5, 4, 19, 13, 35, 27, 9, 2, 1, 45, 0, 37, 29,
+  11, 7, 43, 44, 41, 42, 40, 47, 46, 48, 21, 15, 3]"
 source: https://arxiv.org/abs/2508.14200
 gate_count: 560
 two_qubit_gate_count: 408
 depth: 120
 qubit_count: 185
 tags: [state-preparation, ft, flag, "logical-state:zero", "distance:9", "connectivity:all-to-all"]
+original_matrices: 6f6f1a2595e9e6f8

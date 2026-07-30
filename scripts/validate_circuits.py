@@ -47,6 +47,7 @@ from scripts.add_circuit.circuit_validate import (  # noqa: E402
     validate_state_prep_h,
 )
 from scripts.add_circuit.code_identify import split_h_to_css  # noqa: E402
+from scripts.add_circuit.matrix_format import decode as decode_matrix  # noqa: E402
 from scripts.add_circuit.state_prep import logical_basis_of  # noqa: E402
 from scripts.result_cache import ResultCache, source_fingerprint, text_or_missing  # noqa: E402
 
@@ -212,7 +213,7 @@ def _validate_one(
         result.checks.append(CheckResult("load_code", "error", "Code YAML missing n"))
         return result
 
-    h = np.array(code_data["h"], dtype=int)
+    h = decode_matrix(code_data["h"])
 
     if not stim_path.exists():
         result.checks.append(CheckResult("load_stim", "error", f"STIM file not found: {stim_path}"))
@@ -365,7 +366,7 @@ def _check_logical_gate(
         return
     try:
         outcome = validate_logical_gate_h(
-            circuit_text, h, np.array(logical, dtype=int), n, logical_action
+            circuit_text, h, decode_matrix(logical), n, logical_action
         )
         if outcome == "passed":
             result.checks.append(CheckResult("validate_logical_gate", "passed"))
