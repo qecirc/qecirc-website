@@ -18,14 +18,12 @@ STIM bodies in [`circuits/`](circuits/) were recovered from the paper sources
   input line-by-line in `% Line N:` comments — wire declarations with initial
   states, CNOTs, measurement bases, ancilla lifetimes. Sorting by source line
   number recovers the exact gate sequence; this is lossless.
-- **3 circuits from hand-edited figure PDFs** ([[24,4,5]], [[42,10,6]],
-  [[23,1,7]]): only "touchup" PDFs exist (Inkscape-edited, qpic comments
-  stripped), so the circuits were reconstructed from the PDF vector content
-  (wires, control dots, target circles, ket and measurement-basis glyphs,
-  including the dashed "cut" that splits each figure into two stitched
-  blocks). The extractor was verified to reproduce three known tikz circuits
-  **exactly** after running them through the same pdflatex → Inkscape
-  pipeline.
+- **3 circuits from figure PDFs** ([[24,4,5]], [[42,10,6]], [[23,1,7]]):
+  these figures ship as standalone PDFs, so the circuits were reconstructed
+  from the PDF vector content (wires, control dots, target circles, ket and
+  measurement-basis glyphs, including the dashed "cut" that splits each
+  figure into two stitched blocks). The extractor was verified to reproduce
+  three known tikz circuits **exactly** from PDFs produced the same way.
 
 Every extracted circuit was validated by stabilizer simulation (flags
 post-selected on trivial outcomes) against the paper's own tableaux appendix:
@@ -49,9 +47,9 @@ npm run format && npm run validate:yaml && npm run validate:circuits && npm run 
 ## Anchors and fits
 
 [`anchors.py`](anchors.py) holds the paper's stabilizer generators, extracted
-mechanically from the appendix of `HighDistanceStatePrep.tex` (the [[24,10,4]]
-Z-list is missing two commas in the tex; splitting on line breaks restores the
-intended generators). The paper's labeling **is** each circuit's labeling
+mechanically from the appendix of `HighDistanceStatePrep.tex` (the extraction
+splits generator lists on line breaks as well as commas, so it is robust to
+the tex's formatting). The paper's labeling **is** each circuit's labeling
 (verified: all generators at +1 on the simulated prep state), so anchor fits
 are the identity. The [[16,1,4]] anchor is not in the paper; it is the
 textbook d=4 rotated surface code in row-major order, which matches the

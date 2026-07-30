@@ -8,9 +8,10 @@ simulated prep state).  The [[16,1,4]] rotated-surface-code anchor is not in
 the paper; it is the textbook d=4 rotated surface layout in row-major order,
 which the paper also uses (verified the same way).
 
-The paper's [[24,10,4]] Z-generator list is missing two ``,`` separators
-(after ``Z_22`` and ``Z_18``); the extraction splits on line breaks as well,
-which restores the intended 7 generators.
+The extraction splits generator lists on line breaks as well as commas (one
+generator per tex line, some lines holding two), which keeps it robust to the
+tex's formatting — the [[24,10,4]] Z block parses to its intended 7
+generators this way.
 """
 
 import numpy as np

@@ -7,10 +7,10 @@ Integer Linear Programming" (arXiv:2607.22498) into the QECirc library.
 
 The paper ships no machine-readable circuits; the STIM bodies in ``circuits/``
 were extracted from the paper sources (qpic input preserved in the tikz
-figures' comments for 10 circuits; vector extraction of the three hand-edited
-figure PDFs for [[24,4,5]], [[42,10,6]] and [[23,1,7]]) and validated against
-the paper's stabilizer tableaux — see README.md for the full provenance and
-validation story.
+figures' comments for 10 circuits; vector extraction of the figure PDFs for
+[[24,4,5]], [[42,10,6]] and [[23,1,7]]) and validated against the paper's
+stabilizer tableaux — see README.md for the full provenance and validation
+story.
 
 Check-matrix anchors come from the paper's own appendix (``anchors.py``), in
 the paper's qubit labeling, which is also each circuit's labeling — so anchor
