@@ -115,6 +115,40 @@ class TestComputeCodeDataHCssAutoDetect:
         tag_names = [t["name"] for t in code["tags"]]
         assert "CSS" in tag_names
 
+    def test_original_h_is_submission_verbatim(self):
+        """Issue #138: the H= path must store the submitted H as the original,
+        not the RREF basis split_h_to_css produces to detect CSS structure."""
+        H = _steane_block_diagonal_H()
+        # Scramble away from RREF without changing the row space: add row 1
+        # into row 0, append a redundant row, and reverse the row order.
+        scrambled = H.copy()
+        scrambled[0] = (scrambled[0] + scrambled[1]) % 2
+        scrambled = np.vstack([scrambled, (scrambled[2] + scrambled[3]) % 2])[::-1]
+
+        result = compute_code_data_h(scrambled, n=7, d=3)
+        assert result["code"]["is_css"] is True
+        om = result["original_matrices"]
+        assert np.array_equal(om["h"], scrambled.tolist())
+        # The original logicals are in the submitted column order and must
+        # commute with the submitted stabilizers: logical · Λ · Hᵀ = 0.
+        orig_logical = np.array(om["logical"])
+        H_swap = np.hstack([scrambled[:, 7:], scrambled[:, :7]])
+        assert np.all((orig_logical @ H_swap.T) % 2 == 0)
+
+    def test_original_h_verbatim_with_mixed_rows(self):
+        """A submitted row may mix X and Z (sum of an X- and a Z-check) while
+        the row *space* is still CSS. The original must keep that row as-is."""
+        H = _steane_block_diagonal_H()
+        mixed = H.copy()
+        mixed[0] = (mixed[0] + mixed[3]) % 2  # X-check + Z-check
+        assert mixed[0, :7].any() and mixed[0, 7:].any()  # genuinely mixed
+
+        result = compute_code_data_h(mixed, n=7, d=3)
+        # Still detected as CSS (row space unchanged) ...
+        assert result["code"]["is_css"] is True
+        # ... but the stored original is the submission, mixed row included.
+        assert np.array_equal(result["original_matrices"]["h"], mixed.tolist())
+
 
 class TestComputeCodeDataCssGuard:
     def test_non_css_hxhz_rejected(self):

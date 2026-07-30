@@ -224,7 +224,7 @@ def compute_code_data_h(
     css_split = split_h_to_css(H, n)
     if css_split is not None:
         Hx, Hz = css_split
-        return compute_code_data(
+        result = compute_code_data(
             Hx,
             Hz,
             d=d,
@@ -234,6 +234,16 @@ def compute_code_data_h(
             code_slug=code_slug,
             code_tags=code_tags,
         )
+        # split_h_to_css row-reduces to *detect* CSS structure, so the (Hx, Hz)
+        # passed above is an RREF basis of the submission — fine for
+        # canonicalization, dedup and logicals (same row space), but not for
+        # provenance. The stored original must be the matrix the circuit was
+        # submitted against, verbatim: RREF destroys the natural low-weight
+        # check structure an LDPC code is defined by (issue #138). The
+        # original logicals are unaffected — they are expressed in the
+        # submitted column order, which no row operation changes.
+        result["original_matrices"]["h"] = H.tolist()
+        return result
 
     # Non-CSS path
     k = n - gf2_rank(H)

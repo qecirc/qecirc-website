@@ -109,7 +109,7 @@ def _mqt_h(code_dir: str, cfg: dict) -> np.ndarray:
     return build_symplectic_h(hx, hz)
 
 
-def run_det(write: bool, data_dir: Path) -> tuple[int, int]:
+def run_det(write: bool, data_dir: Path, overwrite: bool = False) -> tuple[int, int]:
     protos = load_protocols(rebuild_all.EVAL_DET / "results.csv")
     imported = deferred = 0
     report: list[str] = []
@@ -165,6 +165,7 @@ def run_det(write: bool, data_dir: Path) -> tuple[int, int]:
                 ),
                 notes=render_notes(proto, state_zero, rel),
                 data_dir=str(data_dir),
+                overwrite=overwrite,
             )
             if cfg.get("new"):
                 # No permutation kwarg: the anchor is already in the circuit's

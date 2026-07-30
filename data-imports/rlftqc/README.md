@@ -33,6 +33,7 @@ qecirc/
 python rebuild_all.py                       # classify only (no writes)
 python rebuild_all.py --write               # import into the repo's data_yaml
 python rebuild_all.py --write --data-dir /tmp/dt   # write to a scratch copy
+python rebuild_all.py --write --overwrite   # data refresh: replace stored circuits, keep qec_ids
 ```
 
 After a real `--write`: in the repo, `npm run format && npm run validate:yaml &&

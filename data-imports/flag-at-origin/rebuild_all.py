@@ -325,7 +325,9 @@ def prep_body(circuit_dict: dict, n: int) -> tuple[str, dict]:
     return str(out) + "\n", meta
 
 
-def import_one(spec: Spec, zf: zipfile.ZipFile, write: bool, data_dir: str) -> str:
+def import_one(
+    spec: Spec, zf: zipfile.ZipFile, write: bool, data_dir: str, overwrite: bool = False
+) -> str:
     d = read_circuit(zf, spec.fname)
     body, _ = prep_body(d, spec.n)
     # Conceptual note only; the pipeline appends source_file / logical_state /
@@ -360,6 +362,7 @@ def import_one(spec: Spec, zf: zipfile.ZipFile, write: bool, data_dir: str) -> s
         notes=notes,
         data_dir=data_dir,
         dry_run=not write,
+        overwrite=overwrite,
     )
     if spec.mode == "perm":
         import yaml  # noqa: PLC0415
@@ -398,6 +401,11 @@ def main() -> None:
     ap.add_argument("--dataset", default=str(DATASET))
     ap.add_argument("--data-dir", default=str(REPO / "data_yaml"))
     ap.add_argument("--only", default=None, help="substring filter on spec.key")
+    ap.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="replace already-imported circuits in place (data refresh), keeping qec_ids",
+    )
     args = ap.parse_args()
 
     zip_path = Path(args.dataset) / "Notebook_1.zip"
@@ -407,7 +415,7 @@ def main() -> None:
     specs = [s for s in SPECS if not args.only or args.only in s.key]
     with zipfile.ZipFile(zip_path) as zf:
         for spec in specs:
-            print(import_one(spec, zf, args.write, args.data_dir), flush=True)
+            print(import_one(spec, zf, args.write, args.data_dir, args.overwrite), flush=True)
     print(f"\n{'wrote' if args.write else 'classified'} {len(specs)} circuits.")
 
 

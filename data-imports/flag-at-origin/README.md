@@ -25,6 +25,7 @@ Everything is pure Clifford + measurement (`H/CX/Measure/Barrier`), so
 ```bash
 python rebuild_all.py            # classify only
 python rebuild_all.py --write
+python rebuild_all.py --write --overwrite  # data refresh: replace stored circuits, keep qec_ids
 ```
 
 Each JSON is the full SPAM benchmark (prep + flag verification + terminal

@@ -15,4 +15,4 @@ two_qubit_gate_count: 114
 depth: 18
 qubit_count: 85
 tags: [state-preparation, partial-ft, "distance:7", "connectivity:2d-grid", "logical-state:zero"]
-original_matrices: db8ad06211b9660f
+original_matrices: 5671cfdf9d519975

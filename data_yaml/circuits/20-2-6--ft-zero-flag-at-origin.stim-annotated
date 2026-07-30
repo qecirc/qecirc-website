@@ -111,14 +111,14 @@ H 61 63
 M 59 61 63
 TICK
 M 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
-DETECTOR rec[-8] rec[-7] rec[-6] rec[-5] rec[-4] rec[-3] rec[-2] rec[-1]
-DETECTOR rec[-12] rec[-11] rec[-10] rec[-9] rec[-4] rec[-3] rec[-2] rec[-1]
-DETECTOR rec[-13] rec[-11] rec[-10] rec[-9] rec[-7] rec[-6] rec[-5] rec[-1]
-DETECTOR rec[-15] rec[-14] rec[-10] rec[-9] rec[-6] rec[-5] rec[-3] rec[-2]
-DETECTOR rec[-16] rec[-14] rec[-11] rec[-9] rec[-7] rec[-5] rec[-4] rec[-2]
-DETECTOR rec[-17] rec[-14] rec[-11] rec[-10] rec[-7] rec[-6] rec[-4] rec[-3]
+DETECTOR rec[-13] rec[-12] rec[-8] rec[-1]
+DETECTOR rec[-17] rec[-16] rec[-15] rec[-14]
 DETECTOR rec[-18] rec[-10] rec[-5] rec[-4]
 DETECTOR rec[-19] rec[-11] rec[-6] rec[-2]
 DETECTOR rec[-20] rec[-9] rec[-7] rec[-3]
+DETECTOR rec[-19] rec[-17] rec[-14] rec[-10] rec[-8] rec[-6] rec[-5] rec[-1]
+DETECTOR rec[-20] rec[-15] rec[-14] rec[-10] rec[-7] rec[-6] rec[-5] rec[-2]
+DETECTOR rec[-18] rec[-10] rec[-8] rec[-7] rec[-6] rec[-3] rec[-2] rec[-1]
+DETECTOR rec[-19] rec[-15] rec[-14] rec[-13] rec[-7] rec[-6] rec[-3] rec[-1]
 OBSERVABLE_INCLUDE(0) rec[-18] rec[-17] rec[-15] rec[-13] rec[-12] rec[-10]
 OBSERVABLE_INCLUDE(1) rec[-19] rec[-17] rec[-16] rec[-13] rec[-12] rec[-11]
