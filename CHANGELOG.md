@@ -187,6 +187,7 @@ the source-of-truth `package.json` version.
   in Z has a random outcome however correct its check pattern looks.
 - **QUITS syndrome-extraction schedules** (69 of them), imported from
 - **QUITS syndrome-extraction schedules** (71 of them), imported from
+- **QUITS syndrome-extraction schedules** (72 of them), imported from
   [QUITS](https://github.com/mkangquantum/quits)
   ([arXiv:2504.02673](https://arxiv.org/abs/2504.02673), Quantum 9, 1931 (2025)) by
   [data-imports/quits/](data-imports/quits/README.md). These are the library's first
@@ -207,6 +208,16 @@ the source-of-truth `package.json` version.
     **measuring** the emitted circuit — reading the check type off each two-qubit gate
     and asking whether any tick mixes them — rather than by trusting the strategy's
     name. The source's own vocabulary lives in the circuit name instead.
+  - **One extra seed is imported, and only one.** QUITS' cardinal strategies take a
+    `seed` that reorders the schedule at identical depth and gate count, and its author
+    suggested varying it. Sweeping 12 seeds over the five cardinal-family codes whose
+    circuit distance is measurable found the default already at the best distance
+    available everywhere but one — and the two lift-connected-surface codes emit only
+    two distinct schedules however it is set. So the import adds exactly the
+    improvement: BPC [[36,8,4]] cardinal at seed 2, circuit distance **4** against
+    seed 1's 3, same depth and same 216 two-qubit gates. `EXTRA_SEEDS` in the importer
+    records it; a variant that measures the same as one already stored earns a reader
+    nothing and costs them a row.
   - Three codes share [[n,k,d]] with an unrelated stored code and are refuted rather
     than merged into it: BPC [[36,8,4]] against the hyperbolic surface code (row-space
     ranks 14/14 against 11/17), BPC [[108,8,8]] against the bivariate bicycle
@@ -217,6 +228,32 @@ the source-of-truth `package.json` version.
     autqec's import (#127) gives the same code, so whichever lands first creates the
     single shared entry; its name, **Bivariate Bicycle Code (Bravyi Table 3)**, says
     what distinguishes it from the stored entry carrying the "(15,3) BB6 code" alias.
+
+### Added
+
+- **`circuit-distance:<N>` on syndrome-extraction circuits** — the fewest faults
+  _anywhere in the round_ (gate, idle, reset or readout) that flip a logical while
+  firing no detector, measured rather than cited. It sits next to `distance:<N>`,
+  which is the **code's** distance and usually a larger number: 8 of the 61 circuits
+  measured so far preserve it, the rest lose at least one step to hook errors. Filter
+  on it like any other tag.
+  - `scripts/measure_circuit_distance.py` writes it;
+    `scripts/add_circuit/circuit_distance.py` is the measurement. The search is stim's
+    `search_for_undetectable_logical_errors` over a `d`-round memory experiment under
+    uniform circuit-level depolarizing noise — every gate, **every idle qubit each
+    tick**, every reset and every measurement. Cross-checked against QUITS'
+    `examples/circuit_distance_search.py`, which computes the same number the same way:
+    identical answers on BPC [[36,8,4]] across seeds.
+  - **Both memories are measured and the smaller wins.** A CSS code's Z and X
+    experiments fail at different weights — the rotated surface code d=5 under the
+    depth-optimal schedule survives 5 faults in Z and 3 in X — and the Z number is not
+    even bounded by `d`, since a Z observable is flipped by X errors. Measuring Z alone
+    would have called that schedule distance-preserving and put `circuit-distance:6` on
+    a `distance:5` code. `build_annotated_se` gained a `basis` argument for this; the
+    stored Z bodies are byte-identical.
+  - The search cost grows with `n` and, harder, with `d`: 61 of 127 circuits settled
+    inside a 120 s budget, up to [[125,5,5]], while [[37,1,7]] did not. An **absent tag
+    means not measured**, never "no faults found".
 
 ### Fixed
 

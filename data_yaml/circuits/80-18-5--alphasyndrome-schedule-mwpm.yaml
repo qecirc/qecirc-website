@@ -1,0 +1,12 @@
+qec_id: 1084
+name: AlphaSyndrome schedule (MWPM)
+tool: asyndrome
+notes: One syndrome-extraction round. Data qubits 0-79, then the ancillas (X-checks
+  first), measured in index order. Hadamards once per X-ancilla, not per check (equivalent).
+source: https://arxiv.org/abs/2601.12509
+gate_count: 372
+two_qubit_gate_count: 310
+depth: 17
+qubit_count: 142
+tags: [syndrome-extraction, "schedule:alpha", "decoder:mwpm", "circuit-distance:3"]
+original_matrices: ba5e1b4ef22c63a3

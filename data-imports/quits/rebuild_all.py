@@ -132,6 +132,26 @@ ASSUME_NEW = {
 # Catalogue keys deliberately left out, with the reason recorded for the README.
 EXCLUDED: dict[str, str] = {}
 
+# Extra `seed` values to import beyond the default 1, per (catalogue key,
+# strategy). The seed drives the edge orientation and colouring behind the two
+# cardinal strategies — zxcoloration ignores it — so a different seed is a
+# different schedule for the same checks, at identical depth and gate count.
+#
+# What it is *not* is free variety worth importing wholesale. A sweep of 12
+# seeds over the five cardinal-family codes whose circuit distance is
+# measurable (see scripts/measure_circuit_distance.py) found the default seed
+# already at the best distance available everywhere except one, and the two
+# lift-connected-surface codes produce only two distinct schedules however the
+# seed is set. So this list holds the improvements and nothing else: a second
+# circuit that measures the same as the first tells a reader nothing and costs
+# them a row.
+EXTRA_SEEDS: dict[tuple[str, str], tuple[int, ...]] = {
+    # Circuit distance 4 — the code's own — against seed 1's 3, at the same
+    # depth (8) and two-qubit count (216). Seed 7 is an equally good, different
+    # schedule; one of the two is enough to make the point.
+    ("bpc-36-8-4", "cardinal"): (2,),
+}
+
 # Qubit permutations (sigma[new] = old) onto stored codes whose automorphism
 # group defeats the dedup search's budget. Not computed here: QUITS labels these
 # codes exactly as autqec does (identical row spaces, verified), so these are the
@@ -346,72 +366,80 @@ def run(dataset: Path, write: bool, only: str, max_n: int = 0) -> list[Outcome]:
             continue
 
         for strategy in sorted(code.supported_strategies):
-            circuit_name, source, _ = SCHEDULE[strategy]
-            try:
-                experiment = code.build_circuit(strategy=strategy, num_rounds=2, basis="Z")
-                circuit = se_round(experiment, code.data_qubits, code.check_qubits)
-            except Exception as e:  # noqa: BLE001
-                out.append(Outcome(spec.key, strategy, "error", f"{type(e).__name__}: {e}"))
-                continue
+            base_name, source, _ = SCHEDULE[strategy]
+            for seed in (1, *EXTRA_SEEDS.get((spec.key, strategy), ())):
+                kind = strategy if seed == 1 else f"{strategy}:seed{seed}"
+                # Seed 1 keeps the plain name: it is what QUITS builds by
+                # default, so naming it after a seed would imply a choice
+                # nobody made.
+                circuit_name = base_name if seed == 1 else f"{base_name} (seed {seed})"
+                try:
+                    experiment = code.build_circuit(
+                        strategy=strategy, num_rounds=2, basis="Z", seed=seed
+                    )
+                    circuit = se_round(experiment, code.data_qubits, code.check_qubits)
+                except Exception as e:  # noqa: BLE001
+                    out.append(Outcome(spec.key, kind, "error", f"{type(e).__name__}: {e}"))
+                    continue
 
-            verdict = validate_syndrome_extraction_h(circuit, h, n, logical=logical)
-            if verdict != "passed":
-                out.append(Outcome(spec.key, strategy, "invalid", verdict.removeprefix("failed: ")))
-                continue
+                verdict = validate_syndrome_extraction_h(circuit, h, n, logical=logical)
+                if verdict != "passed":
+                    out.append(Outcome(spec.key, kind, "invalid", verdict.removeprefix("failed: ")))
+                    continue
 
-            interleaved = interleaves_xz(circuit, n)
-            tags = [
-                "syndrome-extraction",
-                "schedule:interleaved" if interleaved else "schedule:xz-separated",
-            ]
+                interleaved = interleaves_xz(circuit, n)
+                tags = [
+                    "syndrome-extraction",
+                    "schedule:interleaved" if interleaved else "schedule:xz-separated",
+                ]
 
-            if not write:
+                if not write:
+                    out.append(
+                        Outcome(spec.key, kind, "imported", f"{circuit.num_ticks} ticks, dry run")
+                    )
+                    continue
+
+                try:
+                    result = add_circuit(
+                        circuit=circuit,
+                        circuit_name=circuit_name,
+                        d=spec.d,
+                        # Pass the CSS pair, not the symplectic `h`. Both name the
+                        # same code and produce the same canonical form and hash,
+                        # but `H=` routes through `split_h_to_css`, which row-reduces
+                        # to detect CSS structure and hands back an RREF basis — and
+                        # that basis, not the submitted one, is what gets stored as
+                        # the circuit's *original* matrices. For an LDPC code that
+                        # turns weight-6 checks into weight-44 rows and throws away
+                        # the low-weight structure the code is defined by.
+                        Hx=code.hx,
+                        Hz=code.hz,
+                        source=source,
+                        code_name=name,
+                        code_slug=slug,
+                        code_tags=code_tags,
+                        zoo_url=zoo,
+                        tool=TOOL,
+                        tags=tags,
+                        notes=notes_for(spec, strategy, interleaved),
+                        qubit_permutation=sigma,
+                        assume_new=spec.key in ASSUME_NEW,
+                        overwrite=True,
+                    )
+                except UncertainDedupError as e:
+                    out.append(Outcome(spec.key, kind, "error", f"uncertain dedup: {e.candidates}"))
+                    continue
+                except Exception as e:  # noqa: BLE001
+                    out.append(Outcome(spec.key, kind, "error", f"{type(e).__name__}: {e}"))
+                    continue
                 out.append(
-                    Outcome(spec.key, strategy, "imported", f"{circuit.num_ticks} ticks, dry run")
+                    Outcome(
+                        spec.key,
+                        kind,
+                        "imported",
+                        f"{result.code_slug} [{result.code_status}]",
+                    )
                 )
-                continue
-
-            try:
-                result = add_circuit(
-                    circuit=circuit,
-                    circuit_name=circuit_name,
-                    d=spec.d,
-                    # Pass the CSS pair, not the symplectic `h`. Both name the
-                    # same code and produce the same canonical form and hash,
-                    # but `H=` routes through `split_h_to_css`, which row-reduces
-                    # to detect CSS structure and hands back an RREF basis — and
-                    # that basis, not the submitted one, is what gets stored as
-                    # the circuit's *original* matrices. For an LDPC code that
-                    # turns weight-6 checks into weight-44 rows and throws away
-                    # the low-weight structure the code is defined by.
-                    Hx=code.hx,
-                    Hz=code.hz,
-                    source=source,
-                    code_name=name,
-                    code_slug=slug,
-                    code_tags=code_tags,
-                    zoo_url=zoo,
-                    tool=TOOL,
-                    tags=tags,
-                    notes=notes_for(spec, strategy, interleaved),
-                    qubit_permutation=sigma,
-                    assume_new=spec.key in ASSUME_NEW,
-                    overwrite=True,
-                )
-            except UncertainDedupError as e:
-                out.append(Outcome(spec.key, strategy, "error", f"uncertain dedup: {e.candidates}"))
-                continue
-            except Exception as e:  # noqa: BLE001
-                out.append(Outcome(spec.key, strategy, "error", f"{type(e).__name__}: {e}"))
-                continue
-            out.append(
-                Outcome(
-                    spec.key,
-                    strategy,
-                    "imported",
-                    f"{result.code_slug} [{result.code_status}]",
-                )
-            )
     return out
 
 

@@ -357,6 +357,7 @@ def build_annotated_se(
     logical: np.ndarray,
     n: int,
     rounds: int,
+    basis: str = "Z",
 ) -> Optional[stim.Circuit]:
     """Build the ``stim-annotated`` body for a syndrome-extraction round.
 
@@ -392,6 +393,13 @@ def build_annotated_se(
     :func:`_readout_basis` applies to preps and for the same reason; it just costs
     more here, because for a prep the prologue alone is still worth showing.
 
+    ``basis`` mirrors the whole thing into X — reset to ``|+...+>``, keep the
+    checks with no *Z* component, read out transversally in X. The stored body is
+    the Z one, because that is what the site shows; the X one exists because a
+    CSS code's two memories can fail at different weights, and measuring only one
+    of them answers only half the question (see
+    :mod:`~.circuit_distance`).
+
     The result is *not* validated here; run :func:`validate_annotated` on it.
     """
     from .circuit_validate import round_check_matrix
@@ -402,13 +410,20 @@ def build_annotated_se(
     if checks is None or not checks.size:
         return None
 
+    if basis not in ("Z", "X"):
+        raise ValueError(f"basis must be 'Z' or 'X', got {basis!r}")
+    # The half of the symplectic matrix that must be empty for an operator to be
+    # readable in this basis, and the half that carries its support.
+    dead = slice(0, n) if basis == "Z" else slice(n, 2 * n)
+    live = n if basis == "Z" else 0  # column offset of the support half
+
     source = stim.Circuit(body)
     per_round = checks.shape[0]
-    z_checks = [j for j in range(per_round) if not checks[j, :n].any()]
-    z_logicals = (
-        [row for row in np.atleast_2d(logical) if not row[:n].any()] if logical.size else []
+    basis_checks = [j for j in range(per_round) if not checks[j, dead].any()]
+    basis_logicals = (
+        [row for row in np.atleast_2d(logical) if not row[dead].any()] if logical.size else []
     )
-    if not z_checks:
+    if not basis_checks:
         return None
 
     gates = stim.Circuit()
@@ -423,11 +438,11 @@ def build_annotated_se(
     for qubit, coord in sorted(source.get_final_qubit_coordinates().items()):
         if coord:
             out.append("QUBIT_COORDS", [qubit], coord)
-    out.append("R", list(range(n)))
+    out.append("R" if basis == "Z" else "RX", list(range(n)))
     out.append("TICK")
 
     out += gates
-    for j in z_checks:
+    for j in basis_checks:
         out.append("DETECTOR", [stim.target_rec(j - per_round)])
 
     if rounds > 1:
@@ -440,12 +455,12 @@ def build_annotated_se(
         out.append(stim.CircuitRepeatBlock(rounds - 1, repeat))
 
     out.append("TICK")
-    out.append("M", list(range(n)))
-    for j in z_checks:
-        support = [stim.target_rec(q - n) for q in range(n) if checks[j, n + q]]
+    out.append("M" if basis == "Z" else "MX", list(range(n)))
+    for j in basis_checks:
+        support = [stim.target_rec(q - n) for q in range(n) if checks[j, live + q]]
         out.append("DETECTOR", [*support, stim.target_rec(j - per_round - n)])
-    for index, row in enumerate(z_logicals):
-        support = [stim.target_rec(q - n) for q in range(n) if row[n + q]]
+    for index, row in enumerate(basis_logicals):
+        support = [stim.target_rec(q - n) for q in range(n) if row[live + q]]
         out.append("OBSERVABLE_INCLUDE", support, index)
     return out
 

@@ -1,0 +1,12 @@
+qec_id: 1073
+name: Depth-optimal schedule
+tool: asyndrome
+notes: One syndrome-extraction round. Data qubits 0-39, then the ancillas (X-checks
+  first), measured in index order. Hadamards once per X-ancilla, not per check (equivalent).
+source: https://arxiv.org/abs/2601.12509
+gate_count: 228
+two_qubit_gate_count: 204
+depth: 27
+qubit_count: 64
+tags: [syndrome-extraction, "schedule:depth-optimal", "circuit-distance:1"]
+original_matrices: a2f6197f0d31e4cf
