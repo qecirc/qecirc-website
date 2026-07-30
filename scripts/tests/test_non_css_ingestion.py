@@ -358,9 +358,6 @@ class TestAddCircuitH:
         assert any("/matrices/" in p for p in result.files_written)
 
 
-assert any(p.endswith(".original.yaml") for p in paths)
-
-
 class TestExistingNonCssCodeSlug:
     """A non-CSS submission that matches a stored code must file under the
     stored slug.
