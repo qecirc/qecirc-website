@@ -354,3 +354,61 @@ class TestAddCircuitH:
         assert any(p.endswith(".yaml") and "five-qubit" in p for p in paths)
         assert any(p.endswith(".stim") for p in paths)
         assert any(p.endswith(".original.yaml") for p in paths)
+
+
+class TestExistingNonCssCodeSlug:
+    """A non-CSS submission that matches a stored code must file under the
+    stored slug.
+
+    It used not to: `code_slug` — or a slug derived from `code_name` — won over
+    the code the submission actually matched, so the circuit was written as
+    `five-qubit-perfect-code--<circuit>.yaml` while the code lives at
+    `five-qubit-code`. No code YAML was written under that name (there was no
+    new code), leaving circuit files that reference an entry which does not
+    exist; `annotate_circuits.py` reported `code '...' not found` and
+    `db:create` rejected them. The CSS path never had this — these tests pin the
+    two paths to the same behaviour.
+    """
+
+    @staticmethod
+    def _five_qubit_h():
+        Hx, Hz = _five_qubit_matrices()
+        return np.hstack([Hx, Hz])
+
+    def _add(self, tmp_path, **kwargs):
+        from scripts.add_circuit import add_circuit
+
+        return add_circuit(
+            circuit="I 0 1 2 3 4",
+            circuit_name="Slug Probe",
+            d=3,
+            H=self._five_qubit_h(),
+            n=5,
+            source="test://example",
+            data_dir="data_yaml",
+            dry_run=True,
+            **kwargs,
+        )
+
+    def test_code_name_does_not_override_the_matched_slug(self, tmp_path):
+        result = self._add(tmp_path, code_name="Five-Qubit Perfect Code")
+        assert result.code_status == "existing"
+        assert result.code_slug == "five-qubit-code"
+
+    def test_code_slug_does_not_override_the_matched_slug(self, tmp_path):
+        """`code_slug` is documented as naming a *new* code, and on a match
+        there is no new code to name."""
+        result = self._add(tmp_path, code_name="Anything", code_slug="5-1-3")
+        assert result.code_status == "existing"
+        assert result.code_slug == "five-qubit-code"
+
+    def test_the_circuit_files_are_named_after_the_code_that_exists(self, tmp_path):
+        from pathlib import Path
+
+        result = self._add(tmp_path, code_name="Five-Qubit Perfect Code")
+        stems = {Path(p).name.split("--")[0] for p in result.files_written if "--" in p}
+        assert stems == {"five-qubit-code"}
+        # and nothing is written for a code that does not exist
+        assert not any(
+            Path(p).name.startswith("five-qubit-perfect-code") for p in result.files_written
+        )
