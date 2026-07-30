@@ -1,0 +1,21 @@
+qec_id: 1173
+name: FT zero (ILP flags)
+notes: "Fault-tolerant |0>_L preparation with flag circuits constructed by integer
+  linear programming (arXiv:2607.22498). Flag/verification measurements are included
+  (post-selection); the paper's figure caption states all fault sets up to size 2
+  are detected or lead to post-selection later in the QEC gadget. Circuit recovered
+  from the paper's tikz figure (embedded qpic source) and validated against the code's
+  stabilizers. Source file: data-imports/ilp-ftsp/circuits/12_2_4_prep.stim. Logical
+  state: zero. Connectivity: all-to-all. Gate set: CX,H,M. Flag/ancilla qubits: [12,
+  13, 14, 15, 16]. Canonicalization qubit permutation (stored qubit i = original qubit
+  permutation[i]): [0, 3, 1, 4, 2, 5, 6, 9, 7, 10, 8, 11]"
+source: https://arxiv.org/abs/2607.22498
+gate_count: 42
+two_qubit_gate_count: 36
+depth: 12
+qubit_count: 17
+crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6_7_8_9_10_11_12_13_14_15_16;TICK;H_2_4_3_6_10_15;CX_2_8_4_5_6_7_3_9_8_0_5_11_7_1_9_2_8_6_10_5_11_14_0_13_15_9_8_4_1_14_10_12_11_13_15_16_2_14_10_3_1_12_15_11_10_7_3_8_15_6_3_14_4_10_7_0_15_8_4_14_15_10_7_14_4_13;M_14;CX_7_12;M_13_12;CX_15_7_15_16;MX_15;M_16_
+crumble_url_annotated: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6_7_8_9_10_11_12_13_14_15_16;TICK;H_2_4_3_6_10_15;CX_2_8_4_5_6_7_3_9_8_0_5_11_7_1_9_2_8_6_10_5_11_14_0_13_15_9_8_4_1_14_10_12_11_13_15_16_2_14_10_3_1_12_15_11_10_7_3_8_15_6_3_14_4_10_7_0_15_8_4_14_15_10_7_14_4_13;M_14;CX_7_12;M_13_12;CX_15_7_15_16;MX_15;M_16;TICK;M_0_1_2_3_4_5_6_7_8_9_10_11;DT_rec[-12]_rec[-11]_rec[-6]_rec[-5];DT_rec[-11]_rec[-7]_rec[-6]_rec[-4]_rec[-3]_rec[-1];DT_rec[-10]_rec[-9]_rec[-4]_rec[-3];DT_rec[-9]_rec[-7]_rec[-6]_rec[-5]_rec[-3]_rec[-2];DT_rec[-8]_rec[-7]_rec[-2]_rec[-1];OI(0)rec[-12]_rec[-11]_rec[-8]_rec[-7];OI(1)rec[-10]_rec[-9]_rec[-8]_rec[-7]_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"H","H","H",1,"H",1,1,1,"H",1,1,1,1,"H"],[1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,"•","X"],[1,1,1,1,1,1,"•","X"],[1,1,1,"•",1,1,1,1,1,"X"],["X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"•",1,1,1,1,1,"X"],[1,"X",1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,"•"],[1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,"X",1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],["•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,"•"],[1,1,1,1,"X",1,1,1,"•"],[1,"•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],[1,1,"•",1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,"X",1,1,1,1,1,1,"•"],[1,"•",1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,"•"],[1,1,1,1,1,1,1,"X",1,1,"•"],[1,1,1,"•",1,1,1,1,"X"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,"•"],[1,1,1,"•",1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,"X"],["X",1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,"•"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,"•"],[1,1,1,1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetector"],[1,1,1,1,1,1,1,"•",1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,"ZDetector","ZDetector"],[1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"XDetector","ZDetector"]]}
+tags: [state-preparation, ft, flag, "logical-state:zero", "distance:4", "connectivity:all-to-all"]
+original_matrices: cea74c5e98c8d2f1
