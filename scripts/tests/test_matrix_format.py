@@ -108,3 +108,79 @@ class TestDigest:
         payload = {"h": encode(_random(9, 18, 0.4))}
         digest = matrices_digest(payload)
         assert matrices_digest(yaml.safe_load(dump_yaml(payload))) == digest
+
+
+class TestStoredCodeCache:
+    """The dedup scan reads every stored code, so it is cached across calls —
+    but `add_circuit` writes code files as it goes, so a stale cache would make
+    a bulk import blind to the codes it just created."""
+
+    def _write(self, path, text):
+        path.write_text(text, encoding="utf-8")
+
+    def test_reuses_a_parse_when_nothing_changed(self, tmp_path):
+        from scripts.add_circuit import compute
+
+        codes = tmp_path / "codes"
+        codes.mkdir()
+        self._write(codes / "a.yaml", "name: A\nn: 7\nk: 1\n")
+        first = compute._load_stored_codes(codes)
+        second = compute._load_stored_codes(codes)
+        assert first == second
+        # the same object, not merely an equal one: nothing was re-parsed
+        assert first[0][1] is second[0][1]
+
+    def test_sees_a_code_written_after_the_first_scan(self, tmp_path):
+        from scripts.add_circuit import compute
+
+        codes = tmp_path / "codes"
+        codes.mkdir()
+        self._write(codes / "a.yaml", "name: A\nn: 7\nk: 1\n")
+        assert [slug for slug, _ in compute._load_stored_codes(codes)] == ["a"]
+        self._write(codes / "b.yaml", "name: B\nn: 9\nk: 1\n")
+        assert [slug for slug, _ in compute._load_stored_codes(codes)] == ["a", "b"]
+
+    def test_sees_a_code_that_was_rewritten(self, tmp_path):
+        from scripts.add_circuit import compute
+
+        codes = tmp_path / "codes"
+        codes.mkdir()
+        path = codes / "a.yaml"
+        self._write(path, "name: A\nn: 7\nk: 1\n")
+        assert compute._load_stored_codes(codes)[0][1]["n"] == 7
+        # A rewrite that keeps the byte count still has to be noticed, which is
+        # why the stamp carries mtime and not just size.
+        self._write(path, "name: A\nn: 9\nk: 1\n")
+        assert compute._load_stored_codes(codes)[0][1]["n"] == 9
+
+
+class TestOriginalLogicals:
+    """The submitted-order logicals are the canonical ones permuted back, not a
+    second independent computation — so they must still be valid logicals."""
+
+    def test_permuting_back_gives_valid_logicals(self):
+        import yaml as _yaml
+
+        from scripts.add_circuit.code_identify import canonical_form, split_h_to_css
+        from scripts.add_circuit.compute import (
+            _compute_logicals_css,
+            _logicals_in_original_order,
+        )
+        from scripts.add_circuit.matrix_format import decode as _decode
+
+        doc = _yaml.safe_load(open("data_yaml/codes/steane-code.yaml"))
+        hx, hz = split_h_to_css(_decode(doc["h"]), doc["n"])
+        c_hx, c_hz, perm = canonical_form(hx, hz)
+        lx, lz = _compute_logicals_css(c_hx, c_hz, 3)
+        o_lx, o_lz = _logicals_in_original_order(lx, lz, perm, hx, hz)
+
+        assert o_lx is not None
+        assert not (o_lx @ np.asarray(hz).T % 2).any()
+        assert not (o_lz @ np.asarray(hx).T % 2).any()
+        assert np.array_equal(o_lx @ o_lz.T % 2, np.eye(o_lx.shape[0], dtype=int))
+
+    def test_refuses_a_permutation_of_the_wrong_length(self):
+        from scripts.add_circuit.compute import _logicals_in_original_order
+
+        lx = np.array([[1, 1, 1]])
+        assert _logicals_in_original_order(lx, lx, [0, 1], lx, lx) == (None, None)

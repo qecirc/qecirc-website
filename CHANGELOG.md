@@ -28,6 +28,22 @@ the source-of-truth `package.json` version.
 
 ### Fixed
 
+- **Importing a circuit no longer costs a full re-read of the library.** Dedup compares a
+  submission against every stored code, and re-parsed all of them from YAML on _every_
+  call — so a bulk import paid O(library) per circuit and got slower as the library grew.
+  Measured on the 74-code, 43 MB library the qLDPC imports produce: **29.3 s per
+  circuit**. Parsed codes are now cached across calls, keyed on each file's
+  (mtime, size) so a code written mid-import is still picked up — `add_circuit` creates
+  code files as it goes, and a cache that could not see them would be worse than none.
+  Every circuit after the first now pays a `stat`. Sparse storage compounds it: the same
+  first parse drops to 3.6 s.
+- **The submitted-order logical operators are no longer recomputed from scratch.**
+  `canonical_form` only permutes columns and row-reduces, neither of which changes the
+  code, so the canonical logicals permuted back _are_ the originals — worth ~25 s per
+  circuit on a [[544,80]] code, and it makes the two sets agree about which logical qubit
+  is which, where a second independent computation would pick some other equally valid
+  basis. The permuted operators are verified against the submitted matrices before use,
+  with recomputation as the fallback.
 - **A non-CSS circuit for an existing code is filed under that code's slug.** On a dedup
   match the CSS path has always used the stored slug; the non-CSS path only used it when
   nothing else had set one, so `code_slug` — or a slug derived from `code_name` — won
