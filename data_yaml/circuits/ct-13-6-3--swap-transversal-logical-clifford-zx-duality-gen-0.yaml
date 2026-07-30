@@ -1,7 +1,8 @@
 qec_id: 1216
 name: SWAP-transversal logical Clifford (ZX-duality gen 0)
 tool: autqec
-notes: Logical CNOT(5,6)·CNOT(4,6)·CNOT(3,6)·CNOT(4,5)·CNOT(3,5)·CNOT(2,5)·CNOT(1,5)·SWAP(6,5)·CNOT(6,4)·CNOT(3,4)·CNOT(1,4)·SWAP(5,4)·CNOT(6,3)·CNOT(5,3)·CNOT(1,3)·SWAP(4,3)·CNOT(6,1)·CNOT(5,1)·CNOT(4,1)·SWAP(3,1)·C(X,X)(2,6)·C(X,X)(1,2)·C(X,X)(1,4)·C(X,X)(1,6)·C(X,X)(4,6)·C(X,X)(5,6)
+notes:
+  Logical CNOT(5,6)·CNOT(4,6)·CNOT(3,6)·CNOT(4,5)·CNOT(3,5)·CNOT(2,5)·CNOT(1,5)·SWAP(6,5)·CNOT(6,4)·CNOT(3,4)·CNOT(1,4)·SWAP(5,4)·CNOT(6,3)·CNOT(5,3)·CNOT(1,3)·SWAP(4,3)·CNOT(6,1)·CNOT(5,1)·CNOT(4,1)·SWAP(3,1)·C(X,X)(2,6)·C(X,X)(1,2)·C(X,X)(1,4)·C(X,X)(1,6)·C(X,X)(4,6)·C(X,X)(5,6)
   (gates in application order) from generator 0 of the code's ZX-duality group, computed
   by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
   Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
@@ -27,5 +28,5 @@ depth: 0
 qubit_count: 13
 crumble_url: https://algassert.com/crumble#circuit=Z_8_4_3_2_5_11_7_9;SWAP_6_10_1_12;I_0;SWAP_3_2_8_4_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"Z","Z","Z","Z",1,"Z","Z","Z",1,"Z"],[1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,"Swap",1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],["…"],[1,1,"Swap","Swap"],[1,1,1,1],[1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1]]}
-tags: [logical-gate, swap-transversal, 'logical-op:CX', 'logical-op:SWAP', 'logical-op:XCX']
+tags: [logical-gate, swap-transversal, "logical-op:CX", "logical-op:SWAP", "logical-op:XCX"]
 original_matrices: 0c419a06b05f7fa7

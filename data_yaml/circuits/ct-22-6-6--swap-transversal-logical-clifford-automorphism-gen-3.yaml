@@ -1,7 +1,8 @@
 qec_id: 1714
 name: SWAP-transversal logical Clifford (automorphism gen 3)
 tool: autqec
-notes: Logical CNOT(4,6)·CNOT(3,6)·CNOT(4,5)·CNOT(2,5)·CNOT(5,4)·CNOT(2,4)·CNOT(1,4)·CNOT(4,3)·CNOT(2,3)·CNOT(5,2)·SWAP(4,2)·CNOT(5,1)·SWAP(4,1)·√X(4)·√X(1)·C(X,X)(3,4)·C(X,X)(1,3)·C(X,X)(1,5)·C(X,X)(1,4)·√X(3)·√X(2)
+notes:
+  Logical CNOT(4,6)·CNOT(3,6)·CNOT(4,5)·CNOT(2,5)·CNOT(5,4)·CNOT(2,4)·CNOT(1,4)·CNOT(4,3)·CNOT(2,3)·CNOT(5,2)·SWAP(4,2)·CNOT(5,1)·SWAP(4,1)·√X(4)·√X(1)·C(X,X)(3,4)·C(X,X)(1,3)·C(X,X)(1,5)·C(X,X)(1,4)·√X(3)·√X(2)
   (gates in application order) from generator 3 of the code's automorphism group,
   computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
   Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
@@ -25,6 +26,13 @@ depth: 0
 qubit_count: 22
 crumble_url: https://algassert.com/crumble#circuit=SWAP_20_14_12_16_4_18_8_5_9_6_10_7_15_21_17_11_19_13;I_0_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],["…"]]}
-tags: [logical-gate, swap-transversal, 'logical-op:CX', 'logical-op:SWAP', 'logical-op:SQRT_X',
-  'logical-op:XCX']
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:SQRT_X",
+    "logical-op:XCX",
+  ]
 original_matrices: 44d006ba3b2a36c9

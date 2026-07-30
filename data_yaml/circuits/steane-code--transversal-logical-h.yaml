@@ -15,5 +15,5 @@ depth: 0
 qubit_count: 7
 crumble_url: https://algassert.com/crumble#circuit=H_3_1_0_5_2_6_4_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H","H","H","H","H","H"]]}
-tags: [logical-gate, transversal, ft, 'logical-op:H']
+tags: [logical-gate, transversal, ft, "logical-op:H"]
 original_matrices: e5cffdca1c0ae903

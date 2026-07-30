@@ -1,7 +1,8 @@
 qec_id: 1219
 name: SWAP-transversal logical Clifford (automorphism gen 1)
 tool: autqec
-notes: Logical H(4)·CNOT(5,7)·CNOT(4,7)·CNOT(3,7)·CNOT(2,7)·CNOT(1,7)·CNOT(5,6)·CNOT(3,6)·CNOT(2,6)·CNOT(1,6)·SWAP(7,6)·CNOT(6,5)·CNOT(3,5)·CNOT(2,5)·CNOT(2,4)·SWAP(7,4)·CNOT(6,3)·CNOT(2,3)·CNOT(6,2)·CNOT(5,2)·CNOT(4,2)·CNOT(3,2)·CNOT(1,2)·CNOT(7,1)·SWAP(6,1)·S(4)·S(1)·S(7)·CZ(1,7)·CZ(3,5)·√X(4)·C(X,X)(2,5)·C(X,X)(3,4)·C(X,X)(4,6)·C(X,X)(3,6)·√X(7)·C(X,X)(1,4)·C(X,X)(5,7)·C(X,X)(2,6)·√X(3)·√X(2)·C(X,X)(1,6)·C(X,X)(2,7)·C(X,X)(3,7)·C(X,X)(5,6)
+notes:
+  Logical H(4)·CNOT(5,7)·CNOT(4,7)·CNOT(3,7)·CNOT(2,7)·CNOT(1,7)·CNOT(5,6)·CNOT(3,6)·CNOT(2,6)·CNOT(1,6)·SWAP(7,6)·CNOT(6,5)·CNOT(3,5)·CNOT(2,5)·CNOT(2,4)·SWAP(7,4)·CNOT(6,3)·CNOT(2,3)·CNOT(6,2)·CNOT(5,2)·CNOT(4,2)·CNOT(3,2)·CNOT(1,2)·CNOT(7,1)·SWAP(6,1)·S(4)·S(1)·S(7)·CZ(1,7)·CZ(3,5)·√X(4)·C(X,X)(2,5)·C(X,X)(3,4)·C(X,X)(4,6)·C(X,X)(3,6)·√X(7)·C(X,X)(1,4)·C(X,X)(5,7)·C(X,X)(2,6)·√X(3)·√X(2)·C(X,X)(1,6)·C(X,X)(2,7)·C(X,X)(3,7)·C(X,X)(5,6)
   (gates in application order) from generator 1 of the code's automorphism group,
   computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
   Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
@@ -33,6 +34,16 @@ depth: 0
 qubit_count: 13
 crumble_url: https://algassert.com/crumble#circuit=Z_6_2_10;S_3_9;H_1_5_12_8;SQRT_X_0_4_11_7;S_6_2_10;SWAP_0_11_12_8_3_10_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["X^½","H","Z","Z^½","X^½","H","Z","X^½","H","Z^½","Z","X^½","H"],[1,1,"Z^½",1,1,1,"Z^½",1,1,1,"Z^½"],["Swap",1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1]]}
-tags: [logical-gate, swap-transversal, 'logical-op:H', 'logical-op:CX', 'logical-op:SWAP',
-  'logical-op:S', 'logical-op:CZ', 'logical-op:SQRT_X', 'logical-op:XCX']
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:H",
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:S",
+    "logical-op:CZ",
+    "logical-op:SQRT_X",
+    "logical-op:XCX",
+  ]
 original_matrices: 9cad7bd6ef2f09f3

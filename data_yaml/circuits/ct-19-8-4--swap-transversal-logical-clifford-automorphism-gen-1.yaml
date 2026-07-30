@@ -1,7 +1,8 @@
 qec_id: 1563
 name: SWAP-transversal logical Clifford (automorphism gen 1)
 tool: autqec
-notes: Logical CNOT(6,8)·CNOT(5,8)·CNOT(4,8)·CNOT(3,8)·CNOT(2,8)·CNOT(1,8)·CNOT(6,7)·CNOT(5,7)·CNOT(4,7)·CNOT(3,7)·CNOT(2,7)·CNOT(1,7)·SWAP(8,7)·CNOT(8,6)·CNOT(4,6)·CNOT(1,6)·CNOT(8,5)·CNOT(6,5)·CNOT(4,5)·CNOT(2,5)·CNOT(1,5)·CNOT(6,4)·CNOT(3,4)·CNOT(2,4)·CNOT(2,3)·CNOT(8,2)·CNOT(7,2)·CNOT(5,2)·CNOT(4,2)·CNOT(3,2)·CNOT(6,1)·CNOT(5,1)·CZ(3,7)·S(8)·CZ(4,8)·CZ(1,7)·CZ(2,7)·CZ(4,5)·CZ(6,8)·CZ(3,4)·S(7)·CZ(7,8)·CZ(4,7)·CZ(1,5)·S(6)·S(3)·CZ(2,8)·CZ(3,8)·CZ(1,2)·CZ(3,5)·C(X,X)(6,7)·√X(4)·√X(1)·C(X,X)(2,3)·C(X,X)(3,6)·C(X,X)(4,7)·C(X,X)(1,5)·C(X,X)(1,4)·C(X,X)(2,6)·√X(3)·C(X,X)(2,8)·C(X,X)(3,5)·C(X,X)(6,8)·√X(2)·C(X,X)(4,8)·C(X,X)(1,6)·√X(5)·C(X,X)(2,7)
+notes:
+  Logical CNOT(6,8)·CNOT(5,8)·CNOT(4,8)·CNOT(3,8)·CNOT(2,8)·CNOT(1,8)·CNOT(6,7)·CNOT(5,7)·CNOT(4,7)·CNOT(3,7)·CNOT(2,7)·CNOT(1,7)·SWAP(8,7)·CNOT(8,6)·CNOT(4,6)·CNOT(1,6)·CNOT(8,5)·CNOT(6,5)·CNOT(4,5)·CNOT(2,5)·CNOT(1,5)·CNOT(6,4)·CNOT(3,4)·CNOT(2,4)·CNOT(2,3)·CNOT(8,2)·CNOT(7,2)·CNOT(5,2)·CNOT(4,2)·CNOT(3,2)·CNOT(6,1)·CNOT(5,1)·CZ(3,7)·S(8)·CZ(4,8)·CZ(1,7)·CZ(2,7)·CZ(4,5)·CZ(6,8)·CZ(3,4)·S(7)·CZ(7,8)·CZ(4,7)·CZ(1,5)·S(6)·S(3)·CZ(2,8)·CZ(3,8)·CZ(1,2)·CZ(3,5)·C(X,X)(6,7)·√X(4)·√X(1)·C(X,X)(2,3)·C(X,X)(3,6)·C(X,X)(4,7)·C(X,X)(1,5)·C(X,X)(1,4)·C(X,X)(2,6)·√X(3)·C(X,X)(2,8)·C(X,X)(3,5)·C(X,X)(6,8)·√X(2)·C(X,X)(4,8)·C(X,X)(1,6)·√X(5)·C(X,X)(2,7)
   (gates in application order) from generator 1 of the code's automorphism group,
   computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
   Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
@@ -37,6 +38,15 @@ depth: 0
 qubit_count: 19
 crumble_url: https://algassert.com/crumble#circuit=Z_14_6_5;Y_13;X_16;Z_10;Y_18_8_15;SQRT_X_11;S_9;H_7_4_3;S_2;H_12;S_17;I_0;SQRT_X_14;H_6;S_5;SQRT_X_13_16;S_10;SQRT_X_18_8;H_15;SWAP_8_15_13_12_4_10_11_16_18_8_2_12_5_13_6_15_7_10_9_4_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,"Z^½","H","H","Z","Z","H","Y","Z^½","Z","X^½","H","Y","Z","Y","X","Z^½","Y"],[1,1,1,1,1,"Z^½","H",1,"X^½",1,"Z^½",1,1,"X^½","X^½","H","X^½",1,"X^½"],[1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,"Swap",1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1]]}
-tags: [logical-gate, swap-transversal, 'logical-op:CX', 'logical-op:SWAP', 'logical-op:CZ',
-  'logical-op:S', 'logical-op:XCX', 'logical-op:SQRT_X']
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:CZ",
+    "logical-op:S",
+    "logical-op:XCX",
+    "logical-op:SQRT_X",
+  ]
 original_matrices: f542bad89512a10e

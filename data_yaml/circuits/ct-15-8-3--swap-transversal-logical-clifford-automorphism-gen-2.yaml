@@ -1,7 +1,8 @@
 qec_id: 1341
 name: SWAP-transversal logical Clifford (automorphism gen 2)
 tool: autqec
-notes: Logical H(4)·CNOT(7,8)·CNOT(5,8)·CNOT(4,8)·CNOT(3,8)·CNOT(2,8)·CNOT(6,7)·CNOT(3,7)·SWAP(8,7)·CNOT(8,6)·CNOT(7,6)·CNOT(5,6)·CNOT(4,6)·CNOT(2,6)·CNOT(8,5)·CNOT(6,5)·CNOT(4,5)·CNOT(2,5)·CNOT(8,4)·CNOT(2,4)·CNOT(1,4)·SWAP(6,4)·SWAP(5,3)·SWAP(8,2)·SWAP(7,1)·S(8)·S(4)·CZ(4,8)·CZ(4,5)·CZ(6,8)·CZ(7,8)·CZ(2,4)·CZ(3,8)·S(2)·C(X,X)(4,5)·C(X,X)(1,8)·√X(1)·√X(2)·C(X,X)(2,3)·C(X,X)(4,6)·C(X,X)(1,3)·C(X,X)(7,8)·C(X,X)(4,7)·C(X,X)(1,5)·C(X,X)(1,2)·C(X,X)(1,4)·√X(5)·C(X,X)(2,7)·C(X,X)(3,7)·C(X,X)(5,6)
+notes:
+  Logical H(4)·CNOT(7,8)·CNOT(5,8)·CNOT(4,8)·CNOT(3,8)·CNOT(2,8)·CNOT(6,7)·CNOT(3,7)·SWAP(8,7)·CNOT(8,6)·CNOT(7,6)·CNOT(5,6)·CNOT(4,6)·CNOT(2,6)·CNOT(8,5)·CNOT(6,5)·CNOT(4,5)·CNOT(2,5)·CNOT(8,4)·CNOT(2,4)·CNOT(1,4)·SWAP(6,4)·SWAP(5,3)·SWAP(8,2)·SWAP(7,1)·S(8)·S(4)·CZ(4,8)·CZ(4,5)·CZ(6,8)·CZ(7,8)·CZ(2,4)·CZ(3,8)·S(2)·C(X,X)(4,5)·C(X,X)(1,8)·√X(1)·√X(2)·C(X,X)(2,3)·C(X,X)(4,6)·C(X,X)(1,3)·C(X,X)(7,8)·C(X,X)(4,7)·C(X,X)(1,5)·C(X,X)(1,2)·C(X,X)(1,4)·√X(5)·C(X,X)(2,7)·C(X,X)(3,7)·C(X,X)(5,6)
   (gates in application order) from generator 2 of the code's automorphism group,
   computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
   Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
@@ -31,6 +32,16 @@ depth: 0
 qubit_count: 15
 crumble_url: https://algassert.com/crumble#circuit=Z_9_13_2;C_ZYX_8;C_XYZ_14;C_ZYX_12;C_XYZ_4_6;C_ZYX_5;I_0;SWAP_6_5_12_4_13_1_8_14_9_3_11_2_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,"Z",1,"~Cxyz","~Czyx","~Cxyz",1,"~Czyx","Z",1,1,"~Czyx","Z","~Cxyz"],[1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,"Swap",1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"},{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
-tags: [logical-gate, swap-transversal, 'logical-op:H', 'logical-op:CX', 'logical-op:SWAP',
-  'logical-op:S', 'logical-op:CZ', 'logical-op:XCX', 'logical-op:SQRT_X']
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:H",
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:S",
+    "logical-op:CZ",
+    "logical-op:XCX",
+    "logical-op:SQRT_X",
+  ]
 original_matrices: cce56f06d98cc0eb

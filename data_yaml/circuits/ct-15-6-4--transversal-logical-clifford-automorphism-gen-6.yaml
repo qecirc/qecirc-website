@@ -1,7 +1,8 @@
 qec_id: 1316
 name: Transversal logical Clifford (automorphism gen 6)
 tool: autqec
-notes: Logical H(6)·CNOT(5,6)·CNOT(2,6)·CNOT(3,5)·CNOT(2,4)·CNOT(1,4)·SWAP(6,4)·SWAP(5,3)·CNOT(1,2)·SWAP(4,1)·CZ(2,3)·CZ(4,5)·CZ(3,6)·S(6)·CZ(2,5)·√X(4)·C(X,X)(2,4)·√X(1)·C(X,X)(1,4)·C(X,X)(2,6)·√X(6)·√X(2)·C(X,X)(1,6)·C(X,X)(4,6)
+notes:
+  Logical H(6)·CNOT(5,6)·CNOT(2,6)·CNOT(3,5)·CNOT(2,4)·CNOT(1,4)·SWAP(6,4)·SWAP(5,3)·CNOT(1,2)·SWAP(4,1)·CZ(2,3)·CZ(4,5)·CZ(3,6)·S(6)·CZ(2,5)·√X(4)·C(X,X)(2,4)·√X(1)·C(X,X)(1,4)·C(X,X)(2,6)·√X(6)·√X(2)·C(X,X)(1,6)·C(X,X)(4,6)
   (gates in application order) from generator 6 of the code's automorphism group,
   computed by autqec (arXiv:2409.18175). Physical circuit is transversal — single-qubit
   Cliffords, with Pauli corrections that fix the stabilizer signs. The logical_action
@@ -30,6 +31,17 @@ depth: 0
 qubit_count: 15
 crumble_url: https://algassert.com/crumble#circuit=Z_8_3;X_13;Z_2;X_12;Z_1;X_11;Z_4;X_14;Z_10;X_7;Z_9;X_6;C_XYZ_5;I_0;C_XYZ_8_3_13_2_12_1_11_4_14_10_7_9_6_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…","Z","Z","Z","Z","~Cxyz","X","X","Z","Z","Z","X","X","X","X"],[1,"~Cxyz","~Cxyz","~Cxyz","~Cxyz",1,"~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz"]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"}]}
-tags: [logical-gate, transversal, ft, 'logical-op:H', 'logical-op:CX', 'logical-op:SWAP',
-  'logical-op:CZ', 'logical-op:S', 'logical-op:SQRT_X', 'logical-op:XCX']
+tags:
+  [
+    logical-gate,
+    transversal,
+    ft,
+    "logical-op:H",
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:CZ",
+    "logical-op:S",
+    "logical-op:SQRT_X",
+    "logical-op:XCX",
+  ]
 original_matrices: eefc581c91439fac

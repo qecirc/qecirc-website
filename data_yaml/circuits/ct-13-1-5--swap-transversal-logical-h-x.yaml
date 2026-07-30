@@ -19,5 +19,5 @@ depth: 0
 qubit_count: 13
 crumble_url: https://algassert.com/crumble#circuit=Z_11_9_7_5_3;Y_6;C_ZYX_10_8_12_4_2;I_0;C_ZYX_11_9_7_5_3_6;SWAP_4_3_10_9_5_3_11_9_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,"~Czyx","Z","~Czyx","Z","Y","Z","~Czyx","Z","~Czyx","Z","~Czyx"],[1,1,1,"~Czyx",1,"~Czyx","~Czyx","~Czyx",1,"~Czyx",1,"~Czyx"],[1,1,1,"Swap","Swap"],[1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1]],"gates":[{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
-tags: [logical-gate, swap-transversal, 'logical-op:H', 'logical-op:SQRT_X']
+tags: [logical-gate, swap-transversal, "logical-op:H", "logical-op:SQRT_X"]
 original_matrices: 95e2607ee3b46c1b

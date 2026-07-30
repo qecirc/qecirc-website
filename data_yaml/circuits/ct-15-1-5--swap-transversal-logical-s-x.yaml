@@ -19,5 +19,5 @@ depth: 0
 qubit_count: 15
 crumble_url: https://algassert.com/crumble#circuit=Z_13_10_9_7;Y_8;C_ZYX_12_11_14;C_XYZ_6_5_4;I_0;C_ZYX_13_10_9;C_XYZ_7_8;SWAP_6_5_7_5_9_14_10_14_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,1,1,"~Cxyz","~Cxyz","~Cxyz","Z","Y","Z","Z","~Czyx","~Czyx","Z","~Czyx"],[1,1,1,1,1,1,1,"~Cxyz","~Cxyz","~Czyx","~Czyx",1,1,"~Czyx"],[1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"},{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
-tags: [logical-gate, swap-transversal, 'logical-op:S', 'logical-op:SQRT_X']
+tags: [logical-gate, swap-transversal, "logical-op:S", "logical-op:SQRT_X"]
 original_matrices: 5bdb8fb575c4dbe1

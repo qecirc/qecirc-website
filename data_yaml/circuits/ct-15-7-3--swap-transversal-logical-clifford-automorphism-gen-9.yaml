@@ -1,7 +1,8 @@
 qec_id: 1333
 name: SWAP-transversal logical Clifford (automorphism gen 9)
 tool: autqec
-notes: Logical H(3)·CNOT(4,7)·CNOT(2,7)·CNOT(4,6)·CNOT(3,6)·CNOT(2,6)·SWAP(7,6)·CNOT(6,5)·CNOT(4,5)·CNOT(3,5)·CNOT(2,5)·CNOT(1,5)·CNOT(7,4)·CNOT(6,4)·CNOT(2,4)·CNOT(5,3)·CNOT(4,3)·CNOT(4,2)·CNOT(3,1)·CZ(4,6)·CZ(1,4)·CZ(2,3)·CZ(5,6)·CZ(3,6)·CZ(1,5)·CZ(2,4)·CZ(1,3)·CZ(2,5)·C(X,X)(6,7)·C(X,X)(1,3)·√X(3)·√X(6)·C(X,X)(1,4)·C(X,X)(3,7)·C(X,X)(2,6)·C(X,X)(1,6)·√X(5)·C(X,X)(2,7)·C(X,X)(5,6)·C(X,X)(3,4)·C(X,X)(5,7)·C(X,X)(3,5)·C(X,X)(1,2)·√X(4)·√X(1)·√X(7)·C(X,X)(3,6)·C(X,X)(4,7)·C(X,X)(1,7)
+notes:
+  Logical H(3)·CNOT(4,7)·CNOT(2,7)·CNOT(4,6)·CNOT(3,6)·CNOT(2,6)·SWAP(7,6)·CNOT(6,5)·CNOT(4,5)·CNOT(3,5)·CNOT(2,5)·CNOT(1,5)·CNOT(7,4)·CNOT(6,4)·CNOT(2,4)·CNOT(5,3)·CNOT(4,3)·CNOT(4,2)·CNOT(3,1)·CZ(4,6)·CZ(1,4)·CZ(2,3)·CZ(5,6)·CZ(3,6)·CZ(1,5)·CZ(2,4)·CZ(1,3)·CZ(2,5)·C(X,X)(6,7)·C(X,X)(1,3)·√X(3)·√X(6)·C(X,X)(1,4)·C(X,X)(3,7)·C(X,X)(2,6)·C(X,X)(1,6)·√X(5)·C(X,X)(2,7)·C(X,X)(5,6)·C(X,X)(3,4)·C(X,X)(5,7)·C(X,X)(3,5)·C(X,X)(1,2)·√X(4)·√X(1)·√X(7)·C(X,X)(3,6)·C(X,X)(4,7)·C(X,X)(1,7)
   (gates in application order) from generator 9 of the code's automorphism group,
   computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
   Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
@@ -30,6 +31,15 @@ depth: 0
 qubit_count: 15
 crumble_url: https://algassert.com/crumble#circuit=Z_8;X_11;Z_3_2;X_13;SWAP_6_9_14_10;I_0;C_XYZ_8;SWAP_2_6_7_14_4_11_5_11_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"Z","Z",1,1,1,1,"Z",1,1,"X",1,"X"],[1,1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],["…",1,1,1,1,1,1,1,"~Cxyz"],[1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"}]}
-tags: [logical-gate, swap-transversal, 'logical-op:H', 'logical-op:CX', 'logical-op:SWAP',
-  'logical-op:CZ', 'logical-op:XCX', 'logical-op:SQRT_X']
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:H",
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:CZ",
+    "logical-op:XCX",
+    "logical-op:SQRT_X",
+  ]
 original_matrices: ab7f27e2fce8ec97

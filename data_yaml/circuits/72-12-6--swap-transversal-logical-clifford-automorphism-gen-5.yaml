@@ -1,7 +1,8 @@
 qec_id: 1073
 name: SWAP-transversal logical Clifford (automorphism gen 5)
 tool: autqec
-notes: Logical CNOT(8,12)·CNOT(7,12)·CNOT(5,12)·CNOT(4,12)·CNOT(3,12)·CNOT(8,10)·CNOT(6,10)·CNOT(5,10)·CNOT(4,10)·CNOT(3,10)·SWAP(12,10)·CNOT(11,9)·CNOT(10,9)·CNOT(3,9)·CNOT(12,8)·CNOT(10,8)·CNOT(7,8)·CNOT(6,8)·CNOT(5,8)·CNOT(4,8)·CNOT(3,8)·SWAP(9,8)·CNOT(12,7)·CNOT(10,7)·CNOT(9,7)·CNOT(8,7)·CNOT(5,7)·CNOT(4,7)·CNOT(3,7)·CNOT(11,6)·CNOT(3,6)·SWAP(9,6)·CNOT(12,5)·CNOT(11,5)·CNOT(9,5)·CNOT(6,5)·CNOT(12,4)·CNOT(3,4)·SWAP(5,4)·CNOT(12,3)·CNOT(11,3)·CNOT(9,3)·CNOT(7,3)·CNOT(5,3)·CNOT(4,3)·CNOT(12,2)·CNOT(10,2)·CNOT(8,2)·CNOT(6,2)·CNOT(5,2)·CNOT(4,2)·CNOT(3,2)·CNOT(11,1)·CNOT(9,1)·CNOT(6,1)·CNOT(3,1)
+notes:
+  Logical CNOT(8,12)·CNOT(7,12)·CNOT(5,12)·CNOT(4,12)·CNOT(3,12)·CNOT(8,10)·CNOT(6,10)·CNOT(5,10)·CNOT(4,10)·CNOT(3,10)·SWAP(12,10)·CNOT(11,9)·CNOT(10,9)·CNOT(3,9)·CNOT(12,8)·CNOT(10,8)·CNOT(7,8)·CNOT(6,8)·CNOT(5,8)·CNOT(4,8)·CNOT(3,8)·SWAP(9,8)·CNOT(12,7)·CNOT(10,7)·CNOT(9,7)·CNOT(8,7)·CNOT(5,7)·CNOT(4,7)·CNOT(3,7)·CNOT(11,6)·CNOT(3,6)·SWAP(9,6)·CNOT(12,5)·CNOT(11,5)·CNOT(9,5)·CNOT(6,5)·CNOT(12,4)·CNOT(3,4)·SWAP(5,4)·CNOT(12,3)·CNOT(11,3)·CNOT(9,3)·CNOT(7,3)·CNOT(5,3)·CNOT(4,3)·CNOT(12,2)·CNOT(10,2)·CNOT(8,2)·CNOT(6,2)·CNOT(5,2)·CNOT(4,2)·CNOT(3,2)·CNOT(11,1)·CNOT(9,1)·CNOT(6,1)·CNOT(3,1)
   (gates in application order) from generator 5 of the code's automorphism group,
   computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
   Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
@@ -23,5 +24,5 @@ gate_count: 0
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 72
-tags: [logical-gate, swap-transversal, 'logical-op:CX', 'logical-op:SWAP']
+tags: [logical-gate, swap-transversal, "logical-op:CX", "logical-op:SWAP"]
 original_matrices: 1909153a356990fa

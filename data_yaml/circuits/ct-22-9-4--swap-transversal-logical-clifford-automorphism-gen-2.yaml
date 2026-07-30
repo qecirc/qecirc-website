@@ -1,7 +1,8 @@
 qec_id: 1721
 name: SWAP-transversal logical Clifford (automorphism gen 2)
 tool: autqec
-notes: Logical CNOT(8,9)·CNOT(7,9)·CNOT(6,9)·CNOT(5,9)·CNOT(4,9)·CNOT(3,9)·CNOT(6,8)·CNOT(5,8)·CNOT(4,8)·CNOT(1,8)·SWAP(9,8)·CNOT(9,7)·CNOT(6,7)·CNOT(5,7)·CNOT(3,7)·CNOT(1,7)·SWAP(8,7)·CNOT(9,6)·CNOT(3,6)·CNOT(2,6)·CNOT(1,6)·SWAP(8,6)·CNOT(7,5)·CNOT(4,5)·CNOT(2,5)·CNOT(1,5)·CNOT(3,4)·SWAP(6,4)·CNOT(2,3)·SWAP(7,3)·CNOT(9,2)·CNOT(8,2)·SWAP(7,2)·CNOT(9,1)·CNOT(6,1)·CNOT(5,1)·SWAP(3,1)·CZ(5,8)·CZ(3,6)·S(2)·CZ(8,9)·S(5)·CZ(2,5)·S(8)·CZ(4,8)·CZ(7,9)·CZ(3,7)·CZ(1,4)·S(7)·CZ(3,8)·CZ(2,6)·CZ(5,6)·CZ(3,9)·CZ(6,8)·S(3)·CZ(2,8)·CZ(1,2)·CZ(3,5)·C(X,X)(6,7)·C(X,X)(1,8)·√X(3)·√X(6)·C(X,X)(3,7)·C(X,X)(3,8)·C(X,X)(2,6)·C(X,X)(3,9)·√X(5)·C(X,X)(2,7)·√X(8)·C(X,X)(6,9)·C(X,X)(3,5)·C(X,X)(2,3)·C(X,X)(5,8)·C(X,X)(2,4)·C(X,X)(4,7)·C(X,X)(5,9)·C(X,X)(2,5)
+notes:
+  Logical CNOT(8,9)·CNOT(7,9)·CNOT(6,9)·CNOT(5,9)·CNOT(4,9)·CNOT(3,9)·CNOT(6,8)·CNOT(5,8)·CNOT(4,8)·CNOT(1,8)·SWAP(9,8)·CNOT(9,7)·CNOT(6,7)·CNOT(5,7)·CNOT(3,7)·CNOT(1,7)·SWAP(8,7)·CNOT(9,6)·CNOT(3,6)·CNOT(2,6)·CNOT(1,6)·SWAP(8,6)·CNOT(7,5)·CNOT(4,5)·CNOT(2,5)·CNOT(1,5)·CNOT(3,4)·SWAP(6,4)·CNOT(2,3)·SWAP(7,3)·CNOT(9,2)·CNOT(8,2)·SWAP(7,2)·CNOT(9,1)·CNOT(6,1)·CNOT(5,1)·SWAP(3,1)·CZ(5,8)·CZ(3,6)·S(2)·CZ(8,9)·S(5)·CZ(2,5)·S(8)·CZ(4,8)·CZ(7,9)·CZ(3,7)·CZ(1,4)·S(7)·CZ(3,8)·CZ(2,6)·CZ(5,6)·CZ(3,9)·CZ(6,8)·S(3)·CZ(2,8)·CZ(1,2)·CZ(3,5)·C(X,X)(6,7)·C(X,X)(1,8)·√X(3)·√X(6)·C(X,X)(3,7)·C(X,X)(3,8)·C(X,X)(2,6)·C(X,X)(3,9)·√X(5)·C(X,X)(2,7)·√X(8)·C(X,X)(6,9)·C(X,X)(3,5)·C(X,X)(2,3)·C(X,X)(5,8)·C(X,X)(2,4)·C(X,X)(4,7)·C(X,X)(5,9)·C(X,X)(2,5)
   (gates in application order) from generator 2 of the code's automorphism group,
   computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
   Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
@@ -50,6 +51,15 @@ depth: 0
 qubit_count: 22
 crumble_url: https://algassert.com/crumble#circuit=Z_16_10_9_7_6_5;SQRT_X_12;H_8;S_20_17;SQRT_X_13_18_14;H_11;S_21;H_15;SQRT_X_19;I_0;SQRT_X_16;S_10_9;H_7_6_5;SWAP_15_19_17_14_11_19_20_17_6_5_9_21_16_14_13_19_10_6_12_5_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,1,1,1,"Z","Z","Z","H","Z","Z","H","X^½","X^½","X^½","H","Z","Z^½","X^½","X^½","Z^½","Z^½"],[1,1,1,1,1,"H","H","H",1,"Z^½","Z^½",1,1,1,1,1,"X^½"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1]]}
-tags: [logical-gate, swap-transversal, 'logical-op:CX', 'logical-op:SWAP', 'logical-op:CZ',
-  'logical-op:S', 'logical-op:XCX', 'logical-op:SQRT_X']
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:CZ",
+    "logical-op:S",
+    "logical-op:XCX",
+    "logical-op:SQRT_X",
+  ]
 original_matrices: 64527a5fa1ca722e

@@ -14,5 +14,5 @@ depth: 0
 qubit_count: 4
 crumble_url: https://algassert.com/crumble#circuit=Z_2_3;S_0_1_2_3_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["Z^½","Z^½","Z","Z"],[1,1,"Z^½","Z^½"]]}
-tags: [logical-gate, transversal, ft, 'logical-op:CZ']
+tags: [logical-gate, transversal, ft, "logical-op:CZ"]
 original_matrices: a3e75dbdeaf815cc
