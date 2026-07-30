@@ -251,8 +251,8 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 │   ├── tools/             # One YAML per tool (e.g. mqt-qecc.yaml)
 │   ├── papers/            # One YAML per cited paper (e.g. zen-2024-rl-state-prep.yaml)
 │   ├── codes/             # One YAML per code (e.g. steane-code.yaml)
-│   └── circuits/          # YAML + body files per circuit (e.g. steane-code--standard-encoding.yaml/.stim)
-│       └── originals/     # Original (pre-canonicalization) STIM, one per circuit
+│   ├── circuits/          # YAML + body files per circuit (e.g. steane-code--standard-encoding.yaml/.stim)
+│   │   └── originals/     # Original (pre-canonicalization) STIM, one per circuit
 │   └── matrices/          # Submitted check matrices, stored once, content-addressed
 ├── .github/
 │   └── ISSUE_TEMPLATE/    # Circuit submission issue template

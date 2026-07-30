@@ -91,6 +91,9 @@ def build_original_yaml(matrices):
     return data
 
 
+DIGEST_LEN = 16
+
+
 def matrices_digest(data) -> str:
     """Content address for a stored matrix pair.
 
@@ -98,8 +101,22 @@ def matrices_digest(data) -> str:
     with the file: two submissions land on the same file only if the bytes they
     would write are identical, so a change of encoding can never silently alias
     two different matrices onto one address.
+
+    A digest of nothing but decimal digits is skipped — roughly one in 18,000,
+    so it would appear eventually and be baffling when it did. `original_matrices`
+    is a YAML scalar, and js-yaml reads an unquoted `0123456789012345` as the
+    *number* 123456789012345: the build would then look for a file whose name has
+    lost its leading zero, and `validate:yaml` would call the field a non-string.
+    PyYAML quotes such a value on the way out only when it would otherwise read
+    back as an int, which is not the same rule. Sliding along the same hash keeps
+    the address deterministic and the format unchanged.
     """
-    return hashlib.sha256(dump_yaml(data).encode("utf-8")).hexdigest()[:16]
+    digest = hashlib.sha256(dump_yaml(data).encode("utf-8")).hexdigest()
+    for start in range(0, len(digest) - DIGEST_LEN + 1):
+        window = digest[start : start + DIGEST_LEN]
+        if not window.isdigit():
+            return window
+    raise ValueError(f"no non-numeric window in digest {digest}")  # pragma: no cover
 
 
 class _FlowList(list):

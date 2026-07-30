@@ -109,6 +109,30 @@ class TestDigest:
         digest = matrices_digest(payload)
         assert matrices_digest(yaml.safe_load(dump_yaml(payload))) == digest
 
+    def test_the_address_never_reads_back_as_a_number(self):
+        """An all-digit address is a YAML scalar js-yaml reads as an int, losing
+        any leading zero. `matrices_digest` slides along the hash instead."""
+        for seed in range(400):
+            digest = matrices_digest({"h": encode(_random(4, 8, 0.5, seed=seed))})
+            assert len(digest) == 16
+            assert not digest.isdigit()
+            assert isinstance(load_yaml(dump_yaml({"m": digest}))["m"], str)
+
+    def test_a_numeric_window_is_skipped_not_truncated(self, monkeypatch):
+        import hashlib
+
+        forced = "1234567890123456" + "abcdef0123456789" + "0" * 32
+
+        class _Fake:
+            def hexdigest(self):
+                return forced
+
+        monkeypatch.setattr(hashlib, "sha256", lambda _data: _Fake())
+        digest = matrices_digest({"h": [[1, 0]]})
+        assert len(digest) == 16
+        assert not digest.isdigit()
+        assert digest in forced
+
 
 class TestStoredCodeCache:
     """The dedup scan reads every stored code, so it is cached across calls —
