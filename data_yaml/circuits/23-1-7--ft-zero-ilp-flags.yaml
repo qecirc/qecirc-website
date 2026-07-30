@@ -1,0 +1,19 @@
+qec_id: 1178
+name: FT zero (ILP flags)
+notes: "Fault-tolerant |0>_L preparation with flag circuits constructed by integer
+  linear programming (arXiv:2607.22498). Flag/verification measurements are included
+  (post-selection); the paper's figure caption states all fault sets up to size 3
+  are detected or lead to post-selection later in the QEC gadget. Circuit recovered
+  from the paper's figure PDF (vector extraction) and validated against the code's
+  stabilizers. Source file: data-imports/ilp-ftsp/circuits/23_1_7_prep.stim. Logical
+  state: zero. Connectivity: all-to-all. Gate set: CX,H,M. Flag/ancilla qubits: 23-62
+  (40 qubits). Canonicalization qubit permutation (stored qubit i = original qubit
+  permutation[i]): [10, 9, 8, 7, 6, 5, 4, 3, 2, 18, 15, 1, 12, 17, 14, 0, 22, 21,
+  20, 11, 16, 19, 13]"
+source: https://arxiv.org/abs/2607.22498
+gate_count: 253
+two_qubit_gate_count: 215
+depth: 28
+qubit_count: 63
+tags: [state-preparation, ft, flag, "logical-state:zero", "distance:7", "connectivity:all-to-all"]
+original_matrices: 5c037681fa3d0016
