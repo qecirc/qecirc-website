@@ -456,19 +456,28 @@ def round_check_matrix(circuit: Union[stim.Circuit, str], n: int) -> Optional[np
     measure" as a group — the question validation asks — this answers "and which
     ancilla reads which", which is what building detectors needs.
 
-    That extra precision costs generality, so this one is deliberately narrow: it
-    only handles a round shaped ``reset → unitary → measure``, with each ancilla
-    reset once at the start, untouched by anything but gates, and measured once
-    at the end. Anything else — mid-round measurement, ``MR``, a flag qubit
-    re-used — returns ``None``, and the caller falls back to whatever it can do
-    without the map. Validation never depends on this function, so a ``None``
-    here can cost an annotation but never a verdict.
+    That extra precision costs generality, so this one is deliberately narrow. An
+    ancilla must be reset once, before any gate touches it, and measured once;
+    nothing else non-unitary may appear. Anything outside that — ``MR``, a flag
+    qubit re-used, a data qubit measured — returns ``None``, and the caller falls
+    back to whatever it can do without the map. Validation never depends on this
+    function, so a ``None`` here can cost an annotation but never a verdict.
 
-    The operator is obtained by pulling ``Z_ancilla`` back through the unitary
-    part: whatever it becomes at the start of the round is what the measurement
-    reports, given the reset fixes ``Z_ancilla = +1``. Residual support on
-    *another* ancilla means the two are entangled and the outcome is not
-    determined by the data at all — that also returns ``None``.
+    The operator is obtained by pulling ``Z_ancilla`` back through the gates that
+    precede *that* measurement: whatever it becomes at the start of the round is
+    what the measurement reports, given the reset fixes ``Z_ancilla = +1``.
+    Residual support on *another* ancilla means the two are entangled and the
+    outcome is not determined by the data at all — that also returns ``None``.
+
+    **Per measurement, not per round**, which is what lets a round be built from
+    several sequential sub-rounds — reset and read the Z-ancillas, then reset and
+    read the X-ancillas, as the ZX-coloration schedules do. A later sub-round's
+    operator is pulled back through the earlier ones too, so it picks up support
+    on their ancillas unless that support cancels — and it cancels exactly when
+    the checks commute, which for a valid schedule they do. Where they do not,
+    the ancilla check above rejects the round rather than inventing a detector.
+    Requiring the reset to come before any gate on that qubit is what makes the
+    pull-back past it legitimate.
     """
     circ = _widen(_to_stim_circuit(circuit), n)
     width = circ.num_qubits
@@ -497,10 +506,26 @@ def round_check_matrix(circuit: Union[stim.Circuit, str], n: int) -> Optional[np
             for t in op.targets_copy():
                 measured.append(t.value)
                 measured_basis[t.value] = pauli
+    prefix_len: list[int] = []  # gates preceding each measurement, in `unitary`
+    reset: set[int] = set()
+    touched: set[int] = set()  # qubits a gate has already acted on
+    for op in circ:
+        if isinstance(op, stim.CircuitRepeatBlock):
+            return None
+        if op.name in ("R", "RZ"):
+            targets = [t.value for t in op.targets_copy()]
+            if any(q in touched or q in reset for q in targets):
+                return None  # reset twice, or reset after a gate already moved it
+            reset.update(targets)
+        elif op.name in ("M", "MZ"):
+            for t in op.targets_copy():
+                measured.append(t.value)
+                prefix_len.append(len(unitary))
         elif op.name == "TICK" or op.name == "QUBIT_COORDS":
             continue
         elif _ALL_GATES.get(op.name) is not None and _ALL_GATES[op.name].is_unitary:
             unitary.append(op.name, op.targets_copy(), op.gate_args_copy())
+            touched.update(t.value for t in op.targets_copy())
         else:
             return None  # some other non-unitary op; out of scope
 
@@ -511,10 +536,14 @@ def round_check_matrix(circuit: Union[stim.Circuit, str], n: int) -> Optional[np
     if any(measured_basis[q] != reset_basis[q] for q in measured):
         return None  # measured in a different basis than it was prepared in
 
-    try:
-        inverse = _widen(unitary, width).to_tableau().inverse()
-    except ValueError:
-        return None
+    # One tableau per distinct prefix — a two-sub-round schedule has two, not one
+    # per measurement.
+    inverses: dict[int, stim.Tableau] = {}
+    for k in set(prefix_len):
+        try:
+            inverses[k] = _widen(unitary[:k], width).to_tableau().inverse()
+        except ValueError:
+            return None
 
     rows = np.zeros((len(measured), 2 * n), dtype=int)
     for row, anc in enumerate(measured):
@@ -522,6 +551,10 @@ def round_check_matrix(circuit: Union[stim.Circuit, str], n: int) -> Optional[np
         ps = stim.PauliString(width)
         ps[anc] = basis  # the operator the reset fixes to +1
         pulled = inverse(ps)
+    for row, (anc, k) in enumerate(zip(measured, prefix_len)):
+        ps = stim.PauliString(width)
+        ps[anc] = 3  # Z
+        pulled = inverses[k](ps)
         for q in range(width):
             p = pulled[q]
             if not p:

@@ -263,8 +263,9 @@ class TestRoundCheckMatrix:
     def test_returns_none_for_a_shape_it_cannot_read(self):
         """Deliberately narrow: no map is better than a wrong one, and nothing in
         validation depends on it."""
-        assert round_check_matrix("R 7\nM 7\nR 7\nM 7", N) is None  # reset after measure
+        assert round_check_matrix("R 7\nM 7\nR 7\nM 7", N) is None  # ancilla read twice
         assert round_check_matrix("H 0", N) is None  # no measurements
+        assert round_check_matrix("CX 0 7\nR 7\nM 7", N) is None  # reset after a gate
 
     def test_returns_none_when_ancillas_are_entangled(self):
         """The interleaving failure again: the outcome is not a function of the
@@ -302,6 +303,32 @@ class TestRoundCheckMatrix:
         circ.append("CX", [7, 0])
         circ.append("M", [7])
         assert round_check_matrix(circ, N) is None
+    def test_reads_a_round_built_from_two_sequential_sub_rounds(self):
+        """The ZX-coloration shape: reset and read the Z-ancillas, then reset and
+        read the X-ancillas. A single reset-gates-measure round cannot express it,
+        and until each measurement was pulled back through its *own* prefix the
+        whole round was refused — costing 25 QUITS circuits their annotated view.
+
+        Steane's X- and Z-checks are the same three rows, so the two halves must
+        come back as `[X-checks | 0]` on top of `[0 | Z-checks]`.
+        """
+        z_half = "".join(f"R {7 + i}\n" for i in range(3))
+        for i, row in enumerate(STEANE_CHECKS):
+            z_half += "".join(f"CX {q} {7 + i}\n" for q in np.flatnonzero(row))
+        z_half += "M 7 8 9\n"
+
+        x_half = "".join(f"R {10 + i}\nH {10 + i}\n" for i in range(3))
+        for i, row in enumerate(STEANE_CHECKS):
+            x_half += "".join(f"CX {10 + i} {q}\n" for q in np.flatnonzero(row))
+        x_half += "".join(f"H {10 + i}\n" for i in range(3)) + "M 10 11 12\n"
+
+        checks = round_check_matrix(z_half + x_half, N)
+        assert checks is not None, "a two-sub-round schedule must still be readable"
+        assert checks.shape == (6, 2 * N)
+        assert np.array_equal(checks[:3, N:], STEANE_CHECKS)  # Z-checks, read first
+        assert not checks[:3, :N].any()
+        assert np.array_equal(checks[3:, :N], STEANE_CHECKS)  # then the X-checks
+        assert not checks[3:, N:].any()
 
 
 class TestAnnotatedMemoryExperiment:
