@@ -40,6 +40,7 @@ not distinct constructions.
 ```bash
 python rebuild_all.py                   # classify only
 python rebuild_all.py --write
+python rebuild_all.py --write --overwrite  # data refresh: replace stored circuits, keep qec_ids
 python rebuild_all.py --only rotated-d7 # substring filter on spec.key
 ```
 

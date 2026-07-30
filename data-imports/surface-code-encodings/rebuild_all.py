@@ -234,7 +234,7 @@ def describe(spec: Spec) -> tuple[str, list[str], str]:
     return name, tags, notes
 
 
-def run(write: bool, data_dir: Path, only: str | None) -> None:
+def run(write: bool, data_dir: Path, only: str | None, overwrite: bool = False) -> None:
     chosen = [s for s in specs() if not only or only in s.key]
     imported = deferred = 0
     report: list[str] = []
@@ -279,6 +279,7 @@ def run(write: bool, data_dir: Path, only: str | None) -> None:
             notes=notes,
             data_dir=str(data_dir),
             dry_run=not write,
+            overwrite=overwrite,
         )
         try:
             import_state_prep(**kwargs)
@@ -300,11 +301,16 @@ def main() -> None:
     ap.add_argument("--data-dir", default=str(REPO / "data_yaml"))
     ap.add_argument("--dataset", default=str(DATASET))
     ap.add_argument("--only", default=None, help="substring filter on spec.key")
+    ap.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="replace already-imported circuits in place (data refresh), keeping qec_ids",
+    )
     args = ap.parse_args()
     DATASET = Path(args.dataset)
     if not DATASET.is_dir():
         raise SystemExit(f"dataset not found: {DATASET} (clone it there, or pass --dataset)")
-    run(args.write, Path(args.data_dir), args.only)
+    run(args.write, Path(args.data_dir), args.only, overwrite=args.overwrite)
 
 
 if __name__ == "__main__":

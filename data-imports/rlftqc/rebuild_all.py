@@ -219,7 +219,7 @@ def short_name(fam: str, m: dict, counter: dict) -> str:
     return f"{prefix} {idx}"
 
 
-def run(write: bool, data_dir: Path) -> None:
+def run(write: bool, data_dir: Path, overwrite: bool = False) -> None:
     anchors = {k: anchor_H(c, data_dir) for k, c in CODES.items()}
     stims = sorted(p for p in DATASET.rglob("*.stim") if not p.name.endswith("_flag.stim"))
     per_code: dict[str, Stats] = defaultdict(Stats)
@@ -276,6 +276,7 @@ def run(write: bool, data_dir: Path) -> None:
                 qubit_placement=m["placement"],
                 tags=["state-preparation", "ft" if m["ft"] else "non-ft"],
                 data_dir=str(data_dir),
+                overwrite=overwrite,
             )
             if method == "anchor":
                 kwargs.update(anchor_H=H, permutation=sigma)
@@ -312,8 +313,13 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--data-dir", default=str(REPO / "data_yaml"))
+    ap.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="replace already-imported circuits in place (data refresh), keeping qec_ids",
+    )
     args = ap.parse_args()
-    run(args.write, Path(args.data_dir))
+    run(args.write, Path(args.data_dir), overwrite=args.overwrite)
 
 
 if __name__ == "__main__":

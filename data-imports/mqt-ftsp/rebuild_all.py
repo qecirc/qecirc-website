@@ -124,7 +124,7 @@ def gate_set_of(circ: stim.Circuit) -> str:
     return ",".join(names)
 
 
-def run_eval(write: bool, data_dir: Path) -> tuple[int, int]:
+def run_eval(write: bool, data_dir: Path, overwrite: bool = False) -> tuple[int, int]:
     report: list[str] = []
     imported = deferred = 0
     for dirname, code in EVAL_CODES.items():
@@ -161,6 +161,7 @@ def run_eval(write: bool, data_dir: Path) -> tuple[int, int]:
                 tags=tags,
                 notes=method_note,
                 data_dir=str(data_dir),
+                overwrite=overwrite,
             )
             if code.fit == "identity":
                 kwargs.update(method="anchor", anchor_H=h, permutation=list(range(code.n)))
@@ -190,16 +191,21 @@ def main() -> None:
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--data-dir", default=str(REPO / "data_yaml"))
     ap.add_argument("--only", choices=["eval", "det"], default=None)
+    ap.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="replace already-imported circuits in place (data refresh), keeping qec_ids",
+    )
     args = ap.parse_args()
     if not DATASET.exists():
         sys.exit(f"dataset not found at {DATASET} — clone munich-quantum-toolkit/qecc there")
     data_dir = Path(args.data_dir)
     if args.only in (None, "eval"):
-        run_eval(args.write, data_dir)
+        run_eval(args.write, data_dir, overwrite=args.overwrite)
     if args.only in (None, "det"):
         from run_det import run_det  # noqa: PLC0415  (module added in Task 4)
 
-        run_det(args.write, data_dir)
+        run_det(args.write, data_dir, overwrite=args.overwrite)
 
 
 if __name__ == "__main__":

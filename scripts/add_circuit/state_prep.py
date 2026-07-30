@@ -485,6 +485,7 @@ def import_state_prep(
     ancilla_role: str = "flag",
     data_dir: str = "data_yaml",
     dry_run: bool = False,
+    overwrite: bool = False,
 ) -> "AddCircuitResult":
     """Import one state-preparation circuit, fitting it to a single canonical code.
 
@@ -515,6 +516,14 @@ def import_state_prep(
     genuinely new but its parameters/invariants collide with a stored code so the
     dedup search reports ``uncertain`` (e.g. distinct same-``[[n,k]]`` codes). It
     suppresses :exc:`UncertainDedupError` and adds the submission as a new code.
+
+    ``overwrite`` (optional) forwards to ``add_circuit``: an existing circuit
+    with the same ``<code>--<circuit>`` slug is replaced in place, keeping its
+    ``qec_id``. It also narrows the byte-identical-duplicate rejection below: a
+    re-import (data refresh) resubmits every stored circuit, so matching *its
+    own* stored original is expected — but a match with a *different* circuit's
+    original is still a duplicate (distinct dataset files converging on the
+    same circuit) and is still rejected.
 
     The untouched ``circuit`` (flags included) is what gets stored; ``add_circuit``
     dedups it to the canonical code, applies the permutation, and preserves the
@@ -604,6 +613,7 @@ def import_state_prep(
         data_dir=data_dir,
         qubit_permutation=permutation,
         assume_new=assume_new,
+        overwrite=overwrite,
         **code_kwargs,
     )
 
@@ -643,10 +653,25 @@ def import_state_prep(
     #    (e.g. independent RL runs converging to the same circuit). The library
     #    keeps one entry per distinct circuit, so an import whose original text
     #    matches an already-stored original is rejected (drivers report it).
+    #    Both sides are compared in stim's normalized form: stored originals
+    #    are written normalized, while the submission is raw dataset text — a
+    #    trailing newline must not smuggle a duplicate past the guard (it did:
+    #    the 0.4.2 cleanup's 43 removed duplicates all came back on a re-run
+    #    with the old byte comparison).
+    #    When overwriting, a match with this circuit's *own* stored original is
+    #    the expected re-import case and passes; matches with other circuits
+    #    stay rejected — drivers name circuits deterministically, so a dataset's
+    #    genuine duplicates land on different names on every run.
+    from .compute import slugify
+
+    own_suffix = f"--{slugify(circuit_name)}.original.stim"
     originals_dir = Path(data_dir) / "circuits" / "originals"
     if not dry_run and originals_dir.is_dir():
+        normalized_text = str(stim.Circuit(circuit_text))
         for p in sorted(originals_dir.glob("*.original.stim")):
-            if p.read_text() == circuit_text:
+            if str(stim.Circuit(p.read_text())) == normalized_text:
+                if overwrite and p.name.endswith(own_suffix):
+                    continue
                 raise ValueError(f"byte-identical duplicate of stored circuit {p.stem}")
 
     # 5. Real write with the enriched metadata.

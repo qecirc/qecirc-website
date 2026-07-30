@@ -22,14 +22,21 @@ qecirc/
 ```
 
 ```bash
-git clone --depth 1 https://github.com/munich-quantum-toolkit/qecc ../mqt-qecc
+git clone https://github.com/munich-quantum-toolkit/qecc ../mqt-qecc
+git -C ../mqt-qecc checkout 1685b87~1  # last commit with the old codes/ layout
 ```
+
+The pin matters: #751 (2026-07-13) restructured `src/mqt/qecc/codes/` and
+dropped the `rotated_surface_d5/` and `hamming_15/` `.npy` matrix dirs this
+importer reads for its `perm_find` fits. The circuits themselves
+(`scripts/ft_stateprep/`) are unchanged at HEAD.
 
 ## Run
 
 ```bash
 python rebuild_all.py                 # classify only (no writes)
 python rebuild_all.py --write         # import into the repo's data_yaml
+python rebuild_all.py --write --overwrite  # data refresh: replace stored circuits, keep qec_ids
 python rebuild_all.py --only det      # restrict to one part (eval|det)
 ```
 
