@@ -26,6 +26,7 @@ from .code_identify import (
     is_permutation_equivalent,
     split_h_to_css,
 )
+from .matrix_format import decode as decode_matrix
 from .models import CodeParams, TagEntry
 from .tag_suggest import suggest_code_tags
 from .yaml_helpers import load_yaml
@@ -94,8 +95,17 @@ def compute_code_data(
     # 3. Logical operators (use canonical matrices so logicals match stored Hx/Hz)
     Lx, Lz = _compute_logicals_css(canon_Hx, canon_Hz, d)
 
-    # 3b. Original logical operators (from pre-canonicalization matrices)
-    orig_Lx, orig_Lz = _compute_logicals_css(Hx, Hz, d)
+    # 3b. The same logical operators, in the labelling they were submitted in.
+    #     `canonical_form` only permutes columns and row-reduces, neither of
+    #     which changes the code, so permuting the canonical logicals back is
+    #     exact — and it makes the two sets agree about which logical qubit is
+    #     which, where computing a second set from scratch would pick some other
+    #     equally valid basis. It is also ~25 s cheaper per circuit on a
+    #     [[544,80]] code. Verified rather than assumed; recomputation is the
+    #     fallback if the permuted operators are not valid logicals.
+    orig_Lx, orig_Lz = _logicals_in_original_order(Lx, Lz, qubit_perm, Hx, Hz)
+    if orig_Lx is None:
+        orig_Lx, orig_Lz = _compute_logicals_css(Hx, Hz, d)
 
     # 3c. Symplectic forms (always populated alongside the CSS view)
     h = build_symplectic_h(canon_Hx, canon_Hz)
@@ -307,6 +317,32 @@ def compute_code_data_h(
     }
 
 
+def _logicals_in_original_order(Lx, Lz, perm, Hx, Hz):
+    """Canonical logicals expressed in the submitted column order, or (None, None).
+
+    ``perm`` maps canonical column index -> original column index, so undoing it
+    is a scatter. The result is checked against the *submitted* matrices before
+    being returned: each logical must commute with the checks of the other type
+    and the two sets must pair up symplectically. If any of that fails the
+    caller falls back to computing them, so a future change to `canonical_form`
+    degrades to the slow path rather than to wrong operators.
+    """
+    perm = list(perm)
+    if len(perm) != Lx.shape[1]:
+        return None, None
+    orig_Lx = np.zeros_like(Lx)
+    orig_Lz = np.zeros_like(Lz)
+    orig_Lx[:, perm] = Lx
+    orig_Lz[:, perm] = Lz
+
+    k = orig_Lx.shape[0]
+    if (orig_Lx @ np.asarray(Hz).T % 2).any() or (orig_Lz @ np.asarray(Hx).T % 2).any():
+        return None, None
+    if not np.array_equal(orig_Lx @ orig_Lz.T % 2, np.eye(k, dtype=int)):
+        return None, None
+    return orig_Lx, orig_Lz
+
+
 def _compute_logicals_css(Hx, Hz, d):
     """CSS logical operators. Try MQT QECC first, fall back to GF(2)."""
     try:
@@ -473,6 +509,36 @@ def _is_self_dual(Hx, Hz):
     return np.array_equal(rref_x, rref_z)
 
 
+# Parsed `data_yaml/codes/*.yaml`, keyed by path, with the stat that produced it.
+# Dedup compares a submission against every stored code, so without this a bulk
+# import re-parses the entire library once per circuit: for a 69-circuit import
+# into a 74-code library that was 61 s of PyYAML per circuit, and the cost grows
+# with the product of the two — adding a circuit should not get slower because
+# the library got bigger.
+#
+# The cache cannot simply be filled once, because `add_circuit` *writes* code
+# files as it goes and the next circuit has to see them. Keying each entry on
+# (mtime_ns, size) means a new or rewritten file is re-parsed and everything else
+# costs a stat — which is what makes it safe to keep across calls at all.
+_CODE_CACHE: dict[Path, tuple[tuple[int, int], dict]] = {}
+
+
+def _load_stored_codes(codes_dir: Path) -> list[tuple[str, dict]]:
+    """Every stored code as (slug, parsed YAML), re-reading only what changed."""
+    stored: list[tuple[str, dict]] = []
+    for code_file in sorted(codes_dir.glob("*.yaml")):
+        st = code_file.stat()
+        stamp = (st.st_mtime_ns, st.st_size)
+        cached = _CODE_CACHE.get(code_file)
+        if cached is None or cached[0] != stamp:
+            parsed = load_yaml(code_file.read_text(encoding="utf-8"))
+            _CODE_CACHE[code_file] = (stamp, parsed)
+        else:
+            parsed = cached[1]
+        stored.append((code_file.stem, parsed))
+    return stored
+
+
 def _check_yaml_dedup(data_dir, c_hash, Hx, Hz) -> DedupResult:
     """Two-phase dedup against data_yaml/codes/ for a CSS submission.
 
@@ -492,10 +558,7 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz) -> DedupResult:
     H_user = build_symplectic_h(Hx, Hz)
     rank_user = gf2_rank(H_user)
 
-    # Pre-parse YAMLs once so we don't reload them between phases.
-    stored: list[tuple[str, dict]] = []
-    for code_file in sorted(codes_dir.glob("*.yaml")):
-        stored.append((code_file.stem, load_yaml(code_file.read_text(encoding="utf-8"))))
+    stored = _load_stored_codes(codes_dir)
 
     # Phase 1: hash match.
     for slug, data in stored:
@@ -506,7 +569,7 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz) -> DedupResult:
         n_stored = data.get("n")
         if n_stored is None:
             raise ValueError(f"Code '{slug}' is missing required field 'n'")
-        H_stored = np.array(data["h"], dtype=int)
+        H_stored = decode_matrix(data["h"])
         css_split = split_h_to_css(H_stored, n_stored)
         if css_split is None:
             raise ValueError(
@@ -544,7 +607,7 @@ def _phase2_permutation_scan(
     for slug, data in stored:
         if data.get("n") != n or data.get("h") is None:
             continue
-        H_stored = np.array(data["h"], dtype=int) % 2
+        H_stored = decode_matrix(data["h"])
         if H_stored.shape[1] != 2 * n or gf2_rank(H_stored) != rank_user:
             continue
         status, sigma = is_permutation_equivalent(
@@ -574,9 +637,7 @@ def _check_yaml_dedup_h(data_dir, c_hash, H, n) -> DedupResult:
     rank_user = gf2_rank(H)
     H = np.asarray(H, dtype=int) % 2
 
-    stored: list[tuple[str, dict]] = []
-    for code_file in sorted(codes_dir.glob("*.yaml")):
-        stored.append((code_file.stem, load_yaml(code_file.read_text(encoding="utf-8"))))
+    stored = _load_stored_codes(codes_dir)
 
     # Phase 1: hash match.
     for slug, data in stored:
@@ -584,7 +645,7 @@ def _check_yaml_dedup_h(data_dir, c_hash, H, n) -> DedupResult:
             continue
         if data.get("h") is None:
             raise ValueError(f"Code '{slug}' matches non-CSS hash but has no 'h' field")
-        canon_stored = np.array(data["h"], dtype=int) % 2
+        canon_stored = decode_matrix(data["h"])
         if canon_stored.shape == canon_user.shape and np.array_equal(canon_stored, canon_user):
             perm = perm_to_canon if perm_to_canon != list(range(n)) else None
             return DedupResult("match", slug, perm, [])

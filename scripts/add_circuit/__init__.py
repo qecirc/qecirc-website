@@ -48,6 +48,7 @@ from .helpers import (  # noqa: F401
     summarize_circuit,
 )
 from .ids import next_qec_id
+from .matrix_format import decode as decode_matrix
 from .models import ExtractedCode  # noqa: F401
 from .yaml_helpers import (
     build_circuit_yaml,
@@ -55,6 +56,7 @@ from .yaml_helpers import (
     build_original_yaml,
     dump_yaml,
     load_yaml,
+    matrices_digest,
     write_file,
 )
 
@@ -101,7 +103,7 @@ def _find_code_by_matrices(data_dir: Optional[str], n: int, H_perm: np.ndarray) 
         doc = load_yaml(path.read_text())
         if not doc or doc.get("n") != n:
             continue
-        stored_h = np.asarray(doc["h"], dtype=int)
+        stored_h = decode_matrix(doc["h"])
         if stored_h.shape[1] != 2 * n:
             continue
         if target.shape == _rowspace(stored_h).shape and np.array_equal(
@@ -390,28 +392,34 @@ def add_circuit(
 
     stem = f"{code_slug}--{circ_slug}"
     circuits_dir = data_dir / "circuits"
+    matrices_dir = data_dir / "matrices"
 
-    files_to_write.append(
-        (
-            circuits_dir / f"{stem}.yaml",
-            dump_yaml(build_circuit_yaml(circ_data)),
-        )
-    )
+    # Built before the originals block so the matrices reference can be added to
+    # it, and dumped after, once that reference is known.
+    circuit_yaml = build_circuit_yaml(circ_data)
 
     for body in circ_data.get("bodies", []):
         if body.get("body"):
             files_to_write.append((circuits_dir / f"{stem}.{body['format']}", body["body"]))
 
-    # Original files (pre-canonicalization)
+    # Original files (pre-canonicalization).
+    #
+    # The original *circuit* is per circuit, so it stays beside it. The original
+    # *matrices* are a property of the code and the labelling it was submitted
+    # in, so every circuit of one code writes the same bytes — and for a large
+    # qLDPC code those bytes are megabytes. They are stored once, content
+    # addressed, and referenced from the circuit YAML instead.
     originals_dir = circuits_dir / "originals"
     if circ_data.get("original_stim"):
         files_to_write.append((originals_dir / f"{stem}.original.stim", circ_data["original_stim"]))
-    files_to_write.append(
-        (
-            originals_dir / f"{stem}.original.yaml",
-            dump_yaml(build_original_yaml(original_matrices)),
-        )
-    )
+
+    original_yaml = build_original_yaml(original_matrices)
+    if original_yaml:
+        digest = matrices_digest(original_yaml)
+        circuit_yaml["original_matrices"] = digest
+        files_to_write.append((matrices_dir / f"{digest}.yaml", dump_yaml(original_yaml)))
+
+    files_to_write.append((circuits_dir / f"{stem}.yaml", dump_yaml(circuit_yaml)))
 
     # Write or dry-run
     written_paths: list[str] = []

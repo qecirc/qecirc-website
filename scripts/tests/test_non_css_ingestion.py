@@ -353,7 +353,9 @@ class TestAddCircuitH:
         paths = [Path(p).name for p in result.files_written]
         assert any(p.endswith(".yaml") and "five-qubit" in p for p in paths)
         assert any(p.endswith(".stim") for p in paths)
-        assert any(p.endswith(".original.yaml") for p in paths)
+        assert any(p.endswith(".original.stim") for p in paths)
+        # Shared matrices file, named by content digest.
+        assert any("/matrices/" in p for p in result.files_written)
 
 
 class TestExistingNonCssCodeSlug:

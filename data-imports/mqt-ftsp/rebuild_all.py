@@ -37,6 +37,7 @@ from scripts.add_circuit import (  # noqa: E402
     import_state_prep,
 )
 from scripts.add_circuit.code_identify import split_h_to_css  # noqa: E402
+from scripts.add_circuit.matrix_format import decode as decode_matrix  # noqa: E402
 
 SOURCE_EVAL = "https://arxiv.org/abs/2408.11894"
 SOURCE_DET = "https://arxiv.org/abs/2501.05527"
@@ -77,7 +78,7 @@ EVAL_CODES: dict[str, EvalCode] = {
 
 def anchor_h(slug: str, data_dir: Path) -> np.ndarray:
     doc = yaml.safe_load((data_dir / "codes" / f"{slug}.yaml").read_text())
-    return np.asarray(doc["h"], dtype=int)
+    return decode_matrix(doc["h"])
 
 
 def sigma_for(mqt_dir: str, slug: str, n: int, data_dir: Path) -> list[int] | None:

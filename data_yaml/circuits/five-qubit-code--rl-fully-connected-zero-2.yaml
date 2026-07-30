@@ -12,3 +12,4 @@ qubit_count: 5
 crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3_4;TICK;H_3_0;CX_0_4_3_1;H_3;CX_4_2_1_0;H_2;S_0;CX_2_4;S_0;CX_3_4;S_3_3_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H",1,1,"H"],["•",1,1,1,"X"],[1,"X",1,"•"],[1,1,1,"H"],[1,1,"X",1,"•"],["X","•"],["Z^½",1,"H"],[1,1,"•",1,"X"],["Z^½"],[1,1,1,"•","X"],[1,1,1,"Z^½"],[1,1,1,"Z^½"]]}
 tags: [state-preparation, non-ft, "logical-state:zero"]
+original_matrices: 063c4d18c5fe5001

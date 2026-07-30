@@ -14,3 +14,4 @@ crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6;TICK;SQRT_X_0
 crumble_url_annotated: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6;TICK;SQRT_X_0;CX_0_2_0_3_3_5_0_1_5_6;SQRT_X_3;CX_3_0;SQRT_X_5;CX_5_3_1_0_5_4_0_2;S_1;CX_5_6;S_2;CX_3_5_6_5;S_6;TICK;M_0_1_2_3_4_5_6;DT_rec[-7]_rec[-5]_rec[-3]_rec[-1];DT_rec[-6]_rec[-5]_rec[-2]_rec[-1];DT_rec[-4]_rec[-3]_rec[-2]_rec[-1];OI(0)rec[-7]_rec[-6]_rec[-5]_rec[-4]_rec[-3]_rec[-2]_rec[-1]_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["X^½"],["•",1,"X"],["•",1,1,"X"],[1,1,1,"•",1,"X"],["•","X"],[1,1,1,1,1,"•","X"],[1,1,1,"X^½"],["X",1,1,"•"],[1,1,1,1,1,"X^½"],[1,1,1,"X",1,"•"],["X","•"],[1,1,1,1,"X","•"],["•",1,"X"],[1,"Z^½"],[1,1,1,1,1,"•","X"],[1,1,"Z^½"],[1,1,1,"•",1,"X"],[1,1,1,1,1,"X","•"],[1,1,1,1,1,1,"Z^½"]]}
 tags: [state-preparation, non-ft, "connectivity:ibm", "device:jakarta", "logical-state:zero"]
+original_matrices: b6e12cac046cbe89

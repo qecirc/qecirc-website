@@ -38,6 +38,7 @@ from scripts.add_circuit import (  # noqa: E402
     import_state_prep,
 )
 from scripts.add_circuit.code_identify import build_symplectic_h  # noqa: E402
+from scripts.add_circuit.matrix_format import decode as decode_matrix  # noqa: E402
 from scripts.add_circuit.yaml_helpers import load_yaml  # noqa: E402
 
 SOURCE = "https://arxiv.org/abs/2601.05113"
@@ -186,7 +187,7 @@ def anchor_for(code: Code) -> np.ndarray:
     """
     if code.stored:
         doc = load_yaml((REPO / "data_yaml" / "codes" / f"{code.slug}.yaml").read_text())
-        return np.asarray(doc["h"], dtype=int)
+        return decode_matrix(doc["h"])
     zero = prep_body(source_path(Spec("", code, False, "Z")).read_text())
     plus = prep_body(source_path(Spec("", code, False, "X")).read_text())
     Hx, Hz = derive_matrices_two_circuit(zero, plus, code.n)

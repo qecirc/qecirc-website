@@ -44,6 +44,7 @@ from scripts.add_circuit import (  # noqa: E402
     fit_circuit_to_candidates,
     import_state_prep,
 )
+from scripts.add_circuit.matrix_format import decode as decode_matrix  # noqa: E402
 
 SOURCE = "https://arxiv.org/abs/2402.17761"
 
@@ -130,7 +131,7 @@ def family_of(path: Path) -> str | None:
 
 def anchor_H(code: Code, data_dir: Path) -> np.ndarray:
     doc = yaml.safe_load((data_dir / "codes" / f"{code.slug}.yaml").read_text())
-    return np.asarray(doc["h"], dtype=int)
+    return decode_matrix(doc["h"])
 
 
 # --- metadata from the path -------------------------------------------------

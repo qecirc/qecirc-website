@@ -10,3 +10,4 @@ crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_4_5_6_7_8;TICK;H_2_1_
 crumble_url_annotated: https://algassert.com/crumble#circuit=R_0_1_2_4_5_6_7_8;TICK;H_2_1_0_7;CX_7_3_0_5_2_8_7_5_3_8_0_2_1_7_5_6_3_4;TICK;M_0_1_2_3_4_5_6_7_8;DT_rec[-9]_rec[-8]_rec[-4]_rec[-2];DT_rec[-9]_rec[-7]_rec[-6]_rec[-1];DT_rec[-6]_rec[-5];DT_rec[-4]_rec[-3]_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H","H",1,1,1,1,"H"],[1,1,1,"X",1,1,1,"•"],["•",1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,"X",1,"•"],[1,1,1,"•",1,1,1,1,"X"],["•",1,"X"],[1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,"•","X"],[1,1,1,"•","X"]]}
 tags: [encoding, non-ft]
+original_matrices: e7e775839f37c03a

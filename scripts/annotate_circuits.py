@@ -43,6 +43,7 @@ from scripts.add_circuit.annotate import (  # noqa: E402
     validate_annotated,
 )
 from scripts.add_circuit.compute_circuit import LARGE_CIRCUIT_MAX_QUBITS  # noqa: E402
+from scripts.add_circuit.matrix_format import decode as decode_matrix  # noqa: E402
 
 ANNOTATED_FORMAT = "stim-annotated"
 ANNOTATED_URL_KEY = "crumble_url_annotated"
@@ -74,7 +75,7 @@ def _kind_and_state(tags: list[str]) -> tuple[str, str]:
 def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[Result]:
     codes_dir = data_dir / "codes"
     circuits_dir = data_dir / "circuits"
-    originals_dir = circuits_dir / "originals"
+    matrices_dir = data_dir / "matrices"
 
     codes = {
         p.stem: yaml.safe_load(p.read_text(encoding="utf-8")) for p in codes_dir.glob("*.yaml")
@@ -103,15 +104,18 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
             continue
 
         n, k = code["n"], code["k"]
-        stored_h = np.array(code["h"], dtype=int)
-        logical = np.array(code["logical"], dtype=int)
+        stored_h = decode_matrix(code["h"])
+        logical = decode_matrix(code["logical"])
 
+        # The submitted matrices are shared by every circuit of one code, so the
+        # circuit names the file rather than carrying its own copy.
         original_h = None
-        original_path = originals_dir / f"{stem}.original.yaml"
-        if original_path.exists():
-            original = yaml.safe_load(original_path.read_text(encoding="utf-8")) or {}
-            if original.get("h"):
-                original_h = np.array(original["h"], dtype=int)
+        if data.get("original_matrices"):
+            original_path = matrices_dir / f"{data['original_matrices']}.yaml"
+            if original_path.exists():
+                original = yaml.safe_load(original_path.read_text(encoding="utf-8")) or {}
+                if original.get("h"):
+                    original_h = decode_matrix(original["h"])
 
         circ = build_annotated(
             body=body_path.read_text(encoding="utf-8"),
