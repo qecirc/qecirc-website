@@ -136,28 +136,36 @@ spaces, verified, no X↔Z swap — so the σ derived by `data-imports/autqec/fi
 unchanged. `add_circuit` re-verifies each one by row-space equality on every run, so a stale
 entry fails loudly rather than silently.
 
-### Two invariant collisions, both refuted
+### Three invariant collisions, all refuted
 
-Two balanced-product cyclic codes share `[[n,k,d]]` with an unrelated stored code, so the dedup
-screen offers a candidate that is **not** the same code. Both are refuted in `ASSUME_NEW`:
+Three codes share `[[n,k,d]]` with an unrelated stored code, so the dedup screen offers a
+candidate that is **not** the same code. All are refuted in `ASSUME_NEW`:
 
-| Code            | Candidate                          | Refutation                                                                                                                                                                         |
-| --------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| BPC [[36,8,4]]  | `36-8-4` (Hyperbolic Surface Code) | Row-space ranks are 14/14 here and 11/17 there. Rank is a permutation invariant and an X↔Z swap gives 17/11, so no relabeling reconciles them.                                     |
-| BPC [[108,8,8]] | `108-8-10` (Bivariate Bicycle)     | Distance 8 vs 10, and permutation-equivalent codes have equal distance. Independently, ISD sweeps find weight-8 codewords in this code's X row space and none in the stored one's. |
+| Code            | Candidate                          | Refutation                                                                                                                                                                                  |
+| --------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BPC [[36,8,4]]  | `36-8-4` (Hyperbolic Surface Code) | Row-space ranks are 14/14 here and 11/17 there. Rank is a permutation invariant and an X↔Z swap gives 17/11, so no relabeling reconciles them.                                              |
+| BPC [[108,8,8]] | `108-8-10` (Bivariate Bicycle)     | Distance 8 vs 10, and permutation-equivalent codes have equal distance. Independently, ISD sweeps find weight-8 codewords in this code's X row space and none in the stored one's.          |
+| BB [[90,8,10]]  | `90-8-10` (Bivariate Bicycle)      | Enumerating every weight-4 vector against each X row space gives **0** codewords here and **90** there. The weight enumerator is a permutation invariant, so no relabeling reconciles them. |
 
-Both therefore get **distinct slugs** — `36-8-4-bpc` and `90-8-10-bpc` (the latter for the same
-reason against the stored bivariate bicycle [[90,8,10]]). This matters more than it looks:
+They therefore get **distinct slugs** — `36-8-4-bpc`, `90-8-10-bpc` and `90-8-10-autqec`. This
+matters more than it looks:
 `assume_new` skips the dedup check, so nothing downstream would notice that the default
 `n-k-d` slug belongs to an unrelated code, and `overwrite=True` would replace it. The importer
 now **refuses** to import any assume-new code whose slug is already taken.
 
-### One code deliberately left out
+### The second [[90,8,10]], and its slug
 
-BB [[90,8,10]] is excluded. It is provably not the stored `90-8-10`, and it is the _same_ code
-as autqec's — whose entry, `90-8-10-autqec`, is on the unmerged `from-main` branch. Importing it
-here would create a duplicate of that entry rather than a new code. It should be added when that
-branch lands.
+BB [[90,8,10]] is the same code autqec imports, and autqec's PR (#127) files it as
+`90-8-10-autqec`. **This import uses that slug deliberately**, so whichever of the two lands
+first creates the single shared entry and the other deduplicates onto it — `add_circuit` files a
+matched submission under the stored slug and ignores `code_slug`, so no duplicate can arise
+either way.
+
+Its name says what actually distinguishes it: **Bivariate Bicycle Code (Bravyi Table 3)**. The
+polynomials here are Table 3's (15,3) entry verbatim — `A = x^9 + y + y^2`, `B = 1 + x^2 + x^7` —
+and the stored `90-8-10` carries the alias "(15,3) BB6 code" while being a different code by the
+weight-4 count above. Which of the two is mislabelled is a question for the stored entry, not for
+this import.
 
 ## Size
 

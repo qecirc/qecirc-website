@@ -186,11 +186,12 @@ the source-of-truth `package.json` version.
   requires the measurement basis to match the reset basis — a round reset in X and read
   in Z has a random outcome however correct its check pattern looks.
 - **QUITS syndrome-extraction schedules** (69 of them), imported from
+- **QUITS syndrome-extraction schedules** (71 of them), imported from
   [QUITS](https://github.com/mkangquantum/quits)
   ([arXiv:2504.02673](https://arxiv.org/abs/2504.02673), Quantum 9, 1931 (2025)) by
   [data-imports/quits/](data-imports/quits/README.md). These are the library's first
   circuits for **balanced-product, hypergraph-product, lifted-product and
-  lift-connected-surface codes** — 22 new codes, from [[36,8,4]] to
+  lift-connected-surface codes** — 23 new codes, from [[36,8,4]] to
   [[1428,184,<=24]] — and its first competing schedules for the same code from an
   independent source: a bivariate bicycle round is 7 CX layers under the code's own
   schedule and 12 under ZX-coloration.
@@ -206,10 +207,30 @@ the source-of-truth `package.json` version.
     **measuring** the emitted circuit — reading the check type off each two-qubit gate
     and asking whether any tick mixes them — rather than by trusting the strategy's
     name. The source's own vocabulary lives in the circuit name instead.
-  - Two balanced-product codes share [[n,k,d]] with an unrelated stored code and are
-    refuted rather than merged into it: [[36,8,4]] against the hyperbolic surface code
-    (row-space ranks 14/14 against 11/17), and [[108,8,8]] against the bivariate
-    bicycle [[108,8,10]] (different distance). Both get distinct slugs.
+  - Three codes share [[n,k,d]] with an unrelated stored code and are refuted rather
+    than merged into it: BPC [[36,8,4]] against the hyperbolic surface code (row-space
+    ranks 14/14 against 11/17), BPC [[108,8,8]] against the bivariate bicycle
+    [[108,8,10]] (different distance), and BB [[90,8,10]] against the stored
+    `90-8-10` — enumerating every weight-4 vector against each X row space gives 0
+    codewords here and 90 there, and the weight enumerator is a permutation invariant.
+    All three get distinct slugs. The last is filed as `90-8-10-autqec`, the slug
+    autqec's import (#127) gives the same code, so whichever lands first creates the
+    single shared entry; its name, **Bivariate Bicycle Code (Bravyi Table 3)**, says
+    what distinguishes it from the stored entry carrying the "(15,3) BB6 code" alias.
+
+### Fixed
+
+- **A round built from two sequential sub-rounds gets its annotated view.**
+  `round_check_matrix` answers which operator each measurement reads, and it pulled
+  every measurement back through the _same_ whole-round unitary — so a round that
+  resets and reads the Z-ancillas and only then the X-ancillas was refused outright,
+  costing all 25 ZX-coloration circuits their `stim-annotated` body and Crumble
+  detector view. Each measurement is now pulled back through the gates that precede
+  _it_. A later sub-round's operator picks up support on the earlier sub-round's
+  ancillas unless it cancels — which it does exactly when the checks commute — so a
+  schedule where they do not is still refused rather than given a wrong detector.
+  Requiring each ancilla to be reset before any gate touches it is what makes the
+  pull-back past the reset legitimate.
 
 ### Changed
 

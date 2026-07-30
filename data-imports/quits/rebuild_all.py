@@ -119,16 +119,18 @@ ASSUME_NEW = {
         "distance. Independently, ISD sweeps find weight-8 codewords in this "
         "code's X row space and none in the stored code's."
     ),
+    "bb-90-8-10": (
+        'Candidate 90-8-10 carries the alias "(15,3) BB6 code" but is not this '
+        "code: enumerating every weight-4 vector against each X row space gives "
+        "0 codewords here and 90 there. The weight enumerator is a permutation "
+        "invariant, so no relabeling reconciles them. This is Bravyi et al. "
+        "Table 3's (15,3) entry, built from its own polynomials, and is the same "
+        "code autqec imports as 90-8-10-autqec — hence the shared slug."
+    ),
 }
 
 # Catalogue keys deliberately left out, with the reason recorded for the README.
-EXCLUDED = {
-    "bb-90-8-10": (
-        "This is not the stored [[90,8,10]] — it is provably inequivalent to it, and is "
-        "the same code as autqec's, whose entry (90-8-10-autqec) is on an unmerged "
-        "branch. Importing it here would create a duplicate of that entry."
-    ),
-}
+EXCLUDED: dict[str, str] = {}
 
 # Qubit permutations (sigma[new] = old) onto stored codes whose automorphism
 # group defeats the dedup search's budget. Not computed here: QUITS labels these
@@ -247,8 +249,7 @@ def notes_for(spec, strategy: str, interleaved: bool) -> str:
     lines = [
         "One syndrome-extraction round.",
         SCHEDULE[strategy][2],
-        f"Data qubits 0-{spec.n - 1}, then the ancillas (Z-checks first), "
-        "measured in index order.",
+        f"Data qubits 0-{spec.n - 1}, then the ancillas (Z-checks first), measured in index order.",
         "X- and Z-checks share ticks."
         if interleaved
         else "X- and Z-checks run in separate passes.",
@@ -321,6 +322,7 @@ def run(dataset: Path, write: bool, only: str, max_n: int = 0) -> list[Outcome]:
         h, n = symplectic(code.hx, code.hz)
         logical = symplectic_logicals(code.lx, code.lz, n)
         name, zoo, code_tags = FAMILY[spec.family]
+        name = spec.name or name
         sigma = SIGMA.get(spec.key, {}).get("sigma")
         slug = spec.slug or f"{spec.n}-{spec.k}-{spec.d}"
 
@@ -354,9 +356,7 @@ def run(dataset: Path, write: bool, only: str, max_n: int = 0) -> list[Outcome]:
 
             verdict = validate_syndrome_extraction_h(circuit, h, n, logical=logical)
             if verdict != "passed":
-                out.append(
-                    Outcome(spec.key, strategy, "invalid", verdict.removeprefix("failed: "))
-                )
+                out.append(Outcome(spec.key, strategy, "invalid", verdict.removeprefix("failed: ")))
                 continue
 
             interleaved = interleaves_xz(circuit, n)
@@ -399,9 +399,7 @@ def run(dataset: Path, write: bool, only: str, max_n: int = 0) -> list[Outcome]:
                     overwrite=True,
                 )
             except UncertainDedupError as e:
-                out.append(
-                    Outcome(spec.key, strategy, "error", f"uncertain dedup: {e.candidates}")
-                )
+                out.append(Outcome(spec.key, strategy, "error", f"uncertain dedup: {e.candidates}"))
                 continue
             except Exception as e:  # noqa: BLE001
                 out.append(Outcome(spec.key, strategy, "error", f"{type(e).__name__}: {e}"))

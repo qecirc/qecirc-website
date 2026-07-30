@@ -35,6 +35,7 @@ class CodeSpec:
     d_is_bound: bool = False  # source gives d as an upper bound, not a value
     d_source: str = ""  # only when the distance is not a table lookup
     slug: Optional[str] = None  # overrides the default f"{n}-{k}-{d}"
+    name: Optional[str] = None  # overrides FAMILY's name, to tell two apart
 
 
 # name, zoo_url, code tags — per family, following the vocabulary already in
@@ -96,6 +97,14 @@ def build_catalogue(dataset: Path) -> list[CodeSpec]:
         (360, 12, 24, 30, 6, [9], [1, 2], [25, 26], [3], True),
         (756, 16, 34, 21, 18, [3], [10, 17], [3, 19], [5], True),
     ]
+    # [[90,8,10]] shares its parameters with the stored `90-8-10`, which is a
+    # *different* code despite carrying the alias "(15,3) BB6 code": this one is
+    # Table 3's (15,3) entry and its X row space has no weight-4 codewords, the
+    # stored one's has 90. It is refuted in ASSUME_NEW; the suffix keeps them
+    # apart on disk, and matches the slug autqec's import (#127) gives the same
+    # code, so whichever lands first creates the single shared entry.
+    bb_slug = {(90, 8, 10): "90-8-10-autqec"}
+    bb_name = {(90, 8, 10): "Bivariate Bicycle Code (Bravyi Table 3)"}
     for n, k, d, ln, m, ax, ay, bx, by, bound in bb:
         specs.append(
             CodeSpec(
@@ -105,6 +114,8 @@ def build_catalogue(dataset: Path) -> list[CodeSpec]:
                 k=k,
                 d=d,
                 d_is_bound=bound,
+                slug=bb_slug.get((n, k, d)),
+                name=bb_name.get((n, k, d)),
                 build=lambda ln=ln, m=m, ax=ax, ay=ay, bx=bx, by=by: BbCode(ln, m, ax, ay, bx, by),
             )
         )
@@ -140,9 +151,7 @@ def build_catalogue(dataset: Path) -> list[CodeSpec]:
                 k=k,
                 d=d,
                 slug=f"{n}-{k}-{d}-bpc" if (n, k, d) in bpc_slug_taken else None,
-                build=lambda lift=lift, p1=p1, p2=p2: BpcCode(
-                    p1, p2, lift, 3, canonical_basis="Z"
-                ),
+                build=lambda lift=lift, p1=p1, p2=p2: BpcCode(p1, p2, lift, 3, canonical_basis="Z"),
             )
         )
 
