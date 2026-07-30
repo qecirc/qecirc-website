@@ -98,6 +98,7 @@ from scripts.add_circuit.yaml_helpers import (  # noqa: E402
     build_original_yaml,
     dump_yaml,
     load_yaml,
+    matrices_digest,
     write_file,
 )
 
@@ -522,9 +523,7 @@ def main() -> None:
                 h_stored_arr = np.array(stored["h"], dtype=int)
                 sigma = None
                 precomputed = (
-                    json.loads(SIGMA_PRECOMPUTED.read_text())
-                    if SIGMA_PRECOMPUTED.exists()
-                    else {}
+                    json.loads(SIGMA_PRECOMPUTED.read_text()) if SIGMA_PRECOMPUTED.exists() else {}
                 )
                 if slug in precomputed:
                     cand = precomputed[slug]
@@ -647,19 +646,25 @@ def main() -> None:
                 existing = circuits_dir / f"{stem}.yaml"
                 prev = _qec_id_re.search(existing.read_text()) if existing.exists() else None
                 final["qec_id"] = int(prev.group(1)) if prev else next_qec_id(data_dir)
-                write_file(
-                    circuits_dir / f"{stem}.yaml", dump_yaml(build_circuit_yaml(final)), quiet=True
-                )
+                # The submitted matrices are shared by every circuit of the
+                # code: stored once, content-addressed, referenced by digest —
+                # same scheme as add_circuit.
+                original_yaml = build_original_yaml(original_matrices)
+                circuit_yaml = build_circuit_yaml(final)
+                if original_yaml:
+                    digest = matrices_digest(original_yaml)
+                    circuit_yaml["original_matrices"] = digest
+                    write_file(
+                        data_dir / "matrices" / f"{digest}.yaml",
+                        dump_yaml(original_yaml),
+                        quiet=True,
+                    )
+                write_file(circuits_dir / f"{stem}.yaml", dump_yaml(circuit_yaml), quiet=True)
                 for b in final.get("bodies", []):
                     if b.get("body"):
                         write_file(circuits_dir / f"{stem}.{b['format']}", b["body"], quiet=True)
                 originals = circuits_dir / "originals"
                 write_file(originals / f"{stem}.original.stim", str(paper_stim), quiet=True)
-                write_file(
-                    originals / f"{stem}.original.yaml",
-                    dump_yaml(build_original_yaml(original_matrices)),
-                    quiet=True,
-                )
             stats["written"] += 1
             verb = "wrote" if args.write else "ok   "
             print(f"  {verb} {stem} [{family} gen {gen_idx}] logical={pretty} ({struct})")
