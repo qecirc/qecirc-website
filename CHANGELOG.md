@@ -22,9 +22,12 @@ the source-of-truth `package.json` version.
   existing small file is rewritten. Readers call `matrix_format.decode` (Python) or
   `decodeMatrix` (`scripts/matrix-format.mjs`) and cannot tell which was used.
 
-  Together these take `data_yaml/` from **49 MB to 32 MB** on the current data, and
-  matter far more as qLDPC codes arrive: the two effects compound, and the saving on a
-  single [[1428,184]] code is larger than the whole repository is today.
+  On the current data `data_yaml/` goes **35.2 MB to 24.2 MB**, all of it from sharing:
+  `circuits/originals/` drops 15.7 MB to 0.3 MB and the shared `matrices/` costs 4.3 MB
+  back. The sparse encoding saves **nothing today** and is meant to — no code the library
+  has reaches the threshold, and rewriting the small files a person reads would be a cost
+  with no benefit. It is what makes the qLDPC codes affordable when they land: on a single
+  [[1428,184]] code it is worth more than this whole repository.
 
   `db:create` refuses to build a circuit that still carries a per-circuit
   `originals/<stem>.original.yaml` with no `original_matrices` reference. Merging a
