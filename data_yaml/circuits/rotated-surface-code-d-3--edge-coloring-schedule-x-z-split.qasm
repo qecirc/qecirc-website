@@ -20,13 +20,13 @@ cx q[11], q[1];
 cx q[12], q[5];
 barrier q;
 
-cx q[9], q[4];
+cx q[9], q[3];
 cx q[10], q[2];
 cx q[11], q[7];
 cx q[12], q[0];
 barrier q;
 
-cx q[9], q[3];
+cx q[9], q[4];
 cx q[12], q[6];
 barrier q;
 
@@ -36,14 +36,14 @@ barrier q;
 
 barrier q;
 
-cz q[13], q[3];
+cz q[13], q[4];
 cz q[14], q[0];
 cz q[15], q[7];
 cz q[16], q[5];
 barrier q;
 
-cz q[13], q[4];
-cz q[14], q[3];
+cz q[13], q[3];
+cz q[14], q[4];
 cz q[15], q[1];
 cz q[16], q[6];
 barrier q;

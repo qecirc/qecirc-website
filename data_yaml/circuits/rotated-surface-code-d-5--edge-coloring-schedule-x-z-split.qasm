@@ -44,7 +44,7 @@ cx q[35], q[10];
 cx q[36], q[0];
 barrier q;
 
-cx q[25], q[15];
+cx q[25], q[16];
 cx q[26], q[22];
 cx q[27], q[11];
 cx q[28], q[8];
@@ -59,29 +59,29 @@ cx q[36], q[18];
 barrier q;
 
 cx q[25], q[8];
-cx q[26], q[13];
+cx q[26], q[12];
 cx q[29], q[7];
 cx q[30], q[3];
 cx q[31], q[5];
 cx q[32], q[0];
-cx q[35], q[19];
+cx q[35], q[20];
 cx q[36], q[24];
 barrier q;
 
-cx q[25], q[16];
-cx q[26], q[12];
+cx q[25], q[15];
+cx q[26], q[13];
 cx q[29], q[22];
 cx q[30], q[14];
 cx q[31], q[2];
 cx q[32], q[10];
-cx q[35], q[20];
+cx q[35], q[19];
 cx q[36], q[17];
 barrier q;
 
 barrier q;
 
-cz q[37], q[15];
-cz q[38], q[12];
+cz q[37], q[16];
+cz q[38], q[13];
 cz q[39], q[22];
 cz q[40], q[6];
 cz q[41], q[7];
@@ -90,12 +90,12 @@ cz q[43], q[9];
 cz q[44], q[3];
 cz q[45], q[1];
 cz q[46], q[10];
-cz q[47], q[20];
+cz q[47], q[19];
 cz q[48], q[17];
 barrier q;
 
-cz q[37], q[16];
-cz q[38], q[13];
+cz q[37], q[15];
+cz q[38], q[12];
 cz q[39], q[7];
 cz q[40], q[11];
 cz q[41], q[9];
@@ -104,27 +104,27 @@ cz q[43], q[4];
 cz q[44], q[23];
 cz q[45], q[21];
 cz q[46], q[0];
-cz q[47], q[19];
+cz q[47], q[20];
 cz q[48], q[18];
 barrier q;
 
-cz q[39], q[15];
-cz q[40], q[12];
+cz q[39], q[16];
+cz q[40], q[13];
 cz q[41], q[8];
 cz q[42], q[4];
 cz q[43], q[10];
 cz q[44], q[0];
 cz q[45], q[2];
-cz q[46], q[20];
+cz q[46], q[19];
 barrier q;
 
-cz q[39], q[13];
+cz q[39], q[12];
 cz q[40], q[14];
 cz q[41], q[5];
 cz q[42], q[22];
 cz q[43], q[1];
 cz q[44], q[24];
-cz q[45], q[19];
+cz q[45], q[20];
 cz q[46], q[17];
 barrier q;
 

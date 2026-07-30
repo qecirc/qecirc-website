@@ -8,14 +8,14 @@ H 7
 CX 14 8 6 4 7 13 8 14 4 6 14 8 4 11 9 8 5 4 6 5 5 6 6 5 5 6 5 11 6 10 5 12 6 12 12 8 13 8 14 8 13 9 9 13 13 9 9 14 11 9 14 10 13 9 10 14 14 10 10 14 11 10 12 10 14 11 13 10 11 14 14 11 11 13 13 12 12 13 13 12 12 14 13 12 14 13 13 14 14 13 13 14
 TICK
 M 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14
-DETECTOR rec[-15] rec[-9] rec[-5] rec[-3]
-DETECTOR rec[-14] rec[-9] rec[-5] rec[-2]
-DETECTOR rec[-13] rec[-9] rec[-5] rec[-1]
-DETECTOR rec[-12] rec[-9] rec[-3] rec[-2]
-DETECTOR rec[-11] rec[-9] rec[-3] rec[-1]
-DETECTOR rec[-10] rec[-9] rec[-2] rec[-1]
-DETECTOR rec[-8] rec[-5] rec[-3] rec[-2]
+DETECTOR rec[-15] rec[-13] rec[-11] rec[-9]
+DETECTOR rec[-14] rec[-13] rec[-10] rec[-9]
+DETECTOR rec[-12] rec[-11] rec[-10] rec[-9]
 DETECTOR rec[-7] rec[-5] rec[-3] rec[-1]
 DETECTOR rec[-6] rec[-5] rec[-2] rec[-1]
 DETECTOR rec[-4] rec[-3] rec[-2] rec[-1]
+DETECTOR rec[-13] rec[-9] rec[-5] rec[-1]
+DETECTOR rec[-11] rec[-9] rec[-3] rec[-1]
+DETECTOR rec[-10] rec[-9] rec[-2] rec[-1]
+DETECTOR rec[-8] rec[-6] rec[-4] rec[-2]
 OBSERVABLE_INCLUDE(0) rec[-15] rec[-12] rec[-11]

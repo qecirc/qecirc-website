@@ -113,6 +113,12 @@ wrote on an earlier run, by canonical hash, so re-running stays idempotent.
   their annotated memory experiment. It now tracks the basis each ancilla is prepared in, pulls
   back that operator, and requires the measurement basis to match the reset basis. Covered by
   two new tests in `scripts/tests/test_syndrome_extraction.py`.
+- The importer passes the **CSS pair** (`Hx=`/`Hz=`) rather than the symplectic `H=`. Both name
+  the same code and give the same canonical form and hash, but `H=` routes through
+  `split_h_to_css`, which row-reduces to _detect_ CSS structure — and that RREF basis, not the
+  submitted one, is then stored as the circuit's original matrices. For an LDPC code that
+  replaces weight-6 checks with dense rows, losing the structure the code is defined by. See
+  qecirc/qecirc-website#138; non-CSS codes have no pair, so the five-qubit code keeps `H=`.
 - The importer **resolves the stored slug itself** before calling `add_circuit`. On the CSS path
   `add_circuit` picks the matched entry's slug correctly, but on the non-CSS path it falls back
   to slugifying `code_name` — which wrote the five-qubit code's circuits as

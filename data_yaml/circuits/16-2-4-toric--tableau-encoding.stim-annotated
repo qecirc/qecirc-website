@@ -12,8 +12,9 @@ CX 0 9 0 8 9 4 0 13 4 9 9 4 4 14 8 4 9 14 13 4 14 9 9 14 14 8 9 14 13 14 13 9 13
 TICK
 M 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
 DETECTOR rec[-9] rec[-7] rec[-4] rec[-2]
-DETECTOR rec[-14] rec[-10] rec[-9] rec[-6]
 DETECTOR rec[-10] rec[-8] rec[-3] rec[-1]
+DETECTOR rec[-13] rec[-5] rec[-4] rec[-1]
+DETECTOR rec[-14] rec[-10] rec[-9] rec[-6]
 DETECTOR rec[-15] rec[-14] rec[-13] rec[-11]
 DETECTOR rec[-16] rec[-12] rec[-6] rec[-5]
 DETECTOR rec[-15] rec[-12] rec[-3] rec[-2]

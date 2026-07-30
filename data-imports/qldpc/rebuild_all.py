@@ -235,6 +235,16 @@ def run(write: bool, only: str, kinds: set[str]) -> list[Outcome]:
         name, zoo, code_tags = FAMILY[spec.family]
         sigma = SIGMA.get(spec.key, {}).get("sigma")
 
+        # `matrix_x` / `matrix_z` are the code's own check matrices; `code.matrix`
+        # is the symplectic view of the same thing. See the note at add_circuit.
+        if getattr(code, "is_subsystem_code", False) or not hasattr(code, "matrix_x"):
+            css_or_h = {"H": h, "n": n}
+        else:
+            css_or_h = {
+                "Hx": np.asarray(code.matrix_x, dtype=int) % 2,
+                "Hz": np.asarray(code.matrix_z, dtype=int) % 2,
+            }
+
         # Resolve the stored slug ourselves rather than letting add_circuit
         # derive it. For a CSS code that matches an existing entry it picks the
         # stored slug correctly, but on the non-CSS path it falls back to
@@ -277,8 +287,15 @@ def run(write: bool, only: str, kinds: set[str]) -> list[Outcome]:
                     circuit=circuit,
                     circuit_name=circuit_name,
                     d=spec.d,
-                    H=h,
-                    n=n,
+                    # Prefer the CSS pair over the symplectic `h`. Both name the
+                    # same code and give the same canonical form and hash, but
+                    # `H=` routes through `split_h_to_css`, which row-reduces to
+                    # detect CSS structure — and that RREF basis, not the
+                    # submitted one, is then stored as the circuit's *original*
+                    # matrices. For an LDPC code that replaces low-weight checks
+                    # with dense rows, losing the structure the code is defined
+                    # by. Non-CSS codes have no pair, so they keep the `H=` path.
+                    **css_or_h,
                     source=source,
                     code_name=name,
                     code_slug=slug,
