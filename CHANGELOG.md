@@ -213,11 +213,6 @@ the source-of-truth `package.json` version.
 
 ### Changed
 
-- **Prettier no longer parses the generated matrix YAML** (`data_yaml/codes/`,
-  `data_yaml/circuits/originals/`). Those files are written by `add_circuit` and are
-  already in Prettier's style, so checking them only cost time — until the
-  [[1428,184,<=24]] code made its entry 14 MB and ran the Node heap out of memory,
-  which would have failed CI. `npm run validate:yaml` still covers them.
 - **A code too large to display offers its matrices as a download** instead of
   rendering them. The stored `h` is (n-k) x 2n, so the lifted product code
   [[1428,184,<=24]] is 3.6M entries and ~14 MB of JSON — neither readable as text nor

@@ -11,3 +11,4 @@ two_qubit_gate_count: 756
 depth: 12
 qubit_count: 252
 tags: [syndrome-extraction, "schedule:xz-separated"]
+original_matrices: 65eb1446ce5a943b

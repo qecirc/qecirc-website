@@ -11,3 +11,4 @@ two_qubit_gate_count: 972
 depth: 7
 qubit_count: 324
 tags: [syndrome-extraction, "schedule:interleaved"]
+original_matrices: df91a9fb15b7398c
