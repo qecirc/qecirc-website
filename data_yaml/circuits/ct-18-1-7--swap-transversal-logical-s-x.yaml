@@ -19,4 +19,5 @@ depth: 0
 qubit_count: 18
 crumble_url: https://algassert.com/crumble#circuit=C_ZYX_16_15_14_13_12;C_XYZ_9_8_6_5_3_2;I_0;SWAP_3_17_6_1_7_5_9_4_11_2_12_3_13_2_14_4_15_6_16_5_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,"~Cxyz","~Cxyz",1,"~Cxyz","~Cxyz",1,"~Cxyz","~Cxyz",1,1,"~Czyx","~Czyx","~Czyx","~Czyx","~Czyx"],[1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,"Swap",1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"},{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
-tags: [logical-gate, swap-transversal, "logical-op:S", "logical-op:SQRT_X"]
+tags: [logical-gate, swap-transversal, 'logical-op:S', 'logical-op:SQRT_X']
+original_matrices: 007997670deb2a23

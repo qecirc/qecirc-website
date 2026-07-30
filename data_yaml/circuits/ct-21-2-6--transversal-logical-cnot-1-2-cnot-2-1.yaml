@@ -16,4 +16,5 @@ depth: 0
 qubit_count: 21
 crumble_url: https://algassert.com/crumble#circuit=C_ZYX_19_17_16_15_14_13_12_11_10_9_8_7_6_5_18_20;I_0_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,1,1,1,"~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx"]],"gates":[{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
-tags: [logical-gate, transversal, ft, "logical-op:CX"]
+tags: [logical-gate, transversal, ft, 'logical-op:CX']
+original_matrices: 9ae30dd013466a9f

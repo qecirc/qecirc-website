@@ -1,18 +1,17 @@
 qec_id: 1758
 name: SWAP-transversal logical Clifford (automorphism gen 4)
 tool: autqec
-notes:
-  "Logical CNOT(4,8)·CNOT(3,8)·CNOT(2,8)·CNOT(5,7)·CNOT(3,7)·CNOT(2,7)·CNOT(1,7)·SWAP(8,7)·CNOT(4,6)·SWAP(8,6)·CNOT(8,5)·CNOT(7,5)·CNOT(3,5)·CNOT(2,5)·SWAP(6,5)·SWAP(5,4)·CNOT(8,3)·CNOT(7,3)·CNOT(6,3)·CNOT(5,3)·CNOT(2,3)·SWAP(4,3)·CNOT(8,2)·CNOT(1,2)·CNOT(6,1)·CNOT(4,1)·SWAP(2,1)
-  (gates in application order) from generator 4 of the code's automorphism group,
+notes: 'Logical CNOT(4,8)·CNOT(3,8)·CNOT(2,8)·CNOT(5,7)·CNOT(3,7)·CNOT(2,7)·CNOT(1,7)·SWAP(8,7)·CNOT(4,6)·SWAP(8,6)·CNOT(8,5)·CNOT(7,5)·CNOT(3,5)·CNOT(2,5)·SWAP(6,5)·SWAP(5,4)·CNOT(8,3)·CNOT(7,3)·CNOT(6,3)·CNOT(5,3)·CNOT(2,3)·SWAP(4,3)·CNOT(8,2)·CNOT(1,2)·CNOT(6,1)·CNOT(4,1)·SWAP(2,1)
+  (gates in application order) from generator 4 of the code''s automorphism group,
   computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
   Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
-  field states the claim in the stored code's logical basis; validate:circuits checks
+  field states the claim in the stored code''s logical basis; validate:circuits checks
   it. SWAP-transversal circuits are fault-tolerant on architectures where SWAPs are
   error-benign (shuttling ion traps, atom arrays), hence no unconditional ft tag.
   Note: this code shares its [[90,8,10]] parameters with, but is provably inequivalent
-  to, the library's other bivariate bicycle code 90-8-10 — their X-space weight enumerators
+  to, the library''s other bivariate bicycle code 90-8-10 — their X-space weight enumerators
   differ (45 weight-6 codewords here vs 90 weight-4 + 600 weight-6 there), which no
-  qubit relabeling can reconcile."
+  qubit relabeling can reconcile.'
 source: https://arxiv.org/abs/2409.18175
 logical_action: |-
   CX 3 7 2 7 1 7 4 6 2 6 1 6 0 6
@@ -29,4 +28,5 @@ gate_count: 0
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 90
-tags: [logical-gate, swap-transversal, "logical-op:CX", "logical-op:SWAP"]
+tags: [logical-gate, swap-transversal, 'logical-op:CX', 'logical-op:SWAP']
+original_matrices: dd47428307d46cc3

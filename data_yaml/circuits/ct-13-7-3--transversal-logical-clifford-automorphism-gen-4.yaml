@@ -1,8 +1,7 @@
 qec_id: 1222
 name: Transversal logical Clifford (automorphism gen 4)
 tool: autqec
-notes:
-  Logical H(3)·CNOT(6,7)·CNOT(5,7)·CNOT(4,7)·CNOT(7,6)·CNOT(3,6)·CNOT(1,6)·CNOT(4,5)·CNOT(3,5)·CNOT(1,5)·SWAP(6,5)·CNOT(5,4)·CNOT(6,3)·CNOT(4,3)·CNOT(1,3)·CNOT(5,2)·CNOT(4,2)·CNOT(3,2)·CNOT(1,2)·CNOT(5,1)·CNOT(2,1)·CZ(3,7)·CZ(4,6)·CZ(5,6)·CZ(4,5)·CZ(4,7)·CZ(1,5)·CZ(2,4)·CZ(1,3)·CZ(2,5)·CZ(3,5)·C(X,X)(1,3)·√X(3)·√X(6)·C(X,X)(1,4)·C(X,X)(3,7)·C(X,X)(1,5)·C(X,X)(1,6)·√X(5)·C(X,X)(2,7)·C(X,X)(5,6)·C(X,X)(3,4)·C(X,X)(5,7)·C(X,X)(1,2)·C(X,X)(2,3)·√X(4)·√X(1)·C(X,X)(2,4)·√X(7)·C(X,X)(4,7)
+notes: Logical H(3)·CNOT(6,7)·CNOT(5,7)·CNOT(4,7)·CNOT(7,6)·CNOT(3,6)·CNOT(1,6)·CNOT(4,5)·CNOT(3,5)·CNOT(1,5)·SWAP(6,5)·CNOT(5,4)·CNOT(6,3)·CNOT(4,3)·CNOT(1,3)·CNOT(5,2)·CNOT(4,2)·CNOT(3,2)·CNOT(1,2)·CNOT(5,1)·CNOT(2,1)·CZ(3,7)·CZ(4,6)·CZ(5,6)·CZ(4,5)·CZ(4,7)·CZ(1,5)·CZ(2,4)·CZ(1,3)·CZ(2,5)·CZ(3,5)·C(X,X)(1,3)·√X(3)·√X(6)·C(X,X)(1,4)·C(X,X)(3,7)·C(X,X)(1,5)·C(X,X)(1,6)·√X(5)·C(X,X)(2,7)·C(X,X)(5,6)·C(X,X)(3,4)·C(X,X)(5,7)·C(X,X)(1,2)·C(X,X)(2,3)·√X(4)·√X(1)·C(X,X)(2,4)·√X(7)·C(X,X)(4,7)
   (gates in application order) from generator 4 of the code's automorphism group,
   computed by autqec (arXiv:2409.18175). Physical circuit is transversal — single-qubit
   Cliffords, with Pauli corrections that fix the stabilizer signs. The logical_action
@@ -31,15 +30,6 @@ depth: 0
 qubit_count: 13
 crumble_url: https://algassert.com/crumble#circuit=Z_3;Y_10;Z_1;X_5;Y_12;Z_8_0;Y_4_11;X_7;C_ZYX_6_2_9_3_10_1_5_12_8_0_4_11_7_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["Z","Z","~Czyx","Z","Y","X","~Czyx","X","Z","~Czyx","Y","Y","Y"],["~Czyx","~Czyx",1,"~Czyx","~Czyx","~Czyx",1,"~Czyx","~Czyx",1,"~Czyx","~Czyx","~Czyx"]],"gates":[{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
-tags:
-  [
-    logical-gate,
-    transversal,
-    ft,
-    "logical-op:H",
-    "logical-op:CX",
-    "logical-op:SWAP",
-    "logical-op:CZ",
-    "logical-op:XCX",
-    "logical-op:SQRT_X",
-  ]
+tags: [logical-gate, transversal, ft, 'logical-op:H', 'logical-op:CX', 'logical-op:SWAP',
+  'logical-op:CZ', 'logical-op:XCX', 'logical-op:SQRT_X']
+original_matrices: 9cad7bd6ef2f09f3

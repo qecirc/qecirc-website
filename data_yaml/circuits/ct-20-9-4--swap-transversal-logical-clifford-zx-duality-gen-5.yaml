@@ -1,8 +1,7 @@
 qec_id: 1630
 name: SWAP-transversal logical Clifford (ZX-duality gen 5)
 tool: autqec
-notes:
-  Logical CNOT(6,9)·CNOT(5,9)·CNOT(1,9)·CNOT(9,8)·CNOT(7,8)·CNOT(6,8)·CNOT(5,8)·CNOT(4,8)·CNOT(3,8)·CNOT(1,8)·CNOT(5,7)·CNOT(3,7)·SWAP(8,7)·CNOT(5,6)·CNOT(2,6)·CNOT(1,6)·SWAP(9,6)·CNOT(9,5)·CNOT(3,5)·CNOT(2,5)·SWAP(7,5)·CNOT(9,4)·CNOT(8,4)·CNOT(6,4)·SWAP(5,4)·CNOT(8,3)·CNOT(6,3)·CNOT(5,3)·CNOT(1,3)·SWAP(4,3)·CNOT(8,2)·CNOT(7,2)·CNOT(6,2)·SWAP(5,2)·CNOT(6,1)·CNOT(5,1)·CNOT(2,1)·C(X,X)(6,7)·C(X,X)(1,8)·C(X,X)(4,9)·C(X,X)(7,8)·√X(3)·C(X,X)(1,4)·C(X,X)(4,5)·C(X,X)(1,5)·√X(5)·C(X,X)(3,4)·C(X,X)(6,9)·C(X,X)(2,3)·C(X,X)(2,9)·√X(4)·√X(7)·C(X,X)(5,9)·C(X,X)(8,9)·C(X,X)(4,8)·C(X,X)(2,5)
+notes: Logical CNOT(6,9)·CNOT(5,9)·CNOT(1,9)·CNOT(9,8)·CNOT(7,8)·CNOT(6,8)·CNOT(5,8)·CNOT(4,8)·CNOT(3,8)·CNOT(1,8)·CNOT(5,7)·CNOT(3,7)·SWAP(8,7)·CNOT(5,6)·CNOT(2,6)·CNOT(1,6)·SWAP(9,6)·CNOT(9,5)·CNOT(3,5)·CNOT(2,5)·SWAP(7,5)·CNOT(9,4)·CNOT(8,4)·CNOT(6,4)·SWAP(5,4)·CNOT(8,3)·CNOT(6,3)·CNOT(5,3)·CNOT(1,3)·SWAP(4,3)·CNOT(8,2)·CNOT(7,2)·CNOT(6,2)·SWAP(5,2)·CNOT(6,1)·CNOT(5,1)·CNOT(2,1)·C(X,X)(6,7)·C(X,X)(1,8)·C(X,X)(4,9)·C(X,X)(7,8)·√X(3)·C(X,X)(1,4)·C(X,X)(4,5)·C(X,X)(1,5)·√X(5)·C(X,X)(3,4)·C(X,X)(6,9)·C(X,X)(2,3)·C(X,X)(2,9)·√X(4)·√X(7)·C(X,X)(5,9)·C(X,X)(8,9)·C(X,X)(4,8)·C(X,X)(2,5)
   (gates in application order) from generator 5 of the code's ZX-duality group, computed
   by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
   Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
@@ -39,12 +38,6 @@ depth: 0
 qubit_count: 20
 crumble_url: https://algassert.com/crumble#circuit=SWAP_13_17;I_0;SWAP_19_17_9_13_12_19_16_9_15_17_18_13_11_12_3_19_4_9_6_17_7_13_5_12_8_19_10_9_14_12_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],["…"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]]}
-tags:
-  [
-    logical-gate,
-    swap-transversal,
-    "logical-op:CX",
-    "logical-op:SWAP",
-    "logical-op:XCX",
-    "logical-op:SQRT_X",
-  ]
+tags: [logical-gate, swap-transversal, 'logical-op:CX', 'logical-op:SWAP', 'logical-op:XCX',
+  'logical-op:SQRT_X']
+original_matrices: 941ca8613383599d

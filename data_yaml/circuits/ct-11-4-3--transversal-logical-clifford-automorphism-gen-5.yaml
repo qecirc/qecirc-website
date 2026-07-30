@@ -1,8 +1,7 @@
 qec_id: 1145
 name: Transversal logical Clifford (automorphism gen 5)
 tool: autqec
-notes:
-  Logical H(2)·CNOT(2,4)·CNOT(1,4)·CNOT(2,3)·SWAP(4,3)·CNOT(1,2)·SWAP(3,2)·CNOT(3,1)·CNOT(2,1)·CZ(1,4)·CZ(2,3)·S(4)·S(1)·CZ(3,4)·S(2)·CZ(1,2)·√X(4)·C(X,X)(1,4)·√X(3)·C(X,X)(1,2)·C(X,X)(2,3)
+notes: Logical H(2)·CNOT(2,4)·CNOT(1,4)·CNOT(2,3)·SWAP(4,3)·CNOT(1,2)·SWAP(3,2)·CNOT(3,1)·CNOT(2,1)·CZ(1,4)·CZ(2,3)·S(4)·S(1)·CZ(3,4)·S(2)·CZ(1,2)·√X(4)·C(X,X)(1,4)·√X(3)·C(X,X)(1,2)·C(X,X)(2,3)
   (gates in application order) from generator 5 of the code's automorphism group,
   computed by autqec (arXiv:2409.18175). Physical circuit is transversal — single-qubit
   Cliffords, with Pauli corrections that fix the stabilizer signs. The logical_action
@@ -32,16 +31,6 @@ depth: 0
 qubit_count: 11
 crumble_url: https://algassert.com/crumble#circuit=Z_5_2;X_9;Z_10;Y_4;X_7;C_ZYX_8_3_1_6;I_0;C_ZYX_5_2_9_10_4_7_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…","~Czyx","Z","~Czyx","Y","Z","~Czyx","X","~Czyx","X","Z"],[1,1,"~Czyx",1,"~Czyx","~Czyx",1,"~Czyx",1,"~Czyx","~Czyx"]],"gates":[{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
-tags:
-  [
-    logical-gate,
-    transversal,
-    ft,
-    "logical-op:H",
-    "logical-op:CX",
-    "logical-op:SWAP",
-    "logical-op:CZ",
-    "logical-op:S",
-    "logical-op:SQRT_X",
-    "logical-op:XCX",
-  ]
+tags: [logical-gate, transversal, ft, 'logical-op:H', 'logical-op:CX', 'logical-op:SWAP',
+  'logical-op:CZ', 'logical-op:S', 'logical-op:SQRT_X', 'logical-op:XCX']
+original_matrices: 60b977edc631c8d1
