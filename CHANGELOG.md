@@ -5,6 +5,20 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+### Fixed
+
+- **A non-CSS circuit for an existing code is filed under that code's slug.** On a dedup
+  match the CSS path has always used the stored slug; the non-CSS path only used it when
+  nothing else had set one, so `code_slug` — or a slug derived from `code_name` — won
+  instead. A five-qubit-code circuit submitted with
+  `code_name="Five-Qubit Perfect Code"` was written as
+  `five-qubit-perfect-code--<circuit>.yaml` while the code itself lives at
+  `five-qubit-code`; no code YAML was written under that name, because there was no new
+  code, so the circuit referenced an entry that does not exist —
+  `annotate_circuits.py` reported `code '...' not found` and `db:create` rejected it.
+  `code_slug` is documented as naming a _new_ code, and on a match there is no new code
+  to name.
+
 ### Added
 
 - **Search aliases** (`data/migrations/017`). Codes and tools gain optional

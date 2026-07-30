@@ -258,8 +258,17 @@ def compute_code_data_h(
         if dedup.status == "match":
             code_status = "existing"
             existing_perm = dedup.qubit_permutation
-            if not slug:
-                slug = dedup.slug
+            # The stored slug is authoritative, exactly as on the CSS path above.
+            # This used to be `if not slug`, which let `code_slug` — or a slug
+            # derived from `code_name` — win over the code the submission
+            # actually matched: a five-qubit-code circuit passed
+            # `code_name="Five-Qubit Perfect Code"` was written as
+            # `five-qubit-perfect-code--<circuit>.yaml` while the code itself
+            # lives at `five-qubit-code`, so the circuit referenced a code entry
+            # that is never written and `db:create` rejected it. `code_slug` is
+            # documented as naming a *new* code, and on a match there is no new
+            # code to name.
+            slug = dedup.slug
 
     if code_status == "existing":
         # Use the perm from _check_yaml_dedup_h (already normalized to None for
