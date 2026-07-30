@@ -1,0 +1,61 @@
+qec_id: 1587
+name: SWAP-transversal logical Clifford (automorphism gen 15)
+tool: autqec
+notes:
+  Logical H(1)·H(2)·CNOT(8,10)·CNOT(4,10)·CNOT(3,10)·CNOT(2,10)·CNOT(1,10)·CNOT(10,9)·CNOT(6,9)·CNOT(4,9)·CNOT(1,9)·CNOT(5,8)·SWAP(9,8)·CNOT(10,7)·CNOT(2,7)·SWAP(8,7)·CNOT(10,6)·CNOT(8,6)·CNOT(7,6)·CNOT(3,6)·CNOT(2,6)·CNOT(10,5)·CNOT(8,5)·CNOT(3,5)·CNOT(2,5)·CNOT(1,5)·SWAP(6,5)·CNOT(8,4)·CNOT(7,4)·CNOT(3,4)·CNOT(1,4)·SWAP(6,4)·CNOT(10,3)·CNOT(9,3)·CNOT(8,3)·CNOT(5,3)·CNOT(4,3)·CNOT(2,3)·CNOT(10,2)·CNOT(9,2)·CNOT(6,2)·CNOT(1,2)·SWAP(4,2)·CNOT(6,1)·CNOT(5,1)·CNOT(4,1)·CNOT(3,1)·SWAP(2,1)·CZ(6,10)·CZ(2,4)·CZ(5,9)·CZ(8,9)·S(5)·S(8)·CZ(4,8)·CZ(8,10)·CZ(6,7)·CZ(7,8)·CZ(4,9)·CZ(1,9)·CZ(7,9)·CZ(2,10)·CZ(3,7)·S(7)·S(10)·CZ(1,5)·CZ(7,10)·CZ(2,6)·CZ(1,6)·CZ(3,9)·CZ(4,10)·CZ(6,8)·S(6)·CZ(2,8)·CZ(5,7)·CZ(9,10)·CZ(1,2)·CZ(3,5)·C(X,X)(6,7)·C(X,X)(4,9)·√X(3)·√X(9)·√X(6)·C(X,X)(2,10)·C(X,X)(1,10)·C(X,X)(4,5)·C(X,X)(7,10)·C(X,X)(2,6)·C(X,X)(3,9)·C(X,X)(5,6)·√X(8)·C(X,X)(3,4)·C(X,X)(3,5)·C(X,X)(2,3)·C(X,X)(6,10)·C(X,X)(5,8)·√X(4)·√X(7)·C(X,X)(3,6)·C(X,X)(4,7)·C(X,X)(4,8)
+  (gates in application order) from generator 15 of the code's automorphism group,
+  computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
+  Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
+  field states the claim in the stored code's logical basis; validate:circuits checks
+  it. SWAP-transversal circuits are fault-tolerant on architectures where SWAPs are
+  error-benign (shuttling ion traps, atom arrays), hence no unconditional ft tag.
+  The code is the best-known-distance [[19,10]] stabilizer code from Grassl's codetables.de
+  tables (snapshotted in the autqec repository).
+source: https://arxiv.org/abs/2409.18175
+logical_action: |-
+  H 0 1
+  CX 7 9 3 9 2 9 1 9 0 9 9 8 5 8 3 8 0 8 4 7
+  SWAP 8 7
+  CX 9 6 1 6
+  SWAP 7 6
+  CX 9 5 7 5 6 5 2 5 1 5 9 4 7 4 2 4 1 4 0 4
+  SWAP 5 4
+  CX 7 3 6 3 2 3 0 3
+  SWAP 5 3
+  CX 9 2 8 2 7 2 4 2 3 2 1 2 9 1 8 1 5 1 0 1
+  SWAP 3 1
+  CX 5 0 4 0 3 0 2 0
+  SWAP 1 0
+  CZ 5 9 1 3 4 8 7 8
+  S 4 7
+  CZ 3 7 7 9 5 6 6 7 3 8 0 8 6 8 1 9 2 6
+  S 6 9
+  CZ 0 4 6 9 1 5 0 5 2 8 3 9 5 7
+  S 5
+  CZ 1 7 4 6 8 9 0 1 2 4
+  XCX 5 6 3 8
+  SQRT_X 2 8 5
+  XCX 1 9 0 9 3 4 6 9 1 5 2 8 4 5
+  SQRT_X 7
+  XCX 2 3 2 4 1 2 5 9 4 7
+  SQRT_X 3 6
+  XCX 2 5 3 6 3 7
+gate_count: 19
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 19
+crumble_url: https://algassert.com/crumble#circuit=Z_11_5_18_3;Y_15;Z_9;X_16;C_ZYX_8;C_XYZ_14_4_6_10;C_ZYX_7;I_0;C_ZYX_11_18_3;C_XYZ_15;C_ZYX_9;SWAP_6_10_17_16_12_9_3_15_18_7_13_16_4_10_14_9_5_3_11_7_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,1,"Z","~Cxyz","Z","~Cxyz","~Czyx","~Czyx","Z","~Cxyz","Z",1,1,"~Cxyz","Y","X",1,"Z"],[1,1,1,"~Czyx",1,1,1,1,1,"~Czyx",1,"~Czyx",1,1,1,"~Cxyz",1,1,"~Czyx"],[1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"},{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:H",
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:CZ",
+    "logical-op:S",
+    "logical-op:XCX",
+    "logical-op:SQRT_X",
+  ]
+original_matrices: 5930a972fe95bbb7

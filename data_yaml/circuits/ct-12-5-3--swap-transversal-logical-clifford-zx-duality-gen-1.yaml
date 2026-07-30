@@ -1,0 +1,56 @@
+qec_id: 1177
+name: SWAP-transversal logical Clifford (ZX-duality gen 1)
+tool: autqec
+notes:
+  Logical H(1)·H(5)·CNOT(3,5)·CNOT(2,5)·CNOT(1,5)·CNOT(2,4)·CNOT(1,4)·SWAP(5,4)·CNOT(5,3)·SWAP(4,3)·CNOT(1,2)·SWAP(4,2)·CNOT(4,1)·CNOT(3,1)·CNOT(2,1)·CZ(1,4)·S(1)·CZ(3,4)·S(3)·CZ(1,3)·S(2)·CZ(2,5)·C(X,X)(2,4)·√X(1)·C(X,X)(2,3)·C(X,X)(1,4)·√X(3)·C(X,X)(3,5)·√X(2)·C(X,X)(2,5)
+  (gates in application order) from generator 1 of the code's ZX-duality group, computed
+  by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
+  Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
+  field states the claim in the stored code's logical basis; validate:circuits checks
+  it. SWAP-transversal circuits are fault-tolerant on architectures where SWAPs are
+  error-benign (shuttling ion traps, atom arrays), hence no unconditional ft tag.
+  The code is the best-known-distance [[12,5]] stabilizer code from Grassl's codetables.de
+  tables (snapshotted in the autqec repository).
+source: https://arxiv.org/abs/2409.18175
+logical_action: |-
+  H 0 4
+  CX 2 4 1 4 0 4 1 3 0 3
+  SWAP 4 3
+  CX 4 2
+  SWAP 3 2
+  CX 0 1
+  SWAP 3 1
+  CX 3 0 2 0 1 0
+  CZ 0 3
+  S 0
+  CZ 2 3
+  S 2
+  CZ 0 2
+  S 1
+  CZ 1 4
+  XCX 1 3
+  SQRT_X 0
+  XCX 1 2 0 3
+  SQRT_X 2
+  XCX 2 4
+  SQRT_X 1
+  XCX 1 4
+gate_count: 16
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 12
+crumble_url: https://algassert.com/crumble#circuit=Z_3_2_10;X_4;H_7_5_8_1_11_9_6;I_0;H_3_2_10_4;SWAP_5_1_6_10_2_8_3_11_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["…","H","Z","Z","X","H","H","H","H","H","Z","H"],[1,1,"H","H","H",1,1,1,1,1,"H"],[1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1],[1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1]]}
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:H",
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:CZ",
+    "logical-op:S",
+    "logical-op:XCX",
+    "logical-op:SQRT_X",
+  ]
+original_matrices: c8f8885c85ec30ad

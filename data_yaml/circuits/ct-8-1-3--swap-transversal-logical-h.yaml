@@ -1,0 +1,21 @@
+qec_id: 1086
+name: SWAP-transversal logical H
+tool: autqec
+notes: Logical H (gates in application order) from generator 0 of the code's ZX-duality
+  group, computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal
+  — single-qubit Cliffords + SWAPs, with Pauli corrections that fix the stabilizer
+  signs. The logical_action field states the claim in the stored code's logical basis;
+  validate:circuits checks it. SWAP-transversal circuits are fault-tolerant on architectures
+  where SWAPs are error-benign (shuttling ion traps, atom arrays), hence no unconditional
+  ft tag. The code is the best-known-distance [[8,1]] stabilizer code from Grassl's
+  codetables.de tables (snapshotted in the autqec repository).
+source: https://arxiv.org/abs/2409.18175
+logical_action: H 0
+gate_count: 8
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 8
+crumble_url: https://algassert.com/crumble#circuit=Z_4_3;H_5_6_7;I_0;H_4_3;SWAP_6_7_3_7_4_3_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,1,"Z","Z","H","H","H"],[1,1,1,"H","H"],[1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1],[1,1,1,"Swap","Swap"],[1,1,1,1,1]]}
+tags: [logical-gate, swap-transversal, "logical-op:H"]
+original_matrices: 46c0f5687c390fa7

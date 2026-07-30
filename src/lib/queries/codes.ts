@@ -1,4 +1,5 @@
 import { getDb } from "../db";
+import { HIDDEN_CODE_TAG } from "../constants";
 import type {
   Code,
   CodeDetail,
@@ -13,6 +14,7 @@ import {
   addConditions,
   addTagConditions,
   buildCodeOrderBy,
+  visibleCodePredicate,
 } from "./shared";
 
 // Columns to select for list/search views. Excludes `h` and `logical` which
@@ -67,8 +69,16 @@ export function filterCodes(filters: CodeFilters, sort?: CodeSort): CodeWithMeta
 
 export function countAllCodes(): number {
   const db = getDb();
-  const row = db.prepare("SELECT COUNT(*) as count FROM codes").get() as {
-    count: number;
-  };
+  const row = db
+    .prepare(`SELECT COUNT(*) as count FROM codes c WHERE ${visibleCodePredicate()}`)
+    .get(HIDDEN_CODE_TAG) as { count: number };
+  return row.count;
+}
+
+/** Every code including the hidden (codetables) shelf — shown alongside the
+ * curated count where both numbers are stated. */
+export function countAllCodesTotal(): number {
+  const db = getDb();
+  const row = db.prepare("SELECT COUNT(*) as count FROM codes").get() as { count: number };
   return row.count;
 }

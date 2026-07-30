@@ -9,7 +9,7 @@ A community-driven library for quantum error correction circuits.
 ## What QECirc is
 
 - A place to find and share reusable quantum error correction circuits
-- A fast, simple way to grab standard circuits for common tasks — encoding, state preparation, syndrome extraction, and more
+- A fast, simple way to grab standard circuits for common tasks — encoding, state preparation, logical gates, syndrome extraction, and more
 - A hub for the QEC circuit community, highlighting well-crafted circuits and the tools used to create them
 - Simple to use and open to everyone
 
@@ -37,7 +37,7 @@ The project is funded by the [Unitary Foundation](https://unitary.foundation) an
      the unlinked names. Mirror any change here in src/lib/contributors.ts, which
      the About page renders and the landing page counts. -->
 
-[Ludwig Schmid](https://github.com/lsschmid), [Tom Peham](https://github.com/pehamTom), [Remmy Zen](https://github.com/remmyzen), [Maxie Helen Bichmann](https://github.com/MaxieHelenBichmann), [Diego Forlivesi](https://github.com/DiegoForlivesi), [David Amaro](https://github.com/davamaro), [Luis Colmenarez](https://github.com/luis2colmena)
+[Ludwig Schmid](https://github.com/lsschmid), [Tom Peham](https://github.com/pehamTom), [Remmy Zen](https://github.com/remmyzen), [Maxie Helen Bichmann](https://github.com/MaxieHelenBichmann), [Diego Forlivesi](https://github.com/DiegoForlivesi), [David Amaro](https://github.com/davamaro), [Luis Colmenarez](https://github.com/luis2colmena), [Hasan Sayginel](https://github.com/hsayginel)
 
 ## Quick Start
 

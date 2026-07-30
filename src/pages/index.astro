@@ -16,6 +16,8 @@ import HeartIcon from "../components/HeartIcon.astro";
 import {
   countAllCodes,
   countAllCircuits,
+  countAllCodesTotal,
+  countAllCircuitsTotal,
   countAllTools,
   countCircuitPapers,
   getAllCodes,
@@ -28,7 +30,7 @@ import {
   formatCircuitId,
 } from "../lib/queries";
 import { CONTRIBUTORS } from "../lib/contributors";
-import { TAG_UNSELECTED } from "../lib/constants";
+import { TAG_UNSELECTED, HIDDEN_CODE_TAG } from "../lib/constants";
 import { splitAnnotated } from "../lib/stim-format";
 
 // `/` was the codes list until v0.5.0, and client-side filtering pushed history
@@ -42,12 +44,24 @@ if (CODES_LIST_PARAMS.some((p) => Astro.url.searchParams.has(p))) {
 const fmt = new Intl.NumberFormat("en-US");
 const codeCount = countAllCodes();
 const circuitCount = countAllCircuits();
+const codeTotal = countAllCodesTotal();
+const circuitTotal = countAllCircuitsTotal();
 
 // Deliberately not linked, unlike the cards below: "papers" has no page to go
 // to, and a row where only some numbers are clickable reads as broken.
-const STATS: { value: number; label: string }[] = [
-  { value: circuitCount, label: "Circuits" },
-  { value: codeCount, label: "Codes" },
+// `sub` states the grand total including the hidden codetables shelf; it is
+// omitted when the shelf is empty so the tile collapses back to two lines.
+const STATS: { value: number; label: string; sub?: string }[] = [
+  {
+    value: circuitCount,
+    label: "Circuits",
+    sub: circuitTotal > circuitCount ? `${fmt.format(circuitTotal)} incl. codetables` : undefined,
+  },
+  {
+    value: codeCount,
+    label: "Codes",
+    sub: codeTotal > codeCount ? `${fmt.format(codeTotal)} incl. codetables` : undefined,
+  },
   { value: countAllTools(), label: "Tools" },
   { value: countCircuitPapers(), label: "Papers" },
   { value: CONTRIBUTORS.length, label: "Contributors" },
@@ -60,7 +74,10 @@ const latest = getLatestCircuits(5);
 // tool would go stale the moment /tools grows.
 // getTagsWithCount sorts by name, not count, so re-sort before slicing --
 // otherwise this shows whatever happens to sort first, not what most codes are.
+// HIDDEN_CODE_TAG would top this list by count (it marks the whole codetables
+// shelf), but the homepage should showcase the curated library's tags.
 const EXAMPLE_CODE_TAGS = getTagsWithCount("code")
+  .filter((t) => t.name !== HIDDEN_CODE_TAG)
   .toSorted((a, b) => b.count - a.count)
   .slice(0, 6)
   .map((t) => t.name);
@@ -85,7 +102,7 @@ const EXAMPLE_TOOL = getAllTools().find((t) => t.circuit_count > 0);
 // excluded because it is the one entry that is not a code (it collects
 // standalone gadgets), which makes it a misleading example of a code page.
 const EXAMPLE_CODE = getAllCodes()
-  .filter((c) => !c.tags.includes("no-code"))
+  .filter((c) => !c.tags.includes("no-code") && !c.tags.includes(HIDDEN_CODE_TAG))
   .toSorted((a, b) => b.circuit_count - a.circuit_count)[0];
 
 // That code's own circuit tags, not the library-wide ones: a globally common
@@ -186,13 +203,15 @@ const jsonLd = {
 >
   <section class="max-w-2xl mb-8">
     <h1 class="text-3xl font-bold mb-3">Quantum error correction circuits</h1>
-    {/* Encoding, state preparation and flag gadgets are what the library
+    {/* Encoding, state preparation, logical gates and flag gadgets are what
+        the library
         actually holds; syndrome extraction is named as scope, so it says "still
         to come" rather than implying you can download one today. */}
     <p class="text-gray-600 dark:text-gray-400 mb-3">
       QECirc is where QEC researchers find the circuits they need to design
       fault-tolerant computation. Browse, compare and download reusable circuits for
-      encoding, state preparation and flag gadgets, organised by error-correcting code,
+      encoding, state preparation, logical Clifford gates and flag gadgets, organised by
+      error-correcting code,
       with syndrome extraction still to come. Each circuit carries its metrics and its
       source, stored in STIM and offered as QASM and Cirq.
     </p>
@@ -213,7 +232,7 @@ const jsonLd = {
     <div class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
       <h2 class="text-lg font-semibold mb-1">Find circuits</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
-        Search all {fmt.format(circuitCount)} circuits by name, notes, tag or code, ranked
+        Search all {fmt.format(circuitTotal)} circuits by name, notes, tag or code, ranked
         by relevance.
       </p>
       <form method="GET" action="/search" class="flex gap-2">
@@ -242,6 +261,9 @@ const jsonLd = {
         <div>
           <dd class="text-2xl font-bold tabular-nums">{fmt.format(s.value)}</dd>
           <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{s.label}</dt>
+          {s.sub && (
+            <dd class="text-[11px] tabular-nums text-gray-400 dark:text-gray-500 mt-0.5">{s.sub}</dd>
+          )}
         </div>
       ))}
     </dl>

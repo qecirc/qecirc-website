@@ -1,0 +1,19 @@
+qec_id: 1061
+name: Transversal logical H
+tool: autqec
+notes: Logical H (gates in application order) from generator 3 of the code's ZX-duality
+  group, computed by autqec (arXiv:2409.18175). Physical circuit is transversal —
+  single-qubit Cliffords, with Pauli corrections that fix the stabilizer signs. The
+  logical_action field states the claim in the stored code's logical basis; validate:circuits
+  checks it. The code is the best-known-distance [[7,1]] stabilizer code from Grassl's
+  codetables.de tables (snapshotted in the autqec repository).
+source: https://arxiv.org/abs/2409.18175
+logical_action: H 0
+gate_count: 7
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 7
+crumble_url: https://algassert.com/crumble#circuit=H_3_1_0_5_2_6_4_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H","H","H","H","H","H"]]}
+tags: [logical-gate, transversal, ft, "logical-op:H"]
+original_matrices: e5cffdca1c0ae903

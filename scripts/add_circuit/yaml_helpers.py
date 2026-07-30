@@ -66,6 +66,11 @@ def build_circuit_yaml(circ):
     if circ.get("source"):
         data["source"] = circ["source"]
 
+    # Logical-gate circuits: the claimed logical Clifford, in stim notation on
+    # the k logical qubits — the contract validate:circuits checks.
+    if circ.get("logical_action"):
+        data["logical_action"] = circ["logical_action"]
+
     for field in ("gate_count", "two_qubit_gate_count", "depth", "qubit_count", "weight"):
         if circ.get(field) is not None:
             data[field] = circ[field]

@@ -15,12 +15,25 @@ export const TAG_CATEGORIES: readonly { key: TagCategoryKey; label: string }[] =
   { key: "other", label: "Other" },
 ];
 
-const TYPE_TAGS = new Set(["encoding", "state-preparation", "syndrome-extraction"]);
-const FT_TAGS = new Set(["ft", "non-ft", "flag", "deterministic"]);
+const TYPE_TAGS = new Set(["encoding", "state-preparation", "syndrome-extraction", "logical-gate"]);
+// `transversal` / `swap-transversal` describe circuit structure that carries the
+// fault-tolerance argument (SWAP-transversal circuits are FT on architectures
+// where SWAPs are error-benign), so they group with the FT filters.
+const FT_TAGS = new Set([
+  "ft",
+  "non-ft",
+  "flag",
+  "deterministic",
+  "transversal",
+  "swap-transversal",
+]);
 const HARDWARE_TAGS = new Set(["1D-AOD"]);
 
 export function categorizeTag(name: string): TagCategoryKey {
-  if (TYPE_TAGS.has(name) || name.startsWith("logical-state:")) return "type";
+  // `logical-op:<gate>` names the logical Clifford a logical-gate circuit
+  // implements, mirroring how `logical-state:` refines state-preparation.
+  if (TYPE_TAGS.has(name) || name.startsWith("logical-state:") || name.startsWith("logical-op:"))
+    return "type";
   // `distance:N` is a fault-tolerance property (a circuit/gadget FT to distance N).
   if (FT_TAGS.has(name) || name.startsWith("distance:")) return "ft";
   if (HARDWARE_TAGS.has(name) || name.startsWith("connectivity:") || name.startsWith("device:"))

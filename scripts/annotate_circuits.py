@@ -16,10 +16,18 @@ Every emitted body is checked with stim's detector error model before it is
 written — a circuit whose detectors are not provably deterministic is skipped
 and reported, never written.
 
+Settled verdicts (unchanged/skipped/failed) are cached in
+.cache/annotate-circuits.json keyed by the content of every input AND the
+current output file, so re-runs only recompute circuits where something moved.
+"written" is never cached: writing changes the output file, so the next run
+recomputes it once and settles to a cached "unchanged". Pass --no-cache to
+force a full recompute.
+
 Usage:
     uv run python scripts/annotate_circuits.py
     uv run python scripts/annotate_circuits.py --dry-run
     uv run python scripts/annotate_circuits.py --only rotated-surface-code-d-3
+    uv run python scripts/annotate_circuits.py --no-cache
 """
 
 import argparse
@@ -44,9 +52,37 @@ from scripts.add_circuit.annotate import (  # noqa: E402
 )
 from scripts.add_circuit.compute_circuit import LARGE_CIRCUIT_MAX_QUBITS  # noqa: E402
 from scripts.add_circuit.matrix_format import decode as decode_matrix  # noqa: E402
+from scripts.result_cache import ResultCache, source_fingerprint, text_or_missing  # noqa: E402
 
 ANNOTATED_FORMAT = "stim-annotated"
 ANNOTATED_URL_KEY = "crumble_url_annotated"
+
+# C-backed loader when available: ~15x faster over the whole corpus, and this
+# script parses every circuit YAML even on a fully-warm cache run.
+_FastLoader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
+
+def _load_yaml(text: str):
+    return yaml.load(text, Loader=_FastLoader)
+
+
+DEFAULT_CACHE_PATH = Path(_PROJECT_ROOT) / ".cache" / "annotate-circuits.json"
+
+# Modules whose logic determines what gets annotated and how; hashed into
+# every cache key so logic changes self-invalidate the cache.
+_SOURCE_DEPS = [
+    Path(__file__),
+    Path(_PROJECT_ROOT) / "scripts" / "add_circuit" / "annotate.py",
+    Path(_PROJECT_ROOT) / "scripts" / "add_circuit" / "compute_circuit.py",
+]
+
+# Only settled verdicts are replayable: a "written" run mutates its own inputs
+# (the output file is part of the key), so caching it would be self-defeating.
+_CACHEABLE_STATUSES = ("unchanged", "skipped", "failed")
+
+
+def open_cache(path: Path = DEFAULT_CACHE_PATH) -> ResultCache:
+    return ResultCache(path, source_fingerprint(*_SOURCE_DEPS))
 
 
 @dataclass
@@ -72,35 +108,68 @@ def _kind_and_state(tags: list[str]) -> tuple[str, str]:
     return kind, state
 
 
-def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[Result]:
+def annotate_all(
+    data_dir: Path, only: str = "", dry_run: bool = False, cache: ResultCache | None = None
+) -> list[Result]:
     codes_dir = data_dir / "codes"
     circuits_dir = data_dir / "circuits"
     matrices_dir = data_dir / "matrices"
 
-    codes = {
-        p.stem: yaml.safe_load(p.read_text(encoding="utf-8")) for p in codes_dir.glob("*.yaml")
-    }
+    codes = {p.stem: _load_yaml(p.read_text(encoding="utf-8")) for p in codes_dir.glob("*.yaml")}
+    code_texts = {p.stem: p.read_text(encoding="utf-8") for p in codes_dir.glob("*.yaml")}
     results: list[Result] = []
+    seen_stems: set[str] = set()
+
+    def _finish(result: Result, key: str | None) -> None:
+        if cache is not None and key is not None and result.status in _CACHEABLE_STATUSES:
+            cache.put(result.stem, key, [result.status, result.detail])
+        results.append(result)
 
     for path in sorted(circuits_dir.glob("*.yaml")):
         stem = path.stem
         if only and not stem.startswith(only):
             continue
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        current_yaml = path.read_text(encoding="utf-8")
+        data = _load_yaml(current_yaml)
         tags = data.get("tags") or []
         kind, state = _kind_and_state(tags)
         if not kind:
             continue  # gadgets, syndrome extraction: nothing deterministic to annotate
 
         slug = _code_slug(stem)
+        body_path = circuits_dir / f"{stem}.stim"
+
+        # The outcome is a pure function of these inputs plus the current
+        # output file (hashed in, so an out-of-date .stim-annotated misses and
+        # is regenerated). Replay settled verdicts; anything else recomputes.
+        key = None
+        if cache is not None:
+            seen_stems.add(stem)
+            # The submitted matrices seed the detector sparsifier, so the key
+            # tracks the shared matrices file the circuit references (the
+            # reference itself is part of current_yaml).
+            matrices_ref = data.get("original_matrices")
+            key = cache.key(
+                current_yaml,
+                text_or_missing(body_path),
+                code_texts.get(slug, "<no-code>"),
+                text_or_missing(matrices_dir / f"{matrices_ref}.yaml")
+                if matrices_ref
+                else "<no-originals>",
+                text_or_missing(circuits_dir / f"{stem}.{ANNOTATED_FORMAT}"),
+            )
+            hit = cache.get(stem, key)
+            if hit is not None:
+                results.append(Result(stem, hit[0], hit[1]))
+                continue
+
         code = codes.get(slug)
         if code is None:
-            results.append(Result(stem, "failed", f"code {slug!r} not found"))
+            _finish(Result(stem, "failed", f"code {slug!r} not found"), key)
             continue
 
-        body_path = circuits_dir / f"{stem}.stim"
         if not body_path.exists():
-            results.append(Result(stem, "failed", "no .stim body"))
+            _finish(Result(stem, "failed", "no .stim body"), key)
             continue
 
         n, k = code["n"], code["k"]
@@ -113,7 +182,7 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
         if data.get("original_matrices"):
             original_path = matrices_dir / f"{data['original_matrices']}.yaml"
             if original_path.exists():
-                original = yaml.safe_load(original_path.read_text(encoding="utf-8")) or {}
+                original = _load_yaml(original_path.read_text(encoding="utf-8")) or {}
                 if original.get("h"):
                     original_h = decode_matrix(original["h"])
 
@@ -129,12 +198,12 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
             notes=data.get("notes") or "",
         )
         if circ is None:
-            results.append(Result(stem, "skipped", _why_skipped(body_path, stored_h, n, k, kind)))
+            _finish(Result(stem, "skipped", _why_skipped(body_path, stored_h, n, k, kind)), key)
             continue
 
         error = validate_annotated(circ)
         if error:
-            results.append(Result(stem, "failed", error))
+            _finish(Result(stem, "failed", error), key)
             continue
 
         annotated_path = circuits_dir / f"{stem}.{ANNOTATED_FORMAT}"
@@ -154,13 +223,12 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
 
         # Compare rendered text, not the parsed value: a duplicated key parses to
         # the same value while leaving the file invalid.
-        current_yaml = path.read_text(encoding="utf-8")
         desired_yaml = _with_urls(current_yaml, plain_url, url)
         body_changed = (
             not annotated_path.exists() or annotated_path.read_text(encoding="utf-8") != text
         )
         if not body_changed and desired_yaml == current_yaml:
-            results.append(Result(stem, "unchanged"))
+            _finish(Result(stem, "unchanged"), key)
             continue
 
         if not dry_run:
@@ -171,6 +239,10 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
             Result(stem, "written", f"{circ.num_detectors} detectors, {circ.num_observables} obs")
         )
 
+    if cache is not None:
+        # A partial run (--only) sees a subset of stems; pruning to it would
+        # evict every other circuit's entry.
+        cache.save(prune_to=seen_stems if not only else None)
     return results
 
 
@@ -236,9 +308,15 @@ def main() -> int:
     parser.add_argument("--data-dir", default="data_yaml")
     parser.add_argument("--only", default="", help="Only process stems with this prefix")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Recompute every circuit instead of replaying settled verdicts",
+    )
     args = parser.parse_args()
 
-    results = annotate_all(Path(args.data_dir), only=args.only, dry_run=args.dry_run)
+    cache = None if args.no_cache else open_cache()
+    results = annotate_all(Path(args.data_dir), only=args.only, dry_run=args.dry_run, cache=cache)
     counts = Counter(r.status for r in results)
 
     for r in results:
@@ -252,6 +330,8 @@ def main() -> int:
     for status in ("written", "unchanged", "skipped", "failed"):
         if counts[status]:
             print(f"{counts[status]:5d}  {status}")
+    if cache is not None and cache.hits:
+        print(f"       ({cache.hits} verdicts replayed from cache)")
     if args.dry_run:
         print("\n(dry run — nothing written)")
     elif counts["written"]:

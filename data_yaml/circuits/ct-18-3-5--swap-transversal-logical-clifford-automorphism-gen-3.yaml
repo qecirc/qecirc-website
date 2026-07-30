@@ -1,0 +1,36 @@
+qec_id: 1496
+name: SWAP-transversal logical Clifford (automorphism gen 3)
+tool: autqec
+notes: Logical H(2)·CNOT(2,3)·CNOT(3,2)·S(2)·S(1)·C(X,X)(2,3)·√X(2) (gates in application
+  order) from generator 3 of the code's automorphism group, computed by autqec (arXiv:2409.18175).
+  Physical circuit is swap-transversal — single-qubit Cliffords + SWAPs, with Pauli
+  corrections that fix the stabilizer signs. The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. SWAP-transversal
+  circuits are fault-tolerant on architectures where SWAPs are error-benign (shuttling
+  ion traps, atom arrays), hence no unconditional ft tag. The code is the best-known-distance
+  [[18,3]] stabilizer code from Grassl's codetables.de tables (snapshotted in the
+  autqec repository).
+source: https://arxiv.org/abs/2409.18175
+logical_action: |-
+  H 1
+  CX 1 2 2 1
+  S 1 0
+  XCX 1 2
+  SQRT_X 1
+gate_count: 24
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 18
+crumble_url: https://algassert.com/crumble#circuit=Z_16_10_8_6_5_3_15_13;SQRT_X_14;S_12_11_9;H_7;S_4_17;I_0;H_16;SQRT_X_10_8;H_6;SQRT_X_5_3;S_15;SQRT_X_13;SWAP_17_15_5_13_6_4_10_3_7_13_8_6_9_5_11_17_14_4_12_17_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,1,"Z","Z^½","Z","Z","H","Z","Z^½","Z","Z^½","Z^½","Z","X^½","Z","Z","Z^½"],[1,1,1,"X^½",1,"X^½","H",1,"X^½",1,"X^½",1,1,"X^½",1,"Z^½","H"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]]}
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:H",
+    "logical-op:CX",
+    "logical-op:S",
+    "logical-op:XCX",
+    "logical-op:SQRT_X",
+  ]
+original_matrices: f0dfdd393c4b7b0c

@@ -3,20 +3,24 @@ import TagList from "./TagList.astro";
 import type { Tool } from "../types";
 
 interface Props {
-  tool: Tool & { tags: string[]; circuit_count: number };
+  tool: Tool & { tags: string[]; circuit_count: number; hidden_circuit_count?: number };
   baseUrl?: URL;
 }
 
 const { tool, baseUrl } = Astro.props;
+const hiddenCount = tool.hidden_circuit_count ?? 0;
 ---
 
 <div id={tool.slug} class="scroll-mt-4 rounded border border-gray-200 dark:border-gray-800 p-4">
   <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
     <h3 class="font-medium">{tool.name}</h3>
     <span class="text-xs text-gray-500 dark:text-gray-400">
-      {tool.circuit_count === 0
+      {tool.circuit_count === 0 && hiddenCount === 0
         ? "no circuits yet"
-        : `${tool.circuit_count} circuit${tool.circuit_count !== 1 ? "s" : ""}`}
+        : `${tool.circuit_count} circuit${tool.circuit_count !== 1 ? "s" : ""}`}{" "}
+      {hiddenCount > 0 && (
+        <span class="text-gray-400 dark:text-gray-500">(+{hiddenCount} codetables)</span>
+      )}
     </span>
     <div class="ml-auto">
       <TagList tags={tool.tags} baseUrl={baseUrl} basePath="/tools" />

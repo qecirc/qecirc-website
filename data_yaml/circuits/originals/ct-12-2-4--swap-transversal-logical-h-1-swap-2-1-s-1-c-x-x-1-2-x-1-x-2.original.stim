@@ -1,0 +1,11 @@
+Z 1 2 4 8 9
+S 0
+SQRT_X 1
+H 2
+S 3
+H 4
+SQRT_X 5
+C_ZYX 6
+C_XYZ 8
+SWAP 7 8 6 8 5 7 4 8 3 6 2 7 1 8 0 6
+I 11
