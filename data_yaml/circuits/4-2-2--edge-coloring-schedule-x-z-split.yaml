@@ -14,3 +14,4 @@ crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3;TICK;RX_4_5;TICK;CX
 crumble_url_annotated: https://algassert.com/crumble#circuit=R_0_1_2_3;TICK;RX_4_5;TICK;CX_4_0;TICK;CX_4_1;TICK;CX_4_3;TICK;CX_4_2;TICK;TICK;CZ_5_1;TICK;CZ_5_2;TICK;CZ_5_3;TICK;CZ_5_0;TICK;MX_4_5;DT_rec[-1];REPEAT_1_{;RX_4_5;TICK;CX_4_0;TICK;CX_4_1;TICK;CX_4_3;TICK;CX_4_2;TICK;TICK;CZ_5_1;TICK;CZ_5_2;TICK;CZ_5_3;TICK;CZ_5_0;TICK;MX_4_5;DT_rec[-2]_rec[-4];DT_rec[-1]_rec[-3];};TICK;M_0_1_2_3;DT_rec[-4]_rec[-3]_rec[-2]_rec[-1]_rec[-5];OI(0)rec[-4]_rec[-2];OI(1)rec[-4]_rec[-3]_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,"XDetectControlReset","XDetectControlReset"],[1,1,1,1,"H","H"],["X",1,1,1,"•"],[1,"X",1,1,"•"],[1,1,1,"X","•"],[1,1,"X",1,"•"],[1,"Z",1,1,1,"•"],[1,1,"Z",1,1,"•"],[1,1,1,"Z",1,"•"],["Z",1,1,1,1,"•"],[1,1,1,1,"XDetector","XDetector"]]}
 tags: [syndrome-extraction, "schedule:xz-separated"]
+original_matrices: 7bbac7f530f6bf65

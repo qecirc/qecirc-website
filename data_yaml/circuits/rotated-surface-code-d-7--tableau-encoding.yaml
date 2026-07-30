@@ -10,3 +10,4 @@ two_qubit_gate_count: 345
 depth: 165
 qubit_count: 49
 tags: [encoding, non-ft]
+original_matrices: 725ecf3e4c05860f

@@ -10,3 +10,4 @@ two_qubit_gate_count: 261
 depth: 113
 qubit_count: 49
 tags: [state-preparation, non-ft, "logical-state:zero"]
+original_matrices: 725ecf3e4c05860f

@@ -44,7 +44,6 @@ from codes import CATALOGUE, FAMILY  # noqa: E402
 from scripts.add_circuit import (  # noqa: E402
     UncertainDedupError,
     add_circuit,
-    find_existing_code_h,
     validate_encoding_h,
     validate_state_prep_h,
     validate_syndrome_extraction_h,
@@ -245,19 +244,11 @@ def run(write: bool, only: str, kinds: set[str]) -> list[Outcome]:
                 "Hz": np.asarray(code.matrix_z, dtype=int) % 2,
             }
 
-        # Resolve the stored slug ourselves rather than letting add_circuit
-        # derive it. For a CSS code that matches an existing entry it picks the
-        # stored slug correctly, but on the non-CSS path it falls back to
-        # slugifying `code_name` — so the five-qubit code's circuits would be
-        # written as `five-qubit-perfect-code--...` while the code itself lives
-        # at `five-qubit-code`, leaving circuit files pointing at a code entry
-        # that does not exist. Looking the match up first is uniform and makes
-        # the intent explicit for every code.
+        # `code_slug` names a *new* code. On a dedup match `add_circuit` files
+        # under the stored slug and ignores this, on both the CSS and the
+        # non-CSS path, so a spec that matches an existing entry leaves it
+        # empty.
         slug = spec.slug or ""
-        if spec.key not in ASSUME_NEW:
-            match = find_existing_code_h(h, n)
-            if match is not None and getattr(match, "slug", None):
-                slug = match.slug
 
         # `assume_new` skips the dedup check, so nothing downstream would notice
         # that the slug belongs to an unrelated stored code — and `overwrite=True`

@@ -119,9 +119,3 @@ wrote on an earlier run, by canonical hash, so re-running stays idempotent.
   submitted one, is then stored as the circuit's original matrices. For an LDPC code that
   replaces weight-6 checks with dense rows, losing the structure the code is defined by. See
   qecirc/qecirc-website#138; non-CSS codes have no pair, so the five-qubit code keeps `H=`.
-- The importer **resolves the stored slug itself** before calling `add_circuit`. On the CSS path
-  `add_circuit` picks the matched entry's slug correctly, but on the non-CSS path it falls back
-  to slugifying `code_name` — which wrote the five-qubit code's circuits as
-  `five-qubit-perfect-code--…` while the code itself lives at `five-qubit-code`, leaving circuit
-  files pointing at a code entry that is never written. Worth fixing upstream in `add_circuit`;
-  looking the match up first is the local fix.
