@@ -5,14 +5,14 @@ d: 3
 zoo_url: https://errorcorrectionzoo.org/c/rotated_surface
 aliases:
   - "[[9,1,3]]"
-  - Surface-17
-  - checkerboard code
-  - medial surface code
-  - rectified surface code
-  - Kitaev surface code
-  - planar code
+  - "Surface-17"
+  - "checkerboard code"
+  - "medial surface code"
+  - "rectified surface code"
+  - "Kitaev surface code"
+  - "planar code"
 related:
-  - toric code
+  - "toric code"
 canonical_hash: 44a2b880da49802495f3488a4ec488594d2bf99b8f22d9e032d93061a0139bfe
 h:
   - [1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]

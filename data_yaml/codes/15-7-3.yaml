@@ -1,4 +1,4 @@
-name: Quantum Hamming Code
+name: "Quantum Hamming Code"
 n: 15
 k: 7
 d: 3

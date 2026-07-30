@@ -1,12 +1,12 @@
-name: Quantum Golay Code
+name: "Quantum Golay Code"
 n: 23
 k: 1
 d: 7
 zoo_url: https://errorcorrectionzoo.org/c/qubit_golay
 aliases:
   - "[[23,1,7]]"
-  - qubit Golay code
-  - Golay code
+  - "qubit Golay code"
+  - "Golay code"
 canonical_hash: e268431e6b938eb17058f5aa86280ae743bcbc5070d26fcca973d7b49bb1df62
 h:
   - [

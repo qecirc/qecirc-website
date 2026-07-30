@@ -5,9 +5,9 @@ d: 3
 zoo_url: https://errorcorrectionzoo.org/c/stab_5_1_3
 aliases:
   - "[[5,1,3]]"
-  - Laflamme code
-  - perfect code
-  - five-qubit code
+  - "Laflamme code"
+  - "perfect code"
+  - "five-qubit code"
 canonical_hash: c4e6bc522a4a3256a62b41da6f3e225c26e3d5728ef240c3e9564de529d9be1b
 h:
   - [1, 0, 0, 0, 1, 1, 1, 0, 1, 1]

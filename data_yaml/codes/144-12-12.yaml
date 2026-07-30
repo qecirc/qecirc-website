@@ -1,16 +1,16 @@
-name: Gross Code
+name: "Gross Code"
 n: 144
 k: 12
 d: 12
 zoo_url: https://errorcorrectionzoo.org/c/gross
 aliases:
   - "[[144,12,12]]"
-  - (3,3) BB6 code
-  - BB6 code
-  - BB code
-  - bivariate bicycle code
-  - qLDPC code
-  - LDPC code
+  - "(3,3) BB6 code"
+  - "BB6 code"
+  - "BB code"
+  - "bivariate bicycle code"
+  - "qLDPC code"
+  - "LDPC code"
 canonical_hash: 0f7eb5b6dab28018a289f880fdc62f2e1f636f034e1cb8d3ae5c8ddc0922ddae
 h:
   - [

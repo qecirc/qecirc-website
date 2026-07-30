@@ -5,8 +5,8 @@ d: 11
 zoo_url: https://errorcorrectionzoo.org/c/galois_quad_residue
 aliases:
   - "[[47,1,11]]"
-  - quantum QR code
-  - quadratic residue code
+  - "quantum QR code"
+  - "quadratic residue code"
 canonical_hash: fe680a79655135c12b50d5ea5fe69701123eed888fe606b76da17b8962519132
 h:
   - [

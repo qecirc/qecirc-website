@@ -359,6 +359,18 @@ try {
       const origStimPath = path.join(originalsDir, `${stem}.original.stim`);
       if (fs.existsSync(origStimPath)) {
         const origStim = fs.readFileSync(origStimPath, "utf-8");
+        // A branch written before this format still carries the matrices in a
+        // per-circuit `<stem>.original.yaml`. Merging it produces no conflict —
+        // the file simply reappears — and without this the build would read no
+        // reference, store null matrices and say nothing. Run
+        // `scripts/migrate_matrix_storage.py --write`.
+        const legacyPath = path.join(originalsDir, `${stem}.original.yaml`);
+        if (!data.original_matrices && fs.existsSync(legacyPath)) {
+          throw new Error(
+            `Circuit ${stem} has ${stem}.original.yaml but no 'original_matrices' reference. ` +
+              `Run: uv run python scripts/migrate_matrix_storage.py --write`,
+          );
+        }
         const origData = data.original_matrices
           ? readMatrices(dataDir, data.original_matrices, stem)
           : {};

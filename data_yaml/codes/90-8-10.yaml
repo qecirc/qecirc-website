@@ -5,12 +5,12 @@ d: 10
 zoo_url: https://errorcorrectionzoo.org/c/bb90
 aliases:
   - "[[90,8,10]]"
-  - bb90
-  - (15,3) BB6 code
-  - BB6 code
-  - BB code
-  - qLDPC code
-  - LDPC code
+  - "bb90"
+  - "(15,3) BB6 code"
+  - "BB6 code"
+  - "BB code"
+  - "qLDPC code"
+  - "LDPC code"
 canonical_hash: c738368574c9f6d9bb1d58b92e332b71332a585d365cfe29885344ff919d9d33
 h:
   - [

@@ -5,9 +5,9 @@ d: 4
 zoo_url: https://errorcorrectionzoo.org/c/stab_16_6_4
 aliases:
   - "[[16,6,4]]"
-  - tesseract color code
-  - hypercube code
-  - 4D color code
+  - "tesseract color code"
+  - "hypercube code"
+  - "4D color code"
 canonical_hash: f3efb3784fb65bc83aa2f7e8fbc7b5a1abb36053c67bbd3d1228fc21ed24e210
 h:
   - [1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

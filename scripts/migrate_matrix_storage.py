@@ -57,12 +57,19 @@ def _reencode_file(path: Path, write: bool) -> bool:
     # this migration must not decide what a code YAML may contain.
     from scripts.add_circuit.matrix_format import encode as encode_matrix
 
+    changed = False
     for f in ("h", "logical"):
         if data.get(f) is not None:
-            data[f] = encode_matrix(decode_matrix(data[f]))
-    out = dump_yaml(data)
-    if out == text:
+            encoded = encode_matrix(decode_matrix(data[f]))
+            changed = changed or encoded != data[f]
+            data[f] = encoded
+    # Only the *encoding* decides whether to rewrite. Comparing rendered text
+    # instead would rewrite a file whose matrices are untouched just because
+    # `dump_yaml` quotes a string differently than a person did — churn in files
+    # this migration has no business changing.
+    if not changed:
         return False
+    out = dump_yaml(data)
 
     after = {f: decode_matrix(load_yaml(out)[f]) for f in before}
     for f, m in before.items():

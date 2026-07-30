@@ -5,10 +5,10 @@ d: 3
 zoo_url: https://errorcorrectionzoo.org/c/steane
 aliases:
   - "[[7,1,3]]"
-  - seven-qubit code
-  - triangular color code
-  - honeycomb color code
-  - 6.6.6 color code
+  - "seven-qubit code"
+  - "triangular color code"
+  - "honeycomb color code"
+  - "6.6.6 color code"
 canonical_hash: d326fbcca125a5c717a7d4d1d0b4acc8da8e3b9d3ad123bfc705bc14d85f9ca4
 h:
   - [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]

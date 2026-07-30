@@ -26,6 +26,12 @@ the source-of-truth `package.json` version.
   matter far more as qLDPC codes arrive: the two effects compound, and the saving on a
   single [[1428,184]] code is larger than the whole repository is today.
 
+  `db:create` refuses to build a circuit that still carries a per-circuit
+  `originals/<stem>.original.yaml` with no `original_matrices` reference. Merging a
+  branch written before this format produces no git conflict — the old file simply
+  reappears — and the build would otherwise store null matrices and say nothing.
+  `scripts/migrate_matrix_storage.py --write` converts such a branch.
+
 ### Fixed
 
 - **Importing a circuit no longer costs a full re-read of the library.** Dedup compares a

@@ -5,7 +5,7 @@ d: 4
 zoo_url: https://errorcorrectionzoo.org/c/carbon
 aliases:
   - "[[12,2,4]]"
-  - C12 code
+  - "C12 code"
 canonical_hash: 867b5b91d25d0e6057624e51277717b6becc5776ff2f8d2b9020527765c10777
 h:
   - [1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
