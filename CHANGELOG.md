@@ -303,51 +303,6 @@ the source-of-truth `package.json` version.
 
 ### Added
 
-- **Syndrome-extraction circuits — the first in the library** (56 of them), imported
-  from [AlphaSyndrome](https://github.com/acasta-yhliu/asyndrome)
-  ([arXiv:2601.12509](https://arxiv.org/abs/2601.12509), ASPLOS '26) by
-  [data-imports/asyndrome/](data-imports/asyndrome/README.md). One stored circuit is
-  one **round**: reset the ancillas, run the tick-scheduled CX ladder, measure. The
-  round count is not baked in — the `stim-annotated` view repeats it `d` times into a
-  memory experiment with detectors and an observable. 14 new codes come with them
-  (hyperbolic surface ×6, hyperbolic color ×3, surface-with-defects ×2, and others),
-  and the landing page stops saying syndrome extraction is "still to come".
-  - Two of the source dataset's codes needed a distance the dataset does not give
-    correctly, computed exactly by `data-imports/asyndrome/code_distance.py`
-    (minimum weight of a non-trivial logical, by exhaustive enumeration — a
-    distance, not a bound). The self-dual bivariate bicycle code ships `d: -1` and
-    is [[42,6,6]]. The two defect surface codes declare 5 and 7 but each carry a
-    **weight-2 X-logical** — the dataset's own second `logical_xs` entry, and the
-    operator belonging to the qubit the defect creates. That short operator is
-    what a defect _does_; what the numbers do not support is 5 and 7, which
-    neither logical qubit reaches (the surviving one manages 4). Stored as
-    [[24,2,2]] and [[40,2,2]], with the reason in each circuit's notes: a stored
-    `[[n,k,d]]` has to describe the `h` printed beside it.
-- **`validate_syndrome_extraction_h`** (`scripts/add_circuit/circuit_validate.py`),
-  replacing the `NotImplementedError` stub, and a third branch in
-  `npm run validate:circuits` so these circuits are checked rather than silently
-  skipped. A round acts on an already-encoded state, so there is no fixed input to
-  simulate it on and — carrying resets and measurements — no tableau either. It is
-  checked by **stabilizer flows** instead: the group the round measures must be
-  exactly the code's, and every stabilizer and logical must survive it.
-  - **What it measures is derived, not assumed** (`measured_stabilizers`). Nothing
-    stored records which ancilla reads which check, and deriving it is what catches
-    the real failure: an X- and a Z-check sharing two data qubits whose CNOTs are
-    ordered inconsistently leave their two ancillas entangled, so each outcome is
-    random and the round measures nothing — with every check applied exactly once, on
-    the right qubits. 10 of the source dataset's 69 schedules fail exactly this way
-    and were left out; see the import README.
-- **`build_se_round`** (`scripts/add_circuit/syndrome_extraction.py`) — ticks of
-  `(data, ancilla, pauli)` checks to STIM. The tick assignment is the whole content of
-  a scheduling result, so it is emitted verbatim and never re-packed.
-- **`build_annotated_se`** — the memory-experiment view of a round: reset the data,
-  `REPEAT d`, terminal readout, first-round and inter-round detectors, observable.
-  `strip_readout` now recurses into `REPEAT` blocks, which is where most of those
-  detectors live; the browser's line-based mirror always reached them.
-- **`schedule:` and `decoder:` tags**, filed under **Method** in the circuit filter.
-  They pair up: a searched schedule is co-designed with the decoder it was scored
-  against, so two rounds for the same code can differ only by `decoder:`.
-
 - **Search aliases** (`data/migrations/017`). Codes and tools gain optional
   `aliases:`, and codes `related:`, hand-written with the Error Correction Zoo as
   reference. `laflamme` → the five-qubit code, `kitaev` → surface codes,
