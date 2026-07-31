@@ -272,7 +272,12 @@ def compute_code_data_h(
     logical = _compute_symplectic_logicals(canon_H, n, k, gauge=gauge_canon)
     orig_logical = _compute_symplectic_logicals(H, n, k, gauge=gauge_to_store)
 
-    params_with_d = CodeParams(n=n, k=k, is_css=False, d=d)
+    # CSS-ness is a property of the stabilizer group, and a subsystem code can
+    # have a CSS one — Bacon-Shor does. It only reaches this path because k
+    # cannot be derived the CSS way, so the tag would otherwise be lost and the
+    # code would not be findable as CSS while the page rendered its X/Z split.
+    is_css = gauge_to_store is not None and split_h_to_css(H, n) is not None
+    params_with_d = CodeParams(n=n, k=k, is_css=is_css, d=d)
     tags = suggest_code_tags(params_with_d)
     if gauge_to_store is not None:
         # Worth surfacing: a reader who sees [[9,1,3]] over a rank-4 `h` should
@@ -336,7 +341,7 @@ def compute_code_data_h(
             "zoo_url": zoo_url or None,
             "h": canon_H.tolist(),
             "logical": logical.tolist(),
-            "is_css": False,
+            "is_css": is_css,
             "gauge": None if gauge_canon is None else gauge_canon.tolist(),
             "gauge_qubits": gauge_qubit_count or None,
             "canonical_hash": c_hash,

@@ -179,3 +179,15 @@ class TestItReachesStorage:
         )
         doc = build_code_yaml(compute_code_data_h(five_qubit, 5, 3)["code"])
         assert "gauge" not in doc and "gauge_qubits" not in doc
+
+    def test_a_css_subsystem_code_is_still_tagged_css(self):
+        """Bacon-Shor's stabilizer group is CSS; it takes the symplectic path
+        only because k cannot be derived the CSS way. Losing the tag would hide
+        it from a CSS search while its page rendered an X/Z split anyway."""
+        from scripts.add_circuit.code_identify import split_h_to_css
+
+        _, stabilizers = _bacon_shor()
+        assert split_h_to_css(stabilizers, 9) is not None, "fixture must be CSS"
+        code = self._computed()["code"]
+        assert code["is_css"] is True
+        assert "CSS" in [t["name"] for t in code["tags"]]
