@@ -12,6 +12,12 @@ each code and calls it. Three kinds of circuit come out:
 | Encoding            | `get_encoding_circuit`                        | 18    |
 | \|0⟩ preparation    | `get_encoding_circuit(only_zero=True)`        | 18    |
 
+qLDPC's author, [Michael A. Perlin](https://github.com/perlinm), reviewed this import on
+[#136](https://github.com/qecirc/qecirc-website/pull/136) and
+[qLDPCOrg/qLDPC#554](https://github.com/qLDPCOrg/qLDPC/issues/554). The per-circuit
+reproduction snippets, the correction that subsystem-code support was **our** gap and not
+qLDPC's, and the clearer statement of the toric-code refutation all came from that.
+
 ## Running it
 
 qLDPC needs `stim>=1.16` and this project pins `stim>=1.15,<2`, so there is no separate
