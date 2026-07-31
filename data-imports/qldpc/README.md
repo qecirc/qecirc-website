@@ -108,7 +108,7 @@ fault-tolerant, and both encoders are documented as non-FT (FT encoding is upstr
 #327). The library tags claims its sources make; here the source makes the opposite claim, so
 it goes in the notes where a reader will see it.
 
-Consistent with the asyndrome circuits, SE circuits carry no `ft`/`non-ft` tag at all.
+SE circuits carry no `ft`/`non-ft` tag at all.
 
 ## Code identity
 
@@ -116,7 +116,7 @@ Three codes are the same code as a stored entry under a different qubit order, a
 permutation search runs out of budget on all three — they are topological codes with large
 automorphism groups, exactly the case its column invariants cannot separate.
 [`find_sigma.py`](find_sigma.py) settles two of them, reusing
-`data-imports/asyndrome/find_sigma.py`'s matcher rather than keeping a second copy of it:
+`scripts.add_circuit.find_sigma`'s matcher rather than keeping a second copy of it:
 
 | Code                  | Stored entry                 | Result      |
 | --------------------- | ---------------------------- | ----------- |

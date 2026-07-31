@@ -6,10 +6,10 @@ qubit order, but `find_code_permutation`'s budget runs out on them: they are
 topological codes with large automorphism groups, which is precisely the case
 its column invariants cannot separate.
 
-The matcher itself is not rewritten here. `data-imports/asyndrome/find_sigma.py`
-solved exactly this problem for exactly this kind of code — low-weight codewords
-as a canonical hypergraph, then individualization-refinement — so this reuses its
-`find_sigma` rather than keeping a second copy of 250 lines that would drift.
+The matcher itself is not rewritten here. `scripts.add_circuit.find_sigma` solves
+exactly this problem for exactly this kind of code — low-weight codewords as a
+canonical hypergraph, then individualization-refinement — so this drives it
+rather than keeping a second copy of 250 lines that would drift.
 
 Nothing is trusted on its own: each candidate is confirmed here by row-space
 equality against the stored code, and `add_circuit` repeats that check on every
@@ -35,12 +35,11 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(HERE))
-sys.path.insert(0, str(REPO / "data-imports" / "asyndrome"))
 
 from codes import CATALOGUE  # noqa: E402
-from find_sigma import find_sigma  # noqa: E402  (the asyndrome import's matcher)
 
 from scripts.add_circuit.code_identify import gf2_rref, split_h_to_css  # noqa: E402
+from scripts.add_circuit.find_sigma import find_sigma  # noqa: E402
 
 # catalogue key -> stored code slug it should attach to.
 TARGETS = {
