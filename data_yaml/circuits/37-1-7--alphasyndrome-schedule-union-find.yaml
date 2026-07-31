@@ -1,0 +1,12 @@
+qec_id: 1249
+name: AlphaSyndrome schedule (Union-Find)
+tool: asyndrome
+notes: One syndrome-extraction round. Data qubits 0-36, then the ancillas (X-checks
+  first), measured in index order. Hadamards once per X-ancilla, not per check (equivalent).
+source: https://arxiv.org/abs/2601.12509
+gate_count: 216
+two_qubit_gate_count: 180
+depth: 21
+qubit_count: 73
+tags: [syndrome-extraction, "schedule:alpha", "decoder:union-find"]
+original_matrices: f13845a25b569b43

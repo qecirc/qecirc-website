@@ -7,6 +7,31 @@ the source-of-truth `package.json` version.
 
 ### Added
 
+- **AlphaSyndrome syndrome-measurement schedules** (59 of them), imported from
+  [acasta-yhliu/asyndrome](https://github.com/acasta-yhliu/asyndrome)
+  ([arXiv:2601.12509](https://arxiv.org/abs/2601.12509), ASPLOS '26) by
+  [data-imports/asyndrome/](data-imports/asyndrome/README.md). 14 new codes come with
+  them — hyperbolic surface ×6, hyperbolic colour ×3, surface-with-defects ×2, plus the
+  [[61,1,9]] colour code, the 5×9 rotated surface code and a self-dual bivariate bicycle
+  code. Every schedule is scored against a named decoder, so `decoder:` is what separates
+  two otherwise identical rounds for one code.
+  - **10 of the dataset's 69 schedules do not survive validation and are left out** —
+    every `google.json` and every `trivial.json`. Their X- and Z-checks interleave so
+    that two ancillas sharing two data qubits come out entangled, which makes each
+    outcome individually random even though every check is applied exactly once. The
+    import README traces it to the hard-coded tick tables in `asyndrome/special.py` and
+    measures what it costs in the paper's own metric.
+  - **Three codes are stored with a distance the dataset does not give.**
+    `code_distance.py` computes the exact CSS distance by exhaustive enumeration, so
+    these are distances rather than bounds. The self-dual bivariate bicycle code ships
+    `d: -1` and is [[42,6,6]]. The two defect surface codes declare 5 and 7 but each
+    carry a **weight-2 X-logical** — the dataset's own second `logical_xs` entry — so
+    they are stored as [[24,2,2]] and [[40,2,2]]. A stored `[[n,k,d]]` has to describe
+    the `h` printed beside it.
+  - The hyperbolic surface [[36,8,4]] shares `n` and `k` with the QUITS balanced-product
+    `36-8-4-bpc` and nothing else: row-space ranks 11/17 against 14/14, which no
+    relabeling reconciles. It gets its own entry, with the refutation recorded next to
+    the `assume_new` that allows it.
 - **Syndrome-extraction circuits are a supported kind.** The pipeline could describe an
   encoder and a state prep; a round of syndrome extraction fitted neither, and there was
   nothing to check one against.
@@ -185,8 +210,6 @@ the source-of-truth `package.json` version.
   each ancilla is prepared in, pulls back that operator rather than always `Z`, and
   requires the measurement basis to match the reset basis — a round reset in X and read
   in Z has a random outcome however correct its check pattern looks.
-- **QUITS syndrome-extraction schedules** (69 of them), imported from
-- **QUITS syndrome-extraction schedules** (71 of them), imported from
 - **QUITS syndrome-extraction schedules** (72 of them), imported from
   [QUITS](https://github.com/mkangquantum/quits)
   ([arXiv:2504.02673](https://arxiv.org/abs/2504.02673), Quantum 9, 1931 (2025)) by
