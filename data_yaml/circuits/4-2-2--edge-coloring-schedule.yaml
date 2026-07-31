@@ -1,0 +1,21 @@
+qec_id: 1142
+name: Edge-coloring schedule
+tool: qldpc
+notes: "One syndrome-extraction round. The Tanner graph's edges are greedily coloured
+  and one colour runs per tick. Data qubits 0-3, then the ancillas, measured in index
+  order; every ancilla is prepared and read in the X basis. The library states this
+  strategy is not guaranteed to be distance-preserving or fault-tolerant. Reproduce
+  with: qldpc.circuits.get_memory_experiment_parts(qldpc.codes.C4Code(), qldpc.objects.Pauli.Z,
+  num_rounds=2, syndrome_measurement_strategy=qldpc.circuits.EdgeColoring()).qec_cycle
+  — the body stored here is that cycle's REPEAT block with the detectors and observable
+  removed, since they belong to the memory experiment rather than to the round."
+source: https://arxiv.org/abs/2109.14609
+gate_count: 8
+two_qubit_gate_count: 8
+depth: 8
+qubit_count: 6
+crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3;TICK;RX_4_5;TICK;CX_4_0;TICK;CX_4_1;TICK;CX_4_3;TICK;CX_4_2;TICK;TICK;CZ_5_1;TICK;CZ_5_2;TICK;CZ_5_3;TICK;CZ_5_0;TICK;MX_4_5;REPEAT_1_{;RX_4_5;TICK;CX_4_0;TICK;CX_4_1;TICK;CX_4_3;TICK;CX_4_2;TICK;TICK;CZ_5_1;TICK;CZ_5_2;TICK;CZ_5_3;TICK;CZ_5_0;}_
+crumble_url_annotated: https://algassert.com/crumble#circuit=R_0_1_2_3;TICK;RX_4_5;TICK;CX_4_0;TICK;CX_4_1;TICK;CX_4_3;TICK;CX_4_2;TICK;TICK;CZ_5_1;TICK;CZ_5_2;TICK;CZ_5_3;TICK;CZ_5_0;TICK;MX_4_5;DT_rec[-1];REPEAT_1_{;RX_4_5;TICK;CX_4_0;TICK;CX_4_1;TICK;CX_4_3;TICK;CX_4_2;TICK;TICK;CZ_5_1;TICK;CZ_5_2;TICK;CZ_5_3;TICK;CZ_5_0;TICK;MX_4_5;DT_rec[-2]_rec[-4];DT_rec[-1]_rec[-3];};TICK;M_0_1_2_3;DT_rec[-4]_rec[-3]_rec[-2]_rec[-1]_rec[-5];OI(0)rec[-4]_rec[-2];OI(1)rec[-4]_rec[-3]_
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,"XDetectControlReset","XDetectControlReset"],[1,1,1,1,"H","H"],["X",1,1,1,"•"],[1,"X",1,1,"•"],[1,1,1,"X","•"],[1,1,"X",1,"•"],[1,"Z",1,1,1,"•"],[1,1,"Z",1,1,"•"],[1,1,1,"Z",1,"•"],["Z",1,1,1,1,"•"],[1,1,1,1,"XDetector","XDetector"]]}
+tags: [syndrome-extraction, "schedule:xz-separated"]
+original_matrices: 7bbac7f530f6bf65
