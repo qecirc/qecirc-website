@@ -241,14 +241,29 @@ def run(write: bool, only: str, kinds: set[str]) -> list[Outcome]:
             )
             continue
 
-        h = np.asarray(code.matrix, dtype=int) % 2
+        # For a subsystem code `code.matrix` is the *gauge* group, and the
+        # operators a circuit is checked against are the stabilizers — the
+        # centre of it. Everything downstream (validators, dedup, the CSS split)
+        # works on the stabilizer group, and the gauge group rides alongside so
+        # k can be computed as n - rank(h) - gauge qubits instead of n - rank(h).
+        subsystem = bool(getattr(code, "is_subsystem_code", False))
+        gauge = np.asarray(code.matrix, dtype=int) % 2 if subsystem else None
+        h = (
+            np.asarray(code.get_stabilizer_ops(), dtype=int) % 2
+            if subsystem
+            else np.asarray(code.matrix, dtype=int) % 2
+        )
         logical = np.asarray(code.get_logical_ops(), dtype=int) % 2
         name, zoo, code_tags = FAMILY[spec.family]
         sigma = SIGMA.get(spec.key, {}).get("sigma")
 
         # `matrix_x` / `matrix_z` are the code's own check matrices; `code.matrix`
         # is the symplectic view of the same thing. See the note at add_circuit.
-        if getattr(code, "is_subsystem_code", False) or not hasattr(code, "matrix_x"):
+        # A subsystem code always takes the symplectic path, and carries its
+        # gauge group with it.
+        if subsystem:
+            css_or_h = {"H": h, "n": n, "gauge": gauge}
+        elif not hasattr(code, "matrix_x"):
             css_or_h = {"H": h, "n": n}
         else:
             css_or_h = {

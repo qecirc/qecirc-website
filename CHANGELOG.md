@@ -36,6 +36,23 @@ the source-of-truth `package.json` version.
 
 ### Added
 
+- **Bacon-Shor [[9,1,3]], [[16,1,4]] and SHYPS [[49,9,4]]**, the library's first subsystem
+  codes, now that #144 gives them somewhere to live. `code.matrix` is qLDPC's _gauge_
+  group, so the importer passes the stabilizer group (`get_stabilizer_ops()`) as `h` and
+  the gauge group alongside it; k comes out `n - rank(h) - gauge_qubits` rather than
+  `n - rank(h)`, which is the difference between [[9,1,3]] and [[9,5,3]].
+  - An encoder and a |0> prep each. qLDPC's memory experiments do not support subsystem
+    codes, so the two syndrome-extraction strategies report `unsupported` for them rather
+    than silently producing nothing.
+  - **A subsystem encoder exposes `k + gauge_qubits` free inputs**, not `k` — five for
+    Bacon-Shor, one logical and four gauge. `logical_input_count` and the annotator both
+    compared against `k` alone and refused every such circuit. Both now add the stored
+    gauge count. Deliberately _added to the stored k_ rather than derived from `h`: the
+    latter is the same number but would compare the circuit against itself and stop
+    catching a stored k that disagrees with the code, which is what the check is for.
+  - `add_circuit(gauge=...)` passes the group through; #144 stopped at
+    `compute_code_data_h`.
+
 - **Subsystem codes can be stored** (`data/migrations/020`). A subsystem code is described
   by two groups, not one: the **gauge** group a decoder may measure, and the **stabilizer**
   group — its centre — whose outcomes are deterministic. The difference between them is

@@ -9,8 +9,8 @@ each code and calls it. Three kinds of circuit come out:
 | Kind                | From                                          | Count |
 | ------------------- | --------------------------------------------- | ----- |
 | Syndrome extraction | `get_memory_experiment_parts`, two strategies | 28    |
-| Encoding            | `get_encoding_circuit`                        | 15    |
-| \|0⟩ preparation    | `get_encoding_circuit(only_zero=True)`        | 15    |
+| Encoding            | `get_encoding_circuit`                        | 18    |
+| \|0⟩ preparation    | `get_encoding_circuit(only_zero=True)`        | 18    |
 
 ## Running it
 
@@ -39,21 +39,32 @@ own exact distance — except for the bivariate bicycle code, where that search 
 combinatorial problem that does not terminate; its distance comes from Bravyi et al.
 arXiv:2308.07915 Table 3 instead, and `verify_d=False` records that.
 
-**Two things are deliberately excluded.**
+**One thing is deliberately excluded.**
 
-- **Subsystem codes.** `BaconShorCode` and `SHYPSCode` build, and their circuits validate
-  cleanly against `get_stabilizer_ops()`. **The limitation is ours, not qLDPC's** — it reports
-  their parameters correctly, `BaconShorCode(3).get_code_params()` being `(9, 1, 3)`. This
-  library stores one check matrix per code and derives k as n − rank(h), which is only right
-  for a stabilizer code, so Bacon-Shor would land as **[[9,5,3]]** and SHYPS [[49,9,4]] as
-  **[[49,25,4]]**. Storing them needs a gauge-group field and a k that is not derived: a change
-  to our data model, not to this import. (The validators are fine too — `code.matrix` on a
-  subsystem code is the **gauge** group, and validating against that correctly fails.)
 - **Transversal logical Clifford gates.** `transversal.py` is an independent implementation of
   arXiv:2409.18175 and maps exactly onto the `logical-gate` type — but that type is not on this
   branch, and `get_transversal_ops` requires GAP/GUAVA: without it the call drops into an
   interactive prompt and blocks forever, and only the five-qubit and C4 codes complete from
   hard-coded groups.
+
+## Subsystem codes
+
+Bacon-Shor [[9,1,3]] and [[16,1,4]] and SHYPS [[49,9,4]] are here, and they are the library's
+first subsystem codes. `code.matrix` on one of these is the **gauge** group — the operators a
+decoder may measure — so the importer passes the **stabilizer** group, `get_stabilizer_ops()`,
+as `h` and hands the gauge group over separately. k is then `n − rank(h) − gauge_qubits`.
+
+That distinction is not cosmetic: read off `h` alone, Bacon-Shor is [[9,5,3]] and SHYPS is
+[[49,25,4]], counting gauge qubits as logical ones. The gauge-group field that makes the
+difference storable is qecirc/qecirc-website#144.
+
+Two consequences worth knowing:
+
+- **No syndrome extraction.** qLDPC's memory experiments are stabilizer-only, so both
+  strategies report `unsupported` for these codes. They get an encoder and a |0⟩ prep.
+- **Their encoders take `k + gauge_qubits` inputs**, not `k` — five for Bacon-Shor, one
+  logical and four gauge. `logical_input_count` and the annotator were comparing against `k`
+  and refused them; both now add the stored gauge count.
 
 ## Provenance
 

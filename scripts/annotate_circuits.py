@@ -107,6 +107,7 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
             continue
 
         n, k = code["n"], code["k"]
+        gauge_qubits = code.get("gauge_qubits") or 0
         stored_h = decode_matrix(code["h"])
         logical = decode_matrix(code["logical"])
 
@@ -140,10 +141,11 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
                 k=k,
                 kind=kind,
                 logical_state=state,
+                gauge_qubits=gauge_qubits,
                 original_h=original_h,
                 notes=data.get("notes") or "",
             )
-            skip_reason = _why_skipped(body_path, stored_h, n, k, kind)
+            skip_reason = _why_skipped(body_path, stored_h, n, k, kind, gauge_qubits)
         if circ is None:
             results.append(Result(stem, "skipped", skip_reason))
             continue
@@ -190,7 +192,9 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
     return results
 
 
-def _why_skipped(body_path: Path, stored_h: np.ndarray, n: int, k: int, kind: str) -> str:
+def _why_skipped(
+    body_path: Path, stored_h: np.ndarray, n: int, k: int, kind: str, gauge_qubits: int = 0
+) -> str:
     """Explain a ``build_annotated`` refusal.
 
     Every prep and encoder should get at least a reset prologue, so a refusal is
@@ -205,8 +209,10 @@ def _why_skipped(body_path: Path, stored_h: np.ndarray, n: int, k: int, kind: st
     inputs = logical_input_qubits(circ, stored_h, n)
     if inputs is None:
         return "encoder inputs underivable (no tableau and no resets)"
+    expected = k + gauge_qubits
+    detail = "" if not gauge_qubits else f" (k={k} plus {gauge_qubits} gauge qubits)"
     return (
-        f"encoder derived {len(inputs)} logical inputs, expected k={k} — "
+        f"encoder derived {len(inputs)} logical inputs, expected {expected}{detail} — "
         f"circuit and stored h disagree"
     )
 

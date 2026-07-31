@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import numpy as np
 import yaml
 
 from scripts.validate_circuits import validate_all
@@ -274,3 +275,50 @@ def test_all_skipped_checks_count_as_skipped_not_failed():
     ok.checks.append(CheckResult("validate_encoding", "passed"))
     assert ok.is_skipped is False
     assert ok.passed is True
+
+
+# Bacon-Shor [[9,1,3]] as the library stores it: `h` is the stabilizer group,
+# and the four gauge qubits are recorded separately because k cannot be read off
+# `h` alone.
+BACON_SHOR_CODE = {
+    "name": "Bacon-Shor",
+    "n": 9,
+    "k": 1,
+    "d": 3,
+    "gauge_qubits": 4,
+    "h": [
+        [1, 1, 1, 1, 1, 1, 0, 0, 0] + [0] * 9,
+        [0, 0, 0, 1, 1, 1, 1, 1, 1] + [0] * 9,
+        [0] * 9 + [1, 1, 0, 1, 1, 0, 1, 1, 0],
+        [0] * 9 + [0, 1, 1, 0, 1, 1, 0, 1, 1],
+    ],
+    "logical": [[1, 0, 0, 1, 0, 0, 1, 0, 0] + [0] * 9, [0] * 9 + [1, 1, 1, 0, 0, 0, 0, 0, 0]],
+    "canonical_hash": "x",
+}
+
+
+def test_a_subsystem_encoder_may_expose_more_inputs_than_k(tmp_path):
+    """A subsystem code's encoder takes the gauge qubits as inputs too, so
+    Bacon-Shor [[9,1,3]] has five and not one. Comparing against k alone failed
+    every such encoder — which is why the codes could not be stored at all."""
+    from scripts.add_circuit.code_identify import gf2_rank
+
+    h = np.array(BACON_SHOR_CODE["h"])
+    assert 9 - gf2_rank(h) == BACON_SHOR_CODE["k"] + BACON_SHOR_CODE["gauge_qubits"] == 5
+
+    results = _build(tmp_path, "I 0 1 2 3 4 5 6 7 8", code=BACON_SHOR_CODE)
+    check = _checks(results)["logical_input_count"]
+    assert check.status != "error", check.detail
+    if check.status == "failed":
+        assert "gauge qubits" in check.detail, check.detail
+
+
+def test_a_wrong_k_is_still_caught_on_a_subsystem_code(tmp_path):
+    """The gauge count must not become a licence for any input count: it is
+    added to the stored k, not derived from h, so a k that disagrees still
+    fails rather than being explained away."""
+    code = {**BACON_SHOR_CODE, "k": 3}  # claims 3 + 4 = 7 inputs
+    results = _build(tmp_path, _FIVE_QUBIT_ENCODER, code=code)
+    check = _checks(results)["logical_input_count"]
+    assert check.status == "failed"
+    assert "k=3 plus 4 gauge qubits" in check.detail

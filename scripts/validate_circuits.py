@@ -148,7 +148,14 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
         # Run checks
         if circuit_type == "encoding":
             _check_encoding(result, circuit_text, h, n)
-            _check_logical_input_count(result, circuit_text, h, n, code_data.get("k"))
+            _check_logical_input_count(
+                result,
+                circuit_text,
+                h,
+                n,
+                code_data.get("k"),
+                code_data.get("gauge_qubits") or 0,
+            )
         elif circuit_type == "state-preparation":
             _check_state_prep(result, circuit_text, h, n)
             _check_logical_basis(result, circuit_text, h, n, code_data.get("d"), tags)
@@ -298,8 +305,9 @@ def _check_logical_input_count(
     h: np.ndarray,
     n: int,
     k: int | None,
+    gauge_qubits: int = 0,
 ) -> None:
-    """An encoder must expose exactly k free logical inputs.
+    """An encoder must expose exactly k free logical inputs, plus any gauge ones.
 
     Basis-independent, and complementary to the codespace check: it looks at the
     encoder's *inputs* rather than its output on |0...0>, so it catches circuits
@@ -325,13 +333,23 @@ def _check_logical_input_count(
                     "inputs not derivable (no tableau and no resets)",
                 )
             )
-        elif len(inputs) != k:
+        # A subsystem code's encoder takes the gauge qubits as inputs too, so
+        # the count to expect is `k + gauge_qubits` — five for Bacon-Shor
+        # [[9,1,3]]. Both numbers come from the stored code, so a `k` that
+        # disagrees with the circuit is still caught.
+        expected = k + gauge_qubits
+        if len(inputs) != expected:
+            wanted = (
+                f"k={k}"
+                if not gauge_qubits
+                else f"{expected} — k={k} plus {gauge_qubits} gauge qubits"
+            )
             result.checks.append(
                 CheckResult(
                     "logical_input_count",
                     "failed",
                     f"failed: circuit implies {len(inputs)} logical inputs {inputs}, "
-                    f"but the code has k={k}",
+                    f"but the code has {wanted}",
                 )
             )
         else:

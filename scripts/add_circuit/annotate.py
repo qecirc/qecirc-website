@@ -253,6 +253,7 @@ def build_annotated(
     k: int,
     kind: str,
     logical_state: str = "",
+    gauge_qubits: int = 0,
     original_h: Optional[np.ndarray] = None,
     notes: str = "",
 ) -> Optional[stim.Circuit]:
@@ -285,10 +286,16 @@ def build_annotated(
     source = stim.Circuit(body)
 
     # Which qubits are fixed in |0>. For an encoder that is everything except the
-    # k logical inputs, which the reader supplies and which must stay free.
+    # free inputs the reader supplies: `k` of them for a stabilizer code, and
+    # `k + gauge_qubits` for a subsystem one, whose encoder takes the gauge
+    # qubits as inputs too — a Bacon-Shor [[9,1,3]] encoder has five.
+    #
+    # Deliberately *not* `n - rank(h)`, which is the same number: that would
+    # compare the circuit against itself and stop noticing a stored `k` that
+    # disagrees with the code, which is the failure this check exists for.
     if kind == "encoding":
         inputs = logical_input_qubits(source, stored_h, n)
-        if inputs is None or len(inputs) != k:
+        if inputs is None or len(inputs) != k + gauge_qubits:
             return None
         reset = [q for q in range(source.num_qubits) if q not in set(inputs)]
     else:

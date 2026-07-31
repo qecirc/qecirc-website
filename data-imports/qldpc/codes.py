@@ -14,14 +14,12 @@ row here fails loudly instead of importing a mislabelled code. `d` is asserted
 against qLDPC's own exact distance wherever that is instant, which is everywhere
 except the bivariate bicycle code — see `verify_d`.
 
-**Subsystem codes are deliberately absent.** `BaconShorCode` and `SHYPSCode`
-build and their circuits validate against `get_stabilizer_ops()`. qLDPC knows
-their parameters perfectly well — `BaconShorCode(3).get_code_params()` is
-(9, 1, 3). The limitation is *this* library's: it stores one check matrix per
-code and derives k as n - rank(h), which is only right for a stabilizer code, so
-Bacon-Shor would land as [[9,5,3]] and SHYPS [[49,9,4]] as [[49,25,4]]. Storing
-them needs a gauge-group field and a k that is not derived — a change to our data
-model, not to the import.
+**Subsystem codes are included.** `code.matrix` is their *gauge* group, so the
+importer passes the stabilizer group (`get_stabilizer_ops()`) as `h` and the
+gauge group alongside it, and k comes out n - rank(h) - gauge qubits. That
+needed the gauge-group field added in qecirc/qecirc-website#144; before it,
+Bacon-Shor [[9,1,3]] would have landed as [[9,5,3]] and SHYPS [[49,9,4]] as
+[[49,25,4]].
 """
 
 from __future__ import annotations
@@ -103,6 +101,16 @@ FAMILY = {
         "https://errorcorrectionzoo.org/c/hypergraph_product",
         ["CSS", "LDPC"],
     ),
+    "bacon-shor": (
+        "Bacon-Shor Code",
+        "https://errorcorrectionzoo.org/c/bacon_shor",
+        ["CSS", "subsystem"],
+    ),
+    "shyps": (
+        "SHYPS Code",
+        "https://errorcorrectionzoo.org/c/shyps",
+        ["CSS", "subsystem", "LDPC"],
+    ),
     "bb": (
         "Bivariate Bicycle Code",
         "",
@@ -141,6 +149,22 @@ def _catalogue() -> list[CodeSpec]:
             verify_d=False,  # d = 6 from Bravyi et al. arXiv:2308.07915, Table 3
         ),
         # --- new to the library ----------------------------------------------
+        # Subsystem codes. `code.matrix` is their *gauge* group, so the importer
+        # passes the stabilizer group as `h` and the gauge group alongside it;
+        # k is then n - rank(h) - gauge qubits. Storing them at all needed the
+        # gauge-group field added in #144 — before that Bacon-Shor would have
+        # landed as [[9,5,3]] and SHYPS [[49,9,4]] as [[49,25,4]].
+        spec("bacon-shor-3", "bacon-shor", 9, 1, 3, "qldpc.codes.BaconShorCode(3)", slug="9-1-3"),
+        spec(
+            "bacon-shor-4",
+            "bacon-shor",
+            16,
+            1,
+            4,
+            "qldpc.codes.BaconShorCode(4)",
+            slug="16-1-4-bacon-shor",
+        ),
+        spec("shyps-3", "shyps", 49, 9, 4, "qldpc.codes.SHYPSCode(3)", slug="49-9-4"),
         spec("iceberg-c4", "iceberg", 4, 2, 2, "qldpc.codes.C4Code()", slug="4-2-2"),
         spec("iceberg-c6", "iceberg", 6, 2, 2, "qldpc.codes.C6Code()", slug="6-2-2"),
         spec("toric-d6", "toric", 36, 2, 6, "qldpc.codes.ToricCode(6)", slug="36-2-6"),
