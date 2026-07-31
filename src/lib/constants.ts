@@ -39,3 +39,20 @@ export const SUMMARY_UNSELECTED = `${TAG_UNSELECTED} font-medium`;
 
 export const HEART_PATH =
   "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z";
+
+// Above this many entries in the symplectic `h`, a code's matrices are offered
+// as a download instead of being rendered inline. `h` is (n-k) x 2n, so the
+// payload and the render cost both grow as n^2: the quasi-cyclic lifted product
+// code [[1428,184]] is 3.6M entries and ~14 MB of JSON, which no browser should
+// be asked to lay out inside a <pre>. The limit sits comfortably above the
+// largest inline code the library had before qLDPC codes arrived (the
+// unrotated surface code [[221,1,11]], ~97k entries).
+export const MATRIX_INLINE_ENTRY_LIMIT = 300_000;
+
+// Entries in the stored `h` for an [[n,k,d]] code, assuming the n-k independent
+// stabilizer generators a stabilizer code has. Used only to choose between the
+// inline and download views, so an estimate is enough — it never has to load
+// the matrix it is sizing.
+export function matrixEntryEstimate(n: number, k: number): number {
+  return Math.max(0, n - k) * 2 * n;
+}

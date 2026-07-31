@@ -1,0 +1,64 @@
+---
+/**
+ * The matrices block for codes too large to render inline.
+ *
+ * `CodeMatrices` fetches the whole symplectic `h` and lays it out as text. That
+ * is fine up to a couple of hundred qubits, but `h` is (n-k) x 2n — the
+ * quasi-cyclic lifted product code [[1428,184]] is 3.6M entries and ~14 MB of
+ * JSON. Rather than ship that to anyone who expands the section, offer the same
+ * endpoint as a download so only a reader who actually wants the matrices pays
+ * for them.
+ *
+ * The link points at the identical `/api/codes/<slug>/matrices` URL the inline
+ * view uses, cache key and all; the only difference is that the browser saves it
+ * instead of the page parsing it.
+ */
+interface Props {
+  // Same JSON endpoint CodeMatrices would have fetched.
+  dataUrl: string;
+  // Code slug, used for the saved filename.
+  slug: string;
+  n: number;
+  k: number;
+}
+
+const { dataUrl, slug, n, k } = Astro.props;
+
+// Rounded to one decimal below 10 MB; the estimate is deliberately rough, it
+// only has to tell a reader whether this is a 2 MB or a 20 MB click.
+const approxMb = ((n - k) * 2 * n * 4) / 1024 ** 2;
+const sizeLabel = approxMb >= 10 ? `~${Math.round(approxMb)} MB` : `~${approxMb.toFixed(1)} MB`;
+---
+
+<div class="text-sm text-gray-700 dark:text-gray-300">
+  <p class="mb-3">
+    This code has {n} physical qubits, so its stabilizer matrix is {n - k} × {2 * n} and its
+    logical operators are {2 * k} × {2 * n}. That is too large to display usefully, and large
+    enough that sending it to every reader who opens this section would be wasteful — so it is
+    offered as a download instead.
+  </p>
+
+  <a
+    href={dataUrl}
+    download={`${slug}-matrices.json`}
+    class="inline-flex items-center gap-2 px-3 py-2 rounded-md text-[13px] font-medium border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100 no-underline"
+  >
+    <svg
+      class="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
+    </svg>
+    Download matrices (JSON, {sizeLabel})
+  </a>
+
+  <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+    The file holds <code class="font-mono">n</code>, <code class="font-mono">k</code>, the
+    symplectic stabilizer matrix <code class="font-mono">h</code> — X-half then Z-half, one row
+    per generator — and <code class="font-mono">logical</code> in the same layout.
+  </p>
+</div>

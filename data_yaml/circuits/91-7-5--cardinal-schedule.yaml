@@ -1,0 +1,15 @@
+qec_id: 1212
+name: Cardinal schedule
+tool: quits
+notes: "One syndrome-extraction round. Tanner edges split into cardinal directions,
+  each direction edge-coloured. Data qubits 0-90, then the ancillas (Z-checks first),
+  measured in index order. X- and Z-checks share ticks. Code construction: Old, Rispler
+  and Muller, arXiv:2401.02911. Distance 5 from the closed form d = min(L, 2l+1) of
+  arXiv:2401.02911."
+source: https://arxiv.org/abs/2504.02673
+gate_count: 504
+two_qubit_gate_count: 420
+depth: 8
+qubit_count: 175
+tags: [syndrome-extraction, "schedule:interleaved", "circuit-distance:4"]
+original_matrices: 08c9816a57f2f502

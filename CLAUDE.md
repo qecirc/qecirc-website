@@ -24,6 +24,10 @@ Both levels support **tags** to aid discovery and filtering:
 | ------- | ----------------------------------------------------------------- |
 | Code    | `CSS`, `topological`, `bosonic`                                   |
 | Circuit | `encoding`, `syndrome-extraction`, `fault-tolerant`, `distance:3` |
+| Level   | Example tags                                                      |
+| ------- | ----------------------------------------------------------------  |
+| Code    | `CSS`, `topological`, `bosonic`                                   |
+| Circuit | `encoding`, `fault-tolerant`, `distance:3`, `circuit-distance:2`  |
 
 Tags can be either **structured** (`key:value`, e.g. `distance:3`) or **free-form strings**.
 
@@ -145,6 +149,15 @@ memory experiment the round belongs to: reset the data, `REPEAT d` of the round,
 terminal readout, detectors, observable.
 
 Generate both with `uv run python scripts/annotate_circuits.py` (idempotent).
+
+**`distance:<N>` and `circuit-distance:<N>` are different numbers.** The first is the
+code's, and it is carried over from the source. The second is the _schedule's_ — the
+fewest faults anywhere in the round that flip a logical while firing no detector — and
+it is measured, by `scripts/measure_circuit_distance.py`, over both the Z and the X
+memory experiment under uniform circuit-level depolarizing noise. It is never larger
+than the code's and usually smaller: a fault on an ancilla can land on several data
+qubits at once. An absent tag means the search did not finish in its budget, not that
+the circuit is fault-free.
 
 ---
 

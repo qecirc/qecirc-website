@@ -1,0 +1,14 @@
+qec_id: 1181
+name: ZX-coloration schedule
+tool: quits
+notes: "One syndrome-extraction round. Z-checks and X-checks in two separate edge-coloured
+  passes. Data qubits 0-53, then the ancillas (Z-checks first), measured in index
+  order. X- and Z-checks run in separate passes. Code construction: Tiew and Breuckmann,
+  arXiv:2411.03302."
+source: https://arxiv.org/abs/2308.08648
+gate_count: 378
+two_qubit_gate_count: 324
+depth: 12
+qubit_count: 108
+tags: [syndrome-extraction, "schedule:xz-separated", "circuit-distance:2"]
+original_matrices: 244a0cec98648dc4
