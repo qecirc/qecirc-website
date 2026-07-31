@@ -27,6 +27,8 @@ const SCHEMAS = {
       related: "tags",
       h: "matrix",
       logical: "matrix",
+      gauge: "matrix",
+      gauge_qubits: "number",
       tags: "tags",
     },
   },

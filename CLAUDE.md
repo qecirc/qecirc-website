@@ -42,7 +42,7 @@ URL alone. Both the build and `validate:yaml` report such sources.
 ```
 codes
   id, name, slug, n, k, d, zoo_url, aliases, related,
-  h, logical, canonical_hash, created_at
+  h, logical, gauge, gauge_qubits, canonical_hash, created_at
   -- n, k, d: code parameters [[n,k,d]] for direct querying/sorting
   -- zoo_url: optional link to QEC Zoo
   -- aliases: other names for THIS code, space-joined (e.g. "Laflamme code")
@@ -52,7 +52,14 @@ codes
   -- h: symplectic stabilizer matrix, shape (n−k) × 2n, JSON-encoded
   -- logical: symplectic logical operators, shape 2k × 2n, JSON-encoded
   -- For CSS codes, the Hx/Hz/Lx/Lz view is derived in the UI via splitHToCss
-  -- canonical_hash: SHA256 of canonical form for dedup (indexed)
+  -- gauge: subsystem codes only — the gauge group a decoder may measure,
+  --   symplectic, JSON-encoded. NULL when it coincides with `h`.
+  -- gauge_qubits: (rank(gauge) - rank(h)) / 2. Qubits that carry no
+  --   information and are not corrected, so k = n - rank(h) - gauge_qubits.
+  --   Reading k off `h` alone stored Bacon-Shor [[9,1,3]] as [[9,5,3]].
+  -- canonical_hash: SHA256 of canonical form for dedup (indexed) — of the
+  --   gauge group when there is one, since two subsystem codes can share a
+  --   stabilizer group and differ in what a decoder may measure
 
 tools
   id, name, slug, description, homepage_url, github_url, paper_urls, aliases, created_at

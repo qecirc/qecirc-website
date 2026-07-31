@@ -40,8 +40,8 @@ const stmts = {
     INSERT INTO papers (slug, title, authors, year, arxiv_id, doi, journal_ref, url)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`),
   insertCode: db.prepare(`
-    INSERT INTO codes (name, slug, n, k, d, zoo_url, aliases, related, h, logical, canonical_hash)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+    INSERT INTO codes (name, slug, n, k, d, zoo_url, aliases, related, h, logical, gauge, gauge_qubits, canonical_hash)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertCircuit: db.prepare(`
     INSERT INTO circuits (qec_id, code_id, name, slug, notes, source, gate_count, two_qubit_gate_count, depth, qubit_count, weight, crumble_url, crumble_url_annotated, quirk_url, tool_id, paper_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
@@ -227,6 +227,10 @@ try {
         joinAliases(data.related),
         data.h == null ? null : JSON.stringify(decodeMatrix(data.h)),
         data.logical == null ? null : JSON.stringify(decodeMatrix(data.logical)),
+        // Present only for a subsystem code, where the gauge group is bigger
+        // than the stabilizer group in `h` and is what makes its k make sense.
+        data.gauge == null ? null : JSON.stringify(decodeMatrix(data.gauge)),
+        data.gauge_qubits ?? null,
         data.canonical_hash || null,
       );
       codeSlugToId.set(slug, Number(lastInsertRowid));

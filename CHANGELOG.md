@@ -5,6 +5,40 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+### Added
+
+- **Subsystem codes can be stored** (`data/migrations/020`). A subsystem code is described
+  by two groups, not one: the **gauge** group a decoder may measure, and the **stabilizer**
+  group — its centre — whose outcomes are deterministic. The difference between them is
+  real qubits, `(rank(G) − rank(S)) / 2` of them, which carry no information and are not
+  corrected.
+
+  The library read k off a single check matrix as `n − rank(h)`, which counts those gauge
+  qubits as logical ones: Bacon-Shor [[9,1,3]] would have been stored as **[[9,5,3]]** and
+  SHYPS [[49,9,4]] as **[[49,25,4]]**, so both were excluded rather than recorded wrongly.
+  Codes now carry an optional `gauge` matrix and `gauge_qubits` count, and
+
+      k = n − rank(S) − (rank(G) − rank(S)) / 2
+
+  which for a stabilizer code has a zero gauge term and is the formula already in use — one
+  implementation, not two.
+  - **`h` still means the stabilizer group**, for every code. Validators, dedup, the CSS
+    split and the matrices view are untouched: a circuit is checked against the operators
+    that are actually deterministic, which is what those checks want. Stabilizer codes gain
+    no fields at all.
+  - **Logicals are the bare ones.** `_compute_symplectic_logicals` takes the kernel of the
+    gauge group rather than of `h` when there is one, so they commute with everything a
+    decoder may measure, while still quotienting by the stabilizers.
+  - **Identity is the gauge group's.** Two subsystem codes can share a stabilizer group and
+    differ in gauge group, so `canonical_hash` is computed over the gauge group when there
+    is one — it determines the stabilizer group as its centre, so it is the more
+    informative of the two.
+  - Tagged `subsystem`, so a reader who sees [[9,1,3]] over a rank-4 `h` is told why rather
+    than left to think it a bug.
+
+  Verified against qLDPC's own `get_code_params()` on Bacon-Shor(3), Bacon-Shor(4),
+  SHYPS(3) and Steane. Importing the codes themselves is a follow-up.
+
 ### Changed
 
 - **Submitted check matrices are stored once instead of once per circuit.** They are a
