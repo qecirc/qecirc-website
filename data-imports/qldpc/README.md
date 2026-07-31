@@ -42,12 +42,13 @@ arXiv:2308.07915 Table 3 instead, and `verify_d=False` records that.
 **Two things are deliberately excluded.**
 
 - **Subsystem codes.** `BaconShorCode` and `SHYPSCode` build, and their circuits validate
-  cleanly against `get_stabilizer_ops()`. The blocker is the data model: the library derives
-  k as n − rank(h), which is only correct for stabilizer codes, so Bacon-Shor [[9,1,3]] would
-  be stored as **[[9,5,3]]** and SHYPS [[49,9,4]] as **[[49,25,4]]**. Storing them needs a
-  gauge-group field and a k that is not derived. (Note the failure is _not_ in the validators:
-  `code.matrix` on a subsystem code is the **gauge** group, and validating against that
-  correctly fails.)
+  cleanly against `get_stabilizer_ops()`. **The limitation is ours, not qLDPC's** — it reports
+  their parameters correctly, `BaconShorCode(3).get_code_params()` being `(9, 1, 3)`. This
+  library stores one check matrix per code and derives k as n − rank(h), which is only right
+  for a stabilizer code, so Bacon-Shor would land as **[[9,5,3]]** and SHYPS [[49,9,4]] as
+  **[[49,25,4]]**. Storing them needs a gauge-group field and a k that is not derived: a change
+  to our data model, not to this import. (The validators are fine too — `code.matrix` on a
+  subsystem code is the **gauge** group, and validating against that correctly fails.)
 - **Transversal logical Clifford gates.** `transversal.py` is an independent implementation of
   arXiv:2409.18175 and maps exactly onto the `logical-gate` type — but that type is not on this
   branch, and `get_transversal_ops` requires GAP/GUAVA: without it the call drops into an
@@ -112,10 +113,27 @@ automorphism groups, exactly the case its column invariants cannot separate.
 | unrotated surface d=3 | `unrotated-surface-code-d-3` | σ verified  |
 | toric d=4             | `16-2-4`                     | **refuted** |
 
-The toric code is **not** the stored [[16,2,4]]. Its X row space has 8 codewords of weight 4
-and 16 of weight 6; the stored code has 12 of weight 4 and none of weight 6. Weight enumerators
-are permutation invariants and the Z spaces differ the same way, so no relabeling reconciles
-them — it is imported as a distinct code, `16-2-4-toric`.
+The toric code is **not** the stored [[16,2,4]]. The comparison is over the **whole X row
+space** — every element of the span, not the generators — and both spaces have dimension 7, so
+128 elements each:
+
+| weight               | 0   | 4      | 6      | 8   | 10     | 12  | 16  |
+| -------------------- | --- | ------ | ------ | --- | ------ | --- | --- |
+| `qldpc.ToricCode(4)` | 1   | 8      | **16** | 78  | **16** | 8   | 1   |
+| stored `16-2-4`      | 1   | **12** | **0**  | 102 | **0**  | 12  | 1   |
+
+qLDPC's eight generators are all weight 4, which is where the 8 comes from; the 16 of weight 6
+are sums of them, e.g. `matrix[0] + matrix[2]`. What settles it is that the stored code's span
+contains **no** element of weight 6 at all. A weight enumerator is invariant under qubit
+permutation, so no relabeling can turn 0 into 16. The Z spaces differ the same way, and the
+code is imported as a distinct entry, `16-2-4-toric`.
+
+Reproduce either row with:
+
+```
+uv run --with 'qldpc==0.3.2' python data-imports/qldpc/find_sigma.py --enumerator
+```
+
 
 That last case needed a guard. `assume_new` skips the dedup check, so nothing downstream would
 notice that the default `n-k-d` slug belongs to an unrelated code, and `overwrite=True` would

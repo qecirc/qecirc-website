@@ -15,11 +15,13 @@ against qLDPC's own exact distance wherever that is instant, which is everywhere
 except the bivariate bicycle code — see `verify_d`.
 
 **Subsystem codes are deliberately absent.** `BaconShorCode` and `SHYPSCode`
-build and their circuits validate against `get_stabilizer_ops()`, but the library
-derives k as n - rank(h), which is only correct for stabilizer codes: Bacon-Shor
-[[9,1,3]] would be stored as [[9,5,3]] and SHYPS [[49,9,4]] as [[49,25,4]].
-Storing them needs a gauge-group field and a k that is not derived — a data-model
-change, not an import.
+build and their circuits validate against `get_stabilizer_ops()`. qLDPC knows
+their parameters perfectly well — `BaconShorCode(3).get_code_params()` is
+(9, 1, 3). The limitation is *this* library's: it stores one check matrix per
+code and derives k as n - rank(h), which is only right for a stabilizer code, so
+Bacon-Shor would land as [[9,5,3]] and SHYPS [[49,9,4]] as [[49,25,4]]. Storing
+them needs a gauge-group field and a k that is not derived — a change to our data
+model, not to the import.
 """
 
 from __future__ import annotations

@@ -62,10 +62,58 @@ def verify(hx1, hz1, hx2, hz2, sigma) -> bool:
     )
 
 
+def weight_enumerator(generators) -> dict[int, int]:
+    """How many elements of this row space have each weight.
+
+    Over the whole span, not the generators — that distinction caused a
+    misreading of the toric-code refutation on qecirc/qecirc-website#136. The
+    span is 2^dim elements, which is only enumerable because the codes compared
+    this way are small; for the [[16,2,4]] pair it is 128 each.
+
+    It is a permutation invariant, which is what makes it a refutation: relabel
+    the qubits however you like and these counts do not move.
+    """
+    basis = row_space(np.asarray(generators, dtype=int) % 2)
+    dim, width = basis.shape
+    counts: dict[int, int] = {}
+    for mask in range(1 << dim):
+        vector = np.zeros(width, dtype=int)
+        for i in range(dim):
+            if mask >> i & 1:
+                vector ^= basis[i]
+        weight = int(vector.sum())
+        counts[weight] = counts.get(weight, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def report_enumerators(specs) -> None:
+    """Print the X-space weight enumerator of each candidate pair."""
+    for key, slug in TARGETS.items():
+        code = specs[key].build()
+        n = len(code)
+        hx1, _ = split_h_to_css(np.asarray(code.matrix, dtype=int) % 2, n)
+        stored = yaml.safe_load((REPO / "data_yaml/codes" / f"{slug}.yaml").read_text())
+        hx2, _ = split_h_to_css(np.array(stored["h"], dtype=int), n)
+        here, there = weight_enumerator(hx1), weight_enumerator(hx2)
+        verdict = "same" if here == there else "DIFFERENT -> not the same code"
+        print(f"\n  {key} vs stored {slug}: {verdict}")
+        print(f"    qldpc  {here}")
+        print(f"    stored {there}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--only", default="", help="restrict to one catalogue key")
+    parser.add_argument(
+        "--enumerator",
+        action="store_true",
+        help="print X row-space weight enumerators instead of searching for permutations",
+    )
     args = parser.parse_args()
+
+    if args.enumerator:
+        report_enumerators({spec.key: spec for spec in CATALOGUE})
+        return 0
 
     specs = {spec.key: spec for spec in CATALOGUE}
     path = HERE / "sigma_precomputed.json"
