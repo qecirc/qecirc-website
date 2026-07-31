@@ -134,7 +134,6 @@ Reproduce either row with:
 uv run --with 'qldpc==0.3.2' python data-imports/qldpc/find_sigma.py --enumerator
 ```
 
-
 That last case needed a guard. `assume_new` skips the dedup check, so nothing downstream would
 notice that the default `n-k-d` slug belongs to an unrelated code, and `overwrite=True` would
 replace it. `owns_slug()` refuses in that case — while still recognising an entry this import
