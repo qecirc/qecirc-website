@@ -9,6 +9,11 @@ _"QUITS: A modular Qldpc code circUIT Simulator"_ (Kang, Lin, Yao, Gökduman, Me
 These are the library's first circuits for balanced-product, hypergraph-product,
 lifted-product and lift-connected-surface codes.
 
+QUITS' authors were asked before this import and are happy for the circuits to be here.
+[Mingyu Kang](https://github.com/mkangquantum) also suggested varying the schedule seed —
+which is what produced the circuit-distance measurement and the sweep below it, and turned
+up the one schedule that beats the default.
+
 ## Running it
 
 QUITS needs `stim>=1.13` and this project pins `stim>=1.15,<2`, so there is no separate
