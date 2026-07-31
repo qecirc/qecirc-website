@@ -24,10 +24,10 @@ Both levels support **tags** to aid discovery and filtering:
 | ------- | ----------------------------------------------------------------- |
 | Code    | `CSS`, `topological`, `bosonic`                                   |
 | Circuit | `encoding`, `syndrome-extraction`, `fault-tolerant`, `distance:3` |
-| Level   | Example tags                                                     |
-| ------- | ---------------------------------------------------------------- |
-| Code    | `CSS`, `topological`, `bosonic`                                  |
-| Circuit | `encoding`, `fault-tolerant`, `distance:3`, `circuit-distance:2` |
+| Level   | Example tags                                                      |
+| ------- | ----------------------------------------------------------------  |
+| Code    | `CSS`, `topological`, `bosonic`                                   |
+| Circuit | `encoding`, `fault-tolerant`, `distance:3`, `circuit-distance:2`  |
 
 Tags can be either **structured** (`key:value`, e.g. `distance:3`) or **free-form strings**.
 
