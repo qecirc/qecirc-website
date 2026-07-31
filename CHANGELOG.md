@@ -130,6 +130,16 @@ the source-of-truth `package.json` version.
 
 ### Added
 
+- **Every qLDPC circuit records the one-liner that rebuilds it**, at the end of its notes:
+  `Reproduce with: qldpc.circuits.get_encoding_circuit(qldpc.codes.ToricCode(4), only_zero=True)`.
+  Asked for by the library's author
+  ([qLDPCOrg/qLDPC#554](https://github.com/qLDPCOrg/qLDPC/issues/554)) — a reader who wants
+  to rebuild one should not have to reverse-engineer the constructor from `[[n,k,d]]`.
+  The snippet cannot drift from the circuit, because the constructor string **is** what the
+  importer evaluates: `CodeSpec.constructor` replaced the lambda it used to hold, and
+  `CodeSpec.build()` evaluates it. A snippet that stopped building the code would fail the
+  import rather than mislead a reader.
+
 - **qLDPC circuits** (58 of them), imported from
   [qLDPC](https://github.com/qLDPCOrg/qLDPC) by [data-imports/qldpc/](data-imports/qldpc/README.md):
   28 syndrome-extraction rounds in two edge-colouring schedules

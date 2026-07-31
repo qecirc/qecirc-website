@@ -25,7 +25,7 @@ change, not an import.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -35,7 +35,12 @@ class CodeSpec:
     n: int
     k: int
     d: int
-    build: Callable
+    # The qLDPC expression that constructs this code, as source text — and it is
+    # what actually runs, so a circuit's recorded snippet cannot drift from the
+    # circuit. qLDPC's author asked for exactly this (qLDPCOrg/qLDPC#554): a
+    # reader who wants to rebuild a circuit should not have to reverse-engineer
+    # the constructor from [[n,k,d]].
+    constructor: str
     # Set only for codes this import expects to *create*. A code already in the
     # library takes its stored slug from the dedup match, and passing one here
     # would name its circuit files after a code entry that is never written.
@@ -44,6 +49,13 @@ class CodeSpec:
     # True everywhere it is instant; False for the bivariate bicycle code, whose
     # distance search is a hard combinatorial problem that does not terminate.
     verify_d: bool = True
+
+    def build(self):
+        """The code, from `constructor`. One expression, evaluated and recorded."""
+        import qldpc
+        from sympy.abc import x, y
+
+        return eval(self.constructor, {"qldpc": qldpc, "x": x, "y": y})  # noqa: S307
 
 
 # name, zoo_url, code tags — reusing the vocabulary already in data_yaml/codes/.
@@ -98,49 +110,54 @@ FAMILY = {
 
 
 def _catalogue() -> list[CodeSpec]:
-    import qldpc.codes as C
-    from sympy.abc import x, y
-
     spec = CodeSpec
     return [
         # --- already in the library: the circuits join existing entries -------
-        spec("steane", "steane", 7, 1, 3, C.SteaneCode),
-        spec("five-qubit", "five-qubit", 5, 1, 3, C.FiveQubitCode),
-        spec("hamming-15-7-3", "hamming", 15, 7, 3, lambda: C.QuantumHammingCode(4)),
-        spec("tetrahedral", "tetrahedral", 15, 1, 3, C.TetrahedralCode),
-        spec("surface-d3", "rotated-surface", 9, 1, 3, lambda: C.SurfaceCode(3)),
-        spec("surface-d5", "rotated-surface", 25, 1, 5, lambda: C.SurfaceCode(5)),
-        spec("surface-d7", "rotated-surface", 49, 1, 7, lambda: C.SurfaceCode(7)),
+        spec("steane", "steane", 7, 1, 3, "qldpc.codes.SteaneCode()"),
+        spec("five-qubit", "five-qubit", 5, 1, 3, "qldpc.codes.FiveQubitCode()"),
+        spec("hamming-15-7-3", "hamming", 15, 7, 3, "qldpc.codes.QuantumHammingCode(4)"),
+        spec("tetrahedral", "tetrahedral", 15, 1, 3, "qldpc.codes.TetrahedralCode()"),
+        spec("surface-d3", "rotated-surface", 9, 1, 3, "qldpc.codes.SurfaceCode(3)"),
+        spec("surface-d5", "rotated-surface", 25, 1, 5, "qldpc.codes.SurfaceCode(5)"),
+        spec("surface-d7", "rotated-surface", 49, 1, 7, "qldpc.codes.SurfaceCode(7)"),
         spec(
             "surface-d3-unrotated",
             "unrotated-surface",
             13,
             1,
             3,
-            lambda: C.SurfaceCode(3, rotated=False),
+            "qldpc.codes.SurfaceCode(3, rotated=False)",
         ),
-        spec("toric-d4", "toric", 16, 2, 4, lambda: C.ToricCode(4), slug="16-2-4-toric"),
+        spec("toric-d4", "toric", 16, 2, 4, "qldpc.codes.ToricCode(4)", slug="16-2-4-toric"),
         spec(
             "bb-72-12-6",
             "bb",
             72,
             12,
             6,
-            lambda: C.BBCode({x: 6, y: 6}, x**3 + y + y**2, y**3 + x + x**2),
+            "qldpc.codes.BBCode({x: 6, y: 6}, x**3 + y + y**2, y**3 + x + x**2)",
             verify_d=False,  # d = 6 from Bravyi et al. arXiv:2308.07915, Table 3
         ),
         # --- new to the library ----------------------------------------------
-        spec("iceberg-c4", "iceberg", 4, 2, 2, C.C4Code, slug="4-2-2"),
-        spec("iceberg-c6", "iceberg", 6, 2, 2, C.C6Code, slug="6-2-2"),
-        spec("toric-d6", "toric", 36, 2, 6, lambda: C.ToricCode(6), slug="36-2-6"),
-        spec("hgp-hamming3", "hgp", 58, 16, 3, lambda: C.HGPCode(C.HammingCode(3)), slug="58-16-3"),
+        spec("iceberg-c4", "iceberg", 4, 2, 2, "qldpc.codes.C4Code()", slug="4-2-2"),
+        spec("iceberg-c6", "iceberg", 6, 2, 2, "qldpc.codes.C6Code()", slug="6-2-2"),
+        spec("toric-d6", "toric", 36, 2, 6, "qldpc.codes.ToricCode(6)", slug="36-2-6"),
+        spec(
+            "hgp-hamming3",
+            "hgp",
+            58,
+            16,
+            3,
+            "qldpc.codes.HGPCode(qldpc.codes.HammingCode(3))",
+            slug="58-16-3",
+        ),
         spec(
             "hgp-hamming4",
             "hgp",
             241,
             121,
             3,
-            lambda: C.HGPCode(C.HammingCode(4)),
+            "qldpc.codes.HGPCode(qldpc.codes.HammingCode(4))",
             slug="241-121-3",
         ),
     ]

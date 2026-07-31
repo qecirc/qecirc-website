@@ -65,6 +65,24 @@ Two different `source` values, because these circuits have two different origins
   `source: circuit-synth` already does. They are tableau syntheses and reproduce no published
   construction.
 
+## Each circuit records how to rebuild it
+
+Every circuit's notes end with the qLDPC expression that produces it, for example
+
+```
+Reproduce with: qldpc.circuits.get_encoding_circuit(qldpc.codes.ToricCode(4), only_zero=True)
+```
+
+Asked for by qLDPC's author ([qLDPCOrg/qLDPC#554](https://github.com/qLDPCOrg/qLDPC/issues/554)),
+and worth doing on its own terms: a reader who wants to rebuild one should not have to
+reverse-engineer the constructor from `[[n,k,d]]`.
+
+It cannot drift from the circuit, because the constructor string **is** what the importer
+evaluates — `CodeSpec.constructor` replaced the lambda that used to sit there, and
+`CodeSpec.build()` is `eval` over it. A snippet that no longer built the code would fail the
+import rather than mislead a reader. For a syndrome-extraction round the line also says what
+`se_round` takes off, since the stored body is the cycle's `REPEAT` block without its detectors.
+
 ## Tags
 
 - SE: `syndrome-extraction` plus `schedule:xz-separated` — both strategies run the X- and

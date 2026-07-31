@@ -1,13 +1,13 @@
 qec_id: 1156
 name: Tableau encoding
 tool: qldpc
-notes: Encodes 16 logical qubits; the first 16 qubits are the input. Synthesised from
-  the code's tableau, so it carries no flag qubits and no distance guarantee; the
-  library states its encoders are not fault-tolerant.
+notes: "Encodes 16 logical qubits; the first 16 qubits are the input. Synthesised
+  from the code's tableau, so it carries no flag qubits and no distance guarantee;
+  the library states its encoders are not fault-tolerant. Reproduce with: qldpc.circuits.get_encoding_circuit(qldpc.codes.HGPCode(qldpc.codes.HammingCode(3)))"
 source: qldpc
 gate_count: 403
 two_qubit_gate_count: 382
 depth: 110
 qubit_count: 58
 tags: [encoding, non-ft]
-original_matrices: a6f61380de57ccf6
+original_matrices: eeb9ad7bc42d5d10

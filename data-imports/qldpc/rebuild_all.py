@@ -97,6 +97,18 @@ ENCODING_CAVEAT = (
     "distance guarantee; the library states its encoders are not fault-tolerant."
 )
 
+
+def snippet(spec, call: str) -> str:
+    """The qLDPC one-liner that rebuilds this circuit.
+
+    Asked for by qLDPC's author (qLDPCOrg/qLDPC#554): a reader should be able to
+    reproduce a circuit without reverse-engineering the constructor from
+    [[n,k,d]]. `spec.constructor` is the expression this import actually
+    evaluates, so the recorded line cannot drift from the circuit it describes.
+    """
+    return f"Reproduce with: {call.format(code=spec.constructor)}"
+
+
 # Codes whose cheap invariants align with a stored code that is NOT the same
 # code. `assume_new` is only safe with a proof, so the proof lives next to it.
 ASSUME_NEW = {
@@ -330,9 +342,7 @@ def run(write: bool, only: str, kinds: set[str]) -> list[Outcome]:
                 verdict = validate_syndrome_extraction_h(circuit, h, n, logical=logical)
                 if verdict != "passed":
                     out.append(
-                        Outcome(
-                            spec.key, f"se:{key}", "invalid", verdict.removeprefix("failed: ")
-                        )
+                        Outcome(spec.key, f"se:{key}", "invalid", verdict.removeprefix("failed: "))
                     )
                     continue
 
@@ -353,6 +363,16 @@ def run(write: bool, only: str, kinds: set[str]) -> list[Outcome]:
                             f"Data qubits 0-{n - 1}, then the ancillas, measured in "
                             "index order; every ancilla is prepared and read in the X basis.",
                             SE_CAVEAT,
+                            snippet(
+                                spec,
+                                "qldpc.circuits.get_memory_experiment_parts({code}, "
+                                "qldpc.objects.Pauli.Z, num_rounds=2, "
+                                "syndrome_measurement_strategy=qldpc.circuits."
+                                f"{type(strategy).__name__}()).qec_cycle"
+                                " — the body stored here is that cycle's REPEAT block with"
+                                " the detectors and observable removed, since they belong to"
+                                " the memory experiment rather than to the round.",
+                            ),
                         ]
                     ),
                 )
@@ -394,6 +414,11 @@ def run(write: bool, only: str, kinds: set[str]) -> list[Outcome]:
                         if only_zero
                         else f"Encodes {k} logical qubits; the first {k} qubits are the input.",
                         ENCODING_CAVEAT,
+                        snippet(
+                            spec,
+                            "qldpc.circuits.get_encoding_circuit({code}"
+                            + (", only_zero=True)" if only_zero else ")"),
+                        ),
                     ]
                 ),
             )

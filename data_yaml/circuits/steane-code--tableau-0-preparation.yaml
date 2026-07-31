@@ -1,9 +1,10 @@
 qec_id: 1107
 name: Tableau |0> preparation
 tool: qldpc
-notes: Prepares the logical |0> state. Synthesised from the code's tableau, so it
+notes: "Prepares the logical |0> state. Synthesised from the code's tableau, so it
   carries no flag qubits and no distance guarantee; the library states its encoders
-  are not fault-tolerant.
+  are not fault-tolerant. Reproduce with: qldpc.circuits.get_encoding_circuit(qldpc.codes.SteaneCode(),
+  only_zero=True)"
 source: qldpc
 gate_count: 26
 two_qubit_gate_count: 23
@@ -13,4 +14,4 @@ crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6;TICK;CX_5_0;H
 crumble_url_annotated: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6;TICK;CX_5_0;H_2_1;CX_0_5_5_0_2_0_3_0_1_2_6_0_1_4_5_3_1_6_2_4_3_5_5_3;H_3;CX_3_5_3_6_5_4_4_5_5_4_5_4_6_5_5_6_6_5_5_6;TICK;M_0_1_2_3_4_5_6;DT_rec[-4]_rec[-3]_rec[-2]_rec[-1];DT_rec[-6]_rec[-5]_rec[-2]_rec[-1];DT_rec[-7]_rec[-5]_rec[-3]_rec[-1];OI(0)rec[-7]_rec[-6]_rec[-5]_rec[-4]_rec[-3]_rec[-2]_rec[-1]_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["X",1,1,1,1,"•"],[1,"H","H"],["•",1,1,1,1,"X"],["X",1,1,1,1,"•"],["X",1,"•"],["X",1,1,"•"],[1,"•","X"],["X",1,1,1,1,1,"•"],[1,"•",1,1,"X"],[1,1,1,"X",1,"•"],[1,"•",1,1,1,1,"X"],[1,1,"•",1,"X"],[1,1,1,"•",1,"X"],[1,1,1,"X",1,"•"],[1,1,1,"H"],[1,1,1,"•",1,"X"],[1,1,1,"•",1,1,"X"],[1,1,1,1,"X","•"],[1,1,1,1,"•","X"],[1,1,1,1,"X","•"],[1,1,1,1,"X","•"],[1,1,1,1,1,"X","•"],[1,1,1,1,1,"•","X"],[1,1,1,1,1,"X","•"],[1,1,1,1,1,"•","X"]]}
 tags: [state-preparation, non-ft, "logical-state:zero"]
-original_matrices: 5ebba6d4265ffb19
+original_matrices: 7509f8a850d877d3

@@ -1,9 +1,9 @@
 qec_id: 1144
 name: Tableau encoding
 tool: qldpc
-notes: Encodes 2 logical qubits; the first 2 qubits are the input. Synthesised from
+notes: "Encodes 2 logical qubits; the first 2 qubits are the input. Synthesised from
   the code's tableau, so it carries no flag qubits and no distance guarantee; the
-  library states its encoders are not fault-tolerant.
+  library states its encoders are not fault-tolerant. Reproduce with: qldpc.circuits.get_encoding_circuit(qldpc.codes.C4Code())"
 source: qldpc
 gate_count: 15
 two_qubit_gate_count: 14
