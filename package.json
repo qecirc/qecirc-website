@@ -1,7 +1,7 @@
 {
   "name": "qecirc-website",
   "type": "module",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "license": "MIT",
   "scripts": {
     "dev": "astro dev",
@@ -42,5 +42,8 @@
   },
   "engines": {
     "node": ">=24.0.0"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true
   }
 }
