@@ -96,31 +96,35 @@ gate (an ancilla is the control of an X-check and the target of a Z-check) and r
 any tick mixes them. The source's own vocabulary ("cardinal", "ZX-coloration") lives in the
 circuit _name_, where a reader can match it against the paper, rather than in a tag.
 
-No `ft` / `non-ft` tag, following the asyndrome circuits. No `distance-preserving` tag either:
+No `ft` / `non-ft` tag, following the asyndrome circuits. No `distance-preserving` tag either —
 the QUITS paper claims lower depth and better logical failure rate, not distance preservation,
-and the library does not invent claims its sources do not make. (The repo ships
-`examples/circuit_distance_search.py`, which would compute circuit-level distance directly —
-that is the route if we ever want the claim as a measurement rather than a citation.)
+and the library does not invent claims its sources do not make. What the circuits carry instead
+is the measurement: `circuit-distance:<N>`, written by `scripts/measure_circuit_distance.py`,
+which is the same quantity the repo's own `examples/circuit_distance_search.py` computes. 18 of
+the 72 circuits here are measurable within a two-minute budget; an absent tag means the search
+did not finish, not that no faults were found.
 
-## One view the ZX-coloration schedules do not get
+## The view the ZX-coloration schedules used to be missing
 
-Every circuit here is valid and validated, but the `zxcoloration` rounds get no
-`stim-annotated` body — one per code, 25 in total. They are structurally two sub-rounds: reset
-the Z-ancillas, run their checks, measure them, then reset the X-ancillas and do the same. A
-reset _after_ a measurement is exactly what `round_check_matrix` refuses, deliberately — it only
+The `zxcoloration` rounds had no `stim-annotated` body — one per code, 25 in total — until
+`round_check_matrix` was taught to read them. They are structurally two sub-rounds: reset the
+Z-ancillas, run their checks, measure them, then reset the X-ancillas and do the same. A reset
+_after_ a measurement was what `round_check_matrix` refused, deliberately — it only
 reads a round shaped `reset → unitary → measure`, because that is the shape it can pull an
 ancilla's operator back through.
 
-Nothing is lost but the annotated memory-experiment view: validation never depends on that
-function, and the schedule, metrics and circuit body are all unaffected. Generalising it to
-sequential sub-rounds would recover them, and is worth doing if these circuits are wanted in
-Crumble with detectors.
+It now pulls each measurement back through the gates that precede _that measurement_ rather than
+through one whole-round unitary, which is what a sequential schedule needs. A later sub-round's
+operator picks up support on the earlier sub-round's ancillas unless that support cancels — and
+it cancels exactly when the checks commute — so a schedule where they do not is still refused
+rather than handed a wrong detector. All 25 have a `stim-annotated` body with deterministic
+detectors.
 
 ## Every import is gated on validation
 
 `validate_syndrome_extraction_h` runs before anything is written: the round must measure exactly
 the code's stabilizer group and preserve every stabilizer and logical, checked against the
-**stored** code after any relabeling. **All 69 schedules pass.**
+**stored** code after any relabeling. **All 72 schedules pass.**
 
 ## Code identity
 
@@ -170,14 +174,15 @@ this import.
 ## Size
 
 `h` is (n−k) × 2n, so the stored footprint grows as n². The catalogue spans [[36,8,4]] to
-[[1428,184,≤24]], and this import takes `data_yaml/` from **62 MB to 214 MB** — of which the
-seven largest codes are ~93%. QLP [[1428,184]] alone is 56 MB, its code entry 14 MB of that.
-`--max-n 300` drops those seven, keeping 47 of the 69 circuits for ~9 MB.
+[[1428,184,≤24]], and this import takes `data_yaml/` from **40 MB to 82 MB** — of which the
+seven largest codes are most. `--max-n 300` drops those seven.
 
-Most of that is duplication rather than data: 136 MB of the 171 MB under `circuits/` is
-`originals/*.original.yaml`, which stores the submitted matrices once per _circuit_ — the copies
-for one code are byte-identical (same md5). That is a pipeline property, not something this
-import can fix, and it is the obvious place to look if the size ever matters.
+Both ends of that used to be far larger — 62 MB to 214 MB — because the submitted matrices were
+stored once per _circuit_ rather than once per code, and every matrix densely. Sharing them and
+writing the large ones as nonzero column indices took the [[1428,184]] code entry from 14 MB to
+2.4 MB. Of what remains, roughly 18 MB is Prettier exploding the generated YAML one entry per
+line; `data_yaml/codes/` in `.prettierignore` buys that back at the cost of a style split with
+the hand-written files.
 
 The circuits themselves are small throughout: the [[1428,184,≤24]] round is a 112 KB `.stim`.
 
