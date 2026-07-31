@@ -25,7 +25,17 @@ export function categorizeTag(name: string): TagCategoryKey {
   if (FT_TAGS.has(name) || name.startsWith("distance:")) return "ft";
   if (HARDWARE_TAGS.has(name) || name.startsWith("connectivity:") || name.startsWith("device:"))
     return "hardware";
-  if (name.startsWith("prep:") || name.startsWith("verification:")) return "method";
+  // `schedule:` and `decoder:` describe how a syndrome-extraction round was
+  // produced. They pair up: a schedule found by search is co-designed with the
+  // decoder it was scored against, so two rounds for one code can differ only
+  // by `decoder:`.
+  if (
+    name.startsWith("prep:") ||
+    name.startsWith("verification:") ||
+    name.startsWith("schedule:") ||
+    name.startsWith("decoder:")
+  )
+    return "method";
   // `tool:<slug>` tags are derived from each circuit's tool at DB-build time.
   if (name.startsWith("tool:")) return "tools";
   return "other";

@@ -197,6 +197,69 @@ def test_logical_basis_skipped_without_tag(tmp_path):
     assert "no logical-state" in check.detail
 
 
+# One syndrome-extraction round for the repetition code: ancilla 3 reads Z0Z1,
+# ancilla 4 reads Z1Z2.
+REPETITION_SE = "R 3 4\nCX 0 3 1 3 1 4 2 4\nM 3 4\n"
+
+
+def test_syndrome_extraction_is_validated_not_skipped(tmp_path):
+    """The gap this closes: before the third branch existed, a circuit tagged
+    syndrome-extraction matched neither `encoding` nor `state-preparation` and
+    was reported as skipped — i.e. published unchecked."""
+    results = _build(tmp_path, REPETITION_SE, code=REPETITION_CODE, tags=("syndrome-extraction",))
+    assert results[0].circuit_type == "syndrome-extraction"
+    assert results[0].is_skipped is False
+    assert _checks(results)["validate_syndrome_extraction"].status == "passed"
+
+
+def test_syndrome_extraction_failure_is_reported(tmp_path):
+    """Dropping the last CNOT leaves ancilla 4 reading a bare Z1, which is not in
+    the stabilizer group."""
+    results = _build(
+        tmp_path,
+        "R 3 4\nCX 0 3 1 3 1 4\nM 3 4\n",
+        code=REPETITION_CODE,
+        tags=("syndrome-extraction",),
+    )
+    check = _checks(results)["validate_syndrome_extraction"]
+    assert check.status == "failed"
+    assert "outside the stabilizer group" in check.detail
+    assert results[0].passed is False
+
+
+def test_syndrome_extraction_reads_a_sparsely_stored_logical(tmp_path):
+    """A big code's `logical` is stored as nonzero column indices, not 0/1 rows.
+    Handing that mapping straight to numpy is a TypeError, and the check reported
+    an error rather than a result — which is how the [[241,121,3]] hypergraph
+    product code's rounds failed the moment its `logical` crossed the threshold.
+    """
+    from scripts.add_circuit.matrix_format import encode
+
+    code = dict(REPETITION_CODE)
+    code["logical"] = encode(REPETITION_CODE["logical"], threshold=1)
+    assert isinstance(code["logical"], dict), "fixture must be stored sparsely"
+
+    results = _build(tmp_path, REPETITION_SE, code=code, tags=("syndrome-extraction",))
+    assert _checks(results)["validate_syndrome_extraction"].status == "passed"
+
+
+def test_syndrome_extraction_measuring_the_logical_is_rejected(tmp_path):
+    """Reading X0X1X2 is a logical measurement, not a syndrome extraction: it
+    collapses the logical state and reads none of the checks.
+
+    (The `L -> L` branch itself is exercised in test_syndrome_extraction.py —
+    reaching it from here would need a round that measures the full stabilizer
+    group and *still* disturbs a logical, which the group check catches first.)
+    """
+    results = _build(
+        tmp_path,
+        "R 3\nH 3\nCX 3 0 3 1 3 2\nH 3\nM 3\n",
+        code=REPETITION_CODE,
+        tags=("syndrome-extraction",),
+    )
+    assert _checks(results)["validate_syndrome_extraction"].status == "failed"
+
+
 def test_all_skipped_checks_count_as_skipped_not_failed():
     """A circuit whose only check is 'skipped' must report is_skipped=True and
     passed=False, so the summary counts it as skipped rather than a failure."""

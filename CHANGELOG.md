@@ -7,6 +7,35 @@ the source-of-truth `package.json` version.
 
 ### Added
 
+- **Syndrome-extraction circuits are a supported kind.** The pipeline could describe an
+  encoder and a state prep; a round of syndrome extraction fitted neither, and there was
+  nothing to check one against.
+  - **`validate_syndrome_extraction_h`** (`scripts/add_circuit/circuit_validate.py`) — a
+    round must measure exactly the stabilizer group and leave the encoded state, logicals
+    included, alone. It cannot be a codespace test the way the prep and encoder checks
+    are: a round acts on an already-encoded state, so there is nothing to simulate it on.
+    It is a **stabilizer-flow** check instead, and the ancilla-to-check correspondence is
+    derived rather than assumed.
+  - **`build_se_round`** (`scripts/add_circuit/syndrome_extraction.py`) — ticks of
+    (data, ancilla, basis) into one canonical round, refusing a tick that reuses a qubit
+    or an ancilla asked to carry both bases.
+  - **`round_check_matrix`** — which operator each measurement reads, which is what
+    placing detectors needs. Deliberately narrow: no map is better than a wrong one, and
+    nothing in validation depends on it.
+  - **A round's `stim-annotated` body is the memory experiment it belongs to** — reset the
+    data, `REPEAT d` of the round, terminal readout, detectors, observable. Unlike a prep
+    or an encoder, a round is not reset-free and has no tableau, so none of the derive/fit
+    machinery may be pointed at it.
+  - `schedule:` and `decoder:` join the `method` tag category. They pair up: a schedule
+    found by search is co-designed with the decoder it was scored against, so two rounds
+    for one code can differ only by `decoder:`.
+  - **`scripts/add_circuit/find_sigma.py`** — the codeword-based permutation matcher,
+    for codes that match a stored one on every cheap invariant but defeat
+    `find_code_permutation`'s budget. Written for the asyndrome import; three importers
+    need it, so it lives in the shared package rather than in one of them.
+
+### Added
+
 - **Subsystem codes can be stored** (`data/migrations/020`). A subsystem code is described
   by two groups, not one: the **gauge** group a decoder may measure, and the **stabilizer**
   group — its centre — whose outcomes are deterministic. The difference between them is

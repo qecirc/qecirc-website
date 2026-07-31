@@ -28,11 +28,13 @@ import stim
 
 from .circuit_validate import (  # noqa: F401
     extract_code,
+    measured_stabilizers,
     validate_encoding,
     validate_encoding_h,
     validate_state_prep,
     validate_state_prep_h,
     validate_syndrome_extraction,
+    validate_syndrome_extraction_h,
 )
 from .code_identify import gf2_row_basis
 from .compute import compute_code_data, compute_code_data_h
@@ -50,6 +52,7 @@ from .helpers import (  # noqa: F401
 from .ids import next_qec_id
 from .matrix_format import decode as decode_matrix
 from .models import ExtractedCode  # noqa: F401
+from .syndrome_extraction import build_se_round  # noqa: F401
 from .yaml_helpers import (
     build_circuit_yaml,
     build_code_yaml,
@@ -475,6 +478,8 @@ __all__ = [  # noqa: F822  (names defined above / re-exported)
     "validate_state_prep",
     "validate_state_prep_h",
     "validate_syndrome_extraction",
+    "validate_syndrome_extraction_h",
+    "measured_stabilizers",
     "extract_code",
     "ExtractedCode",
     "ExistingCodeMatch",
@@ -493,4 +498,5 @@ __all__ = [  # noqa: F822  (names defined above / re-exported)
     "import_state_prep",
     # perm_find re-exports
     "find_code_permutation",
+    "build_se_round",
 ]
