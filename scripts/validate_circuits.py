@@ -1,15 +1,19 @@
 """
-Validate encoding and state-prep circuits against stored code check matrices.
+Validate encoding, state-prep and syndrome-extraction circuits against stored
+code check matrices.
 
-Iterates over all circuit YAML files in data_yaml/circuits/, identifies encoding
-and state-preparation circuits (via tags), and verifies correctness against the
-code's symplectic ``h`` — CSS and non-CSS codes alike:
+Iterates over all circuit YAML files in data_yaml/circuits/, identifies the
+circuit type (via tags), and verifies correctness against the code's symplectic
+``h`` — CSS and non-CSS codes alike:
 
   - Encoding: validate_encoding_h (circuit maps |0...0⟩ to the code space)
             + logical_input_count (the encoder has exactly k free inputs)
   - State-prep: validate_state_prep_h (all stabilizers satisfied)
               + logical_basis (prepares the basis its logical-state tag claims;
                 CSS codes only)
+  - Syndrome extraction: validate_syndrome_extraction_h (the round measures
+                exactly the stabilizer group and preserves the code state and
+                its logicals)
 
 Usage:
     uv run python scripts/validate_circuits.py
@@ -35,6 +39,7 @@ from scripts.add_circuit.circuit_validate import (  # noqa: E402
     _widen,
     validate_encoding_h,
     validate_state_prep_h,
+    validate_syndrome_extraction_h,
 )
 from scripts.add_circuit.code_identify import split_h_to_css  # noqa: E402
 from scripts.add_circuit.matrix_format import decode as decode_matrix  # noqa: E402
@@ -54,7 +59,7 @@ class CheckResult:
 @dataclass
 class CircuitResult:
     stem: str
-    circuit_type: str  # "encoding" | "state-preparation" | "skipped"
+    circuit_type: str  # "encoding" | "state-preparation" | "syndrome-extraction" | "skipped"
     checks: list[CheckResult] = field(default_factory=list)
 
     @property
@@ -93,6 +98,8 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
             circuit_type = "encoding"
         elif "state-preparation" in tags:
             circuit_type = "state-preparation"
+        elif "syndrome-extraction" in tags:
+            circuit_type = "syndrome-extraction"
         else:
             results.append(CircuitResult(stem=stem, circuit_type="skipped"))
             continue
@@ -145,6 +152,17 @@ def validate_all(data_dir: str = "data_yaml") -> list[CircuitResult]:
         elif circuit_type == "state-preparation":
             _check_state_prep(result, circuit_text, h, n)
             _check_logical_basis(result, circuit_text, h, n, code_data.get("d"), tags)
+        elif circuit_type == "syndrome-extraction":
+            # Decoded here, like `h` above: a large code's `logical` is stored
+            # sparsely, and handing the raw mapping to numpy is a TypeError.
+            stored_logical = code_data.get("logical")
+            _check_syndrome_extraction(
+                result,
+                circuit_text,
+                h,
+                n,
+                None if stored_logical is None else decode_matrix(stored_logical),
+            )
 
         results.append(result)
 
@@ -171,6 +189,35 @@ def _check_state_prep(result: CircuitResult, circuit_text: str, h: np.ndarray, n
             result.checks.append(CheckResult("validate_state_prep", "failed", outcome))
     except Exception as e:
         result.checks.append(CheckResult("validate_state_prep", "error", str(e)))
+
+
+def _check_syndrome_extraction(
+    result: CircuitResult,
+    circuit_text: str,
+    h: np.ndarray,
+    n: int,
+    logical: np.ndarray | None,
+) -> None:
+    """A syndrome-extraction round must measure exactly the stabilizer group and
+    leave the encoded state — logicals included — alone.
+
+    Unlike the prep/encoding checks this cannot be a codespace test: the round
+    acts on an already-encoded state, so there is nothing to simulate it on. It
+    is a *flow* check instead; see ``circuit_validate.measured_stabilizers`` for
+    why the ancilla-to-stabilizer correspondence is derived rather than assumed.
+
+    ``codes.logical`` is passed when present so ``L -> L`` is checked too. It is
+    optional data, and its absence weakens the check rather than invalidating it,
+    so a code without it is still checked on the stabilizers.
+    """
+    try:
+        outcome = validate_syndrome_extraction_h(circuit_text, h, n, logical=logical)
+        if outcome == "passed":
+            result.checks.append(CheckResult("validate_syndrome_extraction", "passed"))
+        else:
+            result.checks.append(CheckResult("validate_syndrome_extraction", "failed", outcome))
+    except Exception as e:
+        result.checks.append(CheckResult("validate_syndrome_extraction", "error", str(e)))
 
 
 def _check_logical_basis(

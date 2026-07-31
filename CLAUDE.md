@@ -20,10 +20,10 @@ is represented as a tag, not a separate entity.
 
 Both levels support **tags** to aid discovery and filtering:
 
-| Level   | Example tags                               |
-| ------- | ------------------------------------------ |
-| Code    | `CSS`, `topological`, `bosonic`            |
-| Circuit | `encoding`, `fault-tolerant`, `distance:3` |
+| Level   | Example tags                                                      |
+| ------- | ----------------------------------------------------------------- |
+| Code    | `CSS`, `topological`, `bosonic`                                   |
+| Circuit | `encoding`, `syndrome-extraction`, `fault-tolerant`, `distance:3` |
 
 Tags can be either **structured** (`key:value`, e.g. `distance:3`) or **free-form strings**.
 
@@ -130,12 +130,21 @@ the code's density. Submitted matrices are shared: they live once in
 `data_yaml/matrices/<digest>.yaml` and circuits reference them by digest. Readers call
 `matrix_format.decode` / `decodeMatrix` and never need to know which encoding was used.
 
-The canonical STIM body is **reset-free** — `to_tableau()` and the derive/fit
-machinery need a circuit with no resets — so it leaves the `|0…0⟩` input implied.
-State-prep and encoding circuits therefore also carry a `stim-annotated` body
-that states it explicitly, plus a terminal readout and detectors where a readout
-basis exists. Generate it with `uv run python scripts/annotate_circuits.py`
-(idempotent); the canonical body must stay reset-free.
+The canonical STIM body of a **prep or encoding** circuit is **reset-free** —
+`to_tableau()` and the derive/fit machinery need a circuit with no resets — so it
+leaves the `|0…0⟩` input implied. Those circuits therefore also carry a
+`stim-annotated` body that states it explicitly, plus a terminal readout and
+detectors where a readout basis exists.
+
+**Syndrome extraction is the exception, and has to be.** A round _is_ reset,
+gates, measure — the resets and measurements are the circuit, not an annotation
+of it. So those bodies are not reset-free and have no tableau, and none of the
+derive/fit machinery may be pointed at them. They are checked by stabilizer flows
+instead (`validate_syndrome_extraction_h`), and their `stim-annotated` body is the
+memory experiment the round belongs to: reset the data, `REPEAT d` of the round,
+terminal readout, detectors, observable.
+
+Generate both with `uv run python scripts/annotate_circuits.py` (idempotent).
 
 ---
 

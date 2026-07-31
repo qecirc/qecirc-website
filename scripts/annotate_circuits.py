@@ -38,6 +38,7 @@ import yaml  # noqa: E402
 
 from scripts.add_circuit.annotate import (  # noqa: E402
     build_annotated,
+    build_annotated_se,
     logical_input_qubits,
     strip_readout,
     validate_annotated,
@@ -68,6 +69,8 @@ def _kind_and_state(tags: list[str]) -> tuple[str, str]:
         kind = "state-preparation"
     elif "encoding" in tags:
         kind = "encoding"
+    elif "syndrome-extraction" in tags:
+        kind = "syndrome-extraction"
     state = next((t.split(":", 1)[1] for t in tags if t.startswith("logical-state:")), "")
     return kind, state
 
@@ -90,7 +93,7 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
         tags = data.get("tags") or []
         kind, state = _kind_and_state(tags)
         if not kind:
-            continue  # gadgets, syndrome extraction: nothing deterministic to annotate
+            continue  # flag gadgets: no code of their own, nothing to annotate against
 
         slug = _code_slug(stem)
         code = codes.get(slug)
@@ -117,19 +120,32 @@ def annotate_all(data_dir: Path, only: str = "", dry_run: bool = False) -> list[
                 if original.get("h"):
                     original_h = decode_matrix(original["h"])
 
-        circ = build_annotated(
-            body=body_path.read_text(encoding="utf-8"),
-            stored_h=stored_h,
-            logical=logical,
-            n=n,
-            k=k,
-            kind=kind,
-            logical_state=state,
-            original_h=original_h,
-            notes=data.get("notes") or "",
-        )
+        if kind == "syndrome-extraction":
+            # A round is annotated as the memory experiment it belongs to, and
+            # the round count that makes one distance-preserving is d.
+            circ = build_annotated_se(
+                body=body_path.read_text(encoding="utf-8"),
+                stored_h=stored_h,
+                logical=logical,
+                n=n,
+                rounds=code.get("d") or 1,
+            )
+            skip_reason = "no per-measurement check map (see round_check_matrix)"
+        else:
+            circ = build_annotated(
+                body=body_path.read_text(encoding="utf-8"),
+                stored_h=stored_h,
+                logical=logical,
+                n=n,
+                k=k,
+                kind=kind,
+                logical_state=state,
+                original_h=original_h,
+                notes=data.get("notes") or "",
+            )
+            skip_reason = _why_skipped(body_path, stored_h, n, k, kind)
         if circ is None:
-            results.append(Result(stem, "skipped", _why_skipped(body_path, stored_h, n, k, kind)))
+            results.append(Result(stem, "skipped", skip_reason))
             continue
 
         error = validate_annotated(circ)

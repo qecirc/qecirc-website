@@ -30,14 +30,14 @@ Before writing any files, the agent:
 - Detects qubit ordering differences between your matrices and the stored code, and reports the permutation that will be applied to the circuit
 - Shows circuit metrics (qubit count, gate count, depth) and a Crumble link
 - Can extract Hx/Hz directly from the circuit via Pauli propagation (`extract_code`) if matrices aren't provided
-- Runs validation if you tell it the circuit type (encoding or state-prep)
+- Runs validation if you tell it the circuit type (encoding, state-prep or syndrome extraction)
 - Shows a dry-run preview of what files would be generated
 
 You confirm before anything is written.
 
 ### Phase 3: Generate YAML files
 
-The agent calls the Python API to write the code YAML, circuit YAML, and body files (`.stim`, `.qasm`, `.cirq`) to `data_yaml/`. For state-prep and encoding circuits, run `uv run python scripts/annotate_circuits.py` afterwards to add the `.stim-annotated` body. Each circuit is automatically assigned a unique `qec_id` (displayed as `#N` in the UI). This ID is permanent and must never be reused.
+The agent calls the Python API to write the code YAML, circuit YAML, and body files (`.stim`, `.qasm`, `.cirq`) to `data_yaml/`. Run `uv run python scripts/annotate_circuits.py` afterwards to add the `.stim-annotated` body. Each circuit is automatically assigned a unique `qec_id` (displayed as `#N` in the UI). This ID is permanent and must never be reused.
 
 ### Phase 4: Zoo lookup, paper lookup, and tagging
 
@@ -81,9 +81,9 @@ The pipeline also preserves the original (pre-canonicalization) STIM circuit and
 
 The agent only uses tags that already exist in the library. Current tags:
 
-| Level   | Tags                                                                                                                                                                                              |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Code    | `CSS`, `stabilizer`, `self-dual`, `color-code`, `surface-code`, `concatenated`                                                                                                                    |
-| Circuit | `encoding`, `state-preparation`, `syndrome-extraction`, `ft`, `non-ft`, `flag`, `deterministic`, plus structured tags `logical-state:*`, `connectivity:*`, `device:*`, `prep:*`, `verification:*` |
+| Level   | Tags                                                                                                                                                                                                                         |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Code    | `CSS`, `stabilizer`, `self-dual`, `color-code`, `surface-code`, `concatenated`                                                                                                                                               |
+| Circuit | `encoding`, `state-preparation`, `syndrome-extraction`, `ft`, `non-ft`, `flag`, `deterministic`, plus structured tags `logical-state:*`, `connectivity:*`, `device:*`, `prep:*`, `verification:*`, `schedule:*`, `decoder:*` |
 
 `tool:*` tags are **not** set by hand — they are derived from a circuit's `tool` field when the database is built. If the Zoo or user suggests any other tag not already in the library, the agent will ask before adding it.

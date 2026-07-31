@@ -344,6 +344,105 @@ def build_annotated(
     return out
 
 
+def build_annotated_se(
+    body: str,
+    stored_h: np.ndarray,
+    logical: np.ndarray,
+    n: int,
+    rounds: int,
+) -> Optional[stim.Circuit]:
+    """Build the ``stim-annotated`` body for a syndrome-extraction round.
+
+    The stored body is *one* round, which is the reusable unit. What a reader
+    actually runs is a memory experiment, and that is what this returns: the data
+    reset to ``|0...0>``, the round repeated ``rounds`` times, a terminal readout,
+    and the detectors that make the whole thing decodable.
+
+    So this is the same idea as :func:`build_annotated` — state what the stored
+    body leaves out — but nothing about the construction is shared. A prep gets a
+    prologue because it starts from ``|0...0>``; a round does not, because it acts
+    on whatever it is given. The round count is the thing that has to be supplied
+    from outside, and ``d`` is the standard choice.
+
+    Which measurement reads which check comes from
+    :func:`~.circuit_validate.round_check_matrix`; ``None`` from there means no
+    annotated body, since without the map no detector can be placed.
+
+    Three families of detector, and the split is just about what is deterministic
+    when:
+
+    * **first round** — only the checks with no X component. The data starts in a
+      Z-basis product state, so those read ``+1`` and everything else is random.
+    * **later rounds** — every check, against the same check in the round before.
+      Nothing needs to be known about the code for these.
+    * **terminal** — each no-X check again, this time against the transversal Z
+      readout that recomputes it from the data.
+
+    A code with **no** pure-Z check — a non-CSS code, whose stabilizers all mix X
+    and Z on the same qubit — gets no body at all, and returns ``None``. Only the
+    middle family would survive, and inter-round detectors with no readout and no
+    observable describe an experiment with no outcome. That is the same narrowing
+    :func:`_readout_basis` applies to preps and for the same reason; it just costs
+    more here, because for a prep the prologue alone is still worth showing.
+
+    The result is *not* validated here; run :func:`validate_annotated` on it.
+    """
+    from .circuit_validate import round_check_matrix
+
+    if rounds < 1:
+        return None
+    checks = round_check_matrix(body, n)
+    if checks is None or not checks.size:
+        return None
+
+    source = stim.Circuit(body)
+    per_round = checks.shape[0]
+    z_checks = [j for j in range(per_round) if not checks[j, :n].any()]
+    z_logicals = (
+        [row for row in np.atleast_2d(logical) if not row[:n].any()] if logical.size else []
+    )
+    if not z_checks:
+        return None
+
+    gates = stim.Circuit()
+    for op in source:
+        if isinstance(op, stim.CircuitRepeatBlock):
+            return None
+        if op.name == "QUBIT_COORDS":
+            continue
+        gates.append(op.name, op.targets_copy(), op.gate_args_copy())
+
+    out = stim.Circuit()
+    for qubit, coord in sorted(source.get_final_qubit_coordinates().items()):
+        if coord:
+            out.append("QUBIT_COORDS", [qubit], coord)
+    out.append("R", list(range(n)))
+    out.append("TICK")
+
+    out += gates
+    for j in z_checks:
+        out.append("DETECTOR", [stim.target_rec(j - per_round)])
+
+    if rounds > 1:
+        repeat = gates.copy()
+        for j in range(per_round):
+            repeat.append(
+                "DETECTOR",
+                [stim.target_rec(j - per_round), stim.target_rec(j - 2 * per_round)],
+            )
+        out.append(stim.CircuitRepeatBlock(rounds - 1, repeat))
+
+    out.append("TICK")
+    out.append("M", list(range(n)))
+    for j in z_checks:
+        support = [stim.target_rec(q - n) for q in range(n) if checks[j, n + q]]
+        out.append("DETECTOR", [*support, stim.target_rec(j - per_round - n)])
+    for index, row in enumerate(z_logicals):
+        support = [stim.target_rec(q - n) for q in range(n) if row[n + q]]
+        out.append("OBSERVABLE_INCLUDE", support, index)
+    return out
+
+
 def strip_readout(circ: stim.Circuit) -> stim.Circuit:
     """Drop the readout epilogue, keeping the reset prologue and the body.
 
@@ -358,6 +457,11 @@ def strip_readout(circ: stim.Circuit) -> stim.Circuit:
     instruction, last, so after the annotations are dropped it is the final
     instruction — anything earlier belongs to the body.
 
+    Annotations inside a ``REPEAT`` block go too — a syndrome-extraction round is
+    annotated as a repeated memory experiment, so that is where most of its
+    detectors live. The browser's mirror strips lines and so has always reached
+    them; this one had to be taught to recurse.
+
     Mirrors ``stripReadout`` in src/lib/stim-format.ts, which does the same for
     the browser. Keep the two in step.
     """
@@ -370,7 +474,7 @@ def strip_readout(circ: stim.Circuit) -> stim.Circuit:
     out = stim.Circuit()
     for op in ops:
         if isinstance(op, stim.CircuitRepeatBlock):
-            out.append(op)
+            out.append(stim.CircuitRepeatBlock(op.repeat_count, strip_readout(op.body_copy())))
             continue
         out.append(op.name, op.targets_copy(), op.gate_args_copy())
     return out

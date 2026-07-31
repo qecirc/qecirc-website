@@ -65,7 +65,7 @@ The build prints how many circuits linked, and lists any link-shaped `source` wi
 behind it:
 
 ```
-Papers: 7, linked to 724 circuits.
+Papers: 8, linked to 780 circuits.
 ```
 
 Those unlinked circuits still render and still search by URL; they just cannot be found by
