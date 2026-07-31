@@ -492,34 +492,23 @@ def round_check_matrix(circuit: Union[stim.Circuit, str], n: int) -> Optional[np
     measured: list[int] = []
     reset_basis: dict[int, int] = {}  # qubit -> stim Pauli code (1 = X, 3 = Z)
     measured_basis: dict[int, int] = {}
+    prefix_len: list[int] = []  # gates preceding each measurement, in `unitary`
+    touched: set[int] = set()  # qubits a gate has already acted on
     for op in circ:
         if isinstance(op, stim.CircuitRepeatBlock):
             return None
         if op.name in ("R", "RZ", "RX"):
-            if measured:
-                return None  # a reset after a measurement: not a single simple round
+            targets = [t.value for t in op.targets_copy()]
+            if any(q in touched or q in reset_basis for q in targets):
+                return None  # reset twice, or reset after a gate already moved it
             pauli = 1 if op.name == "RX" else 3
-            for t in op.targets_copy():
-                reset_basis[t.value] = pauli
+            for q in targets:
+                reset_basis[q] = pauli
         elif op.name in ("M", "MZ", "MX"):
             pauli = 1 if op.name == "MX" else 3
             for t in op.targets_copy():
                 measured.append(t.value)
                 measured_basis[t.value] = pauli
-    prefix_len: list[int] = []  # gates preceding each measurement, in `unitary`
-    reset: set[int] = set()
-    touched: set[int] = set()  # qubits a gate has already acted on
-    for op in circ:
-        if isinstance(op, stim.CircuitRepeatBlock):
-            return None
-        if op.name in ("R", "RZ"):
-            targets = [t.value for t in op.targets_copy()]
-            if any(q in touched or q in reset for q in targets):
-                return None  # reset twice, or reset after a gate already moved it
-            reset.update(targets)
-        elif op.name in ("M", "MZ"):
-            for t in op.targets_copy():
-                measured.append(t.value)
                 prefix_len.append(len(unitary))
         elif op.name == "TICK" or op.name == "QUBIT_COORDS":
             continue
@@ -546,14 +535,10 @@ def round_check_matrix(circuit: Union[stim.Circuit, str], n: int) -> Optional[np
             return None
 
     rows = np.zeros((len(measured), 2 * n), dtype=int)
-    for row, anc in enumerate(measured):
+    for row, (anc, k) in enumerate(zip(measured, prefix_len)):
         basis = reset_basis[anc]
         ps = stim.PauliString(width)
         ps[anc] = basis  # the operator the reset fixes to +1
-        pulled = inverse(ps)
-    for row, (anc, k) in enumerate(zip(measured, prefix_len)):
-        ps = stim.PauliString(width)
-        ps[anc] = 3  # Z
         pulled = inverses[k](ps)
         for q in range(width):
             p = pulled[q]

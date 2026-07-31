@@ -303,6 +303,7 @@ class TestRoundCheckMatrix:
         circ.append("CX", [7, 0])
         circ.append("M", [7])
         assert round_check_matrix(circ, N) is None
+
     def test_reads_a_round_built_from_two_sequential_sub_rounds(self):
         """The ZX-coloration shape: reset and read the Z-ancillas, then reset and
         read the X-ancillas. A single reset-gates-measure round cannot express it,
