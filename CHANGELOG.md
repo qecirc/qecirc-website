@@ -9,7 +9,7 @@ the source-of-truth `package.json` version.
 
 - **The qLDPC rounds were never measured for circuit-level distance**, and the docs say an
   absent `circuit-distance:` tag means the search ran out of budget. It did not: 26 of the
-  28 settle, 24 of them in under a second. `scripts/measure_circuit_distance.py` arrived in
+  28 settle, 20 of them in under a second. `scripts/measure_circuit_distance.py` arrived in
   #137 and #136 had already merged, so nothing ever pointed it at them. Now tagged, which
   puts a number on the caveat those circuits already carry — the library states the
   strategy is not guaranteed distance-preserving, and **[[4,2,2]], [[6,2,2]] and
@@ -317,7 +317,7 @@ the source-of-truth `package.json` version.
     a `distance:5` code. `build_annotated_se` gained a `basis` argument for this; the
     stored Z bodies are byte-identical.
   - The search cost grows with `n` and, harder, with `d`: 44 of the library's 100 rounds
-    settle inside a 120 s budget. `d` is what hurts — [[241,121,3]] takes 2 s and
+    settle inside a 120 s budget. `d` is what hurts — [[241,121,3]] takes 3 s and
     [[49,1,7]] runs out. An **absent tag means not measured**, never "no faults found".
 
 ### Fixed
