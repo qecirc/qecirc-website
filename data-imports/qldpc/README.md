@@ -8,17 +8,22 @@ each code and calls it. Three kinds of circuit come out:
 
 | Kind                | From                                          | Count |
 | ------------------- | --------------------------------------------- | ----- |
-| Syndrome extraction | `get_memory_experiment_parts`, two strategies | 23    |
+| Syndrome extraction | `get_memory_experiment_parts`, two strategies | 28    |
 | Encoding            | `get_encoding_circuit`                        | 18    |
 | \|0⟩ preparation    | `get_encoding_circuit(only_zero=True)`        | 18    |
 
-**Two strategies do not always mean two circuits.** `EdgeColoringXZ` colours the X- and
-Z-check subgraphs separately; when the Tanner graph is small enough that the joint colouring
-already separates them, it returns the joint one byte for byte. That happens on [[4,2,2]],
-[[6,2,2]], [[7,1,3]], [[15,7,3]] and the tetrahedral code. Only the first is stored — the two
-would be indistinguishable on the page, down to the same measured circuit distance — and its
-notes name the strategy that landed on it, so the coincidence is recorded rather than sold as
-a second circuit. That is why the count is 23 and not 28.
+**The two strategies sometimes agree.** `EdgeColoringXZ` colours the X- and Z-check subgraphs
+separately; when the Tanner graph is small enough that the joint colouring already separates
+them, it returns the joint one byte for byte. That happens on [[4,2,2]], [[6,2,2]], [[7,1,3]],
+[[15,7,3]] and the tetrahedral code — 5 of the 14 codes that carry both. On the other 9 they
+differ, sometimes widely: the toric [[16,2,4]] is depth 4 under the joint colouring and 9
+under the split one.
+
+Both are stored even where they agree. They are different algorithms, and which one you would
+reach for is a question about the algorithms, not about these five codes; storing one would
+file the agreement as if the library had only ever had one strategy. Each of the five pairs
+says in its notes that the other strategy produced the identical round, so a reader comparing
+two identical pages is told why rather than left wondering what they missed.
 
 qLDPC's author, [Michael A. Perlin](https://github.com/perlinm), reviewed this import on
 [#136](https://github.com/qecirc/qecirc-website/pull/136) and

@@ -362,32 +362,18 @@ def run(write: bool, only: str, kinds: set[str]) -> list[Outcome]:
                     continue
                 rounds[key] = circuit
 
-            # Two strategies, one circuit. Colouring the X- and Z-check subgraphs
-            # separately gives the joint colouring back, byte for byte, whenever the
-            # Tanner graph is small enough that the joint one already separates them
-            # — five codes here. Storing both would publish the same round twice
-            # under two names, with nothing on either page to tell them apart: same
-            # body, same metrics, same tags, same circuit distance. Keep the first
-            # and let it say which other strategy landed on it, so the coincidence is
-            # recorded rather than sold as a second circuit.
-            first_of: dict[str, str] = {}
-            for key, circuit in rounds.items():
-                first_of.setdefault(str(circuit), key)
-
+            # Two strategies, sometimes one circuit. Colouring the X- and Z-check
+            # subgraphs separately gives the joint colouring back, byte for byte,
+            # whenever the Tanner graph is small enough that the joint one already
+            # separates them — five codes here. Both are still stored: they are
+            # different algorithms that happen to agree, and on 9 of the 14 codes
+            # that carry both they do not (the toric [[16,2,4]] is depth 4 against
+            # 9). Dropping one would file that agreement as if the library had only
+            # ever had one strategy. Each says instead which other strategy landed
+            # on the same round, so a reader is not left comparing two identical
+            # pages and wondering what they missed.
             for key, circuit in rounds.items():
                 body = str(circuit)
-                if first_of[body] != key:
-                    out.append(
-                        report(
-                            Outcome(
-                                spec.key,
-                                f"se:{key}",
-                                "duplicate",
-                                f"identical to se:{first_of[body]}",
-                            )
-                        )
-                    )
-                    continue
                 twins = [
                     SE_STRATEGIES[other][0]
                     for other, c in rounds.items()
@@ -398,7 +384,9 @@ def run(write: bool, only: str, kinds: set[str]) -> list[Outcome]:
                     blurb += (
                         " On this code the "
                         + " and ".join(f"{t!r}" for t in twins)
-                        + " strategy produces the identical round, so it is not stored twice."
+                        + " strategy produces the identical round — the two colourings "
+                        "coincide when the Tanner graph is small enough, which is a "
+                        "property of this code rather than of either strategy."
                     )
 
                 interleaved = interleaves_xz(circuit, n)
