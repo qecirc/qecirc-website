@@ -2,11 +2,12 @@ qec_id: 1146
 name: Edge-coloring schedule
 tool: qldpc
 notes: "One syndrome-extraction round. The Tanner graph's edges are greedily coloured
-  and one colour runs per tick. Data qubits 0-5, then the ancillas, measured in index
-  order; every ancilla is prepared and read in the X basis. The library states this
-  strategy is not guaranteed to be distance-preserving or fault-tolerant. Reproduce
-  with: qldpc.circuits.get_memory_experiment_parts(qldpc.codes.C6Code(), qldpc.objects.Pauli.Z,
-  num_rounds=2, syndrome_measurement_strategy=qldpc.circuits.EdgeColoring()).qec_cycle
+  and one colour runs per tick. On this code the 'Edge-coloring schedule (X/Z split)'
+  strategy produces the identical round, so it is not stored twice. Data qubits 0-5,
+  then the ancillas, measured in index order; every ancilla is prepared and read in
+  the X basis. The library states this strategy is not guaranteed to be distance-preserving
+  or fault-tolerant. Reproduce with: qldpc.circuits.get_memory_experiment_parts(qldpc.codes.C6Code(),
+  qldpc.objects.Pauli.Z, num_rounds=2, syndrome_measurement_strategy=qldpc.circuits.EdgeColoring()).qec_cycle
   — the body stored here is that cycle's REPEAT block with the detectors and observable
   removed, since they belong to the memory experiment rather than to the round."
 source: https://arxiv.org/abs/2109.14609

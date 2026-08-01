@@ -8,9 +8,17 @@ each code and calls it. Three kinds of circuit come out:
 
 | Kind                | From                                          | Count |
 | ------------------- | --------------------------------------------- | ----- |
-| Syndrome extraction | `get_memory_experiment_parts`, two strategies | 28    |
+| Syndrome extraction | `get_memory_experiment_parts`, two strategies | 23    |
 | Encoding            | `get_encoding_circuit`                        | 18    |
 | \|0⟩ preparation    | `get_encoding_circuit(only_zero=True)`        | 18    |
+
+**Two strategies do not always mean two circuits.** `EdgeColoringXZ` colours the X- and
+Z-check subgraphs separately; when the Tanner graph is small enough that the joint colouring
+already separates them, it returns the joint one byte for byte. That happens on [[4,2,2]],
+[[6,2,2]], [[7,1,3]], [[15,7,3]] and the tetrahedral code. Only the first is stored — the two
+would be indistinguishable on the page, down to the same measured circuit distance — and its
+notes name the strategy that landed on it, so the coincidence is recorded rather than sold as
+a second circuit. That is why the count is 23 and not 28.
 
 qLDPC's author, [Michael A. Perlin](https://github.com/perlinm), reviewed this import on
 [#136](https://github.com/qecirc/qecirc-website/pull/136) and

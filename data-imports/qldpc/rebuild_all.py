@@ -339,8 +339,8 @@ def run(write: bool, only: str, kinds: set[str]) -> list[Outcome]:
 
         # --- syndrome extraction -------------------------------------------
         if "se" in kinds:
+            rounds: dict[str, object] = {}
             for key, strategy in strategies.items():
-                circuit_name, blurb = SE_STRATEGIES[key]
                 try:
                     parts = get_memory_experiment_parts(
                         code, Pauli.Z, num_rounds=2, syndrome_measurement_strategy=strategy
@@ -360,6 +360,46 @@ def run(write: bool, only: str, kinds: set[str]) -> list[Outcome]:
                         Outcome(spec.key, f"se:{key}", "invalid", verdict.removeprefix("failed: "))
                     )
                     continue
+                rounds[key] = circuit
+
+            # Two strategies, one circuit. Colouring the X- and Z-check subgraphs
+            # separately gives the joint colouring back, byte for byte, whenever the
+            # Tanner graph is small enough that the joint one already separates them
+            # — five codes here. Storing both would publish the same round twice
+            # under two names, with nothing on either page to tell them apart: same
+            # body, same metrics, same tags, same circuit distance. Keep the first
+            # and let it say which other strategy landed on it, so the coincidence is
+            # recorded rather than sold as a second circuit.
+            first_of: dict[str, str] = {}
+            for key, circuit in rounds.items():
+                first_of.setdefault(str(circuit), key)
+
+            for key, circuit in rounds.items():
+                body = str(circuit)
+                if first_of[body] != key:
+                    out.append(
+                        report(
+                            Outcome(
+                                spec.key,
+                                f"se:{key}",
+                                "duplicate",
+                                f"identical to se:{first_of[body]}",
+                            )
+                        )
+                    )
+                    continue
+                twins = [
+                    SE_STRATEGIES[other][0]
+                    for other, c in rounds.items()
+                    if other != key and str(c) == body
+                ]
+                circuit_name, blurb = SE_STRATEGIES[key]
+                if twins:
+                    blurb += (
+                        " On this code the "
+                        + " and ".join(f"{t!r}" for t in twins)
+                        + " strategy produces the identical round, so it is not stored twice."
+                    )
 
                 interleaved = interleaves_xz(circuit, n)
                 emit(
@@ -383,7 +423,7 @@ def run(write: bool, only: str, kinds: set[str]) -> list[Outcome]:
                                 "qldpc.circuits.get_memory_experiment_parts({code}, "
                                 "qldpc.objects.Pauli.Z, num_rounds=2, "
                                 "syndrome_measurement_strategy=qldpc.circuits."
-                                f"{type(strategy).__name__}()).qec_cycle"
+                                f"{type(strategies[key]).__name__}()).qec_cycle"
                                 " — the body stored here is that cycle's REPEAT block with"
                                 " the detectors and observable removed, since they belong to"
                                 " the memory experiment rather than to the round.",
