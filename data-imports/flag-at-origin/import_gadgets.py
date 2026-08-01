@@ -33,6 +33,7 @@ sys.path.insert(0, str(HERE))
 
 from convert import dict_to_stim, load_pytket_dict  # noqa: E402
 
+from scripts.add_circuit.compute import slugify  # noqa: E402
 from scripts.add_circuit.compute_circuit import compute_circuit_data  # noqa: E402
 from scripts.add_circuit.ids import next_qec_id  # noqa: E402
 from scripts.add_circuit.yaml_helpers import (  # noqa: E402
@@ -81,28 +82,58 @@ def gadget_specs(zf: zipfile.ZipFile) -> list[tuple[str, int, int, str]]:
     return specs
 
 
-def import_one(member: str, d: int, w: int, basis: str, data_dir: Path, write: bool, zf) -> str:
+def import_one(
+    members: list[str], ds: list[int], w: int, basis: str, data_dir: Path, write: bool, zf
+) -> str:
+    """One stored circuit per distinct gadget, however many distances ship it.
+
+    A gadget depends on the stabiliser's weight, not on the code distance it was
+    verified at, so the same file comes back for every distance at or above the
+    one it first appears in — the weight-4 X gadget is byte-identical at d=3, 5,
+    7, 9 and 11. Storing five copies published one circuit five times with
+    nothing to tell the pages apart but the number in the title. The distances
+    are the information, so they become five `distance:` tags on one circuit.
+    """
+    member = members[0]  # lowest distance; they are byte-identical by construction
     stim_text, ndata, anc, _ = dict_to_stim(load_pytket_dict(zf.read(member).decode()))
     b = basis.lower()
-    name = f"{basis}-type weight-{w} FT gadget (d={d})"
+    span = f"d={ds[0]}" if len(ds) == 1 else f"d={ds[0]}-{ds[-1]}"
+    name = f"{basis}-type weight-{w} FT gadget ({span})"
+    # The slug stays the lowest distance's, so an entry keeps its file name and
+    # its permanent qec_id when a later distance turns out to ship the same
+    # circuit. Deterministic either way: it is derived, not remembered.
+    slug_name = f"{basis}-type weight-{w} FT gadget (d={ds[0]})"
     anc_phrase = f"{len(anc)} flag ancillas" if anc else "no flag ancillas needed"
+    verified = (
+        f"distance {ds[0]}"
+        if len(ds) == 1
+        else "distances " + ", ".join(map(str, ds[:-1])) + f" and {ds[-1]}"
+    )
     notes = (
         f"Fault-tolerant gadget for a weight-{w} {basis}-type stabiliser, verified "
-        f"to distance {d} via the 'flag at origin' construction (arXiv:2508.14200). "
+        f"to {verified} via the 'flag at origin' construction (arXiv:2508.14200). "
         f"A reusable building block ({ndata} data qubits + {anc_phrase}) "
-        f"that is not tied to a specific code. Source file: {member}."
+        f"that is not tied to a specific code. "
+        + (
+            f"Source file: {member}."
+            if len(members) == 1
+            else "The same circuit ships at each of those distances; source files: "
+            + ", ".join(members)
+            + "."
+        )
     )
     # Weight is a numeric metric (like qubit_count), not a tag — there are ~50
     # distinct values, so it powers a range filter instead of a tag dropdown.
     # `flag` tag only when the gadget actually uses flag ancillas; the trivial
     # low-weight cases need none but are still FT (they keep the `ft` tag).
-    tags = ["gadget", "ft", f"distance:{d}", f"{b}-type"]
+    tags = ["gadget", "ft", *[f"distance:{d}" for d in ds], f"{b}-type"]
     if anc:
         tags.insert(1, "flag")
     circ = compute_circuit_data(
         stim_text, circuit_name=name, source=SOURCE, tool=TOOL, notes=notes, tags=tags
     )
     circ["weight"] = w
+    circ["slug"] = slugify(slug_name)
     stem = f"{CODE_SLUG}--{circ['slug']}"
     if write:
         circuits_dir = data_dir / "circuits"
@@ -141,9 +172,27 @@ def main() -> None:
         specs = gadget_specs(zf)
         if args.limit:
             specs = specs[: args.limit]
+
+        # Group by the circuit itself, not by (weight, basis): identity is what
+        # the rule is about, and reading the file is the only way to know it.
+        # Keyed on (basis, weight, body) so a hypothetical weight-w gadget that
+        # genuinely differs between distances would still get its own entry.
+        groups: dict[tuple[str, int, str], list[tuple[str, int]]] = {}
         for member, d, w, basis in specs:
-            print(import_one(member, d, w, basis, data_dir, args.write, zf), flush=True)
-    print(f"\n{'wrote' if args.write else 'classified'} {len(specs)} flag gadgets.")
+            body, _, _, _ = dict_to_stim(load_pytket_dict(zf.read(member).decode()))
+            groups.setdefault((basis, w, body), []).append((member, d))
+
+        for (basis, w, _), entries in groups.items():
+            entries.sort(key=lambda e: e[1])
+            members = [m for m, _ in entries]
+            ds = [d for _, d in entries]
+            print(import_one(members, ds, w, basis, data_dir, args.write, zf), flush=True)
+
+    merged = sum(len(v) - 1 for v in groups.values())
+    print(
+        f"\n{'wrote' if args.write else 'classified'} {len(groups)} flag gadgets "
+        f"from {len(specs)} source files ({merged} were the same circuit at another distance)."
+    )
 
 
 if __name__ == "__main__":

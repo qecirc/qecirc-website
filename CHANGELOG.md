@@ -16,6 +16,13 @@ the source-of-truth `package.json` version.
   [[15,7,3]] come out at `circuit-distance:1`**: one fault anywhere in the round flips a
   logical without firing a detector. Two circuits exceed even a 400 s budget and stay
   untagged.
+- **Fifty-six flag gadgets were stored twice or more.** A gadget depends on the
+  stabiliser's weight, not on the code distance it was verified at, so the same file ships
+  at every distance from the one it first appears in up to 11 — the weight-4 X gadget is
+  byte-identical at d=3, 5, 7, 9 and 11 and was five circuits, distinguishable only by the
+  number in the title. The distances are the information, not the copies: 20 circuits now
+  carry several `distance:` tags each, stay findable by filtering on any of them, and name
+  the span (`X-type weight-4 FT gadget (d=3-11)`). 354 source files, 298 circuits.
 - **Five qLDPC rounds were stored twice.** Colouring the X- and Z-check subgraphs
   separately returns the joint colouring, byte for byte, whenever the Tanner graph is
   small enough that the joint one already separates them — [[4,2,2]], [[6,2,2]],
