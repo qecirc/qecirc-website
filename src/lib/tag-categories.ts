@@ -22,7 +22,10 @@ const HARDWARE_TAGS = new Set(["1D-AOD"]);
 export function categorizeTag(name: string): TagCategoryKey {
   if (TYPE_TAGS.has(name) || name.startsWith("logical-state:")) return "type";
   // `distance:N` is a fault-tolerance property (a circuit/gadget FT to distance N).
-  if (FT_TAGS.has(name) || name.startsWith("distance:")) return "ft";
+  // `circuit-distance:N` is the measured one — a different number, the same
+  // question — so it belongs beside it rather than in "Other".
+  if (FT_TAGS.has(name) || name.startsWith("distance:") || name.startsWith("circuit-distance:"))
+    return "ft";
   if (HARDWARE_TAGS.has(name) || name.startsWith("connectivity:") || name.startsWith("device:"))
     return "hardware";
   // `schedule:` and `decoder:` describe how a syndrome-extraction round was

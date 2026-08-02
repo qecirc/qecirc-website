@@ -100,7 +100,7 @@ it is intentionally not imported.
 python import_gadgets.py --write
 ```
 
-Imports the **354 plain `{d}_{w}_{X|Z}_ft_plaquette.txt`** gadgets — one per
+Reads the **354 plain `{d}_{w}_{X|Z}_ft_plaquette.txt`** files — one per
 `(distance, weight, basis)`, the canonical set the paper's own
 `generate_FT_plaq_notebook()` reads and its Notebook_2 table catalogs (weights
 2–51, distances 3/5/7/9/11). The `_mod_ANC` and `_from_Cplusplus` variants are
@@ -108,8 +108,19 @@ auxiliary — `_mod_ANC` only covers 111 configs and merely adds a redundant fla
 to the trivial weight-2/3 cases; `_from_Cplusplus` is a different C++ text format
 and coverage-redundant — so both are skipped.
 
+**354 files, 298 circuits.** A gadget depends on the stabiliser's weight, not on
+the code distance it was verified at, so the same file comes back for every
+distance at or above the one it first appears in — the weight-4 X gadget is
+byte-identical at d=3, 5, 7, 9 and 11. Those five were stored as five circuits,
+with nothing to tell the pages apart but the number in the title. The distances
+are the information, so one circuit now carries five `distance:` tags and stays
+findable by filtering on any of them; its name gives the span (`d=3-11`) and its
+notes list the source files. Grouping is on the emitted circuit, not on
+`(weight, basis)`, so a gadget that genuinely differed between distances would
+still get its own entry. 20 of the 298 absorb the other 56 files.
+
 Each gadget is a complete FT circuit that prepares/measures a single weight-`w`
-stabiliser to distance `d`. They don't correspond to any code, so they can't go
+stabiliser. They don't correspond to any code, so they can't go
 through `import_state_prep`; they're collected under a placeholder
 **`flag-gadgets`** code (`n = k = 0`, no check matrices — so the code page has no
 matrices section; tagged `no-code`) and written directly with the pipeline's

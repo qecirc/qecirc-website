@@ -5,6 +5,40 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+### Fixed
+
+- **The qLDPC rounds were never measured for circuit-level distance**, and the docs say an
+  absent `circuit-distance:` tag means the search ran out of budget. It did not: 26 of the
+  28 settle, 20 of them in under a second. `scripts/measure_circuit_distance.py` arrived in
+  #137 and #136 had already merged, so nothing ever pointed it at them. Now tagged, which
+  puts a number on the caveat those circuits already carry — the library states the
+  strategy is not guaranteed distance-preserving, and **[[4,2,2]], [[6,2,2]] and
+  [[15,7,3]] come out at `circuit-distance:1`**: one fault anywhere in the round flips a
+  logical without firing a detector. Two circuits exceed even a 400 s budget and stay
+  untagged.
+- **Fifty-six flag gadgets were stored twice or more.** A gadget depends on the
+  stabiliser's weight, not on the code distance it was verified at, so the same file ships
+  at every distance from the one it first appears in up to 11 — the weight-4 X gadget is
+  byte-identical at d=3, 5, 7, 9 and 11 and was five circuits, distinguishable only by the
+  number in the title. The distances are the information, not the copies: 20 circuits now
+  carry several `distance:` tags each, stay findable by filtering on any of them, and name
+  the span (`X-type weight-4 FT gadget (d=3-11)`). 354 source files, 298 circuits.
+- **Five pairs of qLDPC rounds were identical without saying so.** Colouring the X- and
+  Z-check subgraphs separately returns the joint colouring, byte for byte, whenever the
+  Tanner graph is small enough that the joint one already separates them — [[4,2,2]],
+  [[6,2,2]], [[7,1,3]], [[15,7,3]] and the tetrahedral code, 5 of the 14 codes carrying
+  both. Nothing on either page said so, which left two entries a reader had to diff by
+  hand. Both are still stored: they are different algorithms, and on the other 9 codes
+  they differ, the toric [[16,2,4]] by depth 4 against 9. Each now names the other
+  strategy in its notes, so the agreement is a stated property of the code rather than an
+  unexplained repeat.
+- **The changelog claimed 61 of 127 circuits measured.** That count came from a branch that
+  also held the AlphaSyndrome import when it was not yet merged, and counted 127 circuits
+  that were never all on `main` at once. With every round in place it is 91 of 159.
+  Corrected, along with how many preserve the code's distance.
+- **`circuit-distance:` fell into the filter's "Other" group** while `distance:` sits under
+  Fault tolerance. Same question, different number — they belong together.
+
 ### Added
 
 - **AlphaSyndrome syndrome-measurement schedules** (59 of them), imported from
@@ -257,7 +291,7 @@ the source-of-truth `package.json` version.
 - **`circuit-distance:<N>` on syndrome-extraction circuits** — the fewest faults
   _anywhere in the round_ (gate, idle, reset or readout) that flip a logical while
   firing no detector, measured rather than cited. It sits next to `distance:<N>`,
-  which is the **code's** distance and usually a larger number: 8 of the 61 circuits
+  which is the **code's** distance and usually a larger number: 17 of the 91 circuits
   measured so far preserve it, the rest lose at least one step to hook errors. Filter
   on it like any other tag.
   - `scripts/measure_circuit_distance.py` writes it;
@@ -274,9 +308,9 @@ the source-of-truth `package.json` version.
     would have called that schedule distance-preserving and put `circuit-distance:6` on
     a `distance:5` code. `build_annotated_se` gained a `basis` argument for this; the
     stored Z bodies are byte-identical.
-  - The search cost grows with `n` and, harder, with `d`: 61 of 127 circuits settled
-    inside a 120 s budget, up to [[125,5,5]], while [[37,1,7]] did not. An **absent tag
-    means not measured**, never "no faults found".
+  - The search cost grows with `n` and, harder, with `d`: 91 of the library's 159 rounds
+    settle inside a 120 s budget. `d` is what hurts — [[241,121,3]] takes 3 s and
+    [[49,1,7]] runs out. An **absent tag means not measured**, never "no faults found".
 
 ### Fixed
 
