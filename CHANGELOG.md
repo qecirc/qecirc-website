@@ -33,19 +33,11 @@ the source-of-truth `package.json` version.
   strategy in its notes, so the agreement is a stated property of the code rather than an
   unexplained repeat.
 - **The changelog claimed 61 of 127 circuits measured.** That count came from a branch that
-  also held the AlphaSyndrome import, which is not merged; on `main` it is 44 of 100.
+  also held the AlphaSyndrome import when it was not yet merged, and counted 127 circuits
+  that were never all on `main` at once. With every round in place it is 91 of 159.
   Corrected, along with how many preserve the code's distance.
-- **A changelog entry announced 56 AlphaSyndrome circuits that are not in the library.** It
-  reached `main` through a rebase, duplicating the machinery entry above it and leaving the
-  repo's only broken relative link. Removed; [#135](https://github.com/qecirc/qecirc-website/pull/135)
-  carries the real entry.
-- **The landing page still offered syndrome extraction as "still to come"** with 100 rounds
-  live. It names what the library holds now.
 - **`circuit-distance:` fell into the filter's "Other" group** while `distance:` sits under
   Fault tolerance. Same question, different number — they belong together.
-- Two union-merge artifacts from #137's rebase: `CLAUDE.md`'s tag table was two malformed
-  tables, and the QUITS changelog bullet appeared three times, at 69, 71 and 72 schedules.
-- `package-lock.json` was left at 0.7.2 against `package.json`'s 0.7.3.
 
 ### Added
 
@@ -299,7 +291,7 @@ the source-of-truth `package.json` version.
 - **`circuit-distance:<N>` on syndrome-extraction circuits** — the fewest faults
   _anywhere in the round_ (gate, idle, reset or readout) that flip a logical while
   firing no detector, measured rather than cited. It sits next to `distance:<N>`,
-  which is the **code's** distance and usually a larger number: 10 of the 44 circuits
+  which is the **code's** distance and usually a larger number: 17 of the 91 circuits
   measured so far preserve it, the rest lose at least one step to hook errors. Filter
   on it like any other tag.
   - `scripts/measure_circuit_distance.py` writes it;
@@ -316,7 +308,7 @@ the source-of-truth `package.json` version.
     would have called that schedule distance-preserving and put `circuit-distance:6` on
     a `distance:5` code. `build_annotated_se` gained a `basis` argument for this; the
     stored Z bodies are byte-identical.
-  - The search cost grows with `n` and, harder, with `d`: 44 of the library's 100 rounds
+  - The search cost grows with `n` and, harder, with `d`: 91 of the library's 159 rounds
     settle inside a 120 s budget. `d` is what hurts — [[241,121,3]] takes 3 s and
     [[49,1,7]] runs out. An **absent tag means not measured**, never "no faults found".
 
