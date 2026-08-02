@@ -20,10 +20,14 @@ is represented as a tag, not a separate entity.
 
 Both levels support **tags** to aid discovery and filtering:
 
-| Level   | Example tags                                                                            |
-| ------- | --------------------------------------------------------------------------------------- |
-| Code    | `CSS`, `topological`, `bosonic`                                                         |
-| Circuit | `encoding`, `syndrome-extraction`, `fault-tolerant`, `distance:3`, `circuit-distance:2` |
+| Level   | Example tags                                                      |
+| ------- | ----------------------------------------------------------------- |
+| Code    | `CSS`, `topological`, `bosonic`                                   |
+| Circuit | `encoding`, `syndrome-extraction`, `fault-tolerant`, `distance:3` |
+| Level   | Example tags                                                      |
+| ------- | ----------------------------------------------------------------  |
+| Code    | `CSS`, `topological`, `bosonic`                                   |
+| Circuit | `encoding`, `fault-tolerant`, `distance:3`, `circuit-distance:2`  |
 
 Tags can be either **structured** (`key:value`, e.g. `distance:3`) or **free-form strings**.
 
@@ -32,7 +36,7 @@ Circuits also have numeric **metrics** for filtering: `gate_count`, `depth`, `qu
 A circuit taken from a published work also links to a **paper**, which is what makes it
 findable by title, author or arXiv id. The link is **derived, not declared**: `circuits.source`
 already holds the provenance link, so `create_database.mjs` matches it against each paper's
-`url`/`arxiv_id`/`doi` rather than making 1028 circuit files repeat it. Add a paper and every
+`url`/`arxiv_id`/`doi` rather than making 833 circuit files repeat it. Add a paper and every
 circuit citing it is enriched at the next build; a source with no paper is not an error
 (`source: circuit-synth` names a tool, not a work), it just leaves the circuit searchable by
 URL alone. Both the build and `validate:yaml` report such sources.
@@ -223,7 +227,7 @@ What a circuit is findable by, and where each comes from:
    3. any term, `STRICT_COLUMNS` — `partial`
    4. any term, allowing `related`
 
-   (2) precedes (3) deliberately: widening `toric code` to "any term" matches every circuit containing "code" (1019 of 1028), whereas allowing `related` returns the 122 surface codes actually meant.
+   (2) precedes (3) deliberately: widening `toric code` to "any term" matches every circuit containing "code" (824 of 833), whereas allowing `related` returns the 98 surface codes actually meant.
 
 **Column weights and the strict column set are DERIVED, not restated** (`src/lib/queries/search-schema.ts`). Both used to be hand-maintained constants, and both drifted from the table within a week despite shouty comments. `PRAGMA table_info(circuit_search)` returns the real columns in declaration order — which is exactly what `bm25()` wants — so:
 
@@ -231,7 +235,7 @@ What a circuit is findable by, and where each comes from:
 - **Forget the weight and it throws**, naming the column, instead of FTS5 silently scoring it 1.0 and mis-ranking everything.
 - **The strict set needs no upkeep**: it is every column minus `circuit_id` (UNINDEXED — naming it in a filter is an FTS5 error) and minus `LOOSE_COLUMNS`. New columns are strict by default, which is the safe direction — wrongly-loose tells a user their exact query found nothing.
 
-**Aliases — a data layer, not a forgiveness layer** (`data/migrations/017`). Codes and tools carry optional `aliases:` (and codes, `related:`) in their YAML; a circuit inherits its code's. The layers above cannot substitute for it: `bb` is two characters, so `editBudget` allows it zero edits, and before this existed `bb codes` returned almost every circuit — the OR fallback firing on `codes`.
+**Aliases — a data layer, not a forgiveness layer** (`data/migrations/017`). Codes and tools carry optional `aliases:` (and codes, `related:`) in their YAML; a circuit inherits its code's. The layers above cannot substitute for it: `bb` is two characters, so `editBudget` allows it zero edits, and before this existed `bb codes` returned 824 of 833 circuits — the OR fallback firing on `codes`.
 
 - `aliases` = **another name for this code**. Matched silently; the gross code _is_ a BB code.
 - `related` = **a different, adjacent code** people reach for loosely. Matched only as a last resort, and `/search` says so. The quick-search ignores `related` entirely: a dropdown has no room to explain itself.

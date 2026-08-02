@@ -91,7 +91,7 @@ export function resolveQuery(raw: string, opts: { literal?: boolean } = {}): Res
   //
   // (2) precedes (3) because dropping to "any term" is the bigger concession:
   // "toric code" widened to ANY term matches every circuit with "code" in it
-  // (1019 of 1028), while allowing `related` returns surface codes -- which is
+  // (824 of 833), while allowing `related` returns surface codes -- which is
   // what the user meant. Ranking (3) first would answer a precise query with the
   // catalogue.
   //

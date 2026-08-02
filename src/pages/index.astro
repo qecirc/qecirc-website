@@ -102,7 +102,7 @@ const EXAMPLE_CIRCUIT_TAGS = EXAMPLE_CODE
   : [];
 
 // A real circuit for the detail-page preview. Not simply the newest one: the
-// step promises Crumble and Quirk, and those links are per-circuit (781 of 1028
+// step promises Crumble and Quirk, and those links are per-circuit (728 of 833
 // have them), so a reader clicking through to one without them would find the
 // step had oversold. Prefer a recent circuit that actually has both.
 const EXAMPLE_CIRCUIT = getLatestCircuits(20).find((c) => c.crumble_url && c.quirk_url) ?? latest[0];
@@ -186,14 +186,14 @@ const jsonLd = {
 >
   <section class="max-w-2xl mb-8">
     <h1 class="text-3xl font-bold mb-3">Quantum error correction circuits</h1>
-    {/* Name only what the library actually holds. Syndrome extraction said
-        "still to come" until the first rounds landed; anything not yet here
-        belongs in this list the same way — as scope, never as a promise. */}
+    {/* Encoding, state preparation and flag gadgets are what the library
+        actually holds; syndrome extraction is named as scope, so it says "still
+        to come" rather than implying you can download one today. */}
     <p class="text-gray-600 dark:text-gray-400 mb-3">
       QECirc is where QEC researchers find the circuits they need to design
       fault-tolerant computation. Browse, compare and download reusable circuits for
-      encoding, state preparation, syndrome extraction and flag gadgets, organised by
-      error-correcting code. Each circuit carries its metrics and its
+      encoding, state preparation and flag gadgets, organised by error-correcting code,
+      with syndrome extraction still to come. Each circuit carries its metrics and its
       source, stored in STIM and offered as QASM and Cirq.
     </p>
     <p class="text-gray-600 dark:text-gray-400 mb-4">
