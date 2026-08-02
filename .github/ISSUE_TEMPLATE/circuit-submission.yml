@@ -36,7 +36,7 @@ body:
     id: check-matrices
     attributes:
       label: Check matrices (Hx, Hz)
-      description: Optional for encoding circuits — these can be derived automatically.
+      description: Optional for encoding circuits — these can be derived automatically. Required for a syndrome-extraction round, which is checked against them.
       placeholder: |
         Hx: [[1,1,0,0,1,1,0], [1,0,1,0,1,0,1], [0,0,0,1,1,1,1]]
         Hz: [[1,1,0,0,1,1,0], [1,0,1,0,1,0,1], [0,0,0,1,1,1,1]]

@@ -1,0 +1,14 @@
+qec_id: 1269
+name: Depth-optimal schedule
+tool: asyndrome
+notes: "One syndrome-extraction round. Data qubits 0-39, then the ancillas (X-checks
+  first), measured in index order. Hadamards once per X-ancilla, not per check (equivalent).
+  Source qubit 20 is in no stabilizer and is dropped. Stored d=2, not the source's
+  7: one of its own logical X operators has weight 2."
+source: https://arxiv.org/abs/2601.12509
+gate_count: 174
+two_qubit_gate_count: 134
+depth: 4
+qubit_count: 78
+tags: [syndrome-extraction, "schedule:depth-optimal", "circuit-distance:2"]
+original_matrices: c425aaef8d081a1c

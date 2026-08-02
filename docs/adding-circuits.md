@@ -396,7 +396,9 @@ add_circuit(circuit=circuit, circuit_name="Depth-optimal schedule", d=3,
             tags=["syndrome-extraction", "schedule:depth-optimal"])
 ```
 
-The importers under `data-imports/` are the worked examples.
+The importers under `data-imports/` are the worked examples —
+[`asyndrome/`](../data-imports/asyndrome/README.md), [`qldpc/`](../data-imports/qldpc/README.md)
+and [`quits/`](../data-imports/quits/README.md) all import rounds.
 
 ## Fitting to an existing code
 
@@ -421,6 +423,9 @@ Worked examples to copy from:
 - [`data-imports/mqt-ftsp/`](../data-imports/mqt-ftsp/README.md) — MQT QECC fault-tolerant state-prep circuits.
 - [`data-imports/rlftqc/`](../data-imports/rlftqc/README.md) — RL-discovered fault-tolerant state-prep circuits.
 - [`data-imports/flag-at-origin/`](../data-imports/flag-at-origin/README.md) — flag-at-origin FT preps (converts pytket circuits to STIM, fits via precomputed/`assume_new` strategies) **and** standalone flag gadgets collected under a placeholder `flag-gadgets` code (`n = k = 0`, no check matrices) for circuits that don't belong to a code.
+- [`data-imports/qldpc/`](../data-imports/qldpc/README.md) — qLDPC encoders, state preps and rounds, including the first subsystem codes. Shows building the codes by calling a library rather than reading files.
+- [`data-imports/quits/`](../data-imports/quits/README.md) — QUITS schedules. Shows lifting one round out of a generated memory experiment, and importing a second schedule for a code that already has one.
+- [`data-imports/asyndrome/`](../data-imports/asyndrome/README.md) — AlphaSyndrome syndrome-measurement schedules. Shows what to do when the source is wrong: 10 of its 69 schedules fail `validate_syndrome_extraction_h` and are left out, three codes need their distance computed because the dataset's is missing or contradicted by its own matrices, and one code needs `assume_new` against a stored code it merely shares `n` and `k` with.
 
 Each `rebuild_all.py` classifies without writing by default and imports with `--write`, then you run the standard `npm run format && npm run validate:yaml && npm run validate:circuits && npm run db:create`.
 

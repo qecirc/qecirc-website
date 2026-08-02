@@ -98,7 +98,9 @@ Encoding extraction is exact. State-prep Hz uses a heuristic for k >= 1 — pref
 If the user says what the circuit does, run the appropriate validation:
 
 ```python
-from scripts.add_circuit import validate_encoding, validate_state_prep
+from scripts.add_circuit import (
+    validate_encoding, validate_state_prep, validate_syndrome_extraction,
+)
 
 # For encoding circuits:
 result = validate_encoding(circuit_text, Hx, Hz)
@@ -108,7 +110,14 @@ result = validate_state_prep(circuit_text, Hx, Hz)
 ```
 
 For a non-CSS code (no Hx/Hz split) pass the symplectic `h` instead:
-`validate_encoding_h(circuit_text, h, n)` / `validate_state_prep_h(circuit_text, h, n)`.
+`validate_encoding_h(circuit_text, h, n)` / `validate_state_prep_h(circuit_text, h, n)` /
+`validate_syndrome_extraction_h(circuit_text, h, n, logical=logical)`.
+
+A syndrome-extraction round is checked differently from the other two, because it acts on an
+already-encoded state: there is no `|0...0>` to simulate it on and no tableau to take. It is
+checked by stabilizer flows — the group it measures must be exactly the code's, and every
+stabilizer and logical must survive it. See "Adding a syndrome-extraction circuit" in
+docs/adding-circuits.md.
 
 If validation fails, report details and stop. Do not proceed with invalid circuits unless the user explicitly overrides.
 

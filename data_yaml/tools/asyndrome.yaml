@@ -1,0 +1,6 @@
+name: AlphaSyndrome
+description: Monte Carlo tree search framework that schedules syndrome-measurement circuits for commuting-stabilizer codes, shaping error propagation away from logical operators and inside a given decoder's correctable region.
+github_url: https://github.com/acasta-yhliu/asyndrome
+paper_urls: [https://arxiv.org/abs/2601.12509]
+aliases: ["asyndrome"]
+tags: [Python, syndrome-extraction, scheduling]

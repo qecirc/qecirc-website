@@ -68,7 +68,7 @@ export function hasDetectors(code: string): boolean {
 /** Drop the readout epilogue, keeping the reset prologue and the body.
  *
  *  Only the *added* epilogue goes. Pre-existing mid-circuit measurements are
- *  part of the circuit — 399 of 834 bodies carry flag/verification measurements
+ *  part of the circuit — 558 of 1028 bodies carry flag/verification measurements
  *  — and must survive. The generator appends exactly one readout instruction,
  *  last, so once the annotations are dropped it is the final line; anything
  *  earlier belongs to the body.
