@@ -102,16 +102,17 @@ const EXAMPLE_CIRCUIT_TAGS = EXAMPLE_CODE
   : [];
 
 // A real circuit for the detail-page preview. Not simply the newest one: the
-// step promises Crumble and Quirk, and those links are per-circuit (781 of 1028
-// have them), so a reader clicking through to one without them would find the
-// step had oversold. Prefer a recent circuit that actually has both.
+// step promises Crumble and Quirk, and those links are per-circuit -- a sizeable
+// minority of circuits carry neither -- so a reader clicking through to one
+// without them would find the step had oversold. Prefer a recent circuit that
+// actually has both.
 const EXAMPLE_CIRCUIT = getLatestCircuits(20).find((c) => c.crumble_url && c.quirk_url) ?? latest[0];
 
 // Derived from the example's real bodies through the same splitAnnotated the
 // FormatSwitcher tabs use, so the chips are exactly the tabs the linked page
 // shows -- `stim-annotated` is a view of the STIM body, not a format, and gets
-// no tab. Hardcoding STIM/QASM/Cirq would lie for the ~140 circuits that have
-// no Cirq conversion.
+// no tab. Hardcoding STIM/QASM/Cirq would lie for the several hundred circuits
+// that have no Cirq conversion.
 const EXAMPLE_FORMATS = EXAMPLE_CIRCUIT
   ? splitAnnotated(getBodiesForCircuits([EXAMPLE_CIRCUIT.id]).get(EXAMPLE_CIRCUIT.id) ?? []).tabs.map(
       (b) => b.format.toUpperCase(),

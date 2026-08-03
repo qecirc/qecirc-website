@@ -30,9 +30,16 @@ data_yaml/
 ├── tools/              # one YAML file per tool
 ├── papers/             # one YAML file per cited paper
 ├── codes/              # one YAML file per code
-└── circuits/           # YAML metadata + body files per circuit
-    └── originals/      # original (pre-canonicalization) STIM and matrices
+├── circuits/           # YAML metadata + body files per circuit
+│   └── originals/      # original (pre-canonicalization) STIM, where one was submitted
+└── matrices/           # submitted check matrices, content-addressed and shared
 ```
+
+The two halves of a submission live apart because they have different owners: the
+STIM is per circuit, while the matrices a circuit was submitted against are the same
+for every circuit of one code, so they are written once as
+`data_yaml/matrices/<digest>.yaml` and referenced by the circuit YAML's
+`original_matrices: <digest>`.
 
 To edit existing data, modify the YAML files directly and rebuild:
 
@@ -65,7 +72,7 @@ The build prints how many circuits linked, and lists any link-shaped `source` wi
 behind it:
 
 ```
-Papers: 8, linked to 780 circuits.
+Papers: <n>, linked to <m> circuits.
 ```
 
 Those unlinked circuits still render and still search by URL; they just cannot be found by
@@ -73,7 +80,10 @@ title or author. `npm run validate:yaml` reports the same thing as a warning.
 
 ## Original Circuit Data
 
-The `circuit_originals` table stores pre-canonicalization data for each circuit:
+The `circuit_originals` table stores pre-canonicalization data for the circuits that have
+any. Not every circuit does — one written directly by the pipeline helpers, as the flag
+gadgets are, was never submitted in some other form, and the detail page simply omits the
+section for it.
 
 | Column             | Description                                            |
 | ------------------ | ------------------------------------------------------ |
@@ -82,4 +92,4 @@ The `circuit_originals` table stores pre-canonicalization data for each circuit:
 | `original_h`       | JSON-encoded symplectic stabilizer matrix as submitted |
 | `original_logical` | JSON-encoded symplectic logical operators as submitted |
 
-The Hx/Hz/Lx/Lz CSS view is derived from `original_h` / `original_logical` at render time; it is not stored. This data is populated from `data_yaml/circuits/originals/` during `npm run db:create` and displayed on the circuit detail page (`/circuits/[qec_id]`) under "Original submission (before canonicalization)".
+The Hx/Hz/Lx/Lz CSS view is derived from `original_h` / `original_logical` at render time; it is not stored. `original_stim` is populated from `data_yaml/circuits/originals/` and the matrix columns from `data_yaml/matrices/<digest>.yaml` (resolved through the circuit YAML's `original_matrices` digest) during `npm run db:create`, and both are displayed on the circuit detail page (`/circuits/[qec_id]`) under "Original submission (before canonicalization)".

@@ -2,8 +2,8 @@
 
 The stored ``stim`` body is reset-free and unannotated — ``to_tableau()`` and the
 derive/fit machinery need a circuit with no resets, and it leaves the ``|0...0>``
-input implied. (It is not gate-only: 399 of 834 bodies carry flag or verification
-measurements, which are part of the circuit.) This module builds a *separate*
+input implied. (It is not gate-only: a large share of bodies carry flag or
+verification measurements, which are part of the circuit.) This module builds a *separate*
 ``stim-annotated`` body stating what the stored one leaves out: an explicit reset
 prologue, then the body verbatim, then — where derivable — a terminal readout and
 the deterministic stabilizer outcomes as ``DETECTOR``s.
@@ -474,8 +474,8 @@ def strip_readout(circ: stim.Circuit) -> stim.Circuit:
     leaving it implied.
 
     Only the *added* epilogue goes. Pre-existing mid-circuit measurements are
-    part of the circuit (399 of 834 bodies carry flag/verification measurements)
-    and must survive. :func:`build_annotated` appends exactly one readout
+    part of the circuit — a large share of bodies carry flag/verification
+    measurements — and must survive. :func:`build_annotated` appends exactly one readout
     instruction, last, so after the annotations are dropped it is the final
     instruction — anything earlier belongs to the body.
 

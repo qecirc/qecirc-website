@@ -8,7 +8,7 @@
       34, 51, 11, 27, 10, 93, 30, 14, 13, 36, 20, 19, 8, 7, 24
     ],
     "stored_slug": "108-8-10",
-    "provenance": "Derived by data-imports/autqec/find_sigma.py for the autqec import (arXiv:2409.18175). QUITS labels this code identically to autqec (identical X and Z row spaces), so the same permutation applies. add_circuit re-verifies it by row-space equality on every run."
+    "provenance": "Derived for the autqec import (arXiv:2409.18175), whose find_sigma.py driver is not in this repository - it is still open as PR #127. The matcher it calls is scripts/add_circuit/find_sigma.py; see data-imports/qldpc/find_sigma.py for a worked example of driving it. QUITS labels this code identically to autqec (identical X and Z row spaces), so the same permutation applies. add_circuit re-verifies it by row-space equality on every run."
   },
   "bb-144-12-12": {
     "sigma": [
@@ -21,6 +21,6 @@
       29, 3, 39, 116, 16, 35, 12, 122, 41, 19, 24, 25
     ],
     "stored_slug": "144-12-12",
-    "provenance": "Derived by data-imports/autqec/find_sigma.py for the autqec import (arXiv:2409.18175). QUITS labels this code identically to autqec (identical X and Z row spaces), so the same permutation applies. add_circuit re-verifies it by row-space equality on every run."
+    "provenance": "Derived for the autqec import (arXiv:2409.18175), whose find_sigma.py driver is not in this repository - it is still open as PR #127. The matcher it calls is scripts/add_circuit/find_sigma.py; see data-imports/qldpc/find_sigma.py for a worked example of driving it. QUITS labels this code identically to autqec (identical X and Z row spaces), so the same permutation applies. add_circuit re-verifies it by row-space equality on every run."
   }
 }

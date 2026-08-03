@@ -154,7 +154,7 @@ result = add_circuit(
 print(result.summary())
 ```
 
-Report the files written. The output includes original submission files (`*.original.stim` and `*.original.yaml` in `data_yaml/circuits/originals/`) — these are automatically generated and preserve the pre-canonicalization STIM circuit and check matrices for verification purposes. No user action is needed for these.
+Report the files written. The output includes original submission files — `<code-slug>--<circuit-slug>.original.stim` in `data_yaml/circuits/originals/`, and the submitted check matrices in `data_yaml/matrices/<digest>.yaml`, which is content-addressed and shared by every circuit of the code. These are automatically generated and preserve the pre-canonicalization data for verification purposes. No user action is needed for these.
 
 ---
 
@@ -224,7 +224,7 @@ work is enriched too.
 Then confirm it linked. `npm run db:create` prints:
 
 ```
-Papers: 7, linked to 724 circuits.
+Papers: <n>, linked to <m> circuits.
 ```
 
 and lists any source with no paper behind it. The new circuit must not be in that
