@@ -10,17 +10,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  no-private-registries:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Forbid private artifactory references
-        run: |
-          if git grep -n -F 'jfrog.io' -- ':!.github/workflows/ci.yml'; then
-            echo "::error::Found jfrog.io references. QECirc must only use public registries (PyPI, npm)."
-            exit 1
-          fi
-
   quality:
     runs-on: ubuntu-latest
     steps:

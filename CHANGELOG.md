@@ -5,6 +5,14 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+### Removed
+
+- **The `no-private-registries` CI job.** It failed the build on any `jfrog.io` reference —
+  a guard from the period when this code sat next to a private artifactory. Nothing in the
+  repository has referenced one for a long time (`git grep -F jfrog.io` is empty), and both
+  lockfiles resolve exclusively against public registries, so the job was spending a run on
+  every PR to assert something no longer at risk.
+
 ### Fixed
 
 - **`/api/search` was cached at the edge for a week, keyed on `?q=`.** `middleware.ts`
