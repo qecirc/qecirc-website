@@ -69,6 +69,46 @@ the source-of-truth `package.json` version.
 - **`scripts/annotate_circuits.py` described itself as state-prep/encoding-only** though it
   has dispatched to `build_annotated_se` for syndrome extraction since that landed. Its
   docstring now covers both branches and why a round cannot be reset-free.
+- **A collapsed circuit row kept every one of its controls in the tab order.** The panel is
+  hidden with `max-height: 0` and `overflow: hidden`, which clips it visually and does
+  nothing at all to focus — so a keyboard user tabbing down a code page fell through
+  hundreds of buttons and links inside rows they could not see, with no way to tell where
+  the focus ring had gone. Measured on the built site: **396 focusable controls inside the
+  collapsed rows of `/codes/steane-code`, 1366 on `/codes/flag-gadgets`, and 7 in the
+  closed mobile nav below 640px** — now 0 in all three. The collapsed check-matrices
+  section was the same bug (3 controls). The containers carry `inert`, and every handler
+  that writes `max-height` now writes `inert` beside it; expanding a row makes its ten
+  controls focusable again, collapsing takes them back out.
+- **66 of the 84 code pages shared a `<title>` with another page.** 17 groups of codes have the same
+  bare name — nine are called "Balanced Product Cyclic Code" — so their tabs, bookmarks and
+  search results were indistinguishable. The page already computed the disambiguated
+  `codeTitle` (name plus `[[n,k,d]]`) and handed it to the JSON-LD; the `<title>` was the
+  one place still getting `code.name`. All 84 code page titles are now distinct.
+- **The `<h1>` ran the name into the parameters: "Steane Code[[7,1,3]]".** Astro strips the
+  whitespace between two adjacent expressions, and the measured gap was 0.00px. Laid out
+  the same way `CodeCard.astro` already does it — flex with an explicit gap — which renders
+  8px of space.
+- **`/favorites` stopped at 200 circuits and did not say so.** `/api/circuits` capped the id
+  list at 200 "to prevent abuse" while the client allows 5000 favourites and sends them all
+  in one request, so a reader who favourited the whole library saw a fifth of it and had no
+  reason to suspect the rest existed. It was never a URL-length guard either: 200 four-digit
+  ids is ~1000 characters. The cap stays — an unbounded id list is a real way to make the
+  server build an arbitrarily large query — but it is now 2000, comfortably above the
+  library's 972 circuits and still inside Node's 16 KB header limit, and truncation is
+  reported (`X-Truncated`) instead of hidden, with `/favorites` showing a notice naming
+  both counts and pointing at "Export list". Verified: 400 ids in, 400 back; all 972 in,
+  all 972 back; 2100 in, `X-Truncated: true`.
+- **"Download all visible circuits" was not true while the Favorites filter was on.** That
+  filter lives in localStorage and hides rows client-side, but `/api/download` reads the
+  query string — by design, and the contract is unchanged — so the zip still contained the
+  hidden non-favourites. The label and tooltip now say so while the filter is active, and
+  revert when it is switched off. The `[data-list-count]` label is untouched: it describes
+  the URL filters, which the download does honour.
+- **`/about` hotlinked its funding badge from img.shields.io** — the site's only third-party
+  request, on a page whose privacy policy discloses no external content, and one that
+  reserved no space so the paragraph below it moved when the badge arrived. The badge is
+  now committed at `public/unitary-foundation-badge.svg` and served locally with explicit
+  `width`/`height`. `/about` now issues zero cross-origin requests.
 - **The qLDPC rounds were never measured for circuit-level distance**, and the docs say an
   absent `circuit-distance:` tag means the search ran out of budget. It did not: 26 of the
   28 settle, 20 of them in under a second. `scripts/measure_circuit_distance.py` arrived in

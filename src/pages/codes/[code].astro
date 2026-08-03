@@ -105,8 +105,13 @@ const jsonLd = [
 ];
 ---
 
+{/* codeTitle, not code.name: 17 groups of codes share a bare name (nine are
+    called "Balanced Product Cyclic Code"), so 66 of the 84 pages had a
+    <title> identical to another page's and were indistinguishable in a tab
+    strip, a bookmark list or a search result. The [[n,k,d]] tells them
+    apart, and the JSON-LD on this page already used it. */}
 <Layout
-  title={code.name}
+  title={codeTitle}
   description={`Circuits for ${code.name}${params && code.name !== params ? ` ${params}` : ""}`}
   jsonLd={jsonLd}
 >
@@ -126,8 +131,11 @@ const jsonLd = [
   </a>
 
   <div class="flex items-baseline flex-wrap gap-x-3.5 gap-y-1 mb-2">
-    <h1 class="text-2xl font-bold">
-      {code.name}
+    {/* flex + gap, not two adjacent expressions: Astro strips the whitespace
+        between them, so the heading rendered as "Steane Code[[7,1,3]]" with a
+        measured 0.00px gap. Same construction as CodeCard.astro. */}
+    <h1 class="text-2xl font-bold flex items-baseline flex-wrap gap-x-2">
+      <span>{code.name}</span>
       {params !== "" && code.name !== params && <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>}
     </h1>
     {code.zoo_url && (
@@ -297,6 +305,23 @@ const jsonLd = [
 
   const FAV_FILTER_LS_KEY = "qecirc:fav-filter-active";
 
+  // "Download all visible circuits" is true of the URL filters — /api/download
+  // reads the same query string the filter form writes — but not of the
+  // Favorites filter, which lives in localStorage and hides rows the download
+  // still contains. The download's contract is deliberately URL-params-only,
+  // so the label is what has to change, not the behaviour.
+  const DOWNLOAD_LABEL = "Download all visible circuits";
+  const DOWNLOAD_LABEL_FAV_FILTERED =
+    "Download all circuits matching the filters — the Favorites filter is not applied, so this includes rows it is hiding";
+
+  function setDownloadLabel(favFilterActive: boolean): void {
+    const btn = document.getElementById("download-all-btn");
+    if (!btn) return;
+    const label = favFilterActive ? DOWNLOAD_LABEL_FAV_FILTERED : DOWNLOAD_LABEL;
+    btn.setAttribute("aria-label", label);
+    btn.setAttribute("title", `${label} — Shift+D`);
+  }
+
   function applyFavFilter(active: boolean): void {
     const favSet = new Set(getFavorites());
     document.querySelectorAll("[id] > .circuit-toggle").forEach(function (toggle) {
@@ -305,6 +330,7 @@ const jsonLd = [
       const qecId = Number(row.id);
       row.style.display = active && !favSet.has(qecId) ? "none" : "";
     });
+    setDownloadLabel(active);
   }
 
   const favToggle = document.getElementById("fav-filter-toggle");

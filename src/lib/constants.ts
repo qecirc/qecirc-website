@@ -37,6 +37,21 @@ export const DROPDOWN_ENTRY_UNSELECTED =
 export const SUMMARY_SELECTED = `${TAG_SELECTED} font-semibold`;
 export const SUMMARY_UNSELECTED = `${TAG_UNSELECTED} font-medium`;
 
+// Hard ceiling on how many circuit ids one `/api/circuits?ids=` request may
+// name, and on the `IN (...)` list `getCircuitsByQecIds` builds from them.
+//
+// It was 200, "to prevent abuse", and it truncated in silence: a reader with
+// more than 200 favourites saw the first 200 and nothing said so. That is not a
+// URL-length guard -- 200 four-digit ids is ~1000 characters -- and the library
+// already holds ~1000 circuits, so favouriting everything showed a fifth of it.
+// The cap stays, because an unbounded id list is a real way to make the server
+// build an arbitrarily large query, but it now sits above the whole library
+// with room to grow. Truncation is reported (`X-Truncated`) rather than hidden.
+//
+// It is also below what would break the request itself: 2000 ids is ~10 KB of
+// query string, inside Node's 16 KB header limit.
+export const MAX_CIRCUIT_IDS_PER_REQUEST = 2_000;
+
 export const HEART_PATH =
   "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z";
 

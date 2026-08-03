@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from "astro";
 import { getCircuitsByQecIds } from "../../lib/queries";
+import { MAX_CIRCUIT_IDS_PER_REQUEST } from "../../lib/constants";
 
 export const GET: APIRoute = ({ url }) => {
   const idsParam = url.searchParams.get("ids");
@@ -22,8 +23,11 @@ export const GET: APIRoute = ({ url }) => {
     return Response.json([]);
   }
 
-  // Cap at 200 to prevent abuse
-  const capped = qecIds.slice(0, 200);
+  // Bound the query the ids become. Truncating is a last resort, not the
+  // normal case (see MAX_CIRCUIT_IDS_PER_REQUEST), and when it happens the
+  // response says so instead of quietly returning a prefix.
+  const capped = qecIds.slice(0, MAX_CIRCUIT_IDS_PER_REQUEST);
+  const truncated = capped.length < qecIds.length;
   const circuits = getCircuitsByQecIds(capped);
 
   const result = circuits.map((c) => ({
@@ -39,5 +43,13 @@ export const GET: APIRoute = ({ url }) => {
     tags: c.tags,
   }));
 
-  return Response.json(result);
+  // Headers, not a wrapper object: the body stays a plain array, so nothing
+  // that already reads this endpoint has to change to learn about truncation.
+  return Response.json(result, {
+    headers: {
+      "X-Truncated": truncated ? "true" : "false",
+      "X-Requested-Ids": String(qecIds.length),
+      "X-Id-Limit": String(MAX_CIRCUIT_IDS_PER_REQUEST),
+    },
+  });
 };

@@ -159,8 +159,12 @@ const stimFilename = buildStimFilename({
   </div>
 
   <!-- data-circuit-scope: the Detectors switch lives in the format-tab row but
-       repoints the Crumble link above it, so they need a common ancestor. -->
-  <div class="circuit-detail overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;" data-circuit-scope>
+       repoints the Crumble link above it, so they need a common ancestor.
+       inert: `max-height: 0` + `overflow: hidden` clips the panel visually but
+       leaves every control inside it tabbable, so a keyboard user tabbing past
+       a collapsed row fell into buttons and links they could not see. It must
+       be kept in step with max-height by every handler that toggles one. -->
+  <div class="circuit-detail overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;" data-circuit-scope inert>
     <div class="border-t border-gray-200 dark:border-gray-800 px-4 py-4 space-y-3">
       <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
         <div>
@@ -262,6 +266,9 @@ const stimFilename = buildStimFilename({
 
         if (isOpen) {
           detail.style.maxHeight = "0px";
+          // Clipped content stays tabbable without this — see the inert note
+          // on .circuit-detail in the markup above.
+          detail.inert = true;
           chevron.classList.remove("rotate-90");
           btn.setAttribute("aria-expanded", "false");
           if (location.hash === "#" + qecId) {
@@ -272,6 +279,7 @@ const stimFilename = buildStimFilename({
           document.querySelectorAll(".circuit-detail").forEach(function (d) {
             if (d !== detail) {
               (d as HTMLElement).style.maxHeight = "0px";
+              (d as HTMLElement).inert = true;
               const otherBtn = (d as HTMLElement).closest("[id]")?.querySelector(".circuit-toggle");
               if (otherBtn) {
                 otherBtn.querySelector(".chevron")?.classList.remove("rotate-90");
@@ -279,6 +287,7 @@ const stimFilename = buildStimFilename({
               }
             }
           });
+          detail.inert = false;
           detail.style.maxHeight = detail.scrollHeight + "px";
           chevron.classList.add("rotate-90");
           btn.setAttribute("aria-expanded", "true");
