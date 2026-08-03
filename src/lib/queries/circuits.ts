@@ -14,6 +14,7 @@ import {
   addConditions,
   addTagConditions,
 } from "./shared";
+import { MAX_CIRCUIT_IDS_PER_REQUEST } from "../constants";
 
 export function formatCircuitId(qecId: number): string {
   return `#${qecId}`;
@@ -205,7 +206,9 @@ export function getCircuitsByQecIds(
   qecIds: number[],
 ): (Circuit & { tags: string[]; code_slug: string; code_name: string })[] {
   if (qecIds.length === 0) return [];
-  const capped = qecIds.slice(0, 200);
+  // Bounds the `IN (...)` list. Callers that care whether this bit are
+  // expected to compare lengths themselves (see /api/circuits).
+  const capped = qecIds.slice(0, MAX_CIRCUIT_IDS_PER_REQUEST);
   const db = getDb();
   const placeholders = capped.map(() => "?").join(",");
   const rows = db
