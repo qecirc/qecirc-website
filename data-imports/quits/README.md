@@ -40,6 +40,31 @@ regenerated from the recorded command, which is most of the point of keeping an 
 Useful flags: `--only bpc` restricts to catalogue keys containing a string, and `--max-n 300`
 skips the large codes (see [Size](#size)).
 
+## Re-running
+
+The importer is idempotent for codes (dedup) and hardcodes `overwrite=True` for circuits,
+so a re-import rewrites every circuit file in place. It carries over the `qec_id` — the
+public `#N` — and nothing else that was added after the first import.
+
+**What a re-import loses:** the measured `circuit-distance:<N>` tags. They are not the
+code's distance and not derivable from the source; `scripts/measure_circuit_distance.py`
+searches for them, and re-importing writes a fresh `tags:` list without them. Not every
+round carries one — the search is budgeted, and an absent tag means it did not finish,
+not that the circuit is fault-free.
+
+**What recovers it:** one command, which is why the loss is a documentation gap rather
+than a data one. The script strips any existing tag and re-measures, so it is idempotent
+and safe to run whether or not anything was lost:
+
+```bash
+uv run python scripts/measure_circuit_distance.py --write
+```
+
+**Not lost:** `crumble_url_annotated` and the `stim-annotated` bodies —
+`scripts/annotate_circuits.py` regenerates them, and `test_url_edit_is_idempotent`
+(`scripts/tests/test_annotate.py`) pins that re-running rewrites rather than duplicates.
+Run it anyway, as the importer's closing line says; it is cheap.
+
 ## Dataset, and why this importer calls it
 
 Unlike the asyndrome dataset, **QUITS ships no circuits** — not one `.stim` file is checked in.

@@ -239,5 +239,29 @@ Then the standard follow-up:
 
 ```bash
 uv run python scripts/annotate_circuits.py
+uv run python scripts/measure_circuit_distance.py --write
 npm run format && npm run validate:yaml && npm run validate:circuits && npm run db:create
 ```
+
+## Re-running
+
+The importer is idempotent for codes (dedup) and hardcodes `overwrite=True` for circuits,
+so a re-import rewrites every circuit file in place. It carries over the `qec_id` — the
+public `#N` — and nothing else that was added after the first import.
+
+**What a re-import loses:** the measured `circuit-distance:<N>` tags. They are not the
+code's distance and not derivable from the source; `scripts/measure_circuit_distance.py`
+searches for them, and re-importing writes a fresh `tags:` list without them.
+
+**What recovers it:** one command, which is why the loss is a documentation gap rather
+than a data one. The script strips any existing tag and re-measures, so it is idempotent
+and safe to run whether or not anything was lost:
+
+```bash
+uv run python scripts/measure_circuit_distance.py --write
+```
+
+**Not lost:** `crumble_url_annotated` and the `stim-annotated` bodies —
+`scripts/annotate_circuits.py` regenerates them, and `test_url_edit_is_idempotent`
+(`scripts/tests/test_annotate.py`) pins that re-running rewrites rather than duplicates.
+Run it anyway, as above; it is cheap.

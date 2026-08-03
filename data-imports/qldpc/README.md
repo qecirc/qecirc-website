@@ -42,7 +42,32 @@ uv run --with 'qldpc==0.3.2' python data-imports/qldpc/rebuild_all.py --write
 ```
 
 `--only surface` restricts to catalogue keys containing a string; `--kinds se` restricts to
-circuit kinds. Re-running is idempotent — `qec_id`s are kept.
+circuit kinds. Re-running is idempotent — `qec_id`s are kept. See [Re-running](#re-running)
+for the one thing it does not keep.
+
+## Re-running
+
+The importer is idempotent for codes (dedup) and hardcodes `overwrite=True` for circuits,
+so a re-import rewrites every circuit file in place. It carries over the `qec_id` — the
+public `#N` — and nothing else that was added after the first import.
+
+**What a re-import loses:** the measured `circuit-distance:<N>` tags — 26 of the 28
+syndrome-extraction rounds carry one. They are not the code's distance and not derivable
+from the source; `scripts/measure_circuit_distance.py` searches for them, and re-importing
+writes a fresh `tags:` list without them.
+
+**What recovers it:** one command, which is why the loss is a documentation gap rather
+than a data one. The script strips any existing tag and re-measures, so it is idempotent
+and safe to run whether or not anything was lost:
+
+```bash
+uv run python scripts/measure_circuit_distance.py --write
+```
+
+**Not lost:** `crumble_url_annotated` and the `stim-annotated` bodies —
+`scripts/annotate_circuits.py` regenerates them, and `test_url_edit_is_idempotent`
+(`scripts/tests/test_annotate.py`) pins that re-running rewrites rather than duplicates.
+Run it anyway, as the importer's closing line says; it is cheap.
 
 ## What is covered, and what is not
 
