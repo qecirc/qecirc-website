@@ -24,8 +24,10 @@ data/*.db-shm
 # Generated payload files
 *_payload.yaml
 
-# Git worktrees
-.worktrees/
+# Git worktrees (agent worktrees live under .claude/, which is otherwise
+# tracked — .claude/agents/ and .claude/commands/ are committed)
+.claude/worktrees/
+.claude/launch.json
 
 # OS
 .DS_Store
