@@ -89,9 +89,15 @@ circuits
   --   above the gate it was a dead link costing up to 240 KB of page
   -- There is deliberately NO crumble_url. A Crumble URL is a pure string
   --   transform of the body, so it is derived where it is shown (`crumbleHref`
-  --   in src/lib/stim-format.ts) rather than stored: no staleness, no width
-  --   gate, and the Detectors switch moves it by re-deriving from the body
-  --   on screen. Dropped in migration 021.
+  --   in src/lib/stim-format.ts) rather than stored: no staleness, and the
+  --   Detectors switch moves it by re-deriving from the body on screen.
+  --   Dropped in migration 021. It is capped on the length of the derived
+  --   string (CRUMBLE_MAX_URL_LENGTH), not on qubit count — measuring the
+  --   thing that actually gets big keeps the 144-qubit links the old
+  --   40-qubit gate denied, and still refuses the 782 KB one no browser opens.
+  -- `npm test` checks `crumbleUrl` against stim's own `to_crumble_url()` over
+  --   every committed body. It is a reimplementation of a stim function, and
+  --   nothing else in the repo would notice it drifting.
   -- tool_id: optional link to tool used to create the circuit
 
 circuit_bodies
@@ -393,6 +399,7 @@ npm run format:check                # Check Prettier formatting
 npm run format                      # Auto-format with Prettier
 npm run papers:add -- 2402.17761    # Fetch a paper (arXiv id/DOI/link) into data_yaml/papers/
 npm run papers:missing              # Fetch every circuit source that has no paper yet
+npm test                            # Node tests (crumbleUrl vs stim's to_crumble_url, over every body)
 npm run validate:yaml               # Validate data_yaml/ schemas
 npm run validate:circuits           # Validate encoding/state-prep circuits against the code's symplectic h (CSS and non-CSS alike)
 uv run ruff check scripts/          # Lint Python code

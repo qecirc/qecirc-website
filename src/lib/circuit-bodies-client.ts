@@ -12,7 +12,7 @@ import { citeNotice } from "./cite-client";
 import {
   ANNOTATED_OF,
   bodyForDisplay,
-  crumbleHref,
+  crumbleLinks,
   hasQubitCoords,
   lineNumbered,
   splitAnnotated,
@@ -54,15 +54,23 @@ function buildSwitcher(
   const { tabs, annotated } = splitAnnotated(bodies);
 
   // The Crumble link is derived from the body, and the body only arrives here —
-  // the row rendered without one. Reveal the link now that there is something to
-  // point it at; body-view-client repoints it from the Detectors switch.
+  // the row rendered without one. Reveal the link, and the "View in:" block with
+  // it, now that there is something to point at; body-view-client repoints it
+  // from the Detectors switch. Too long to open (see CRUMBLE_MAX_URL_LENGTH) and
+  // the anchor is removed outright, which also stops paintCrumble finding it.
   const stimBody = tabs.find((b) => b.format === ANNOTATED_OF)?.body.trimEnd();
   const link = container
     .closest<HTMLElement>("[data-circuit-scope]")
     ?.querySelector<HTMLAnchorElement>("[data-crumble-link]");
-  if (link && stimBody !== undefined) {
-    link.href = crumbleHref(stimBody, annotated);
-    link.classList.remove("hidden");
+  if (link) {
+    const links = stimBody === undefined ? null : crumbleLinks(stimBody, annotated);
+    if (links) {
+      link.href = links.plain;
+      link.classList.remove("hidden");
+      link.closest<HTMLElement>("[data-view-links]")?.classList.remove("hidden");
+    } else {
+      link.remove();
+    }
   }
 
   // Only STIM carries coordinates or an annotated variant, so at most one body

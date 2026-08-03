@@ -191,9 +191,16 @@ const stimFilename = buildStimFilename({
         )}
         {/* The Crumble link is derived from the circuit body, and on a code page
             the bodies are lazy-loaded — so the href is filled in by
-            circuit-bodies-client once the row's bodies arrive, and the anchor
-            stays hidden until then rather than offering a dead link. */}
-        <div class="flex items-center gap-3">
+            circuit-bodies-client once the row's bodies arrive.
+            The whole block hides with the anchor, not just the anchor: a bare
+            "View in:" label pointing at nothing is what the user would otherwise
+            see with JS off, before the fetch resolves, or if it fails. A Quirk
+            link is server-rendered and shows on its own, so the block starts
+            visible whenever there is one. */}
+        <div
+          class:list={["flex items-center gap-3", !circuit.quirk_url && "hidden"]}
+          data-view-links
+        >
           <span class="text-gray-500 dark:text-gray-400">View in:</span>
           <a
             href="#"

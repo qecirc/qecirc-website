@@ -19,7 +19,7 @@ import {
   formatCitation,
 } from "../../lib/queries";
 import { buildStimFilename } from "../../lib/filename";
-import { ANNOTATED_FORMAT, ANNOTATED_OF, crumbleHref } from "../../lib/stim-format";
+import { ANNOTATED_FORMAT, ANNOTATED_OF, crumbleLinks } from "../../lib/stim-format";
 import { notFound } from "../../lib/not-found";
 
 const qecId = Number(Astro.params.qec_id);
@@ -54,10 +54,12 @@ const stimFilename = buildStimFilename({
 // Derived here rather than stored: a Crumble URL is a pure string transform of
 // the body, which this page already has in full. Rendered server-side so the
 // link works without JS; body-view-client repoints it when the Detectors switch
-// moves. `undefined` only if the circuit somehow has no STIM body at all.
+// moves. Null when the circuit has no STIM body, or when the derived string
+// exceeds CRUMBLE_MAX_URL_LENGTH — a link no browser opens is not worth the
+// kilobytes it would add to this page's HTML.
 const stimBody = bodies.find((b) => b.format === ANNOTATED_OF)?.body;
 const annotatedBody = bodies.find((b) => b.format === ANNOTATED_FORMAT)?.body?.trimEnd();
-const crumbleUrl = stimBody ? crumbleHref(stimBody.trimEnd(), annotatedBody) : null;
+const crumbleUrl = stimBody ? (crumbleLinks(stimBody.trimEnd(), annotatedBody)?.plain ?? null) : null;
 
 const hasOriginalMatrices = original?.has_original_matrices === 1;
 const originalsUrl = `/api/circuits/${qecId}/originals`;

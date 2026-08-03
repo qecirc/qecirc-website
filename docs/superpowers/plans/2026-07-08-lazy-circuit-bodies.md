@@ -4,6 +4,11 @@
 
 **Goal:** Code pages (`/codes/[code]`) stop embedding circuit bodies in HTML; bodies are fetched on first row expand via a new JSON endpoint (15 MB → ~1–2 MB on the largest page).
 
+**Superseded in part (0.8.0):** the Cirq body format described below no longer exists —
+its per-moment ASCII grid scaled with the qubit count for no gain over the STIM body. The
+format tabs are STIM and QASM. Everything else here still holds; the mentions are left as
+written because this document is a record of what was decided at the time.
+
 **Architecture:** New `/api/circuits/[qec_id]/bodies` endpoint (mirrors the existing `originals.ts`). `CircuitRow` renders a placeholder instead of `FormatSwitcher` and dispatches a `circuit-expand` CustomEvent on expand (same pattern as `toggle-client.ts`'s `collapsible-open`). A new client module clones a shared `<template>` and fills in tabs + line-numbered bodies, mirroring the `CodeMatrices` lazy-load pattern.
 
 **Tech Stack:** Astro v7, TypeScript, better-sqlite3, Tailwind. No new dependencies.

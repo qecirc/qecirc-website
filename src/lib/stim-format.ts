@@ -68,10 +68,21 @@ export function hasDetectors(code: string): boolean {
 /** Drop the readout epilogue, keeping the reset prologue and the body.
  *
  *  Only the *added* epilogue goes. Pre-existing mid-circuit measurements are
- *  part of the circuit — 558 of 1028 bodies carry flag/verification measurements
- *  — and must survive. The generator appends exactly one readout instruction,
- *  last, so once the annotations are dropped it is the final line; anything
- *  earlier belongs to the body.
+ *  part of the circuit — most bodies carry flag/verification measurements — and
+ *  must survive. The annotator appends exactly one readout instruction, last, so
+ *  once the annotations are dropped it is the final line; anything earlier
+ *  belongs to the body.
+ *
+ *  **An unannotated body is returned untouched**, and that guard is load-bearing
+ *  rather than an optimisation. `hasDetectors` is what decides whether the
+ *  Detectors switch exists, so without it a body with no annotations had its
+ *  final measurement removed with no control anywhere on the page to bring it
+ *  back: 294 canonical bodies end in a readout, and `/circuits/662` rendered
+ *  `H 0 / CX …` while its Crumble link opened the same circuit *with* `M 10`.
+ *  Copy and Download hand over what is displayed, so the user could take away a
+ *  circuit missing its final measurement. Tying the subtraction to the presence
+ *  of annotations means the readout is only ever hidden when there is a switch
+ *  that restores it.
  *
  *  Mirrors `strip_readout` in scripts/add_circuit/annotate.py, which the
  *  annotator's own tests use as the reference for the same rule. Keep the two in
@@ -80,10 +91,9 @@ export function hasDetectors(code: string): boolean {
  *  is part of the circuit, not an epilogue.
  */
 export function stripReadout(code: string): string {
-  const lines = code
-    .trimEnd()
-    .split("\n")
-    .filter((line) => !ANNOTATION_LINE.test(line));
+  const trimmed = code.trimEnd();
+  if (!hasDetectors(trimmed)) return trimmed;
+  const lines = trimmed.split("\n").filter((line) => !ANNOTATION_LINE.test(line));
   if (lines.length && READOUT_LINE.test(lines[lines.length - 1])) lines.pop();
   while (lines.length && TICK_LINE.test(lines[lines.length - 1])) lines.pop();
   return lines.join("\n").trimEnd();
@@ -163,11 +173,50 @@ export function crumbleAnnotatedUrl(annotated: string, showDetectors: boolean): 
 /** The Crumble link a circuit opens with: its default view, detectors hidden.
  *
  *  `annotated` is the circuit's `stim-annotated` body, or undefined when it has
- *  none — and that is what decides whether anything may be subtracted.
- *  `stripReadout` drops an epilogue the annotator *added*, so a circuit that was
- *  never annotated is linked whole; applying it there would silently drop a
- *  trailing flag measurement that is part of the circuit (232 bodies end in one).
+ *  none. Either way `stripReadout` only subtracts from a body that carries
+ *  annotations, so a circuit that was never annotated is linked whole — 294
+ *  canonical bodies end in a measurement that is part of the circuit.
  */
 export function crumbleHref(stim: string, annotated: string | undefined): string {
   return annotated === undefined ? crumbleUrl(stim) : crumbleAnnotatedUrl(annotated, false);
+}
+
+/** The longest URL this will emit, in characters.
+ *
+ *  Not a qubit count. The old `crumble_url` column was blanked past 40 qubits,
+ *  which denied a working link to every 144-qubit circuit in the library while
+ *  saying nothing about the one number that matters — how long the string
+ *  actually comes out. Measuring the string keeps those links (a 144-qubit
+ *  syndrome round derives to ~8 KB) and refuses only the ones no browser will
+ *  open: a 2688-qubit schedule derives to 232 KB plain and 782 KB with
+ *  detectors, which is both an unusable link and, server-rendered into an
+ *  `href`, exactly the page bloat this change removes elsewhere.
+ *
+ *  65,536 is the narrowest ceiling among current browsers — Chrome accepts
+ *  ~2 MB and Safari ~80 KB, Firefox is the binding constraint at ~64 KB — so a
+ *  link that is offered opens everywhere. It costs 22 of 972 circuits their
+ *  link, all of them 720 qubits or wider; the gate it replaces cost 275.
+ */
+export const CRUMBLE_MAX_URL_LENGTH = 65_536;
+
+export interface CrumbleLinks {
+  /** Detectors hidden — what the page shows, and what the anchor opens with. */
+  plain: string;
+  /** Detectors shown. Always the longer of the two. */
+  detectors: string;
+}
+
+/** Both Crumble views for a circuit, or null when either is too long to open.
+ *
+ *  Gated on the pair rather than on each separately: the Detectors switch has to
+ *  be able to repoint the link, and an anchor that works until you press a
+ *  button is worse than one that was never offered. Two circuits (#1215, #1216,
+ *  720 qubits) are refused on the detectors view alone.
+ */
+export function crumbleLinks(stim: string, annotated: string | undefined): CrumbleLinks | null {
+  const plain = crumbleHref(stim, annotated);
+  const detectors = annotated === undefined ? plain : crumbleAnnotatedUrl(annotated, true);
+  if (plain.length > CRUMBLE_MAX_URL_LENGTH) return null;
+  if (detectors.length > CRUMBLE_MAX_URL_LENGTH) return null;
+  return { plain, detectors };
 }

@@ -20,6 +20,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test": "node --test scripts/tests/*.test.mjs",
     "validate:yaml": "node scripts/validate-yaml.mjs",
     "validate:circuits": "uv run python scripts/validate_circuits.py"
   },
