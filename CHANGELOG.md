@@ -15,11 +15,13 @@ the source-of-truth `package.json` version.
 
 ### Fixed
 
-- **Every keypress on `/search` threw.** `initCircuitActions()` was called with no argument,
-  and the first line of its keydown handler reads `config.downloadAllSelector` — so any key
-  pressed outside an input raised a `TypeError` instead of doing anything. Typing in the
-  search box was safe (`isInputFocused()` returns first), which is why it went unnoticed:
-  the page looked fine and simply had none of the shortcuts every other list page has.
+- **Every keypress on `/search` threw a `TypeError`.** `initCircuitActions()` was called with
+  no argument, so `findActiveContainer()` read `config.activeContainerSelector` off
+  `undefined` on any key that reached it. The page still worked: the throw is confined to
+  one of several `document` keydown listeners, so `j`/`k`/`Enter`/`f` — handled separately by
+  `initListKeynav` — kept working, and typing in the search box never reached it at all
+  (`isInputFocused()` returns first). What was missing was `1`/`2`/`3`, `c`/`y` and `d`,
+  plus an error per keystroke in the console. That is why it went unnoticed.
   `/search` renders the same expandable `CircuitRow`s as a code page, so it now passes the
   same selector, and `1`/`2`/`3`, `c`/`y` and `d` act on the open row. No `downloadAllSelector`:
   there is no such button on `/search`, and `/api/download` reads URL filter params rather

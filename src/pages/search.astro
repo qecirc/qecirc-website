@@ -292,13 +292,18 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
   initCircuitBodies();
 
   // Same expandable `CircuitRow`s as a code page, so the same selector finds
-  // the open one. No `downloadAllSelector`: `/search` has no "download all"
-  // button, and `/api/download` reads URL filter params rather than a query,
-  // so there is nothing for Shift+D to mean here.
+  // the open one.
   //
-  // This was `initCircuitActions()` with no argument, which is not merely "no
-  // shortcuts": `config.downloadAllSelector` is read on the first line of the
-  // keydown handler, so every keypress outside an input threw a TypeError.
+  // No `downloadAllSelector`, so Shift+D is deliberately inert here even though
+  // `KeyboardHelp` lists it: `/search` has no "download all" button to click.
+  // It could grow one — `/api/download` accepts `?ids=`, which is how
+  // `/favorites` implements the same shortcut — but that is a feature, not part
+  // of fixing this, and `/search` filters server-side so which results it would
+  // cover needs deciding first.
+  //
+  // Passing nothing here used to throw: `findActiveContainer()` reads
+  // `config.activeContainerSelector`, so every key that reached this listener
+  // raised a TypeError off `undefined`.
   initCircuitActions({
     activeContainerSelector:
       '[id] > .circuit-toggle[aria-expanded="true"] + .circuit-detail',
