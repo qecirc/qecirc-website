@@ -11,7 +11,6 @@ gate_count: 26
 two_qubit_gate_count: 16
 depth: 12
 qubit_count: 7
-crumble_url: https://algassert.com/crumble#circuit=H_1_5_6;CX_1_0_0_3;H_0_3;CX_0_2;H_0;CX_0_4_3_0_1_0;H_3_1;CX_6_3;CZ_6_0;CX_5_1_6_2;CZ_5_1_6_0_5_0_6_0_5_4;CX_5_4;H_6_5_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,"H",1,1,1,"H","H"],["X","•"],["•",1,1,"X"],["H",1,1,"H"],["•",1,"X"],["H"],["•",1,1,1,"X"],["X",1,1,"•"],["X","•"],[1,"H",1,"H"],[1,1,1,"X",1,1,"•"],["Z",1,1,1,1,1,"•"],[1,"X",1,1,1,"•"],[1,1,"X",1,1,1,"•"],[1,"Z",1,1,1,"•"],["Z",1,1,1,1,1,"•"],["Z",1,1,1,1,"•"],["Z",1,1,1,1,1,"•"],[1,1,1,1,"Z","•"],[1,1,1,1,"X","•"],[1,1,1,1,1,"H","H"]]}
 tags: [state-preparation, ft, "connectivity:ibm", "device:tokyo", "logical-state:zero", flag]
 original_matrices: 063c4d18c5fe5001

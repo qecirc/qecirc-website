@@ -22,7 +22,13 @@
 // what makes them follow the switches rather than silently handing over
 // something different from what is displayed.
 
-import { bodyForDisplay, hasDetectors, hasQubitCoords, lineNumbered } from "./stim-format";
+import {
+  bodyForDisplay,
+  crumbleAnnotatedUrl,
+  hasDetectors,
+  hasQubitCoords,
+  lineNumbered,
+} from "./stim-format";
 import { syncDetailHeight } from "./dom-helpers";
 import { TAB_ACTIVE_CLASS, TAB_INACTIVE_CLASS } from "./constants";
 
@@ -65,16 +71,18 @@ function crumbleLink(scope: HTMLElement): HTMLAnchorElement | null {
   return all.length === 1 ? all[0] : null;
 }
 
-/** Point the Crumble link at the body currently on screen. Left alone when the
- *  circuit has no annotated URL — past ~40 qubits there is no Crumble link at
- *  all. */
-function paintCrumble(scope: HTMLElement, detectors: boolean): void {
+/** Point the Crumble link at the body currently on screen.
+ *
+ *  Only called when this scope has a live Detectors switch, which is also the
+ *  only case where the block's body is the annotated one — see `crumbleHref`,
+ *  which may subtract a readout epilogue only from a body that had one added.
+ *  Without the switch the link cannot change, so the href rendered by the server
+ *  (detail page) or by circuit-bodies-client (code page) already stands.
+ */
+function paintCrumble(scope: HTMLElement, annotated: string, detectors: boolean): void {
   const link = crumbleLink(scope);
   if (!link) return;
-  const plain = link.dataset.crumbleUrl;
-  const annotated = link.dataset.crumbleUrlAnnotated;
-  if (!plain || !annotated) return;
-  link.href = detectors ? annotated : plain;
+  link.href = crumbleAnnotatedUrl(annotated, detectors);
 }
 
 function paint(scope: HTMLElement, block: HTMLElement, raw: string, view: View): void {
@@ -89,8 +97,12 @@ function paint(scope: HTMLElement, block: HTMLElement, raw: string, view: View):
   if (copyBtn) copyBtn.dataset.code = shown;
 
   setSwitch(scope.querySelector<HTMLElement>(".coords-btn"), view.coords, "coords");
-  setSwitch(scope.querySelector<HTMLElement>(".detectors-btn"), view.detectors, "detectors");
-  paintCrumble(scope, view.detectors);
+  const detectorsBtn = scope.querySelector<HTMLElement>(".detectors-btn");
+  setSwitch(detectorsBtn, view.detectors, "detectors");
+  // Only a live Detectors switch can move the link, and its presence is also
+  // what tells us `raw` is the annotated body (a canonical STIM body never
+  // carries DETECTOR lines).
+  if (detectorsBtn) paintCrumble(scope, raw, view.detectors);
 
   // Both switches change how many lines are on screen, so the row's collapse
   // container has to be re-measured or the extra lines are clipped away.

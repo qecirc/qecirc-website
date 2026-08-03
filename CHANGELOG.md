@@ -5,13 +5,52 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+**Breaking (0.7.11 → 0.8.0):** migration `021` drops `circuits.crumble_url` and
+`circuits.crumble_url_annotated`, and the two keys are gone from the circuit YAML schema.
+Nothing reads them any more — the link is derived where it is shown — but anything holding
+a copy of the database or parsing the YAML will need the columns removed.
+
 ### Removed
 
+- **The Cirq body format, all 718 files and 13 MB of it.** A Cirq circuit's text form is a
+  per-moment ASCII grid whose width scales with the qubit count, so it grew fastest exactly
+  where it read worst — and it never said anything the STIM body does not say better. Gone
+  with it: the `stimcirq` dependency (and its `cirq-core`, `pandas`, `sympy` and `duet`
+  transitive weight), the CIRQ tab, and the `.cirq` extension from the two body-file
+  readers. The format shortcuts are `1`/`2` now; `3` finds no tab and does nothing, which is
+  what it already did past the last tab.
+- **The stored Crumble URLs — `crumble_url` on 725 circuits and `crumble_url_annotated` on
+  398, 528 KB of YAML.** A Crumble URL is a pure string transform of the body it shows: join
+  the lines with `;`, abbreviate `QUBIT_COORDS`/`DETECTOR`/`OBSERVABLE_INCLUDE`, write the
+  spaces as `_`. Storing it therefore kept a second, lossy copy of every circuit, and the
+  copy drifted — 76 of the 725 links pointed at a body the page had stopped displaying, and
+  32 more dropped a syndrome round's own measurement. `crumbleHref` in
+  `src/lib/stim-format.ts` now derives it: the detail page server-renders it from the body it
+  already has, code pages fill it in when the row's bodies are lazy-loaded, and the Detectors
+  switch moves it by re-deriving rather than by swapping to a second stored string. The
+  transform is stim's own, checked byte-for-byte against all 1123 URLs that used to be
+  stored.
+- **Quirk URLs above 40 qubits — 28 links, 1.70 MB.** Quirk's editor tops out around 16
+  qubits, so these were dead links, and the URL scales with width: one was 242,264
+  characters, and seven of them made up 91% of `/codes/144-12-12`. The width gate was already
+  in the pipeline (`LARGE_CIRCUIT_MAX_QUBITS`); the stored data predated it. Below the gate
+  nothing changed — 697 circuits keep their Quirk link.
 - **The `no-private-registries` CI job.** It failed the build on any `jfrog.io` reference —
   a guard from the period when this code sat next to a private artifactory. Nothing in the
   repository has referenced one for a long time (`git grep -F jfrog.io` is empty), and both
   lockfiles resolve exclusively against public registries, so the job was spending a run on
   every PR to assert something no longer at risk.
+
+### Changed
+
+- **The Crumble link now works at any qubit count.** It was blanked past ~40 qubits because
+  the stored string got unwieldy, which meant the circuits a layout view helps most — a
+  144-qubit syndrome round, a 475-qubit prep — were the ones without a link. Deriving it
+  removes the reason for the gate: the string is built when it is needed and costs nothing
+  to keep.
+- **`/codes/144-12-12` is 90% smaller: 1,259,209 → 124,946 bytes.** `/codes/108-8-10`,
+  781,983 → 124,974. The circuit pages follow: `#27`, 426,081 → 150,455; `#163`, 738,916 →
+  95,579.
 
 ### Fixed
 

@@ -73,8 +73,11 @@ export function hasDetectors(code: string): boolean {
  *  last, so once the annotations are dropped it is the final line; anything
  *  earlier belongs to the body.
  *
- *  Mirrors `strip_readout` in scripts/add_circuit/annotate.py, which does the
- *  same server-side to build the un-annotated Crumble link. Keep the two in step.
+ *  Mirrors `strip_readout` in scripts/add_circuit/annotate.py, which the
+ *  annotator's own tests use as the reference for the same rule. Keep the two in
+ *  step — with one known difference: the Python one recurses into `REPEAT`
+ *  blocks and pops a round's own final measurement, which for a syndrome round
+ *  is part of the circuit, not an epilogue.
  */
 export function stripReadout(code: string): string {
   const lines = code
@@ -101,4 +104,70 @@ export function bodyForDisplay(code: string, showCoords: boolean, showDetectors:
   if (!showDetectors) out = stripReadout(out);
   if (!showCoords) out = stripQubitCoords(out);
   return out.trimEnd();
+}
+
+/** Instruction names Crumble abbreviates in a URL. stim's own
+ *  `Circuit.to_crumble_url()` writes these short forms, and the two must agree
+ *  or a link stops matching the one the pipeline used to store. */
+const CRUMBLE_ABBREVIATIONS: Record<string, string> = {
+  QUBIT_COORDS: "Q",
+  DETECTOR: "DT",
+  OBSERVABLE_INCLUDE: "OI",
+};
+
+const INSTRUCTION_NAME = /^[A-Z_][A-Z_0-9]*/;
+const PAREN_ARGS = /\(([^)]*)\)/g;
+
+export const CRUMBLE_BASE = "https://algassert.com/crumble#circuit=";
+
+/** A Crumble link for a STIM body — the transform stim's `to_crumble_url()`
+ *  applies, reproduced exactly.
+ *
+ *  This used to be stored per circuit (`crumble_url`, plus a second
+ *  `crumble_url_annotated` for the Detectors view), which cost half a megabyte
+ *  of YAML to say something the body already says, went stale whenever the body
+ *  was regenerated, and was dropped above ~40 qubits because the stored string
+ *  got too big. Deriving it removes all three problems: the link now exists at
+ *  any width, and it is by construction the circuit that is on screen.
+ *
+ *  The encoding, verified against all 1123 URLs the library used to store:
+ *  lines are joined with `;`, blank lines and indentation dropped, the three
+ *  instruction names above abbreviated, `, ` inside a parenthesised argument
+ *  list collapsed to `,`, the space after `)` dropped, every remaining space
+ *  written `_`, and a single trailing `_` appended.
+ */
+export function crumbleUrl(body: string): string {
+  const parts: string[] = [];
+  for (const rawLine of body.split("\n")) {
+    let line = rawLine.trim();
+    if (!line) continue;
+    const name = line.match(INSTRUCTION_NAME)?.[0];
+    if (name && name in CRUMBLE_ABBREVIATIONS) {
+      line = CRUMBLE_ABBREVIATIONS[name] + line.slice(name.length);
+    }
+    line = line.replace(PAREN_ARGS, (_m, args: string) => `(${args.replaceAll(", ", ",")})`);
+    parts.push(line.replaceAll(") ", ")").replaceAll(" ", "_"));
+  }
+  return `${CRUMBLE_BASE}${parts.join(";")}_`;
+}
+
+/** The Crumble link for an annotated body, following the Detectors switch.
+ *
+ *  Coordinates are always kept — in Crumble the layout is the point, so the
+ *  Coords switch is deliberately not an argument here.
+ */
+export function crumbleAnnotatedUrl(annotated: string, showDetectors: boolean): string {
+  return crumbleUrl(showDetectors ? annotated : stripReadout(annotated));
+}
+
+/** The Crumble link a circuit opens with: its default view, detectors hidden.
+ *
+ *  `annotated` is the circuit's `stim-annotated` body, or undefined when it has
+ *  none — and that is what decides whether anything may be subtracted.
+ *  `stripReadout` drops an epilogue the annotator *added*, so a circuit that was
+ *  never annotated is linked whole; applying it there would silently drop a
+ *  trailing flag measurement that is part of the circuit (232 bodies end in one).
+ */
+export function crumbleHref(stim: string, annotated: string | undefined): string {
+  return annotated === undefined ? crumbleUrl(stim) : crumbleAnnotatedUrl(annotated, false);
 }

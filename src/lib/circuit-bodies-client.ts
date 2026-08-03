@@ -12,6 +12,7 @@ import { citeNotice } from "./cite-client";
 import {
   ANNOTATED_OF,
   bodyForDisplay,
+  crumbleHref,
   hasQubitCoords,
   lineNumbered,
   splitAnnotated,
@@ -52,6 +53,18 @@ function buildSwitcher(
   // FormatSwitcher.astro, which resolves this server-side.
   const { tabs, annotated } = splitAnnotated(bodies);
 
+  // The Crumble link is derived from the body, and the body only arrives here —
+  // the row rendered without one. Reveal the link now that there is something to
+  // point it at; body-view-client repoints it from the Detectors switch.
+  const stimBody = tabs.find((b) => b.format === ANNOTATED_OF)?.body.trimEnd();
+  const link = container
+    .closest<HTMLElement>("[data-circuit-scope]")
+    ?.querySelector<HTMLAnchorElement>("[data-crumble-link]");
+  if (link && stimBody !== undefined) {
+    link.href = crumbleHref(stimBody, annotated);
+    link.classList.remove("hidden");
+  }
+
   // Only STIM carries coordinates or an annotated variant, so at most one body
   // per switcher owns the switches.
   let coordsSlot = tabBar.querySelector<HTMLElement>(".coords-slot");
@@ -86,7 +99,7 @@ function buildSwitcher(
       else kbd.remove();
     }
     // The coords slot sits after the tab prototype in the template, so tabs
-    // must go before it to keep the row reading [STIM][QASM][CIRQ] … [Coords].
+    // must go before it to keep the row reading [STIM][QASM] … [Coords].
     if (coordsSlot) tabBar.insertBefore(tab, coordsSlot);
     else tabBar.appendChild(tab);
 

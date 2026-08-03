@@ -73,9 +73,6 @@ def build_circuit_yaml(circ):
         if circ.get(field) is not None:
             data[field] = circ[field]
 
-    if circ.get("crumble_url"):
-        data["crumble_url"] = circ["crumble_url"]
-
     if circ.get("quirk_url"):
         data["quirk_url"] = circ["quirk_url"]
 
