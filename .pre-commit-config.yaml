@@ -8,10 +8,20 @@ repos:
     rev: v6.0.0
     hooks:
       - id: check-merge-conflict
+      # data_yaml/ holds circuit bodies (.stim/.qasm/.cirq) written byte-for-byte
+      # by the ingestion pipeline. These two hooks rewrite them — 2476 files on a
+      # full run — which dirties the whole library to no purpose and puts the
+      # stored body out of step with what the pipeline would emit.
       - id: end-of-file-fixer
+        exclude: ^data_yaml/
       - id: trailing-whitespace
+        exclude: ^data_yaml/
       - id: check-yaml
+      # tsconfig.check.json is JSONC: it carries the comments explaining which
+      # two files it excludes and why. `check-json` is a strict JSON parser and
+      # cannot read it, though TypeScript can.
       - id: check-json
+        exclude: ^tsconfig\.check\.json$
       - id: check-added-large-files
         args: ["--maxkb=500"]
 
