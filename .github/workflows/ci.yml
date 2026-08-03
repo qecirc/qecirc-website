@@ -65,8 +65,8 @@ jobs:
       - run: uv run ruff format --check scripts/ data-imports/
       # The gate used to measure `scripts/add_circuit` alone at 60%, which left
       # the four top-level maintainer scripts unmeasured — including
-      # validate_circuits.py, which CI runs as its own step and which was
-      # carrying a live bug. Measuring all five gives 85%, so the bar goes to 80.
+      # validate_circuits.py, which runs in its own job and which was carrying a
+      # live bug. Measuring all five gives 85%, so the bar goes to 80.
       - run: >
           uv run pytest
           --cov=scripts/add_circuit
@@ -75,13 +75,43 @@ jobs:
           --cov=scripts/measure_circuit_distance.py
           --cov=scripts/add_paper.py
           --cov-fail-under=80
-      # Same as `npm run validate:circuits`, invoked directly (no node in this job).
+
+  # The two whole-library sweeps below are their own jobs rather than steps of
+  # `python-tests`, because each one parses all ~970 circuits through stim and
+  # they share nothing but the checkout. Run in sequence they cost 246 s + 236 s
+  # on top of the 78 s test run — 9m35s for the job. In parallel the wall clock
+  # is the slowest of the three (~4m), which is faster than this workflow was
+  # before either check existed. The price is two extra `uv sync` setups, ~8 s
+  # each, on runners that cost nothing to run concurrently.
+
+  # Same as `npm run validate:circuits`, invoked directly (no node in this job).
+  validate-circuits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.x"
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync
       - run: uv run python scripts/validate_circuits.py
-      # A `stim-annotated` body is derived from its circuit, but it is committed
-      # rather than generated at build time — so editing a circuit and not
-      # re-running the annotator ships a memory experiment describing the
-      # previous schedule, and nothing else would notice. The committed tree has
-      # to be a fixed point of the annotator.
+
+  # A `stim-annotated` body is derived from its circuit, but it is committed
+  # rather than generated at build time — so editing a circuit and not
+  # re-running the annotator ships a memory experiment describing the previous
+  # schedule, and nothing else would notice. The committed tree has to be a
+  # fixed point of the annotator.
+  annotated-bodies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.x"
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync
       - name: stim-annotated bodies are up to date
         run: |
           out=$(uv run python scripts/annotate_circuits.py --dry-run)

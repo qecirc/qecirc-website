@@ -228,6 +228,12 @@ the source-of-truth `package.json` version.
     their circuit but committed rather than built, so editing a circuit without re-running
     the annotator ships a memory experiment describing the previous schedule, and nothing
     else in CI would ever notice.
+  - **The two whole-library sweeps now run as their own jobs, in parallel.** Each parses
+    every circuit through stim and they share nothing but the checkout, so as steps of one
+    job they added up: 78 s of tests + 246 s validating circuits + 236 s checking annotated
+    bodies, a 9m35s job. Split, the wall clock is the slowest of the three — about 4
+    minutes, quicker than the workflow was before either check existed — for two extra
+    `uv sync` setups at ~8 s each.
 - **`npm run typecheck`, because nothing in CI had ever read a TypeScript type.**
   `astro build` transpiles without checking and `eslint.config.mjs` uses the non-type-aware
   `tseslint.configs.recommended`, so all of `src/` was compiled and shipped on trust. The
