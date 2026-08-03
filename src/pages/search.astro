@@ -290,7 +290,24 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
   import { initCircuitActions } from "../lib/circuit-actions-client";
 
   initCircuitBodies();
-  initCircuitActions();
+
+  // Same expandable `CircuitRow`s as a code page, so the same selector finds
+  // the open one.
+  //
+  // No `downloadAllSelector`, so Shift+D is deliberately inert here even though
+  // `KeyboardHelp` lists it: `/search` has no "download all" button to click.
+  // It could grow one — `/api/download` accepts `?ids=`, which is how
+  // `/favorites` implements the same shortcut — but that is a feature, not part
+  // of fixing this, and `/search` filters server-side so which results it would
+  // cover needs deciding first.
+  //
+  // Passing nothing here used to throw: `findActiveContainer()` reads
+  // `config.activeContainerSelector`, so every key that reached this listener
+  // raised a TypeError off `undefined`.
+  initCircuitActions({
+    activeContainerSelector:
+      '[id] > .circuit-toggle[aria-expanded="true"] + .circuit-detail',
+  });
 
   // Tags apply the moment they are clicked (they are plain links), so the code
   // select has to apply on change too. Without this it looks inert: the choice
