@@ -14,6 +14,8 @@ import {
   getCodeBySlug,
   getTagsFor,
   formatCodeParams,
+  showCodeParams,
+  codeDisplayName,
   codeHasWeightedCircuits,
   getCircuitTagsForCode,
   getCircuitsForCode,
@@ -63,7 +65,7 @@ const sortHref = (field: CircuitSortField) => `${basePath}?sort=${field}&sort_di
 
 const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
 const pageUrl = `${siteUrl}/codes/${codeSlug}`;
-const codeTitle = params && code.name !== params ? `${code.name} ${params}` : code.name;
+const codeTitle = codeDisplayName(code);
 const collection: Record<string, unknown> = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
@@ -112,7 +114,7 @@ const jsonLd = [
     apart, and the JSON-LD on this page already used it. */}
 <Layout
   title={codeTitle}
-  description={`Circuits for ${code.name}${params && code.name !== params ? ` ${params}` : ""}`}
+  description={`Circuits for ${codeTitle}`}
   jsonLd={jsonLd}
 >
   <a
@@ -136,7 +138,7 @@ const jsonLd = [
         measured 0.00px gap. Same construction as CodeCard.astro. */}
     <h1 class="text-2xl font-bold flex items-baseline flex-wrap gap-x-2">
       <span>{code.name}</span>
-      {params !== "" && code.name !== params && <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>}
+      {showCodeParams(code) && <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>}
     </h1>
     {code.zoo_url && (
       <a
@@ -252,6 +254,7 @@ const jsonLd = [
 
 <script>
   import { getFavorites } from "../../lib/favorites-client";
+  import { safeStorage } from "../../lib/safe-storage";
   import { initListKeynav } from "../../lib/list-keynav-client";
   import { initListFilter } from "../../lib/list-filter-client";
   import { initCircuitActions } from "../../lib/circuit-actions-client";
@@ -335,7 +338,7 @@ const jsonLd = [
 
   const favToggle = document.getElementById("fav-filter-toggle");
   if (favToggle) {
-    let active = localStorage.getItem(FAV_FILTER_LS_KEY) === "true";
+    let active = safeStorage.getItem(FAV_FILTER_LS_KEY) === "true";
     if (active) {
       favToggle.setAttribute("aria-pressed", "true");
       applyFavFilter(true);
@@ -343,7 +346,7 @@ const jsonLd = [
     favToggle.addEventListener("click", function () {
       active = !active;
       favToggle.setAttribute("aria-pressed", active ? "true" : "false");
-      localStorage.setItem(FAV_FILTER_LS_KEY, String(active));
+      safeStorage.setItem(FAV_FILTER_LS_KEY, String(active));
       applyFavFilter(active);
     });
   }

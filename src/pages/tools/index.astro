@@ -19,8 +19,45 @@ const filters: ToolFilters = {
 };
 
 const hasFilters = hasActiveFilters(filters);
-const tools = hasFilters ? filterTools(filters) : getAllTools();
+const allTools = getAllTools();
+const tools = hasFilters ? filterTools(filters) : allTools;
 const allTags = getTagsWithCount("tool");
+
+// Mirrors /codes (src/pages/codes/index.astro): an entity listing page carries
+// a CollectionPage + ItemList and a BreadcrumbList, per CLAUDE.md.
+const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
+const pageUrl = `${siteUrl}/tools`;
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${pageUrl}#tools`,
+    url: pageUrl,
+    name: "Tools",
+    description: "Software tools used to create QEC circuits.",
+    isPartOf: { "@id": `${siteUrl}/#website` },
+    // The unfiltered list, not `tools`: ?tag= filters this page on the server
+    // but every variant canonicalises to /tools, so the enumeration has to
+    // describe that one URL. Tools have no page of their own — each item links
+    // to its anchor here (ToolCard renders id={tool.slug}).
+    // Cap the enumeration to bound head size; numberOfItems keeps the true total.
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: allTools.length,
+      itemListElement: allTools.slice(0, 200).map((tool, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: tool.name,
+        url: `${pageUrl}#${tool.slug}`,
+      })),
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [{ "@type": "ListItem", position: 1, name: "Tools", item: pageUrl }],
+  },
+];
 
 const contributed = tools.filter((t) => t.circuit_count > 0);
 const others = tools
@@ -28,7 +65,7 @@ const others = tools
   .sort((a, b) => a.name.localeCompare(b.name));
 ---
 
-<Layout title="Tools" description="Software tools used to create QEC circuits">
+<Layout title="Tools" description="Software tools used to create QEC circuits" jsonLd={jsonLd}>
   <h1 class="text-2xl font-bold mb-4">Tools</h1>
 
   <TagList tags={allTags} selectedTags={selectedTags} showCount baseUrl={Astro.url} basePath="/tools" class="mb-6">

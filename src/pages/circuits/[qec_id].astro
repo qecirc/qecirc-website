@@ -247,7 +247,13 @@ const jsonLd = [
       setFavState(favBtn, isFavorite(qecId));
 
       favBtn.addEventListener("click", function () {
-        setFavState(favBtn, toggleFavorite(qecId));
+        try {
+          setFavState(favBtn, toggleFavorite(qecId));
+        } catch {
+          // Nothing was stored, so the heart must not change: a filled heart
+          // that survives no reload is worse than no heart at all.
+          // toggleFavorite has already told the user why.
+        }
       });
     });
   }

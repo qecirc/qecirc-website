@@ -26,6 +26,23 @@
   // runs this script once, so each instance is wired up individually.
   document.querySelectorAll<HTMLElement>(".search-bar").forEach(initSearchBar);
 
+  type SearchResult = {
+    type: string;
+    name: string;
+    slug: string;
+    qec_id?: string;
+    params: string;
+    tags: string[];
+    href: string;
+    subtitle?: string;
+  };
+
+  // Only the newest request may write to a dropdown. Responses can arrive out
+  // of order, and a slow one landing last would replace the list with results
+  // for a query the user has already typed past. Shared by both instances --
+  // only one of them is ever visible, so only one is ever being typed into.
+  let latestSearch = 0;
+
   function initSearchBar(container: HTMLElement, instance: number) {
   const input = container.querySelector("input") as HTMLInputElement;
   const resultsList = container.querySelector("ul") as HTMLUListElement;
@@ -39,6 +56,11 @@
   }
 
   function hide() {
+    // Bump the generation too. Dismissing the dropdown — Escape, an outside
+    // click, or backspacing below the two-character floor, which calls this —
+    // must also abandon whatever is in flight, or that response reopens a list
+    // the user just closed, or answers a query they have already deleted.
+    latestSearch++;
     resultsList.classList.add("hidden");
     activeIndex = -1;
     input.removeAttribute("aria-activedescendant");
@@ -72,11 +94,27 @@
       return;
     }
 
-    const res = await fetch("/api/search?q=" + encodeURIComponent(query));
-    const results: { type: string; name: string; slug: string; qec_id?: string; params: string; tags: string[]; href: string; subtitle?: string }[] = await res.json();
+    const seq = ++latestSearch;
+    let results: SearchResult[];
+    try {
+      const res = await fetch("/api/search?q=" + encodeURIComponent(query));
+      // A 5xx answers with an HTML error page, so res.json() rejects. This runs
+      // from a setTimeout with its promise dropped, where that rejection is
+      // unhandled and freezes the dropdown on stale results; leave the previous
+      // list up instead -- the next keystroke retries.
+      if (!res.ok) return;
+      results = await res.json();
+    } catch {
+      return;
+    }
+    if (seq !== latestSearch) return;
 
     resultsList.innerHTML = "";
     activeIndex = -1;
+    // The active item is about to be removed from the DOM; an
+    // aria-activedescendant naming a node that no longer exists points a
+    // screen reader at nothing.
+    input.removeAttribute("aria-activedescendant");
     cachedItems = [];
 
     if (results.length === 0) {

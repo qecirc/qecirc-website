@@ -1,7 +1,7 @@
 ---
 import TagList from "./TagList.astro";
 import type { CodeWithMeta } from "../types";
-import { formatCodeParams } from "../lib/queries";
+import { formatCodeParams, showCodeParams } from "../lib/queries";
 
 interface Props {
   code: CodeWithMeta;
@@ -16,7 +16,7 @@ interface Props {
 const { code, basePath, baseUrl, selectedTags } = Astro.props;
 const { name, slug, tags, circuit_count } = code;
 const params = formatCodeParams(code);
-const showParams = params !== "" && name !== params;
+const showParams = showCodeParams(code);
 
 // Row data consumed by list-filter-client.ts (client-side filtering/sorting).
 const rowMetrics = JSON.stringify({ n: code.n, k: code.k, d: code.d ?? null });
