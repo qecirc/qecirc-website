@@ -215,8 +215,12 @@ print(result.summary())
 
 ### Option B: CLI
 
+A thin shell over `add_circuit()` — same write path, same guarantees. It covers
+the CSS (`Hx`/`Hz`) case only; for a symplectic `H`, a subsystem code, an explicit
+`qubit_permutation` or circuit `tags`, use Option A.
+
 ```bash
-python -m scripts.add_circuit.generate \
+npm run generate -- \
   --hx path/to/hx.json \
   --hz path/to/hz.json \
   --stim circuit.stim \
@@ -229,6 +233,11 @@ python -m scripts.add_circuit.generate \
 ```
 
 Add `--dry-run` to preview without writing. Multiple circuits per code: pass multiple `--stim` files with matching `--circuit-name`, `--source`, `--tool` values.
+
+`--circuit-name` is **required, one per `--stim` file** — every circuit is filed as
+`<code-slug>--<circuit-slug>`, so two circuits without distinct names are one filename.
+As in Option A, an existing `<code>--<circuit>` slug is refused; pass `--overwrite` to
+replace it in place (keeping its `qec_id`). `--assume-new` is the CLI's `assume_new=True`.
 
 ---
 

@@ -126,6 +126,21 @@ def test_encoder_narrower_than_code_still_checks_inputs(tmp_path):
     assert check.status == "passed"
 
 
+def test_underivable_inputs_are_skipped_not_errored(tmp_path):
+    """`logical_input_qubits` returns None when neither route applies — a
+    measurement leaves the circuit with no tableau, and with no resets there are
+    no ancillas to read the inputs off either.
+
+    The skip has to be terminal. Recording the "skipped" result and then falling
+    through raised TypeError on `len(None)`, which the blanket except turned into
+    an "error" — so a circuit that was merely unanalysable FAILED, exiting 1.
+    """
+    results = _build(tmp_path, "CX 0 1\nCX 0 2\nM 0", code=REPETITION_CODE)
+    check = _checks(results)["logical_input_count"]
+    assert check.status == "skipped", f"{check.status}: {check.detail}"
+    assert "not derivable" in check.detail
+
+
 def test_logical_input_count_catches_what_codespace_check_cannot(tmp_path):
     """An all-Z stabilizer group stabilizes |0...0> no matter what the circuit
     does, so the codespace check passes any CNOT circuit on the repetition code.

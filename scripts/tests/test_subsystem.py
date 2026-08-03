@@ -180,6 +180,59 @@ class TestItReachesStorage:
         doc = build_code_yaml(compute_code_data_h(five_qubit, 5, 3)["code"])
         assert "gauge" not in doc and "gauge_qubits" not in doc
 
+    def test_dedup_does_not_absorb_a_different_gauge_group(self):
+        """Two subsystem codes can share a stabilizer group and differ in what a
+        decoder may measure, which is why `canonical_hash` is taken over the
+        gauge group. Phase 2 of the dedup scan compared only `h`, so a [[9,4,3]]
+        with Bacon-Shor's centre but a smaller gauge group was reported
+        `match / existing / 9-1-3` and its k=4 silently discarded.
+        """
+        from scripts.add_circuit.compute import compute_code_data_h
+
+        gauge, stabilizers = _bacon_shor()
+        # The centre plus one anticommuting gauge pair: rank 6 against the
+        # stabilizers' 4, so one gauge qubit and k = 9 - 4 - 1 = 4.
+        smaller_gauge = np.vstack([stabilizers, _op([0, 1], []), _op([], [0, 3])])
+        assert gf2_rank(smaller_gauge) == 6 < gf2_rank(gauge)
+
+        result = compute_code_data_h(
+            stabilizers,
+            9,
+            3,
+            code_name="Toy Subsystem",
+            gauge=smaller_gauge,
+            data_dir="data_yaml",
+        )
+        assert result["code"]["k"] == 4
+        assert result["dedup_status"] == "new"
+        assert result["code"]["status"] == "new"
+        assert result["code"]["slug"] != "9-1-3"
+
+    def test_dedup_does_not_absorb_the_stabilizer_code_at_the_centre(self):
+        """The same confusion without a gauge group at all: Bacon-Shor's
+        stabilizer group is a perfectly good [[9,5,3]] CSS code, and submitting
+        it as one must not file the circuit under the subsystem code's slug."""
+        from scripts.add_circuit.compute import compute_code_data_h
+
+        _, stabilizers = _bacon_shor()
+        result = compute_code_data_h(
+            stabilizers, 9, 3, code_name="Toy Centre", data_dir="data_yaml"
+        )
+        assert result["code"]["k"] == 5
+        assert result["dedup_status"] == "new"
+        assert result["code"]["slug"] != "9-1-3"
+
+    def test_the_same_code_still_dedups(self):
+        """The guard must not cost a genuine re-submission its match."""
+        from scripts.add_circuit.compute import compute_code_data_h
+
+        gauge, stabilizers = _bacon_shor()
+        result = compute_code_data_h(
+            stabilizers, 9, 3, code_name="Bacon-Shor", gauge=gauge, data_dir="data_yaml"
+        )
+        assert result["dedup_status"] == "match"
+        assert result["code"]["slug"] == "9-1-3"
+
     def test_a_css_subsystem_code_is_still_tagged_css(self):
         """Bacon-Shor's stabilizer group is CSS; it takes the symplectic path
         only because k cannot be derived the CSS way. Losing the tag would hide

@@ -1,7 +1,7 @@
 {
   "name": "qecirc-website",
   "type": "module",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "license": "MIT",
   "scripts": {
     "dev": "astro dev",
@@ -13,7 +13,7 @@
     "db:clear": "node scripts/db/clear.mjs",
     "db:clear:circuits": "node scripts/db/clear.mjs --circuits-only",
     "db:clear:tools": "node scripts/db/clear.mjs --tools-only",
-    "generate": "python -m scripts.add_circuit.generate",
+    "generate": "uv run python -m scripts.add_circuit.generate",
     "papers:add": "uv run python scripts/add_paper.py",
     "papers:missing": "uv run python scripts/add_paper.py --missing",
     "typecheck": "astro check --tsconfig ./tsconfig.check.json",

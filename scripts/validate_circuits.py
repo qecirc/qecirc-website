@@ -326,6 +326,10 @@ def _check_logical_input_count(
         circ = _widen(stim.Circuit(circuit_text), n)
         inputs = logical_input_qubits(circ, h, n)
         if inputs is None:
+            # Terminal: `inputs` is what every line below counts, so falling
+            # through raises TypeError on len(None), the blanket except turns
+            # that into an "error" check, and a circuit that was merely
+            # unanalysable FAILS the run — exit 1 in CI.
             result.checks.append(
                 CheckResult(
                     "logical_input_count",
@@ -333,6 +337,7 @@ def _check_logical_input_count(
                     "inputs not derivable (no tableau and no resets)",
                 )
             )
+            return
         # A subsystem code's encoder takes the gauge qubits as inputs too, so
         # the count to expect is `k + gauge_qubits` — five for Bacon-Shor
         # [[9,1,3]]. Both numbers come from the stored code, so a `k` that

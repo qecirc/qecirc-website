@@ -492,7 +492,12 @@ def main() -> int:
         print("Dry run — pass --write to import.")
     else:
         print(
-            "\nNext: uv run python scripts/annotate_circuits.py && npm run format && "
+            "\nNext: uv run python scripts/annotate_circuits.py && "
+            # Re-import carries over only `qec_id`, so every measured
+            # `circuit-distance:` tag on these circuits is gone. The script
+            # strips and re-measures, so this restores them.
+            "uv run python scripts/measure_circuit_distance.py --write && "
+            "npm run format && "
             "npm run validate:yaml && npm run validate:circuits && npm run db:create"
         )
     return 1 if counts.get("error") else 0
