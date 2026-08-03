@@ -300,7 +300,7 @@ def compute_code_data_h(
     uncertain_candidates: list[str] = []
     existing_perm: Optional[list[int]] = None
     if data_dir:
-        dedup = _check_yaml_dedup_h(data_dir, c_hash, H, n)
+        dedup = _check_yaml_dedup_h(data_dir, c_hash, H, n, gauge=gauge_to_store)
         dedup_status = dedup.status
         uncertain_candidates = dedup.uncertain_candidates
         if dedup.status == "match":
@@ -643,17 +643,45 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz) -> DedupResult:
     return _phase2_permutation_scan(stored, H_user, n, rank_user)
 
 
+def _gauge_agrees(
+    gauge_user: np.ndarray, gauge_stored: np.ndarray, n: int, sigma: list[int]
+) -> bool:
+    """Do the two gauge groups span the same row space under `sigma`?
+
+    `sigma` is the permutation `is_permutation_equivalent` returned, whose
+    contract is that gathering columns `sigma + [s + n for s in sigma]` from the
+    user's matrix reproduces the stored one's row space. The gauge group has to
+    survive the same gather, or the two codes differ in what a decoder may
+    measure even though their centres coincide.
+    """
+    gauge_user = np.asarray(gauge_user, dtype=int) % 2
+    gauge_stored = np.asarray(gauge_stored, dtype=int) % 2
+    permuted = gauge_user[:, list(sigma) + [s + n for s in sigma]]
+    return np.array_equal(gf2_row_basis(permuted), gf2_row_basis(gauge_stored))
+
+
 def _phase2_permutation_scan(
     stored: list[tuple[str, dict]],
     H_user: np.ndarray,
     n: int,
     rank_user: int,
+    gauge_user: Optional[np.ndarray] = None,
 ) -> DedupResult:
     """Common Phase-2 scan shared by the CSS and non-CSS dedup paths.
 
     For each stored code with matching (n, rank), run is_permutation_equivalent
     against the user's symplectic H. Returns "match" on the first equivalent,
     "uncertain" if any candidate timed out and none matched, else "new".
+
+    `H_user` is the *stabilizer* group, which for a subsystem code is only the
+    centre of the gauge group — and two subsystem codes can share a centre while
+    differing in what a decoder may measure. That is exactly why
+    `compute_code_data_h` hashes the gauge group rather than `h`, so Phase 1
+    separates such codes; comparing only `h` here merged them again, absorbing a
+    [[9,4,3]] into the stored Bacon-Shor [[9,1,3]] and discarding the computed k.
+    So a permutation match must carry the gauge group over too, and `gauge_user`
+    is passed whenever the submission has one (`None` for a plain stabilizer
+    code, including every CSS submission).
     """
     uncertain: list[str] = []
     for slug, data in stored:
@@ -662,10 +690,27 @@ def _phase2_permutation_scan(
         H_stored = decode_matrix(data["h"])
         if H_stored.shape[1] != 2 * n or gf2_rank(H_stored) != rank_user:
             continue
+        gauge_stored = decode_matrix(data["gauge"]) if data.get("gauge") is not None else None
+        # A subsystem code is not the stabilizer code sitting at its centre:
+        # same `h`, different k. Cheap and definite, so it runs before the
+        # permutation search rather than after it.
+        if (gauge_user is None) != (gauge_stored is None):
+            continue
+        if gauge_user is not None and gf2_rank(gauge_user) != gf2_rank(gauge_stored):
+            continue  # different gauge-qubit counts, so different k
         status, sigma = is_permutation_equivalent(
             H_user, H_stored, n, budget_seconds=DEDUP_BUDGET_SECONDS
         )
         if status == "equivalent":
+            if gauge_user is not None and not _gauge_agrees(gauge_user, gauge_stored, n, sigma):
+                # The centres coincide under this sigma but the gauge groups do
+                # not. Another sigma might carry both — the search returns the
+                # first that fits the centre and does not enumerate the rest —
+                # so this is genuinely unresolved, and gets the same answer a
+                # budget timeout does rather than a silent merge or a silent
+                # duplicate.
+                uncertain.append(slug)
+                continue
             perm = sigma if sigma != list(range(n)) else None
             return DedupResult("match", slug, perm, [])
         if status == "uncertain":
@@ -675,11 +720,15 @@ def _phase2_permutation_scan(
     return DedupResult("new", None, None, [])
 
 
-def _check_yaml_dedup_h(data_dir, c_hash, H, n) -> DedupResult:
+def _check_yaml_dedup_h(data_dir, c_hash, H, n, gauge=None) -> DedupResult:
     """Two-phase dedup against data_yaml/codes/ for a non-CSS submission.
 
     Same shape as :func:`_check_yaml_dedup`: hash lookup, then a permutation-
     equivalence scan against same-shape candidates.
+
+    `gauge` is the submission's gauge group when it has one (subsystem codes).
+    Phase 1 already accounts for it — `c_hash` is taken over the gauge group in
+    that case — and Phase 2 needs it explicitly.
     """
     codes_dir = Path(data_dir) / "codes"
     if not codes_dir.exists():
@@ -705,7 +754,7 @@ def _check_yaml_dedup_h(data_dir, c_hash, H, n) -> DedupResult:
             f"Hash collision: code '{slug}' has matching canonical_hash but different canonical H."
         )
 
-    return _phase2_permutation_scan(stored, H, n, rank_user)
+    return _phase2_permutation_scan(stored, H, n, rank_user, gauge_user=gauge)
 
 
 def slugify(name: str) -> str:
