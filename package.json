@@ -16,7 +16,7 @@
     "generate": "uv run python -m scripts.add_circuit.generate",
     "papers:add": "uv run python scripts/add_paper.py",
     "papers:missing": "uv run python scripts/add_paper.py --missing",
-    "typecheck": "astro check --tsconfig ./tsconfig.check.json",
+    "typecheck": "astro check",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
