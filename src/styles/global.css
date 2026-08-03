@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* Tailwind v4 detects its own sources, which means it scans every tracked file
+   -- including prose that merely *names* a class. A CHANGELOG entry explaining
+   that `text-amber-600` was replaced puts `.text-amber-600{}` back in the
+   stylesheet, and the design plans under docs/ do the same for classes no
+   component has used in months. The dead bytes are the small half of it: the
+   larger cost is that "the class is gone from the built CSS" stops being a way
+   to check that a sweep across call sites was complete, and it fails in the
+   direction that hides a missed one. Neither path renders anything, so neither
+   is a source. Paths resolve relative to this file. */
+@source not "../../CHANGELOG.md";
+@source not "../../docs";
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 .prose-link {

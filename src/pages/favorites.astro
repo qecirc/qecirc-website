@@ -161,7 +161,7 @@ import Layout from "../components/Layout.astro";
 
           for (const circuit of codeCircuits) {
             const row = document.createElement("div");
-            row.className = "rounded border border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3 flex-wrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
+            row.className = "rounded border border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3 flex-wrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
             row.dataset.qecId = String(circuit.qec_id);
             row.tabIndex = 0;
             row.setAttribute("data-list-row", "");

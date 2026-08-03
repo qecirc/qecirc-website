@@ -13,7 +13,6 @@
   <ul
     class="search-results absolute right-0 top-full mt-1 w-96 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg hidden z-50 max-h-80 overflow-y-auto"
     role="listbox"
-    aria-live="polite"
     aria-label="Search results"
   >
   </ul>
@@ -51,8 +50,20 @@
   let activeIndex = -1;
   let cachedItems: NodeListOf<HTMLLIElement> | HTMLLIElement[] = [];
 
+  // The combobox wiring is applied here rather than in the markup for two
+  // reasons: the dropdown only exists when this script runs (without JS the
+  // input is a plain search field and must not claim to own a popup), and the
+  // layout renders two SearchBars, so the listbox id has to be per-instance --
+  // the same `instance` index the option ids below already use.
+  resultsList.id = `search-results-${instance}`;
+  input.setAttribute("role", "combobox");
+  input.setAttribute("aria-controls", resultsList.id);
+  input.setAttribute("aria-autocomplete", "list");
+  input.setAttribute("aria-expanded", "false");
+
   function show() {
     resultsList.classList.remove("hidden");
+    input.setAttribute("aria-expanded", "true");
   }
 
   function hide() {
@@ -62,6 +73,7 @@
     // the user just closed, or answers a query they have already deleted.
     latestSearch++;
     resultsList.classList.add("hidden");
+    input.setAttribute("aria-expanded", "false");
     activeIndex = -1;
     input.removeAttribute("aria-activedescendant");
   }
@@ -231,6 +243,17 @@
     } else if (e.key === "Escape") {
       hide();
     }
+  });
+
+  // Tabbing out of the input leaves a dropdown that still reports itself as
+  // expanded on a combobox nothing is focused on. Guarded on a non-null
+  // relatedTarget: the result <li>s are not focusable, so pressing the mouse on
+  // one blurs the input with relatedTarget null, and hiding there would take
+  // the item away between mousedown and the click that navigates. Pointer
+  // dismissal is the document listener below.
+  input.addEventListener("focusout", function (e) {
+    const next = (e as FocusEvent).relatedTarget as Node | null;
+    if (next && !container.contains(next)) hide();
   });
 
   document.addEventListener("click", function (e) {

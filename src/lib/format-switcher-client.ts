@@ -24,6 +24,24 @@ export function initFormatSwitchers(root: HTMLElement | Document = document): vo
     }
     syncSwitches((tabs[0] as HTMLElement | undefined)?.dataset.format);
 
+    // The active tab is otherwise signalled by colour alone (WCAG 1.4.1 / 4.1.2).
+    // Same pattern as CodeMatrices.astro. The initial state is read off the
+    // visible body rather than assumed to be the first tab, because the tabs on
+    // code pages are cloned from CircuitBodiesTemplate.astro, which carries no
+    // aria-pressed of its own.
+    function syncPressed(format: string | undefined): void {
+      tabs.forEach(function (t) {
+        (t as HTMLElement).setAttribute(
+          "aria-pressed",
+          (t as HTMLElement).dataset.format === format ? "true" : "false",
+        );
+      });
+    }
+    const shown = Array.from(bodies).find(function (b) {
+      return (b as HTMLElement).style.display !== "none";
+    });
+    syncPressed((shown as HTMLElement | undefined)?.dataset.format);
+
     tabs.forEach(function (tab) {
       tab.addEventListener("click", function () {
         const format = (tab as HTMLElement).dataset.format;
@@ -38,6 +56,7 @@ export function initFormatSwitchers(root: HTMLElement | Document = document): vo
             (b as HTMLElement).dataset.format === format ? "" : "none";
         });
 
+        syncPressed(format);
         syncSwitches(format);
 
         // Formats differ in length, so the row's collapse container has to be

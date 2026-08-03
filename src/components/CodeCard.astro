@@ -24,7 +24,7 @@ const rowTags = JSON.stringify(tags);
 ---
 
 <div
-  class="rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+  class="rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
   tabindex="0"
   data-list-row
   data-filter-row
@@ -34,7 +34,7 @@ const rowTags = JSON.stringify(tags);
 >
   <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
     <a href={`/codes/${slug}`} class="flex items-baseline gap-2" data-list-link>
-      <h3 class="font-medium">{name}</h3>
+      <h2 class="font-medium">{name}</h2>
       {showParams && <span class="text-sm text-gray-500 dark:text-gray-400">{params}</span>}
       <span class="text-xs text-gray-500 dark:text-gray-400">{circuit_count} {circuit_count === 1 ? "circuit" : "circuits"}</span>
     </a>
