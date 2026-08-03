@@ -290,7 +290,19 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
   import { initCircuitActions } from "../lib/circuit-actions-client";
 
   initCircuitBodies();
-  initCircuitActions();
+
+  // Same expandable `CircuitRow`s as a code page, so the same selector finds
+  // the open one. No `downloadAllSelector`: `/search` has no "download all"
+  // button, and `/api/download` reads URL filter params rather than a query,
+  // so there is nothing for Shift+D to mean here.
+  //
+  // This was `initCircuitActions()` with no argument, which is not merely "no
+  // shortcuts": `config.downloadAllSelector` is read on the first line of the
+  // keydown handler, so every keypress outside an input threw a TypeError.
+  initCircuitActions({
+    activeContainerSelector:
+      '[id] > .circuit-toggle[aria-expanded="true"] + .circuit-detail',
+  });
 
   // Tags apply the moment they are clicked (they are plain links), so the code
   // select has to apply on change too. Without this it looks inert: the choice

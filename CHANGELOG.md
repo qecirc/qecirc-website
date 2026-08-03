@@ -15,6 +15,24 @@ the source-of-truth `package.json` version.
 
 ### Fixed
 
+- **Every keypress on `/search` threw.** `initCircuitActions()` was called with no argument,
+  and the first line of its keydown handler reads `config.downloadAllSelector` — so any key
+  pressed outside an input raised a `TypeError` instead of doing anything. Typing in the
+  search box was safe (`isInputFocused()` returns first), which is why it went unnoticed:
+  the page looked fine and simply had none of the shortcuts every other list page has.
+  `/search` renders the same expandable `CircuitRow`s as a code page, so it now passes the
+  same selector, and `1`/`2`/`3`, `c`/`y` and `d` act on the open row. No `downloadAllSelector`:
+  there is no such button on `/search`, and `/api/download` reads URL filter params rather
+  than a query. Found by `astro check`, which had never run before this week.
+- **`aria-expanded={String(open)}`** on the collapsible section typed as `string` where the
+  attribute accepts `boolean | "true" | "false"`. Astro renders the boolean correctly, so
+  this was a type error rather than a rendered one — but it was the reason that file sat in
+  the typecheck exclusion list.
+- **`tsconfig.check.json` is gone, and `npm run typecheck` runs against the real config.**
+  It existed to hold two errors out of CI while the files they were in belonged to other
+  open PRs — a debt register with two entries, both now paid. The full project type-checks
+  clean: 92 files, 0 errors. The `check-json` exclusion that existed only to parse it went
+  with it.
 - **The pre-commit hooks corrupted the repository, and nothing had noticed because nothing
   ran them.** They were never wired into CI, so they only ever fired for someone who had run
   `pre-commit install` — and on this repository a full run rewrites 2476 files and leaves

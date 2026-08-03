@@ -17,11 +17,7 @@ repos:
       - id: trailing-whitespace
         exclude: ^data_yaml/
       - id: check-yaml
-      # tsconfig.check.json is JSONC: it carries the comments explaining which
-      # two files it excludes and why. `check-json` is a strict JSON parser and
-      # cannot read it, though TypeScript can.
       - id: check-json
-        exclude: ^tsconfig\.check\.json$
       - id: check-added-large-files
         args: ["--maxkb=500"]
 
