@@ -8,7 +8,13 @@
 //
 // "Active" depends on context: on a circuit detail page there is exactly one
 // body; on a code page (with multiple expandable rows) it is the row whose
-// `.circuit-toggle` has `aria-expanded="true"`.
+// `.circuit-toggle` has `data-expanded="true"`. That is deliberately a data
+// attribute and not `aria-expanded`: the row is not the toggle — the chevron
+// button inside it is, and it owns the ARIA — so a page script that selected
+// on the ARIA would break the moment the row's semantics were corrected. It
+// did: `role="button"` + `aria-expanded` on the row announced a toggle that
+// Enter does not perform (Enter navigates), and flattened the row's eight
+// interactive descendants.
 //
 // All bindings reuse the existing click handlers on the underlying buttons,
 // so no copy/download/format logic is duplicated here.

@@ -70,6 +70,53 @@ a copy of the database or parsing the YAML will need the columns removed.
 
 ### Fixed
 
+- **A circuit row announced itself as a button that does something else.** It carried
+  `role="button"`, `tabindex="0"` and `aria-expanded="false"`, so a screen reader said
+  "button, collapsed" — and then `Enter` on it navigated to the circuit page. `l`, Space and
+  a mouse click expanded; the one key the announced role promises did not. That is WCAG
+  4.1.2: the name, role and state have to describe what the thing actually does, and here
+  the role described a toggle that only some of the row implements.
+  `role="button"` also carries ARIA's _Children Presentational: True_ — a button's contents
+  are a label, not controls — so the row's eight interactive descendants (the permalink, the
+  favourite toggle, the detail link and five tag links) were stripped of their own roles and
+  folded into the row's accessible name, a 149-character run of
+  `#190G: 112Q: 8D: 3Q: 7Circuit-Synth Zero State Preparation…1D-AODlogical-state:zero…`.
+  Every affordance in the row existed for a mouse and for nobody else.
+  The row now claims nothing it does not do:
+  - **`role="group"` with a name** (`Circuit #190: <name>`), not a bare focusable `div`. It
+    still has to be focusable — `j`/`k` move between rows by focusing them — and something
+    focusable with no role announces as an unnamed container. `group` names it, and, unlike
+    `button`, does not flatten what is inside it: all eight descendants are individually
+    exposed again, and the row's own name is 76 characters that say which circuit it is.
+  - **The chevron is a real `<button>`**, which is the only element here that _is_ a toggle,
+    and it owns `aria-expanded` plus an `aria-controls` pointing at the panel. Its name is
+    fixed ("Circuit #190 details") rather than flipping between "Expand" and "Collapse":
+    `aria-expanded` already carries the state, and a name that repeats it says the same
+    thing twice. It has no click handler of its own — the click bubbles to the row's
+    existing one — so it cannot toggle twice, and there is one implementation, not two.
+  - **No documented keyboard behaviour changed.** `Enter` still navigates, `l`/`h`/Space
+    still expand and collapse, `j`/`k` still move, `f` still favourites, and clicking
+    anywhere on the row still expands it. `Enter` on the chevron toggles instead of
+    navigating, which is what a focused button should do.
+- **Two page scripts selected the open row by its `aria-expanded`, and would have died
+  silently.** `[id] > .circuit-toggle[aria-expanded="true"] + .circuit-detail` is how
+  `/codes/[code]` and `/search` find the row that `1`/`2`/`3`, `c`/`y` and `d` act on, and
+  `circuit-bodies-client` uses the same shape to load bodies for a row already expanded by a
+  `#id` deep link. Moving `aria-expanded` onto the chevron would have left all three
+  matching nothing, with no error and no test to catch it. The row therefore mirrors the
+  state in `data-expanded`, all three selectors read that, and `list-keynav`'s
+  `expandedAttr` is pointed at it on both pages. The split is deliberate rather than
+  incidental: ARIA describes the control to assistive technology, a data attribute is what
+  page scripts are allowed to depend on, and one function (`setExpanded`) writes both plus
+  the chevron rotation so they cannot drift.
+- **Giving the panel an `id` broke the "collapse the other rows" loop**, and only in the
+  state nobody looks at. `aria-controls` needs a target id, and the loop found each other
+  row's header with `panel.closest("[id]")` — which starts at the element itself, so it now
+  returned the panel, found no header under it, and left that row's `data-expanded`,
+  `aria-expanded` and chevron all saying "open" while the panel was visibly shut. Two rows
+  then matched the "open row" selector and `1`/`2`/`3` would have acted on the wrong one. It
+  walks to `previousElementSibling` now. Found by checking the collapsed row's attributes in
+  a browser after the change, not by anything that would have shown on screen.
 - **Every keypress on `/search` threw a `TypeError`.** `initCircuitActions()` was called with
   no argument, so `findActiveContainer()` read `config.activeContainerSelector` off
   `undefined` on any key that reached it. The page still worked: the throw is confined to

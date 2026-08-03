@@ -296,13 +296,16 @@ const jsonLd = [
     // toggle, so /codes/foo#42 focuses (and the existing expandFromHash
     // handler expands) the right row.
     hashAttr: "data-qec-id",
+    // The row is not the toggle: `aria-expanded` belongs to the chevron button
+    // inside it, and the row mirrors the state in `data-expanded`.
+    expandedAttr: "data-expanded",
   });
 
   // 1/2/3 + c/y + d target the currently expanded circuit row (if any);
   // Shift+D triggers the page-level "download all visible" button.
   initCircuitActions({
     activeContainerSelector:
-      '[id] > .circuit-toggle[aria-expanded="true"] + .circuit-detail',
+      '[id] > .circuit-toggle[data-expanded="true"] + .circuit-detail',
     downloadAllSelector: "#download-all-btn",
   });
 
