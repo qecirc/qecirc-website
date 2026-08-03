@@ -5,13 +5,68 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+**Breaking (0.7.11 → 0.8.0):** migration `021` drops `circuits.crumble_url` and
+`circuits.crumble_url_annotated`, and the two keys are gone from the circuit YAML schema.
+Nothing reads them any more — the link is derived where it is shown — but anything holding
+a copy of the database or parsing the YAML will need the columns removed.
+
 ### Removed
 
+- **The Cirq body format, all 718 files and 13 MB of it.** A Cirq circuit's text form is a
+  per-moment ASCII grid whose width scales with the qubit count, so it grew fastest exactly
+  where it read worst — and it never said anything the STIM body does not say better. Gone
+  with it: the `stimcirq` dependency (and its `cirq-core`, `pandas`, `sympy` and `duet`
+  transitive weight), the CIRQ tab, and the `.cirq` extension from the two body-file
+  readers. The format shortcuts are `1`/`2` now; `3` finds no tab and does nothing, which is
+  what it already did past the last tab.
+- **The stored Crumble URLs — `crumble_url` on 725 circuits and `crumble_url_annotated` on
+  398, 528 KB of YAML.** A Crumble URL is a pure string transform of the body it shows: join
+  the lines with `;`, abbreviate `QUBIT_COORDS`/`DETECTOR`/`OBSERVABLE_INCLUDE`, write the
+  spaces as `_`. Storing it therefore kept a second, lossy copy of every circuit, and the
+  copy drifted — 76 of the 725 links pointed at a body the page had stopped displaying, and
+  32 more dropped a syndrome round's own measurement. `crumbleHref` in
+  `src/lib/stim-format.ts` now derives it: the detail page server-renders it from the body it
+  already has, code pages fill it in when the row's bodies are lazy-loaded, and the Detectors
+  switch moves it by re-deriving rather than by swapping to a second stored string. The
+  transform is stim's own, checked byte-for-byte against all 1123 URLs that used to be
+  stored.
+- **Quirk URLs above 40 qubits — 28 links, 1.70 MB.** Quirk's editor tops out around 16
+  qubits, so these were dead links, and the URL scales with width: one was 242,264
+  characters, and seven of them made up 91% of `/codes/144-12-12`. The width gate was already
+  in the pipeline (`LARGE_CIRCUIT_MAX_QUBITS`); the stored data predated it. Below the gate
+  nothing changed — 697 circuits keep their Quirk link.
 - **The `no-private-registries` CI job.** It failed the build on any `jfrog.io` reference —
   a guard from the period when this code sat next to a private artifactory. Nothing in the
   repository has referenced one for a long time (`git grep -F jfrog.io` is empty), and both
   lockfiles resolve exclusively against public registries, so the job was spending a run on
   every PR to assert something no longer at risk.
+
+### Changed
+
+- **The Crumble link is gated on the length of the URL, not on the qubit count.** It used to
+  be blanked past 40 qubits, which denied a link to every 144-qubit circuit in the library
+  while saying nothing about the number that actually matters. `CRUMBLE_MAX_URL_LENGTH` is
+  65,536 characters — the narrowest ceiling among current browsers (Chrome accepts ~2 MB and
+  Safari ~80 KB; Firefox is the binding constraint at ~64 KB) — so a link that is offered
+  opens everywhere. 950 of 972 circuits get one, against 697 before; the 22 refused are all
+  720 qubits or wider, where the string runs to 232 KB plain and 782 KB with detectors. The
+  cap looks at both views together, so the Detectors switch can never turn a working link
+  into a broken one.
+- **`/codes/144-12-12` is 90% smaller: 1,259,209 → 124,946 bytes.** `/codes/108-8-10`,
+  781,983 → 124,974. The circuit pages follow: `#27`, 426,081 → 150,455; `#163`, 738,916 →
+  95,579.
+
+### Added
+
+- **`npm test` — `crumbleUrl` against stim's own `to_crumble_url()`, over all 1646 committed
+  bodies.** The Crumble link is now derived by a hand-written reimplementation of a stim
+  function, and nothing else in the repository compares the two: a stim upgrade, or an edit
+  to the abbreviation table, would break every link on the site and pass every other check.
+  A second assertion keeps the corpus a fixed point of `str(stim.Circuit(...))`, because the
+  exactness only holds for canonical text — a hand-edited body using a gate alias
+  (`CORRELATED_ERROR` for `E`) or carrying a `#` comment would derive a link for
+  differently-spelled text. Runs in CI as `crumble-url-parity`, node's own test runner, no new
+  dependency.
 
 ### Fixed
 
@@ -108,6 +163,15 @@ the source-of-truth `package.json` version.
   stops being a way to check that a sweep across call sites was complete — and it fails in
   the direction that hides a missed one, which is how four `ring-blue-500/40` sites survived
   the first pass of the fix above. Both paths are now `@source not` in `global.css`.
+- **294 circuits displayed — and handed over on Copy and Download — a body missing its final
+  measurement.** `bodyForDisplay` subtracted the readout epilogue unconditionally, but a
+  circuit with no `stim-annotated` body has no Detectors switch to bring it back, so for
+  those the subtraction was permanent and invisible. `/circuits/662` rendered two lines while
+  its Crumble link opened the same circuit _with_ `M 10`, and a user could download a circuit
+  that no longer measured anything. `stripReadout` now subtracts only from a body that
+  carries annotations — which is exactly the condition under which the switch exists. The 674
+  circuits that do have an annotated body are unaffected: none of the 63 prologue-only ones
+  ends in a readout.
 
 - **The pre-commit hooks corrupted the repository, and nothing had noticed because nothing
   ran them.** They were never wired into CI, so they only ever fired for someone who had run

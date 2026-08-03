@@ -11,8 +11,6 @@ gate_count: 18
 two_qubit_gate_count: 11
 depth: 7
 qubit_count: 10
-crumble_url: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6_7_8_9;TICK;H_3_7_0_2_6_9;CX_6_1_3_8_3_4_0_8_6_5_0_1_2_8_7_1_9_1_9_2_9_0;H_9_
-crumble_url_annotated: https://algassert.com/crumble#circuit=R_0_1_2_3_4_5_6_7_8_9;TICK;H_3_7_0_2_6_9;CX_6_1_3_8_3_4_0_8_6_5_0_1_2_8_7_1_9_1_9_2_9_0;H_9;TICK;MX_0_1_2_3_4_5_6_7_8;DT_rec[-9]_rec[-4]_rec[-3]_rec[-1];DT_rec[-8]_rec[-2];DT_rec[-7]_rec[-1];DT_rec[-9]_rec[-6]_rec[-5]_rec[-2];OI(0)rec[-9]_rec[-8]_rec[-7]_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H",1,"H","H",1,1,"H","H",1,"H"],[1,"X",1,1,1,1,"•"],[1,1,1,"•",1,1,1,1,"X"],[1,1,1,"•","X"],["•",1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"X","•"],["•","X"],[1,1,"•",1,1,1,1,1,"X"],[1,"X",1,1,1,1,1,"•"],[1,"X",1,1,1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"H"]]}
 tags: [state-preparation, ft, "logical-state:plus", flag]
 original_matrices: 18ed8bee546ba80f

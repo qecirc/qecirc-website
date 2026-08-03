@@ -1,6 +1,6 @@
 [project]
 name = "qecirc-website"
-version = "0.7.14"
+version = "0.8.0"
 description = "QECirc — quantum error correction circuit library"
 license = "MIT"
 requires-python = ">=3.13"

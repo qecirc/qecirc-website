@@ -102,17 +102,17 @@ const EXAMPLE_CIRCUIT_TAGS = EXAMPLE_CODE
   : [];
 
 // A real circuit for the detail-page preview. Not simply the newest one: the
-// step promises Crumble and Quirk, and those links are per-circuit -- a sizeable
-// minority of circuits carry neither -- so a reader clicking through to one
-// without them would find the step had oversold. Prefer a recent circuit that
-// actually has both.
-const EXAMPLE_CIRCUIT = getLatestCircuits(20).find((c) => c.crumble_url && c.quirk_url) ?? latest[0];
+// step promises Crumble and Quirk, and while every circuit now gets a Crumble
+// link (it is derived from the body), Quirk's is stored and only exists below
+// the width gate -- so a reader clicking through to a wide circuit would find
+// the step had oversold. Prefer a recent circuit that has one.
+const EXAMPLE_CIRCUIT = getLatestCircuits(20).find((c) => c.quirk_url) ?? latest[0];
 
 // Derived from the example's real bodies through the same splitAnnotated the
 // FormatSwitcher tabs use, so the chips are exactly the tabs the linked page
 // shows -- `stim-annotated` is a view of the STIM body, not a format, and gets
-// no tab. Hardcoding STIM/QASM/Cirq would lie for the several hundred circuits
-// that have no Cirq conversion.
+// no tab. Hardcoding STIM/QASM would lie for any circuit whose QASM conversion
+// failed.
 const EXAMPLE_FORMATS = EXAMPLE_CIRCUIT
   ? splitAnnotated(getBodiesForCircuits([EXAMPLE_CIRCUIT.id]).get(EXAMPLE_CIRCUIT.id) ?? []).tabs.map(
       (b) => b.format.toUpperCase(),
@@ -182,7 +182,7 @@ const jsonLd = {
 
 <Layout
   title="Quantum error correction circuits"
-  description="Find the QEC circuits you need to design fault-tolerant computation. Browse, search and download STIM, QASM and Cirq circuits, organised by error-correcting code."
+  description="Find the QEC circuits you need to design fault-tolerant computation. Browse, search and download STIM and QASM circuits, organised by error-correcting code."
   jsonLd={jsonLd}
 >
   <section class="max-w-2xl mb-8">
@@ -195,7 +195,7 @@ const jsonLd = {
       fault-tolerant computation. Browse, compare and download reusable circuits for
       encoding, state preparation, syndrome extraction and flag gadgets, organised by
       error-correcting code. Each circuit carries its metrics and its
-      source, stored in STIM and offered as QASM and Cirq.
+      source, stored in STIM and offered as QASM.
     </p>
     <p class="text-gray-600 dark:text-gray-400 mb-4">
       QECirc is built as a community project, in the open. The circuits are drawn from
@@ -359,7 +359,7 @@ const jsonLd = {
           previewLabel="A circuit page"
         >
           <Fragment slot="body">
-            A circuit page carries the body in STIM and QASM, usually Cirq too, the source to
+            A circuit page carries the body in STIM and QASM, the source to
             cite, and links to open it in Crumble or Quirk. Its id is permanent and never reused, so{" "}
             <span class="font-mono text-xs">{formatCircuitId(EXAMPLE_CIRCUIT.qec_id)}</span> always
             means this circuit -- quote it in a paper or send it to a colleague. Where

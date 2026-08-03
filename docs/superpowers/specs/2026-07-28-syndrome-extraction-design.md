@@ -4,6 +4,11 @@
 annotated view are in `scripts/add_circuit/`, where they shipped ahead of this data as
 #145 so the qLDPC and QUITS imports could use them. This document is kept as the record
 of why each choice was made — see the import README for the operational detail.
+
+**Superseded in part (0.8.0):** the Cirq body format described below no longer exists —
+its per-moment ASCII grid scaled with the qubit count for no gain over the STIM body. The
+format tabs are STIM and QASM. Everything else here still holds; the mentions are left as
+written because this document is a record of what was decided at the time.
 **Date:** 2026-07-28
 **Dataset under consideration:** [acasta-yhliu/asyndrome](https://github.com/acasta-yhliu/asyndrome) —
 _AlphaSyndrome: Tackling the Syndrome Measurement Circuit Scheduling Problem for QEC Codes_,

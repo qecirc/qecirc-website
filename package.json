@@ -1,7 +1,7 @@
 {
   "name": "qecirc-website",
   "type": "module",
-  "version": "0.7.14",
+  "version": "0.8.0",
   "license": "MIT",
   "scripts": {
     "dev": "astro dev",
@@ -20,6 +20,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test": "node --test scripts/tests/*.test.mjs",
     "validate:yaml": "node scripts/validate-yaml.mjs",
     "validate:circuits": "uv run python scripts/validate_circuits.py"
   },

@@ -43,8 +43,8 @@ const stmts = {
     INSERT INTO codes (name, slug, n, k, d, zoo_url, aliases, related, h, logical, gauge, gauge_qubits, canonical_hash)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertCircuit: db.prepare(`
-    INSERT INTO circuits (qec_id, code_id, name, slug, notes, source, gate_count, two_qubit_gate_count, depth, qubit_count, weight, crumble_url, crumble_url_annotated, quirk_url, tool_id, paper_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+    INSERT INTO circuits (qec_id, code_id, name, slug, notes, source, gate_count, two_qubit_gate_count, depth, qubit_count, weight, quirk_url, tool_id, paper_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertBody: db.prepare(`
     INSERT INTO circuit_bodies (circuit_id, format, body)
     VALUES (?, ?, ?)`),
@@ -104,7 +104,7 @@ function listYamlFiles(dir) {
 // Body format extensions. `stim-annotated` is the canonical STIM body plus a
 // reset prologue, a terminal readout and derived detectors/observables; the
 // canonical `stim` body stays unitary because the derive/fit pipeline needs it.
-const BODY_EXTENSIONS = new Set(["stim", "qasm", "cirq", "stim-annotated"]);
+const BODY_EXTENSIONS = new Set(["stim", "qasm", "stim-annotated"]);
 
 // --- 4. Insert data ---
 const toolSlugToId = new Map();
@@ -338,8 +338,6 @@ try {
         data.depth ?? null,
         data.qubit_count ?? null,
         data.weight ?? null,
-        data.crumble_url || null,
-        data.crumble_url_annotated || null,
         data.quirk_url || null,
         toolId,
         paperId,

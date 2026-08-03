@@ -24,10 +24,10 @@ export interface Circuit {
   depth: number | null;
   qubit_count: number | null;
   weight: number | null;
-  crumble_url: string | null;
-  /** Crumble link for the `stim-annotated` body. The Detectors switch points the
-   *  Crumble link here; null when the circuit has no annotated body. */
-  crumble_url_annotated: string | null;
+  /** Quirk link, when the circuit is narrow enough for Quirk to open it
+   *  (`LARGE_CIRCUIT_MAX_QUBITS`). There is deliberately no Crumble column: that
+   *  link is a pure function of the body and is derived where it is shown, by
+   *  `crumbleHref` in src/lib/stim-format.ts. */
   quirk_url: string | null;
   tool_id: number | null;
   /** The paper this circuit is taken from, resolved from `source` at build time

@@ -1,5 +1,6 @@
 // Keyboard shortcuts that act on the "active" circuit body on a page:
-// - 1 / 2 / 3 switch format tabs (STIM / QASM / CIRQ) inside the active FormatSwitcher.
+// - 1 / 2 / 3 switch format tabs inside the active FormatSwitcher. Only STIM
+//   and QASM exist today, so 3 finds no tab and falls through untouched.
 // - c / y copy the visible circuit body.
 // - d download the visible circuit body.
 // - D (Shift+d) clicks a page-level "download all" button (e.g. download all

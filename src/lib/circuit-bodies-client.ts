@@ -12,6 +12,7 @@ import { citeNotice } from "./cite-client";
 import {
   ANNOTATED_OF,
   bodyForDisplay,
+  crumbleLinks,
   hasQubitCoords,
   lineNumbered,
   splitAnnotated,
@@ -52,6 +53,26 @@ function buildSwitcher(
   // FormatSwitcher.astro, which resolves this server-side.
   const { tabs, annotated } = splitAnnotated(bodies);
 
+  // The Crumble link is derived from the body, and the body only arrives here —
+  // the row rendered without one. Reveal the link, and the "View in:" block with
+  // it, now that there is something to point at; body-view-client repoints it
+  // from the Detectors switch. Too long to open (see CRUMBLE_MAX_URL_LENGTH) and
+  // the anchor is removed outright, which also stops paintCrumble finding it.
+  const stimBody = tabs.find((b) => b.format === ANNOTATED_OF)?.body.trimEnd();
+  const link = container
+    .closest<HTMLElement>("[data-circuit-scope]")
+    ?.querySelector<HTMLAnchorElement>("[data-crumble-link]");
+  if (link) {
+    const links = stimBody === undefined ? null : crumbleLinks(stimBody, annotated);
+    if (links) {
+      link.href = links.plain;
+      link.classList.remove("hidden");
+      link.closest<HTMLElement>("[data-view-links]")?.classList.remove("hidden");
+    } else {
+      link.remove();
+    }
+  }
+
   // Only STIM carries coordinates or an annotated variant, so at most one body
   // per switcher owns the switches.
   let coordsSlot = tabBar.querySelector<HTMLElement>(".coords-slot");
@@ -86,7 +107,7 @@ function buildSwitcher(
       else kbd.remove();
     }
     // The coords slot sits after the tab prototype in the template, so tabs
-    // must go before it to keep the row reading [STIM][QASM][CIRQ] … [Coords].
+    // must go before it to keep the row reading [STIM][QASM] … [Coords].
     if (coordsSlot) tabBar.insertBefore(tab, coordsSlot);
     else tabBar.appendChild(tab);
 
