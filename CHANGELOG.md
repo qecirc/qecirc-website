@@ -15,6 +15,28 @@ the source-of-truth `package.json` version.
 
 ### Fixed
 
+- **The pre-commit hooks corrupted the repository, and nothing had noticed because nothing
+  ran them.** They were never wired into CI, so they only ever fired for someone who had run
+  `pre-commit install` — and on this repository a full run rewrites 2476 files and leaves
+  Python that does not parse. Three separate causes, each now configured out in `_typos.toml`
+  and `.pre-commit-config.yaml`:
+  - **`typos` rewrites `anc` to `and`.** It is how the importers spell "ancilla", 29 times,
+    and `for row, anc in enumerate(...)` becomes `for row, and in ...` — a syntax error in
+    `circuit_validate.py`, `syndrome_extraction.py` and three of the flag-at-origin drivers.
+    It also translates the German legal pages into English a word at a time (`Sie` → `Size`,
+    `oder` → `order`), which would quietly damage a compliance document, and "corrects" the
+    `ba` inside the content-addressed digest `18ed8bee546ba80f` that 32 circuits reference —
+    breaking `db:create`. Now: the German pages and `data_yaml/` are excluded, and the QEC
+    vocabulary (`anc`, `ket`, `IZ`), the author name `Wille` and the citation `Lond` are
+    named. Not `locale = "en-gb"`, which sounds right for the prose and would rewrite
+    Tailwind's `text-center` and the `/favorites` route: 178 findings become 2233.
+  - **`end-of-file-fixer` and `trailing-whitespace` rewrote 2476 circuit bodies.** `.stim`,
+    `.qasm` and `.cirq` files are emitted byte-for-byte by the pipeline; a hook that edits
+    them puts the stored body out of step with what the pipeline would produce. Excluded
+    from `data_yaml/`.
+  - **`check-json` cannot read `tsconfig.check.json`**, which is JSONC — it carries the
+    comments explaining which two files it excludes and why. Excluded.
+
 - **`/api/search` was cached at the edge for a week, keyed on `?q=`.** `middleware.ts`
   stamps `s-maxage=604800` on any response without its own `Cache-Control`, which is safe
   for a page whose output is fixed at deploy time and not for one whose key space anyone
@@ -190,6 +212,28 @@ the source-of-truth `package.json` version.
 
 ### Added
 
+- **Four gaps closed in what CI actually checks.**
+  - **A `pre-commit` job.** The hooks now run on every PR instead of only for contributors
+    who installed them, which is what let the corruption above sit unnoticed. `prettier` is
+    skipped — it is the one hook needing `node_modules`, and `quality` already runs the same
+    check.
+  - **`ruff` covers `data-imports/`.** Every importer lives there, it is where the ingestion
+    bugs have actually been, and it was outside both the lint and format gates. Clean when
+    widened, so it costs nothing now and stops the next drift.
+  - **The coverage gate measures five scripts, not one, and asks for 80% rather than 60%.**
+    It watched `scripts/add_circuit` alone, leaving the four top-level maintainer scripts
+    unmeasured — including `validate_circuits.py`, which CI runs as its own step and which
+    was carrying a live bug. All five together come to 85%.
+  - **`stim-annotated` bodies must be a fixed point of the annotator.** They are derived from
+    their circuit but committed rather than built, so editing a circuit without re-running
+    the annotator ships a memory experiment describing the previous schedule, and nothing
+    else in CI would ever notice.
+  - **The two whole-library sweeps now run as their own jobs, in parallel.** Each parses
+    every circuit through stim and they share nothing but the checkout, so as steps of one
+    job they added up: 78 s of tests + 246 s validating circuits + 236 s checking annotated
+    bodies, a 9m35s job. Split, the wall clock is the slowest of the three — about 4
+    minutes, quicker than the workflow was before either check existed — for two extra
+    `uv sync` setups at ~8 s each.
 - **`npm run typecheck`, because nothing in CI had ever read a TypeScript type.**
   `astro build` transpiles without checking and `eslint.config.mjs` uses the non-type-aware
   `tseslint.configs.recommended`, so all of `src/` was compiled and shipped on trust. The
