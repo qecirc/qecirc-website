@@ -337,7 +337,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
   // raised a TypeError off `undefined`.
   initCircuitActions({
     activeContainerSelector:
-      '[id] > .circuit-toggle[aria-expanded="true"] + .circuit-detail',
+      '[id] > .circuit-toggle[data-expanded="true"] + .circuit-detail',
   });
 
   // Tags apply the moment they are clicked (they are plain links), so the code
@@ -355,5 +355,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
     favoritable: true,
     favoriteSelector: "[data-list-fav]",
     hashAttr: "data-qec-id",
+    // See the code page: the row mirrors the chevron button's aria-expanded.
+    expandedAttr: "data-expanded",
   });
 </script>
