@@ -32,6 +32,9 @@ jobs:
       - run: npm ci
       - run: npm run format:check
       - run: npm run lint
+      # `astro build` transpiles without checking, and eslint is not type-aware,
+      # so without this nothing in CI ever reads a type.
+      - run: npm run typecheck
       - run: npm run validate:yaml
       - run: npm run build
       - name: Start server

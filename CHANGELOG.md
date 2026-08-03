@@ -7,6 +7,24 @@ the source-of-truth `package.json` version.
 
 ### Fixed
 
+- **`/api/search` was cached at the edge for a week, keyed on `?q=`.** `middleware.ts`
+  stamps `s-maxage=604800` on any response without its own `Cache-Control`, which is safe
+  for a page whose output is fixed at deploy time and not for one whose key space anyone
+  can enumerate. `/search` had set its own 600 s for exactly this reason since it was
+  written; the quick-search behind it had not. It does now.
+- **A zip download only type-checked by accident.** `/api/download` handed a Node `Buffer`
+  straight to `Response`, whose `BodyInit` wants a view onto a plain `ArrayBuffer` and not
+  the `ArrayBufferLike` union Node declares. The bytes were always right; the types said
+  otherwise. It now copies into its own `Uint8Array`, which also stops `.buffer` meaning
+  "Node's shared allocation pool" rather than "this zip".
+- **Renovate could auto-merge a moving target.** `pyproject.toml` pins `mqt-qecc` to a git
+  branch, and `lockFileMaintenance` runs with `automerge: true` — so a weekend lock refresh
+  landed whatever that branch pointed at, unread, in the ingestion pipeline. It already had:
+  f476ffa1. Git-sourced dependencies and `uv.lock` refreshes now need a human.
+- **`.gitignore` ignored a directory nobody uses.** It listed `.worktrees/`, while agent
+  worktrees are created under `.claude/worktrees/` — so every worktree showed up as
+  untracked in the main checkout. Corrected, narrowly: `.claude/` itself stays tracked,
+  because `.claude/agents/` and `.claude/commands/` are committed.
 - **The qLDPC rounds were never measured for circuit-level distance**, and the docs say an
   absent `circuit-distance:` tag means the search ran out of budget. It did not: 26 of the
   28 settle, 20 of them in under a second. `scripts/measure_circuit_distance.py` arrived in
@@ -41,6 +59,15 @@ the source-of-truth `package.json` version.
 
 ### Added
 
+- **`npm run typecheck`, because nothing in CI had ever read a TypeScript type.**
+  `astro build` transpiles without checking and `eslint.config.mjs` uses the non-type-aware
+  `tseslint.configs.recommended`, so all of `src/` was compiled and shipped on trust. The
+  new script runs `astro check` as its own CI step, and found three errors on `main` — one
+  of them a page whose keyboard shortcuts have simply never worked. Two of the three live
+  in files owned by other open PRs and are excluded, individually and by name, in
+  `tsconfig.check.json`; that file is a debt register with two entries, not an ignore list.
+  `typescript` becomes a direct dev dependency in the process, instead of whichever major
+  `astro` and `typescript-eslint` happened to hoist between them.
 - **AlphaSyndrome syndrome-measurement schedules** (59 of them), imported from
   [acasta-yhliu/asyndrome](https://github.com/acasta-yhliu/asyndrome)
   ([arXiv:2601.12509](https://arxiv.org/abs/2601.12509), ASPLOS '26) by

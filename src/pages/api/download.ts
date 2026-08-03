@@ -104,7 +104,16 @@ export const GET: APIRoute = ({ url }) => {
     entries.map((e) => ({ name: e.name, data: Buffer.from(e.body, "utf8") })),
   );
 
-  return new Response(zipBuffer, {
+  // `Response` takes a `BodyInit`, whose `BufferSource` arm is a view onto a
+  // plain `ArrayBuffer` — never a `SharedArrayBuffer`. Node types a `Buffer` as
+  // `Buffer<ArrayBufferLike>`, which is the union, so it is rejected on paper
+  // even though the value never is one at runtime. A `Buffer` is also a window
+  // into Node's shared allocation pool, so `.buffer` is not this zip alone.
+  // Copying the view into its own `ArrayBuffer` settles both: the type is
+  // exactly what the DOM asks for, and the bytes are exactly this zip.
+  const zipBytes = new Uint8Array(zipBuffer);
+
+  return new Response(zipBytes, {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${zipName}"`,

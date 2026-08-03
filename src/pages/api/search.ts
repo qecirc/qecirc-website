@@ -12,12 +12,17 @@ import {
   MIN_QUERY_LENGTH,
 } from "../../lib/queries";
 
+// Same reasoning as /search (src/pages/search.astro): this route varies by an
+// unbounded, attacker-fillable `?q=`, so it must not inherit the week-long
+// s-maxage that middleware.ts stamps on responses without their own value.
+const CACHE_CONTROL = "public, max-age=0, s-maxage=600";
+
 export const GET: APIRoute = ({ url }) => {
   const raw = url.searchParams.get("q")?.trim() ?? "";
 
   if (raw.length < MIN_QUERY_LENGTH) {
     return new Response(JSON.stringify([]), {
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Cache-Control": CACHE_CONTROL },
     });
   }
 
@@ -68,6 +73,6 @@ export const GET: APIRoute = ({ url }) => {
   }));
 
   return new Response(JSON.stringify([...codes, ...circuits, ...tools]), {
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Cache-Control": CACHE_CONTROL },
   });
 };
