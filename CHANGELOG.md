@@ -38,18 +38,29 @@ the source-of-truth `package.json` version.
 - **Seven accessibility defects, each measured in a browser rather than inferred from a
   linter.** They had nothing in common but the failure mode: every one of them looked right
   to a sighted mouse user, which is exactly why none had been noticed.
-  - **The focus ring was all but invisible.** `focus-visible:ring-blue-500/40` measured
-    1.64:1 against a row in light mode and 1.74:1 in dark — WCAG 1.4.11 asks 3:1 — and,
-    worse, only 1.33:1 and 1.27:1 against the row's own resting border, so "focused" and
-    "not focused" were nearly the same picture. Dropping the alpha leaves solid blue-500:
-    3.76:1 on white, 5.35:1 on gray-950, and 3.04:1 / 3.90:1 against the resting border.
-    `CircuitRow` and `CodeCard` carried the same class and both change.
+  - **The focus ring was all but invisible.** `ring-blue-500/40` measured 1.64:1 against a
+    row in light mode and 1.74:1 in dark — WCAG 1.4.11 asks 3:1 — and, worse, only 1.33:1
+    and 1.27:1 against the row's own resting border, so "focused" and "not focused" were
+    nearly the same picture. Dropping the alpha leaves solid blue-500: 3.76:1 on white,
+    5.35:1 on gray-950, and 3.04:1 / 3.90:1 against the resting border. Six call sites, not
+    the two that were first found: `CircuitRow`, `CodeCard`, the `/search` query and filter
+    inputs, the `/` filter input, and the row `favorites` builds client-side. On the inputs
+    the ring also has the field's own `gray-300`/`gray-700` border beside it, and there it
+    goes 1.12:1 → 2.55:1 (light) / 2.74:1 (dark) — short of 3:1 against that one edge, but
+    the ring's other neighbour is the page background, which it clears.
   - **`text-amber-600` measured 3.20:1 on white**, under the 4.5:1 body text needs, and
     neither of the two places that show it — the alpha superscript in the header (14px/600)
     and the active-sort label (12px/600) — is large enough to claim the 3:1 exception. Now
     `amber-700`: 5.03:1 in light, and dark mode keeps `amber-400` at 11.69:1. Bumped at all
     ten call sites at once, because a token that means "this is the sort you asked for"
     stops meaning it the moment two shades are in play.
+  - **Two of those ten are links whose only hover feedback was that colour**, so darkening
+    the resting state flattened the hover step: the header α and "Clear all active filters"
+    went from a 2.22:1 step to 1.41:1. Both now go to `amber-900` on hover — 1.80:1, still
+    a slight step — and, more to the point, underline. Dark mode never had a usable step
+    either (`amber-400` → `amber-200` is 1.38:1) and gains the same underline. A hover
+    affordance that exists only as a colour change is one an awful lot of people cannot
+    see; this is the first of the two that does not depend on hue at all.
   - **`/codes` skipped from `h1` straight to `h3`** — `CodeCard`'s heading, the only
     heading-order violation on the site. It is an `h2` now; the class list is unchanged and
     so is the rendering, since the card sets its own size and weight. `ToolCard` keeps its
@@ -69,12 +80,34 @@ the source-of-truth `package.json` version.
     writing all along point at nothing, so no screen reader ever announced the highlighted
     result. All five are wired up now, and `aria-expanded` tracks the dropdown. They are set
     from the script, not the markup: without JS there is no dropdown, and an input that
-    claims to own a popup that cannot open is worse than a plain search field.
+    claims to own a popup that cannot open is worse than a plain search field. Two
+    consequences of making it a real combobox:
+    - **`aria-live="polite"` came off the results list.** It was there because nothing else
+      announced the results — a reasonable call while `aria-activedescendant` pointed at
+      nothing. Now that the combobox announces the active option, the live region announces
+      the list on top of it, and the user hears everything twice. `role="listbox"` and the
+      label stay.
+    - **Tabbing out left `aria-expanded="true"` on an input nothing was focused on.**
+      `hide()` was reachable from Escape, a click outside, and a query under two characters
+      — not from losing focus. There is a `focusout` handler now, guarded on a non-null
+      `relatedTarget`: the result `<li>`s are not focusable, so pressing the mouse on one
+      blurs the input with a null `relatedTarget`, and hiding there would take the item away
+      between mousedown and the click that navigates.
   - **`/about` re-documented the keyboard shortcuts and had drifted from them.** It omitted
     `Home` and `End`, and described `Esc` as collapsing the open row when it also closes the
     help overlay. Corrected in place. The duplication itself stays: `KeyboardHelp`'s flat
     17-row table and `/about`'s topic-grouped prose are different shapes, and collapsing
     them into one source would cost more than it saves.
+
+- **Writing about a Tailwind class put it back in the stylesheet.** Tailwind v4 finds its
+  own sources, which means it reads every tracked file — including prose that only _names_ a
+  class. The CHANGELOG entry above, explaining that `text-amber-600` had been replaced,
+  regenerated `.text-amber-600{}`; the design plans under `docs/` were keeping
+  `dark:text-amber-300` alive for a component that stopped using it months ago. The wasted
+  bytes are the small half. The large half is that "the class is gone from the built CSS"
+  stops being a way to check that a sweep across call sites was complete — and it fails in
+  the direction that hides a missed one, which is how four `ring-blue-500/40` sites survived
+  the first pass of the fix above. Both paths are now `@source not` in `global.css`.
 
 - **The pre-commit hooks corrupted the repository, and nothing had noticed because nothing
   ran them.** They were never wired into CI, so they only ever fired for someone who had run

@@ -98,7 +98,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
         autofocus
         placeholder="Search circuits by name, notes, tag or #id"
         aria-label="Search circuits"
-        class="flex-1 rounded border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+        class="flex-1 rounded border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
       <button
         type="submit"
@@ -124,7 +124,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
             <select
               id="code-select"
               name="code"
-              class="rounded border border-gray-300 dark:border-gray-700 px-2 py-1 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              class="rounded border border-gray-300 dark:border-gray-700 px-2 py-1 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Any code ({facets.codes.reduce((s, c) => s + c.count, 0)})</option>
               {staleCode && <option value={codeSlug} selected>No match for this query</option>}

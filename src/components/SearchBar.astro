@@ -13,7 +13,6 @@
   <ul
     class="search-results absolute right-0 top-full mt-1 w-96 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg hidden z-50 max-h-80 overflow-y-auto"
     role="listbox"
-    aria-live="polite"
     aria-label="Search results"
   >
   </ul>
@@ -244,6 +243,17 @@
     } else if (e.key === "Escape") {
       hide();
     }
+  });
+
+  // Tabbing out of the input leaves a dropdown that still reports itself as
+  // expanded on a combobox nothing is focused on. Guarded on a non-null
+  // relatedTarget: the result <li>s are not focusable, so pressing the mouse on
+  // one blurs the input with relatedTarget null, and hiding there would take
+  // the item away between mousedown and the click that navigates. Pointer
+  // dismissal is the document listener below.
+  input.addEventListener("focusout", function (e) {
+    const next = (e as FocusEvent).relatedTarget as Node | null;
+    if (next && !container.contains(next)) hide();
   });
 
   document.addEventListener("click", function (e) {
