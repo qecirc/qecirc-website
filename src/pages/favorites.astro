@@ -174,7 +174,14 @@ import Layout from "../components/Layout.astro";
             unfavBtn.setAttribute("data-list-fav", "");
             unfavBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="currentColor" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" /></svg>`;
             unfavBtn.addEventListener("click", function () {
-              toggleFavorite(circuit.qec_id);
+              try {
+                toggleFavorite(circuit.qec_id);
+              } catch {
+                // Storage refused the write, so the circuit is still a
+                // favourite. Removing the row would say otherwise.
+                // toggleFavorite has already told the user why.
+                return;
+              }
               row.remove();
               // Remove section if empty
               if (list.children.length === 0) {
@@ -340,8 +347,18 @@ import Layout from "../components/Layout.astro";
         } else {
           if (toast) toast("All circuits in this list are already in your favorites.");
         }
-      } catch {
-        if (toast) toast("Invalid file format. Expected a QECirc favorites JSON file.");
+      } catch (err) {
+        // A blocked store is not a malformed file, and saying so matters here:
+        // the count comes from an in-memory merge, so reporting success and
+        // reloading would drop the user on the same empty list they started
+        // with, with nothing to explain it.
+        const blocked = err instanceof Error && err.name === "StorageBlockedError";
+        if (toast)
+          toast(
+            blocked
+              ? "Couldn't save — this browser is blocking site storage. Allow cookies/site data for qecirc.com and try again."
+              : "Invalid file format. Expected a QECirc favorites JSON file.",
+          );
       }
       // Reset so the same file can be re-imported
       importFile.value = "";

@@ -33,6 +33,29 @@ export function formatCodeParams(code: Pick<Code, "n" | "k" | "d">): string {
   return code.d != null ? `[[${code.n},${code.k},${code.d}]]` : `[[${code.n},${code.k}]]`;
 }
 
+/**
+ * Whether `[[n,k,d]]` is worth rendering beside the name.
+ *
+ * `includes`, not `===`: 5 of the 84 codes carry their parameters inside their
+ * name and only 3 of those are *nothing but* the parameters, so an equality
+ * test let "Gottesman [[8,3,3]] Code" and "[[20,2,6]] Code" print theirs twice.
+ *
+ * One predicate for one question. It was written out by hand at eight call
+ * sites — the page title, the `<h1>`, the meta description, two JSON-LD `name`
+ * fields, the code cards, `llms.txt`, the quick-search JSON and the /search
+ * code filter — which is exactly how five of them were missed when the other
+ * three were corrected.
+ */
+export function showCodeParams(code: Pick<Code, "name" | "n" | "k" | "d">): boolean {
+  const params = formatCodeParams(code);
+  return params !== "" && !code.name.includes(params);
+}
+
+/** The code's name, with `[[n,k,d]]` appended unless the name already has it. */
+export function codeDisplayName(code: Pick<Code, "name" | "n" | "k" | "d">): string {
+  return showCodeParams(code) ? `${code.name} ${formatCodeParams(code)}` : code.name;
+}
+
 export function getAllCodes(): CodeWithMeta[] {
   const db = getDb();
   const codes = db

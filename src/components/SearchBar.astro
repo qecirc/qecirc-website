@@ -56,6 +56,11 @@
   }
 
   function hide() {
+    // Bump the generation too. Dismissing the dropdown — Escape, an outside
+    // click, or backspacing below the two-character floor, which calls this —
+    // must also abandon whatever is in flight, or that response reopens a list
+    // the user just closed, or answers a query they have already deleted.
+    latestSearch++;
     resultsList.classList.add("hidden");
     activeIndex = -1;
     input.removeAttribute("aria-activedescendant");
@@ -106,6 +111,10 @@
 
     resultsList.innerHTML = "";
     activeIndex = -1;
+    // The active item is about to be removed from the DOM; an
+    // aria-activedescendant naming a node that no longer exists points a
+    // screen reader at nothing.
+    input.removeAttribute("aria-activedescendant");
     cachedItems = [];
 
     if (results.length === 0) {

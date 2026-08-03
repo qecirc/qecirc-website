@@ -258,39 +258,66 @@ the source-of-truth `package.json` version.
   (`ToolCard` already renders `id={tool.slug}`). Not added to `/search`: it is `Disallow`ed,
   so nothing would ever read it.
 - **Codes whose name already carries their parameters printed them twice** — "Gottesman
-  [[8,3,3]] Code [[8,3,3]]", "[[20,2,6]] Code [[20,2,6]]". Three copies of one guard tested
-  `name === params`, which only catches a name that is _nothing but_ its parameters, on
-  three separate surfaces: `llms.txt`, the header quick-search JSON and the `/search` code
-  filter. All three now test `includes`. Verified on the built server: `llms.txt` has no
-  doubled line left, `/api/search?q=gottesman` returns `params: ""`, and the dropdown and
-  the filter option both read "Gottesman [[8,3,3]] Code" once.
+  [[8,3,3]] Code [[8,3,3]]", "[[20,2,6]] Code [[20,2,6]]". The guard tested
+  `name === params`, which only catches a name that is _nothing but_ its parameters: of the
+  5 codes whose name contains them, 3 are exactly them, so 2 doubled. It had been written
+  out by hand at **eight** call sites — the `<title>`, the `<h1>`, the meta description, two
+  JSON-LD `name` fields, the code cards, `llms.txt`, the quick-search JSON and the `/search`
+  code filter — and correcting them one at a time is how the first pass fixed three and left
+  the page they link to still saying it twice. There is now one predicate,
+  `showCodeParams`/`codeDisplayName` beside `formatCodeParams`, and all eight sites call it.
+  Verified on the built server: all 84 code page titles, `/codes`, its ItemList, `llms.txt`,
+  `/api/search` and the `/search` filter — 0 doubled, with "Steane Code [[7,1,3]]" and the
+  bare "[[16,2,4]]" both still rendering exactly once.
 - **`/search` printed two different empty states, three lines apart** — "No circuits found
   for X" from the result count, then "No circuits match this query." from the empty state
-  proper. The count line is now suppressed when there is nothing to count, leaving the
-  centred block that also knows whether the filters are to blame and offers the way out of
-  them — the same shape `/tools` and `/codes` use for theirs.
+  proper. One empty state now, the centred one, and it carries what the count line used to:
+  the query as actually resolved (a correction rewrites it), whether the filters are to
+  blame, and the way out of each. The three result-set notices are suppressed when there is
+  no result set — "Showing results for steane." sitting directly above "No circuits match"
+  told the user two opposite things — and the escape hatch from a correction moves into the
+  empty state, which is the only thing rendered in that case.
 - **The header quick-search could show results for a query the user had typed past.**
   `doSearch` awaited `fetch` and `res.json()` and wrote `innerHTML` unconditionally: no
   ordering guard, no `res.ok` check, no `catch` — and it is called from a `setTimeout` with
   its promise dropped, so a 5xx (which answers with an HTML error page, making `res.json()`
   reject) threw where nothing could catch it and left the dropdown frozen on stale results.
   A generation counter now discards any response that is not the newest, and a failed
-  request leaves the previous list up for the next keystroke to replace. Verified in the
-  browser by holding responses open and releasing them out of order: the stale response no
-  longer wins, a 500 changes nothing and logs no unhandled rejection, and the next
+  request leaves the previous list up for the next keystroke to replace. **Dismissing counts
+  as newest**: `hide()` bumps the counter too, so a response still in flight cannot reopen a
+  dropdown closed with Escape or an outside click, nor answer a query backspaced below the
+  two-character floor. Verified in the browser by holding responses open and releasing them
+  in a chosen order: the stale response never wins, a dismissed one leaves the list hidden
+  and untouched, a 500 changes nothing and logs no unhandled rejection, and the next
   keystroke recovers.
+- **`aria-activedescendant` outlived the option it named.** Arrowing to the third result and
+  then typing on left the input pointing at `search-result-0-2` after that node had been
+  removed with the rest of the list — the attribute is cleared alongside `activeIndex` now.
 - **Ten unguarded `localStorage` calls, where a denied store throws on _read_.** Chrome's
   "block all cookies" and some embedded webviews make every access raise `SecurityError`,
   so these were not lost preferences but thrown exceptions mid-module. The worst sat in
   `codes/[code].astro`: the favourites-filter read is above the "download all" wiring, so a
   browser that refuses storage lost the download button, the keyboard shortcuts and the tag
-  dropdowns with it. `src/lib/safe-storage.ts` now wraps get/set — a read answers `null`, a
-  write is dropped — and the two `is:inline` scripts that cannot import it (the theme, the
-  search-filter disclosure) inline the same try/catch. Proved by serving the built site
-  through a proxy that makes `localStorage` throw before any page script runs:
-  `/codes/steane-code` renders all 81 rows with zero page errors, the favourites filter,
-  theme toggle and tag-view toggle all still respond, and "Download all" still fetches
-  `/api/download?code=steane-code`.
+  dropdowns with it. `src/lib/safe-storage.ts` now wraps get/set — a read answers `null` —
+  and the two `is:inline` scripts that cannot import it (the theme, the search-filter
+  disclosure) inline the same try/catch. Proved by serving the built site through a proxy
+  that makes `localStorage` throw before any page script runs: `/codes/steane-code` renders
+  all 81 rows with zero page errors, the favourites filter, theme toggle and tag-view
+  toggle all still respond, and "Download all" still fetches `/api/download?code=steane-code`.
+
+  **A write reports whether it landed, and favourites act on that.** Swallowing the failure
+  is right for a theme or a tag view and wrong for the user's own list: `importFavorites`
+  counts a merge it performs in memory, so a dropped write would have toasted
+  "Imported 3 new favorites" and called `location.reload()`, landing the user back on an
+  empty page with nothing to explain it — and a heart would fill for something never stored.
+  `setItem` returns a boolean, favourite writes turn `false` into `StorageBlockedError`, and
+  the message says what actually happened ("this browser is blocking site storage") instead
+  of the file-format error the import's catch-all would have shown. The toast is raised in
+  `favorites-client` rather than at each call site, so the hearts in `CircuitRow.astro`
+  explain themselves too. Verified under denied storage: the import toasts the storage
+  message, does not claim a count and does not reload; the hearts on a code page and on a
+  circuit page stay in their old state. Verified with storage working: the import still
+  stores `[101,102,103]`, reloads, and renders 3 rows, and a heart still round-trips.
 
 ### Added
 

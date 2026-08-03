@@ -12,7 +12,7 @@ import {
   resolveQuery,
   getToolsForCircuits,
   getPapersForCircuits,
-  formatCodeParams,
+  codeDisplayName,
   MIN_QUERY_LENGTH,
 } from "../lib/queries";
 import { tagToggleUrl } from "../lib/url";
@@ -64,13 +64,7 @@ const tagGroups = TAG_CATEGORIES.map((c) => ({
 }));
 
 const hasFilters = selectedTags.length > 0 || codeSlug !== "";
-const codeLabel = (c: { name: string; n: number; k: number; d: number | null }) => {
-  const p = formatCodeParams(c);
-  // `includes`, not `===`: a name that already carries its parameters
-  // ("[[20,2,6]] Code", "Gottesman [[8,3,3]] Code") would otherwise print them
-  // twice in the code filter's options.
-  return p === "" || c.name.includes(p) ? c.name : `${c.name} ${p}`;
-};
+const codeLabel = codeDisplayName;
 const clearHref = `/search?q=${encodeURIComponent(q)}${literal ? "&literal=1" : ""}`;
 // Escape hatch from a correction: same query, spelling left alone.
 const literalHref = `/search?q=${encodeURIComponent(q)}&literal=1`;
@@ -225,7 +219,13 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
         </p>
       )}
 
-      {resolved?.corrected && (
+      {/* All three notices describe a result set ("these are closely related
+          codes", "these match at least one term"), so they are nonsense with
+          nothing to point at: "Showing results for steane." directly above
+          "No circuits match" told the user two opposite things. The escape
+          hatch from a correction is not lost — it moves into the empty state
+          below, which is the only thing rendered in that case. */}
+      {results.length > 0 && resolved?.corrected && (
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
           Showing results for <span class="font-medium text-gray-900 dark:text-gray-100">{resolved.display}</span>.
           {" "}Search instead for{" "}
@@ -233,24 +233,37 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
         </p>
       )}
 
-      {resolved?.relatedOnly && (
+      {results.length > 0 && resolved?.relatedOnly && (
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
           No code goes by that name here. These are closely related codes that people
           often mean by it &mdash; check the code on each result before relying on it.
         </p>
       )}
 
-      {resolved?.partial && (
+      {results.length > 0 && resolved?.partial && (
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
           No circuit matches every term, so these match at least one.
         </p>
       )}
 
       {results.length === 0 ? (
+        /* The one place a zero-result page speaks, so it has to carry
+           everything the count line above used to: what was actually searched
+           for (which is not always what was typed — a correction rewrites it),
+           whether the filters are to blame, and the way out of each. */
         <div class="text-center py-8">
           <p class="text-gray-500 dark:text-gray-400 mb-2">
-            No circuits match {hasFilters ? "this query and these filters." : "this query."}
+            No circuits match{" "}
+            <span class="font-medium text-gray-900 dark:text-gray-100">{resolved?.display ?? q}</span>
+            {hasFilters ? " with these filters." : "."}
           </p>
+          {resolved?.corrected && (
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              Corrected from <span class="font-medium text-gray-900 dark:text-gray-100">{resolved.raw}</span>.
+              {" "}Search instead for{" "}
+              <a href={`${literalHref}`} class="underline hover:text-gray-900 dark:hover:text-gray-100">{resolved.raw}</a>.
+            </p>
+          )}
           {hasFilters && (
             <a href={clearHref} class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">
               Clear filters

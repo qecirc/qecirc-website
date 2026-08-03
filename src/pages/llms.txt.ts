@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getAllCodes, formatCodeParams } from "../lib/queries";
+import { getAllCodes, codeDisplayName } from "../lib/queries";
 
 export const prerender = false;
 
@@ -13,10 +13,7 @@ export const GET: APIRoute = ({ site }) => {
   const totalCircuits = codes.reduce((sum, c) => sum + c.circuit_count, 0);
 
   const codeLines = codes.map((c) => {
-    const params = formatCodeParams(c);
-    // `includes`, not `===`: a name that already carries its parameters
-    // ("[[20,2,6]] Code") would otherwise be listed as "[[20,2,6]] Code [[20,2,6]]".
-    const label = params === "" || c.name.includes(params) ? c.name : `${c.name} ${params}`;
+    const label = codeDisplayName(c);
     const n = c.circuit_count;
     return `- [${label}](${base}/codes/${c.slug}): ${n} circuit${n !== 1 ? "s" : ""}`;
   });

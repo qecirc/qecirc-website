@@ -4,7 +4,7 @@ export const prerender = false;
 import Layout from "../../components/Layout.astro";
 import CodeCard from "../../components/CodeCard.astro";
 import CodeFilter from "../../components/CodeFilter.astro";
-import { filterCodes, getTagsWithCount, formatCodeParams } from "../../lib/queries";
+import { filterCodes, getTagsWithCount, codeDisplayName } from "../../lib/queries";
 
 // Filtering/sorting happens client-side (list-filter-client.ts): the page
 // always renders the full list in default order and ignores filter params,
@@ -29,15 +29,12 @@ const jsonLd = [
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: totalCount,
-      itemListElement: codes.slice(0, 200).map((code, i) => {
-        const params = formatCodeParams(code);
-        return {
-          "@type": "ListItem",
-          position: i + 1,
-          name: params === "" || code.name === params ? code.name : `${code.name} ${params}`,
-          url: `${siteUrl}/codes/${code.slug}`,
-        };
-      }),
+      itemListElement: codes.slice(0, 200).map((code, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: codeDisplayName(code),
+        url: `${siteUrl}/codes/${code.slug}`,
+      })),
     },
   },
   {
