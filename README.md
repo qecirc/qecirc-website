@@ -37,7 +37,7 @@ The project is funded by the [Unitary Foundation](https://unitary.foundation) an
      the unlinked names. Mirror any change here in src/lib/contributors.ts, which
      the About page renders and the landing page counts. -->
 
-[Ludwig Schmid](https://github.com/lsschmid), [Tom Peham](https://github.com/pehamTom), [Remmy Zen](https://github.com/remmyzen), [Maxie Helen Bichmann](https://github.com/MaxieHelenBichmann), [Diego Forlivesi](https://github.com/DiegoForlivesi), [David Amaro](https://github.com/davamaro), [Luis Colmenarez](https://github.com/luis2colmena), [Michael A. Perlin](https://github.com/perlinm), [Mingyu Kang](https://github.com/mkangquantum)
+[Ludwig Schmid](https://github.com/lsschmid), [Tom Peham](https://github.com/pehamTom), [Remmy Zen](https://github.com/remmyzen), [Maxie Helen Bichmann](https://github.com/MaxieHelenBichmann), [Diego Forlivesi](https://github.com/DiegoForlivesi), [David Amaro](https://github.com/davamaro), [Luis Colmenarez](https://github.com/luis2colmena), [Michael A. Perlin](https://github.com/perlinm), [Mingyu Kang](https://github.com/mkangquantum), [Yuhao Liu](https://github.com/acasta-yhliu)
 
 ## Quick Start
 

@@ -410,7 +410,7 @@ a copy of the database or parsing the YAML will need the columns removed.
   unexplained repeat.
 - **The changelog claimed 61 of 127 circuits measured.** That count came from a branch that
   also held the AlphaSyndrome import when it was not yet merged, and counted 127 circuits
-  that were never all on `main` at once. With every round in place it is 91 of 159.
+  that were never all on `main` at once. With every round in place it is 87 of 155.
   Corrected, along with how many preserve the code's distance.
 - **`circuit-distance:` fell into the filter's "Other" group** while `distance:` sits under
   Fault tolerance. Same question, different number — they belong together.
@@ -537,27 +537,27 @@ a copy of the database or parsing the YAML will need the columns removed.
   `tsconfig.check.json`; that file is a debt register with two entries, not an ignore list.
   `typescript` becomes a direct dev dependency in the process, instead of whichever major
   `astro` and `typescript-eslint` happened to hoist between them.
-- **AlphaSyndrome syndrome-measurement schedules** (59 of them), imported from
+- **AlphaSyndrome syndrome-measurement schedules** (55 of them), imported from
   [acasta-yhliu/asyndrome](https://github.com/acasta-yhliu/asyndrome)
   ([arXiv:2601.12509](https://arxiv.org/abs/2601.12509), ASPLOS '26) by
-  [data-imports/asyndrome/](data-imports/asyndrome/README.md). 14 new codes come with
-  them — hyperbolic surface ×6, hyperbolic colour ×3, surface-with-defects ×2, plus the
-  [[61,1,9]] colour code, the 5×9 rotated surface code and a self-dual bivariate bicycle
-  code. Every schedule is scored against a named decoder, so `decoder:` is what separates
-  two otherwise identical rounds for one code.
+  [data-imports/asyndrome/](data-imports/asyndrome/README.md). 12 new codes come with
+  them — hyperbolic surface ×6, hyperbolic colour ×3, plus the [[61,1,9]] colour code,
+  the 5×9 rotated surface code and a self-dual bivariate bicycle code. Every schedule is
+  scored against a named decoder, so `decoder:` is what separates two otherwise identical
+  rounds for one code.
   - **10 of the dataset's 69 schedules do not survive validation and are left out** —
     every `google.json` and every `trivial.json`. Their X- and Z-checks interleave so
     that two ancillas sharing two data qubits come out entangled, which makes each
     outcome individually random even though every check is applied exactly once. The
     import README traces it to the hard-coded tick tables in `asyndrome/special.py` and
-    measures what it costs in the paper's own metric.
-  - **Three codes are stored with a distance the dataset does not give.**
-    `code_distance.py` computes the exact CSS distance by exhaustive enumeration, so
-    these are distances rather than bounds. The self-dual bivariate bicycle code ships
-    `d: -1` and is [[42,6,6]]. The two defect surface codes declare 5 and 7 but each
-    carry a **weight-2 X-logical** — the dataset's own second `logical_xs` entry — so
-    they are stored as [[24,2,2]] and [[40,2,2]]. A stored `[[n,k,d]]` has to describe
-    the `h` printed beside it.
+    measures what it costs in the paper's own metric. Their author has since confirmed
+    the two reference schedules were not meant to stand as correct, and points to
+    [arXiv:2602.09099](https://arxiv.org/abs/2602.09099) for one that is.
+  - **The two defect surface codes and their 4 schedules are left out too**, at the
+    author's request: they were exploratory, not a result of the paper.
+  - **One code is stored with a distance the dataset does not give.** `code_distance.py`
+    computes the exact CSS distance by exhaustive enumeration, so it is a distance rather
+    than a bound: the self-dual bivariate bicycle code ships `d: -1` and is [[42,6,6]].
   - The hyperbolic surface [[36,8,4]] shares `n` and `k` with the QUITS balanced-product
     `36-8-4-bpc` and nothing else: row-space ranks 11/17 against 14/14, which no
     relabeling reconciles. It gets its own entry, with the refutation recorded next to
@@ -787,7 +787,7 @@ a copy of the database or parsing the YAML will need the columns removed.
 - **`circuit-distance:<N>` on syndrome-extraction circuits** — the fewest faults
   _anywhere in the round_ (gate, idle, reset or readout) that flip a logical while
   firing no detector, measured rather than cited. It sits next to `distance:<N>`,
-  which is the **code's** distance and usually a larger number: 17 of the 91 circuits
+  which is the **code's** distance and usually a larger number: 13 of the 87 circuits
   measured so far preserve it, the rest lose at least one step to hook errors. Filter
   on it like any other tag.
   - `scripts/measure_circuit_distance.py` writes it;
