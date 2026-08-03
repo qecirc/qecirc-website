@@ -115,7 +115,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
       <Fragment>
       <details id="search-filters" open={hasFilters} class="mt-3">
         <summary class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer select-none">
-          Filters{hasFilters && <span class="ml-1 text-amber-600 dark:text-amber-400">&#183; active</span>}
+          Filters{hasFilters && <span class="ml-1 text-amber-700 dark:text-amber-400">&#183; active</span>}
         </summary>
 
         <div class="mt-3 space-y-3 rounded border border-gray-200 dark:border-gray-800 p-3">
@@ -135,7 +135,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
               ))}
             </select>
             {hasFilters && (
-              <a href={clearHref} class="text-xs underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">
+              <a href={clearHref} class="text-xs underline text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
                 Clear
               </a>
             )}
@@ -213,7 +213,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
           blame and offers the way out of them, and two "no results" sentences
           three lines apart read as a rendering fault. */}
       {results.length > 0 && (
-        <p class="text-sm text-gray-500 mb-3">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
           {`${truncated ? `Top ${results.length}` : results.length} ${results.length === 1 ? "circuit" : "circuits"}`}
           {" for "}<span class="font-medium text-gray-900 dark:text-gray-100">{resolved?.display ?? q}</span>
         </p>
@@ -265,7 +265,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
             </p>
           )}
           {hasFilters && (
-            <a href={clearHref} class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">
+            <a href={clearHref} class="text-sm underline text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
               Clear filters
             </a>
           )}
@@ -283,7 +283,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
             <span></span>
             <span></span>
             <span class="text-center" title="Gate count">G</span>
-            <span class="text-center text-amber-600 dark:text-amber-400" title="Two-qubit gate count">2Q</span>
+            <span class="text-center text-amber-700 dark:text-amber-400" title="Two-qubit gate count">2Q</span>
             <span class="text-center" title="Circuit depth">D</span>
             <span class="text-center" title="Qubit count">Q</span>
             <span></span>

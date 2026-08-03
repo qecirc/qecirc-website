@@ -35,6 +35,47 @@ the source-of-truth `package.json` version.
   open PRs — a debt register with two entries, both now paid. The full project type-checks
   clean: 92 files, 0 errors. The `check-json` exclusion that existed only to parse it went
   with it.
+- **Seven accessibility defects, each measured in a browser rather than inferred from a
+  linter.** They had nothing in common but the failure mode: every one of them looked right
+  to a sighted mouse user, which is exactly why none had been noticed.
+  - **The focus ring was all but invisible.** `focus-visible:ring-blue-500/40` measured
+    1.64:1 against a row in light mode and 1.74:1 in dark — WCAG 1.4.11 asks 3:1 — and,
+    worse, only 1.33:1 and 1.27:1 against the row's own resting border, so "focused" and
+    "not focused" were nearly the same picture. Dropping the alpha leaves solid blue-500:
+    3.76:1 on white, 5.35:1 on gray-950, and 3.04:1 / 3.90:1 against the resting border.
+    `CircuitRow` and `CodeCard` carried the same class and both change.
+  - **`text-amber-600` measured 3.20:1 on white**, under the 4.5:1 body text needs, and
+    neither of the two places that show it — the alpha superscript in the header (14px/600)
+    and the active-sort label (12px/600) — is large enough to claim the 3:1 exception. Now
+    `amber-700`: 5.03:1 in light, and dark mode keeps `amber-400` at 11.69:1. Bumped at all
+    ten call sites at once, because a token that means "this is the sort you asked for"
+    stops meaning it the moment two shades are in play.
+  - **`/codes` skipped from `h1` straight to `h3`** — `CodeCard`'s heading, the only
+    heading-order violation on the site. It is an `h2` now; the class list is unchanged and
+    so is the rendering, since the card sets its own size and weight. `ToolCard` keeps its
+    `h3`, which is correct: `/tools` has a real `h2` above it.
+  - **Three `text-gray-500`s on `/search` had no dark variant**, measuring 4.16:1 against
+    `gray-950`. Every sibling paragraph in the file already had `dark:text-gray-400`, and
+    `global.css` states the pairing as house rule, so these were omissions rather than
+    choices. 7.74:1 now.
+  - **The format tabs said which format was active in colour only** (WCAG 4.1.2) — the
+    server emitted plain buttons and the client rewrote `className` and `display`. They now
+    carry `aria-pressed`, the pattern `CodeMatrices` already uses. The initial state is read
+    off the visible body rather than assumed to be the first tab, because the tabs on code
+    pages are cloned from `CircuitBodiesTemplate` and start with no ARIA of their own.
+  - **The header quick-search was an incomplete combobox.** The input had no
+    `role="combobox"`, `aria-expanded`, `aria-controls` or `aria-autocomplete`, and the
+    results list had no `id` — which made the `aria-activedescendant` the script had been
+    writing all along point at nothing, so no screen reader ever announced the highlighted
+    result. All five are wired up now, and `aria-expanded` tracks the dropdown. They are set
+    from the script, not the markup: without JS there is no dropdown, and an input that
+    claims to own a popup that cannot open is worse than a plain search field.
+  - **`/about` re-documented the keyboard shortcuts and had drifted from them.** It omitted
+    `Home` and `End`, and described `Esc` as collapsing the open row when it also closes the
+    help overlay. Corrected in place. The duplication itself stays: `KeyboardHelp`'s flat
+    17-row table and `/about`'s topic-grouped prose are different shapes, and collapsing
+    them into one source would cost more than it saves.
+
 - **The pre-commit hooks corrupted the repository, and nothing had noticed because nothing
   ran them.** They were never wired into CI, so they only ever fired for someone who had run
   `pre-commit install` — and on this repository a full run rewrites 2476 files and leaves
