@@ -41,7 +41,10 @@ export const GET: APIRoute = ({ url }) => {
       type: "code" as const,
       name: c.name,
       slug: c.slug,
-      params: c.name === params ? "" : params,
+      // `includes`, not `===`: the dropdown renders name and params as adjacent
+      // spans, so a name that already carries them ("Gottesman [[8,3,3]] Code")
+      // showed the parameters twice.
+      params: c.name.includes(params) ? "" : params,
       tags: c.tags,
       href: `/codes/${c.slug}`,
     };

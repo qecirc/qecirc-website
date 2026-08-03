@@ -66,7 +66,10 @@ const tagGroups = TAG_CATEGORIES.map((c) => ({
 const hasFilters = selectedTags.length > 0 || codeSlug !== "";
 const codeLabel = (c: { name: string; n: number; k: number; d: number | null }) => {
   const p = formatCodeParams(c);
-  return p === "" || c.name === p ? c.name : `${c.name} ${p}`;
+  // `includes`, not `===`: a name that already carries its parameters
+  // ("[[20,2,6]] Code", "Gottesman [[8,3,3]] Code") would otherwise print them
+  // twice in the code filter's options.
+  return p === "" || c.name.includes(p) ? c.name : `${c.name} ${p}`;
 };
 const clearHref = `/search?q=${encodeURIComponent(q)}${literal ? "&literal=1" : ""}`;
 // Escape hatch from a correction: same query, spelling left alone.
@@ -173,9 +176,20 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
           const d = document.getElementById("search-filters");
           if (!d) return;
           const KEY = "qecirc:search-filters-open";
-          if (localStorage.getItem(KEY) === "1") d.open = true;
+          // Inline copy of src/lib/safe-storage.ts: an is:inline script cannot
+          // import. Reading throws where storage is denied, which would leave
+          // the disclosure without its toggle listener as well as its state.
+          try {
+            if (localStorage.getItem(KEY) === "1") d.open = true;
+          } catch {
+            // Storage denied — keep the server-rendered open state.
+          }
           d.addEventListener("toggle", function () {
-            localStorage.setItem(KEY, d.open ? "1" : "0");
+            try {
+              localStorage.setItem(KEY, d.open ? "1" : "0");
+            } catch {
+              // Storage denied — the choice does not survive the page.
+            }
           });
         })();
       </script>
@@ -200,12 +214,16 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
 
   {hasQuery && (
     <>
-      <p class="text-sm text-gray-500 mb-3">
-        {results.length === 0
-          ? "No circuits found"
-          : `${truncated ? `Top ${results.length}` : results.length} ${results.length === 1 ? "circuit" : "circuits"}`}
-        {" for "}<span class="font-medium text-gray-900 dark:text-gray-100">{resolved?.display ?? q}</span>
-      </p>
+      {/* A count, and only a count: the empty state further down is the single
+          place that says nothing matched. It knows whether filters are to
+          blame and offers the way out of them, and two "no results" sentences
+          three lines apart read as a rendering fault. */}
+      {results.length > 0 && (
+        <p class="text-sm text-gray-500 mb-3">
+          {`${truncated ? `Top ${results.length}` : results.length} ${results.length === 1 ? "circuit" : "circuits"}`}
+          {" for "}<span class="font-medium text-gray-900 dark:text-gray-100">{resolved?.display ?? q}</span>
+        </p>
+      )}
 
       {resolved?.corrected && (
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">

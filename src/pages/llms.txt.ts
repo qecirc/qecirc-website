@@ -14,7 +14,9 @@ export const GET: APIRoute = ({ site }) => {
 
   const codeLines = codes.map((c) => {
     const params = formatCodeParams(c);
-    const label = params === "" || c.name === params ? c.name : `${c.name} ${params}`;
+    // `includes`, not `===`: a name that already carries its parameters
+    // ("[[20,2,6]] Code") would otherwise be listed as "[[20,2,6]] Code [[20,2,6]]".
+    const label = params === "" || c.name.includes(params) ? c.name : `${c.name} ${params}`;
     const n = c.circuit_count;
     return `- [${label}](${base}/codes/${c.slug}): ${n} circuit${n !== 1 ? "s" : ""}`;
   });

@@ -252,6 +252,7 @@ const jsonLd = [
 
 <script>
   import { getFavorites } from "../../lib/favorites-client";
+  import { safeStorage } from "../../lib/safe-storage";
   import { initListKeynav } from "../../lib/list-keynav-client";
   import { initListFilter } from "../../lib/list-filter-client";
   import { initCircuitActions } from "../../lib/circuit-actions-client";
@@ -335,7 +336,7 @@ const jsonLd = [
 
   const favToggle = document.getElementById("fav-filter-toggle");
   if (favToggle) {
-    let active = localStorage.getItem(FAV_FILTER_LS_KEY) === "true";
+    let active = safeStorage.getItem(FAV_FILTER_LS_KEY) === "true";
     if (active) {
       favToggle.setAttribute("aria-pressed", "true");
       applyFavFilter(true);
@@ -343,7 +344,7 @@ const jsonLd = [
     favToggle.addEventListener("click", function () {
       active = !active;
       favToggle.setAttribute("aria-pressed", active ? "true" : "false");
-      localStorage.setItem(FAV_FILTER_LS_KEY, String(active));
+      safeStorage.setItem(FAV_FILTER_LS_KEY, String(active));
       applyFavFilter(active);
     });
   }

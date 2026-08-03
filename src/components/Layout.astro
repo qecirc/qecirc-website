@@ -16,7 +16,13 @@ interface Props {
 
 const DEFAULT_DESCRIPTION = "QECirc — a community-driven library for quantum error correction circuits";
 const { title, description = DEFAULT_DESCRIPTION, jsonLd } = Astro.props;
-const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+// Normalised, not echoed: a prerendered page reports its pathname with a
+// trailing slash ("/about/") while sitemap.xml lists "/about", and an SSR page
+// echoes whatever the request asked for. Stripping it here makes canonical,
+// og:url and the sitemap name the same URL on both kinds of page — which is
+// also what `trailingSlash: "never"` (astro.config.mjs) enforces at the router.
+const canonicalPath = Astro.url.pathname.replace(/\/+$/, "") || "/";
+const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url.origin).href;
 const fullTitle = `${title} - QECirc`;
 
 // Site-wide structured data (schema.org), emitted on every page. Entity-level
@@ -42,14 +48,10 @@ const siteGraph = {
       description: DEFAULT_DESCRIPTION,
       inLanguage: "en",
       publisher: { "@id": `${siteUrl}/#organization` },
-      potentialAction: {
-        "@type": "SearchAction",
-        target: {
-          "@type": "EntryPoint",
-          urlTemplate: `${siteUrl}/search?q={search_term_string}`,
-        },
-        "query-input": "required name=search_term_string",
-      },
+      // No `potentialAction`/SearchAction: it advertised /search, which
+      // robots.txt.ts disallows for every agent, so it pointed crawlers at a
+      // path they must not fetch. Google retired the sitelinks searchbox it fed
+      // in November 2024, so there is nothing to un-disallow /search for.
     },
   ],
 };
@@ -105,7 +107,16 @@ const sunIconSvg = `<svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" f
     {extraJsonLd.map((obj) => <script type="application/ld+json" set:html={serializeLd(obj)} />)}
     <script is:inline>
       (function () {
-        const stored = localStorage.getItem("theme");
+        // Inline copy of src/lib/safe-storage.ts: an is:inline script cannot
+        // import. Reading localStorage throws outright where storage is denied
+        // (Chrome "block all cookies", some embedded webviews), and an
+        // exception here would leave the page on its light-mode default.
+        let stored = null;
+        try {
+          stored = localStorage.getItem("theme");
+        } catch {
+          // Storage denied — fall through to the OS preference.
+        }
         const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         if (stored === "dark" || (!stored && prefersDark)) {
           document.documentElement.classList.add("dark");
@@ -226,7 +237,12 @@ const sunIconSvg = `<svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" f
     <script is:inline>
       function toggleTheme() {
         const dark = document.documentElement.classList.toggle("dark");
-        localStorage.setItem("theme", dark ? "dark" : "light");
+        try {
+          localStorage.setItem("theme", dark ? "dark" : "light");
+        } catch {
+          // Storage denied — the choice applies to this page view only. The
+          // listeners below still get wired up, which is the point of the guard.
+        }
       }
       document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
       const mobileTheme = document.getElementById("theme-toggle-mobile");

@@ -1,8 +1,10 @@
+import { safeStorage } from "./safe-storage";
+
 const STORAGE_KEY = "qecirc-favorites";
 
 export function getFavorites(): number[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = safeStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -25,7 +27,7 @@ export function toggleFavorite(qecId: number): boolean {
   } else {
     favs.splice(idx, 1);
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
+  safeStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
   return idx === -1;
 }
 
@@ -53,6 +55,6 @@ export function importFavorites(json: string): number {
     if (existing.size >= MAX_FAVORITES) break;
     existing.add(id);
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...existing]));
+  safeStorage.setItem(STORAGE_KEY, JSON.stringify([...existing]));
   return existing.size - before;
 }
