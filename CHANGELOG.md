@@ -25,6 +25,50 @@ the source-of-truth `package.json` version.
   worktrees are created under `.claude/worktrees/` — so every worktree showed up as
   untracked in the main checkout. Corrected, narrowly: `.claude/` itself stays tracked,
   because `.claude/agents/` and `.claude/commands/` are committed.
+- **Six documentation defects, five of them the same defect: a maintained count.** CLAUDE.md
+  said "1028 circuit files", "1019 of 1028" and "one paper backs up to 370 circuits"; each
+  was right the day it was written and wrong within days, three times over as imports landed.
+  Updating them would only reset the clock, so the counts are **gone** and the arguments they
+  supported are stated without one — a paper backs "hundreds" of circuits, and widening
+  `toric code` to "any term" matches "all but a handful" because "code" occurs in nearly every
+  circuit's text. Same treatment for the stale counts in code comments
+  (`index.astro`, `CircuitRow.astro`, `add_circuit/annotate.py`) and for the sample
+  `Papers: N, linked to M circuits.` build output quoted in `docs/database.md` and
+  `/add-circuit`.
+- **CLAUDE.md's static/SSR page lists were wrong on the day they were written**, and read as
+  an inventory: `/favorites` was missing from the static list, `/tools` and five `/api/*`
+  routes from the SSR one. Replaced with the rule that actually decides it — a route that
+  reads SQLite is `prerender = false` — plus examples marked as examples and a pointer to
+  `grep -rn "prerender" src/pages/`, which cannot go stale.
+- **The matrices lived in three places at once, on paper.** They moved to content-addressed
+  `data_yaml/matrices/<digest>.yaml` and no `*.original.yaml` has existed since, but
+  `docs/database.md` still omitted the directory from its tree and filed matrices under
+  `circuits/originals/`, `/add-circuit` still named `*.original.yaml`, and
+  `docs/adding-circuits.md` contradicted **itself** — line 444 against its own "Original
+  submission" section. All four now match CLAUDE.md and the pipeline.
+- **"The pipeline always preserves the original" was never true.** The flag gadgets are
+  written directly with the pipeline helpers, so there is nothing earlier to preserve: they
+  have no `circuit_originals` row and no "Original submission" section, which `index.astro`
+  already knew and the docs did not. Corrected in `docs/adding-circuits.md`,
+  `docs/adding-circuits-agent.md`, `docs/database.md` and CLAUDE.md's schema comment.
+- **The QUITS README pointed at a file in an unmerged branch.**
+  `data-imports/autqec/find_sigma.py` does not exist here — that import is still PR #127 —
+  so a reader had no way to reproduce the two BB permutations. The README now says so
+  outright and points at the matcher that _is_ in the repo
+  (`scripts/add_circuit/find_sigma.py`, with `data-imports/qldpc/find_sigma.py` as the
+  worked example of driving it); `sigma_precomputed.json`'s two provenance strings say the
+  same. The permutations themselves are untouched, and `add_circuit` still re-verifies each
+  by row-space equality on every run — which is what makes shipping them acceptable.
+- **The agent doc's "Current tags" table listed about a third of the vocabulary.** It was
+  missing seven code tags (`LDPC`, `topological`, `subsystem`, `bivariate-bicycle-code`, …)
+  and six circuit tags and families (`gadget`, `partial-ft`, `x-type`/`z-type`, `distance:*`,
+  `circuit-distance:*`, …) while telling the agent it may only use tags that already exist.
+  A second copy of a table that imports extend was never going to hold, so it is replaced by
+  the query against `tags`/`taggings` that returns the real vocabulary, plus the shape of it
+  in prose.
+- **`scripts/annotate_circuits.py` described itself as state-prep/encoding-only** though it
+  has dispatched to `build_annotated_se` for syndrome extraction since that landed. Its
+  docstring now covers both branches and why a round cannot be reset-free.
 - **The qLDPC rounds were never measured for circuit-level distance**, and the docs say an
   absent `circuit-distance:` tag means the search ran out of budget. It did not: 26 of the
   28 settle, 20 of them in under a second. `scripts/measure_circuit_distance.py` arrived in

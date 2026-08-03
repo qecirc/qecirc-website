@@ -32,7 +32,7 @@ Circuits also have numeric **metrics** for filtering: `gate_count`, `depth`, `qu
 A circuit taken from a published work also links to a **paper**, which is what makes it
 findable by title, author or arXiv id. The link is **derived, not declared**: `circuits.source`
 already holds the provenance link, so `create_database.mjs` matches it against each paper's
-`url`/`arxiv_id`/`doi` rather than making 1028 circuit files repeat it. Add a paper and every
+`url`/`arxiv_id`/`doi` rather than making every circuit file repeat it. Add a paper and every
 circuit citing it is enriched at the next build; a source with no paper is not an error
 (`source: circuit-synth` names a tool, not a work), it just leaves the circuit searchable by
 URL alone. Both the build and `validate:yaml` report such sources.
@@ -99,10 +99,12 @@ circuit_bodies
 circuit_originals
   id, circuit_id → circuits (UNIQUE),
   original_stim, original_h, original_logical
-  -- pre-canonicalization data as submitted by contributors
+  -- pre-canonicalization data as submitted by contributors — NOT every
+  --   circuit has a row: a circuit written directly by the pipeline helpers
+  --   (the flag gadgets) was never submitted in some other form
   -- matrix fields are JSON-encoded (same format as codes.h / codes.logical)
-  -- original_stim from data_yaml/circuits/originals/ (one per circuit);
-  --   matrices from data_yaml/matrices/<digest>.yaml, shared by every circuit
+  -- original_stim from data_yaml/circuits/originals/, one file per circuit
+  --   that has one; matrices from data_yaml/matrices/<digest>.yaml, shared by every circuit
   --   of a code and referenced by the circuit YAML's `original_matrices`.
   --   create_database.mjs resolves the reference, so this table is unchanged.
 
@@ -178,8 +180,9 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 
 **Rendering strategy — Astro v7 (static default, SSR opt-in):**
 
-- Static pages: 404, `/about`, `/contribute`, `/privacy`, `/legal` (pre-rendered at build time)
-- SSR pages (`prerender = false`): the landing page `/`, all `/codes/...` and `/circuits/...` routes, `/search`, `/api/search` (rendered on request, read from SQLite)
+- **The rule: a route that reads SQLite is `prerender = false`; everything else stays static.** `grep -rn "prerender" src/pages/` is the authoritative list — an enumeration here goes stale the day a page is added, so what follows is examples only.
+  - Static (pre-rendered at build time): the prose pages (`/about`, `/contribute`, `/privacy`, `/legal`), `/404`, and `/favorites`, which reads `localStorage` and nothing else.
+  - SSR (`prerender = false`, rendered on request): `/`, `/codes/...`, `/circuits/...`, `/tools`, `/search`, every `/api/*` endpoint, and the machine-facing `sitemap.xml` / `llms.txt` / `robots.txt`.
   - **`/` must stay SSR.** `@astrojs/node` serves pre-rendered pages straight from disk without running middleware, so a static `/` would silently lose the `s-maxage` edge caching (see below). The DB is baked at build time either way, so pre-rendering buys nothing here.
 - **Unknown id/slug → `return notFound()`** (`src/lib/not-found.ts`), which returns a bodiless 404; Astro fills the body with the prerendered /404 page. Never `Astro.rewrite("/404")` from an SSR page — /404 is prerendered, so the rewrite finds no component instance and 500s (`scripts/smoke.sh` guards this).
 - Client-side JS: search bar (debounced fetch), circuit row expand/collapse, format switching, favorites (toggle/filter/export/import), CodeBlock copy/download, lazy-loaded circuit bodies on code pages (fetched from `/api/circuits/[qec_id]/bodies` on first row expand), and filtering/sorting on the listing pages (`list-filter-client.ts` over `data-metrics`/`data-tags` row attributes — the server always renders the canonical full list and ignores filter params; `/api/download` still parses them)
@@ -198,7 +201,7 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 
 **Do not "unify" these by pointing the quick-search at the FTS index.** LIKE matches mid-word (`ycle` → Bivariate Bicycle Code), which token-based FTS cannot — that is what makes a type-ahead usable. There is also no FTS index for codes or tools, and pulling `notes` into a 10-item navigation list would surface circuits that merely mention the term. Enter with nothing highlighted hands over to `/search`; that is where the two meet.
 
-**Paper text is `/search`-only, for the same reason.** One paper backs up to 370 circuits, so matching a title in a 10-item navigation dropdown would fill it with near-identical rows and bury the code or tool the user was actually jumping to. A paper is something you _find circuits by_, not something you navigate to — there is no paper page to land on.
+**Paper text is `/search`-only, for the same reason.** A single paper can back hundreds of circuits, so matching a title in a 10-item navigation dropdown would fill it with near-identical rows and bury the code or tool the user was actually jumping to. A paper is something you _find circuits by_, not something you navigate to — there is no paper page to land on.
 
 `/search` ranks by BM25 over the `circuit_search` FTS5 table (migrations `016`–`019`), which `scripts/db/create_database.mjs` repopulates on every build. Its **nine columns** are `circuit_id, name, code_name, aliases, related, tags, code_tags, paper, notes` — and that order is load-bearing (see `BM25_WEIGHTS` below).
 
@@ -223,7 +226,7 @@ What a circuit is findable by, and where each comes from:
    3. any term, `STRICT_COLUMNS` — `partial`
    4. any term, allowing `related`
 
-   (2) precedes (3) deliberately: widening `toric code` to "any term" matches every circuit containing "code" (1019 of 1028), whereas allowing `related` returns the 122 surface codes actually meant.
+   (2) precedes (3) deliberately: widening `toric code` to "any term" matches all but a handful of circuits in the library — "code" occurs in nearly every one's text — whereas allowing `related` returns only the surface codes actually meant.
 
 **Column weights and the strict column set are DERIVED, not restated** (`src/lib/queries/search-schema.ts`). Both used to be hand-maintained constants, and both drifted from the table within a week despite shouty comments. `PRAGMA table_info(circuit_search)` returns the real columns in declaration order — which is exactly what `bm25()` wants — so:
 
@@ -277,7 +280,7 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 │   ├── papers/            # One YAML per cited paper (e.g. zen-2024-rl-state-prep.yaml)
 │   ├── codes/             # One YAML per code (e.g. steane-code.yaml)
 │   ├── circuits/          # YAML + body files per circuit (e.g. steane-code--standard-encoding.yaml/.stim)
-│   │   └── originals/     # Original (pre-canonicalization) STIM, one per circuit
+│   │   └── originals/     # Original (pre-canonicalization) STIM, where one was submitted
 │   └── matrices/          # Submitted check matrices, stored once, content-addressed
 ├── .github/
 │   └── ISSUE_TEMPLATE/    # Circuit submission issue template

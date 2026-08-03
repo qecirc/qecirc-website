@@ -60,7 +60,7 @@ The agent then enriches the generated YAML with tags:
 
 The agent shows you the final YAML files. You can request edits. Once you approve, it rebuilds the database with `npm run db:create`.
 
-The pipeline also preserves the original (pre-canonicalization) STIM circuit and check matrices in `data_yaml/circuits/originals/`. These are viewable on the circuit detail page under "Original submission".
+Where you submitted a circuit in some other form, the pipeline also preserves it: the pre-canonicalization STIM in `data_yaml/circuits/originals/`, the check matrices in `data_yaml/matrices/<digest>.yaml` (content-addressed, so every circuit of one code shares one file). Both are viewable on the circuit detail page under "Original submission".
 
 ## What you need to provide
 
@@ -79,11 +79,15 @@ The pipeline also preserves the original (pre-canonicalization) STIM circuit and
 
 ## Tag vocabulary
 
-The agent only uses tags that already exist in the library. Current tags:
+The agent only uses tags that already exist in the library. **The `tags` table is the vocabulary** — reproducing it here would be a second copy to keep in step, and imports add to it faster than a doc gets edited. Ask the database:
 
-| Level   | Tags                                                                                                                                                                                                                         |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Code    | `CSS`, `stabilizer`, `self-dual`, `color-code`, `surface-code`, `concatenated`                                                                                                                                               |
-| Circuit | `encoding`, `state-preparation`, `syndrome-extraction`, `ft`, `non-ft`, `flag`, `deterministic`, plus structured tags `logical-state:*`, `connectivity:*`, `device:*`, `prep:*`, `verification:*`, `schedule:*`, `decoder:*` |
+```bash
+sqlite3 data/qecirc.db \
+  "SELECT g.taggable_type, t.name, COUNT(*) FROM tags t
+     JOIN taggings g ON g.tag_id = t.id
+    GROUP BY 1, 2 ORDER BY 1, 3 DESC;"
+```
 
-`tool:*` tags are **not** set by hand — they are derived from a circuit's `tool` field when the database is built. If the Zoo or user suggests any other tag not already in the library, the agent will ask before adding it.
+What you will find, in shape rather than in full: **code** tags name what kind of code it is (`CSS`, `LDPC`, `topological`, `self-dual`, `surface-code`, …); **circuit** tags name what the circuit does and how well (`encoding`, `state-preparation`, `syndrome-extraction`, `ft`/`partial-ft`/`non-ft`, `flag`, …); and **structured `key:value` families** carry the parameters — `distance:*` and `circuit-distance:*` (different numbers, see CLAUDE.md), `logical-state:*`, `schedule:*`, `connectivity:*`, `device:*`, `prep:*`, `verification:*`, `decoder:*`.
+
+`tool:*` tags are **not** set by hand — they are derived from a circuit's `tool` field when the database is built. If the Zoo or user suggests any tag the query above does not return, the agent will ask before adding it.

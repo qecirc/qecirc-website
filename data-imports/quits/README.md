@@ -141,9 +141,20 @@ BB [[108,8,10]] and [[144,12,12]] already exist in the library under a different
 and the dedup permutation search exceeds its budget on them — these codes have enormous
 automorphism groups. The permutations in [`sigma_precomputed.json`](sigma_precomputed.json) were
 not recomputed here: **QUITS labels these codes exactly as autqec does** — identical X and Z row
-spaces, verified, no X↔Z swap — so the σ derived by `data-imports/autqec/find_sigma.py` applies
-unchanged. `add_circuit` re-verifies each one by row-space equality on every run, so a stale
-entry fails loudly rather than silently.
+spaces, verified, no X↔Z swap — so the σ derived for the autqec import
+([arXiv:2409.18175](https://arxiv.org/abs/2409.18175)) applies unchanged.
+
+That import is **not in this repository** — it is still open as PR #127, and so is the
+`find_sigma.py` driver that produced these two permutations. To recompute them from scratch
+here you need the matcher itself, which _is_ in the repo:
+[`scripts/add_circuit/find_sigma.py`](../../scripts/add_circuit/find_sigma.py), shared with the
+qLDPC and AlphaSyndrome imports. [`data-imports/qldpc/find_sigma.py`](../qldpc/find_sigma.py) is
+the closest worked example of driving it — feed it this code's `Hx`/`Hz` (from `codes.py`) and
+the stored code's, and it returns the same σ or fails.
+
+`add_circuit` re-verifies each entry by row-space equality on every run, so a stale
+entry fails loudly rather than silently — which is what makes shipping a permutation whose
+producer lives in an unmerged branch acceptable rather than merely convenient.
 
 ### Three invariant collisions, all refuted
 

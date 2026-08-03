@@ -441,7 +441,7 @@ Each `rebuild_all.py` classifies without writing by default and imports with `--
 - Compact STIM, QASM, and Cirq format conversions
 - Crumble and Quirk visualization URLs
 - **Circuit ID (`qec_id`)**: auto-assigned as `max(existing IDs) + 1` — permanent, never reused
-- **Original submission data**: the pipeline always preserves the original (pre-canonicalization) STIM circuit and the contributor-provided symplectic stabilizer / logical matrices in `data_yaml/circuits/originals/`. These are displayed on the circuit detail page under "Original submission (before canonicalization)"; the Hx/Hz/Lx/Lz view is derived in the UI.
+- **Original submission data**: where a circuit was submitted in some other form, the pipeline preserves the pre-canonicalization STIM in `data_yaml/circuits/originals/` and the contributor's symplectic stabilizer / logical matrices in `data_yaml/matrices/<digest>.yaml` (see [Original submission](#original-submission) below). A circuit written directly with the pipeline helpers — the flag gadgets are — has no original, and the detail page's "Original submission (before canonicalization)" section is simply absent for it. The Hx/Hz/Lx/Lz view is derived in the UI.
 - Dedup: if the code already exists, the pipeline detects qubit ordering differences and relabels the circuit to match. Check `AddCircuitResult.qubit_permutation` to see if relabeling was applied (`None` = no relabeling, `list` = permutation applied)
 - Use `find_existing_code_full()` to check for qubit permutations before generating files
 
@@ -519,10 +519,12 @@ body cannot be: its resets and measurements are the circuit.
 ### Original submission
 
 The pipeline preserves what a circuit was submitted with, before any canonicalization or
-qubit relabeling. It lives in two places, because the two halves have different owners:
+qubit relabeling. There is nothing to preserve for a circuit the pipeline helpers wrote
+themselves — the flag gadgets have no original — but where there is, it lives in two
+places, because the two halves have different owners:
 
 - `data_yaml/circuits/originals/<code-slug>--<circuit-slug>.original.stim` — the STIM
-  circuit as submitted. Per circuit, since every circuit has its own.
+  circuit as submitted. Per circuit, since no two circuits share one.
 - `data_yaml/matrices/<digest>.yaml` — the contributor's symplectic stabilizer / logical
   matrices. **Shared**: every circuit of one code was submitted against the same matrices,
   so they are written once and named by a content digest, and the circuit YAML points at

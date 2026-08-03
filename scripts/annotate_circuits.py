@@ -1,10 +1,17 @@
 """
-Backfill `stim-annotated` bodies for state-prep and encoding circuits.
+Backfill `stim-annotated` bodies.
 
-Writes `data_yaml/circuits/<stem>.stim-annotated` for every state-prep and
-encoding circuit: a reset prologue stating the `|0...0>` input, then the body,
-then — where a terminal readout basis exists — the readout and its detectors.
-Non-CSS codes get the prologue alone (see `annotate.build_annotated`).
+Writes `data_yaml/circuits/<stem>.stim-annotated`, and what it writes depends on
+what the circuit is:
+
+- **State-prep and encoding** — a reset prologue stating the `|0...0>` input,
+  then the body, then — where a terminal readout basis exists — the readout and
+  its detectors. Non-CSS codes get the prologue alone (see
+  `annotate.build_annotated`).
+- **Syndrome extraction** — the memory experiment the round belongs to: reset
+  the data, `REPEAT d` of the round, terminal readout, detectors, observable
+  (see `annotate.build_annotated_se`). A round is not reset-free and has no
+  tableau, so none of the derive/fit machinery is pointed at it.
 
 Also rewrites both Crumble links in the circuit YAML. `crumble_url` follows what
 the STIM tab shows by default, which now carries the prologue, so leaving it
