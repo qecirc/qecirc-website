@@ -46,7 +46,14 @@ Two emitter choices worth knowing:
 `validate_syndrome_extraction_h` runs before anything is written: the round must measure
 exactly the code's stabilizer group, and preserve every stabilizer and logical. Of the 69
 schedules, **59 pass and 10 fail**, and the failures are systematic — every `google.json` and
-every `trivial.json`. All 59 are imported.
+every `trivial.json`. 55 of the 59 are imported; the other 4 belong to the two defect codes,
+which their author has asked us to leave out (see [Not imported](#not-imported)).
+
+**The dataset's author has confirmed this** ([#135](https://github.com/qecirc/qecirc-website/pull/135)):
+the two reference schedules were not meant to be taken as correct, and he points to
+_"Surface code off-the-hook: diagonal syndrome-extraction scheduling"_ (Kishony and Fowler,
+[arXiv:2602.09099](https://arxiv.org/abs/2602.09099)) for a schedule that is. The rest of this
+section is the diagnosis as we found it, kept because it says exactly what goes wrong.
 
 The cause is a bad X-/Z-check interleaving. Pulling `Z_ancilla` back through one of these
 rounds gives the intended stabilizer **times an X on a second ancilla**: two ancillas sharing
@@ -128,15 +135,13 @@ circuit rather than their harness.
   Z-strings and vice versa. The dataset's own code reads the Pauli _character_, so everything
   downstream of it is self-consistent; `load_code` does the same. Reading the key would build
   silently wrong matrices.
-- **The two defect codes each carry a qubit in no stabilizer** (index 12 and 20). The
-  stabilizer group therefore gives `k = 3` where the file declares `k = 2`, and no logical
-  touches the qubit. `load_code` drops it and renumbers, which is a relabeling of the schedule
-  and nothing else — so they are stored on 24 and 40 qubits, not 25 and 41. Their distances are
-  corrected too, for a separate reason: see below.
+- **A qubit in no stabilizer is not part of the code.** `load_code` drops it and renumbers,
+  which is a relabeling of the schedule and nothing else. No imported code has one; the two
+  that did are the excluded defect codes, where it was the defect.
 
 ## Codes
 
-59 circuits across 25 codes are imported. Seven of those codes were already in the library and
+55 circuits across 23 codes are imported. Seven of those codes were already in the library and
 are matched by the dedup search (`bbcode-72` → `72-12-6`, both d=3 colour codes →
 `steane-code`, `color-hex-5/7` → `19-1-5` / `37-1-7`, `color-oct-5/7` → `17-1-5` / `31-1-7`,
 `surface-3x3` → `rotated-surface-code-d-3`).
@@ -156,10 +161,9 @@ mislabelling qubits.
 uv run python data-imports/asyndrome/find_sigma.py --dataset PATH   # merges into the json
 ```
 
-The other 14 are new, filed under the numeric `n-k-d` slug convention with the family's display
-name: hyperbolic surface (6), hyperbolic colour (3), surface with defects (2), the [[61,1,9]]
-6.6.6 colour code, the 5×9 rotated surface code [[45,1,5]], and the self-dual bivariate bicycle
-code [[42,6,6]].
+The other 12 are new, filed under the numeric `n-k-d` slug convention with the family's display
+name: hyperbolic surface (6), hyperbolic colour (3), the [[61,1,9]] 6.6.6 colour code, the 5×9
+rotated surface code [[45,1,5]], and the self-dual bivariate bicycle code [[42,6,6]].
 
 One of the new ones needs `assume_new`, because its cheap invariants line up with a stored code
 it is not: the hyperbolic surface [[36,8,4]] against `36-8-4-bpc`, the balanced-product cyclic
@@ -176,45 +180,32 @@ three duplicates — the lattices give different check bases and different tick 
 the circuit name carries the lattice (`… on the 6.6.6 lattice`). Without it the three names
 collide and the second import silently overwrites the first.
 
-## Distances the dataset does not give, or gets wrong
+## A distance the dataset does not give
 
 [`code_distance.py`](code_distance.py) computes the exact CSS distance — the minimum weight of
 a non-trivial logical, by enumerating every stabilizer combination against every logical class.
 Exhaustive, so the answers are distances and not bounds; affordable only because the budget is
 `2^(rank + k) <= 2^26`, which is why it is a maintainer script and not part of the pipeline.
 Its results are committed in `rebuild_all.py`'s `DISTANCE` map. It agrees with the declared `d`
-for every dataset code it can reach, except:
-
-- **`self-dual-bbcode`** ships `d: -1`. Computed: `d_X = d_Z = 6`, so [[42,6,6]].
-- **`defect-5` / `defect-7`** declare 5 and 7. Both have `d_X = 2`, and the weight-2 X-logical
-  is the file's own second `logical_xs` entry — supports {1,8} and {2,11}. Confirmed a second
-  way by enumerating every weight-≤2 vector that commutes with the Z-checks and is not a
-  stabilizer, and a third by checking the declared logicals pair symplectically (they do: the
-  pairing matrix is invertible, so both really are logical qubits).
-
-  The short operator is not a corruption — it is **what a defect does**. Puncturing a surface
-  code adds a logical qubit whose operators are set by the puncture's geometry, and a puncture
-  near a boundary buys you a short string. Per logical qubit:
-
-  |             | defect-5     | defect-7     |
-  | ----------- | ------------ | ------------ |
-  | original q0 | X̄ 4, Z̄ 4     | X̄ 4, Z̄ 5     |
-  | defect q1   | **X̄ 2**, Z̄ 6 | **X̄ 2**, Z̄ 6 |
-
-  So the extra logical qubit is intended and its distance-2 operator comes with it. What the
-  numbers do not support is the declared 5 and 7 — **neither logical qubit reaches them**, so
-  they are not the code's distance under the usual definition (2) and not the surviving
-  qubit's either (4). They are the distance of a base lattice that the shipped matrices no
-  longer describe. Stored as [[24,2,2]] and [[40,2,2]], with the reason in each circuit's
-  notes, because the library's `[[n,k,d]]` has to describe the `h` printed beside it.
-
-  Two hypotheses ruled out along the way: the codes are not cyclic under the shift their
-  logical strings suggest, and the weight-2 operator is not a check that went missing from the
-  file — adding it and its shifts to the stabilizer group breaks commutation with `Hz`.
+for every dataset code it can reach, except **`self-dual-bbcode`**, which ships `d: -1`.
+Computed: `d_X = d_Z = 6`, so [[42,6,6]].
 
 ## Not imported
 
 - **The 10 `google` / `trivial` schedules** — they do not measure their stabilizers; see above.
+- **The 4 `defect-5` / `defect-7` schedules**, at the request of the dataset's author
+  ([#135](https://github.com/qecirc/qecirc-website/pull/135)): the two defect codes were
+  exploratory and are not a result of the paper.
+
+  Worth recording, since it was measured before they came out. Both declare `d` 5 and 7 and
+  both have `d_X = 2`: the weight-2 X-logical is the file's own second `logical_xs` entry,
+  supports {1,8} and {2,11}. That is not a corruption but **what a defect does** — puncturing a
+  surface code adds a logical qubit whose operators the puncture's geometry fixes, and a
+  puncture near a boundary buys a short string. Per logical qubit the original carries X̄ 4 /
+  Z̄ 4 (defect-5) and X̄ 4 / Z̄ 5 (defect-7); the added qubit carries **X̄ 2** / Z̄ 6 in both. So
+  neither logical qubit reaches the declared 5 or 7 — those are the distance of a base lattice
+  the shipped matrices no longer describe. They were stored as [[24,2,2]] and [[40,2,2]] for
+  that reason, since a stored `[[n,k,d]]` has to describe the `h` printed beside it.
 
 ## Fault tolerance is deliberately not tagged
 
