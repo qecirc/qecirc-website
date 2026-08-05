@@ -1,6 +1,7 @@
 ---
-import TagList from "./TagList.astro";
 import type { CodeWithMeta } from "../types";
+import { TAG_SELECTED, TAG_UNSELECTED } from "../lib/constants";
+import { tagToggleUrl } from "../lib/url";
 import { formatCodeParams, showCodeParams } from "../lib/queries";
 
 interface Props {
@@ -15,16 +16,39 @@ interface Props {
 
 const { code, basePath, baseUrl, selectedTags } = Astro.props;
 const { name, slug, tags, circuit_count } = code;
+
+// [[n,k,d]] leads the name: many readers scan for the parameters, not the
+// title. Suppressed where the name IS the parameter string (e.g. "[[11,1,3]]"),
+// which would otherwise print twice.
 const params = formatCodeParams(code);
 const showParams = showCodeParams(code);
 
 // Row data consumed by list-filter-client.ts (client-side filtering/sorting).
 const rowMetrics = JSON.stringify({ n: code.n, k: code.k, d: code.d ?? null });
 const rowTags = JSON.stringify(tags);
+
+// Same URL logic TagList uses: toggling links that preserve other params when
+// the host page is server-filtered (baseUrl set), plain ?tag= links otherwise.
+const selectedSet = selectedTags ? new Set(selectedTags) : null;
+const tagUrl = (tag: string) =>
+  baseUrl
+    ? tagToggleUrl(baseUrl.search, selectedTags ?? baseUrl.searchParams.getAll("tag"), tag, basePath)
+    : `${basePath}?tag=${encodeURIComponent(tag)}`;
+
+// The tags cell uses the circuit rows' density mechanism (.circuit-tags in
+// global.css): all chips are rendered, and the compact default shows the
+// first plus this "+k" rest-count so the row stays one line tall. That also
+// lets the cell stay visible below md, where it used to be hidden outright.
+const restTags = tags.slice(1);
+
+// n, k and d are columns of their own (the table header sorts on them), so a
+// missing value shows as a dash rather than being omitted — the column keeps
+// its width either way.
+const numCls = "px-2 py-2 text-right align-baseline font-mono text-[13px] tabular-nums";
 ---
 
-<div
-  class="rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+<tr
+  class="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
   tabindex="0"
   data-list-row
   data-filter-row
@@ -32,14 +56,41 @@ const rowTags = JSON.stringify(tags);
   data-metrics={rowMetrics}
   data-tags={rowTags}
 >
-  <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-    <a href={`/codes/${slug}`} class="flex items-baseline gap-2" data-list-link>
-      <h2 class="font-medium">{name}</h2>
-      {showParams && <span class="text-sm text-gray-500 dark:text-gray-400">{params}</span>}
-      <span class="text-xs text-gray-500 dark:text-gray-400">{circuit_count} {circuit_count === 1 ? "circuit" : "circuits"}</span>
+  <td class="py-2 pr-3 align-baseline">
+    <a href={`/codes/${slug}`} class="text-sm hover:underline" data-list-link>
+      {showParams && (
+        <span class="font-mono text-xs tabular-nums text-gray-500 dark:text-gray-400 mr-1">{params}</span>
+      )}<span class="font-medium">{name}</span>
     </a>
-    <div class="ml-auto">
-      <TagList tags={tags} basePath={basePath} baseUrl={baseUrl} selectedTags={selectedTags} />
-    </div>
-  </div>
-</div>
+  </td>
+  <td class={numCls}>{code.n ?? "–"}</td>
+  <td class={numCls}>{code.k ?? "–"}</td>
+  <td class={numCls}>{code.d ?? "–"}</td>
+  <td class={`${numCls} text-gray-500 dark:text-gray-400`}>{circuit_count}</td>
+  <td class="py-2 pl-4 align-baseline">
+    {tags.length > 0 && (
+      <div class="circuit-tags flex flex-wrap gap-1 justify-end">
+        {tags.map((tag) => (
+          <a
+            href={tagUrl(tag)}
+            data-tag={tag}
+            class:list={[
+              "inline-block px-1 py-0.5 font-mono text-xs transition-colors",
+              selectedSet?.has(tag) ? TAG_SELECTED : TAG_UNSELECTED,
+            ]}
+          >
+            {tag}
+          </a>
+        ))}
+        {restTags.length > 0 && (
+          <span
+            class="tags-rest inline-block px-1 py-0.5 font-mono text-xs text-gray-500 dark:text-gray-400"
+            title={restTags.join(", ")}
+          >
+            +{restTags.length}
+          </span>
+        )}
+      </div>
+    )}
+  </td>
+</tr>

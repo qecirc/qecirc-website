@@ -49,7 +49,7 @@ function downloadNameFor(format: string): string | undefined {
 }
 
 const TAB_BASE_CLASS =
-  "format-tab px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors";
+  "format-tab px-3 py-1.5 font-mono text-xs font-semibold cursor-pointer transition-colors";
 ---
 
 {hasMultipleFormats ? (
@@ -64,7 +64,7 @@ const TAB_BASE_CLASS =
         >
           {b.format.toUpperCase()}
           {i < 3 && (
-            <kbd class="ml-1.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-300 dark:border-gray-700 bg-white/60 dark:bg-gray-900/60 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+            <kbd class="ml-1.5 inline-block min-w-[1rem] text-center px-1 border border-gray-300 dark:border-gray-700 bg-white/60 dark:bg-gray-900/60 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
               {i + 1}
             </kbd>
           )}

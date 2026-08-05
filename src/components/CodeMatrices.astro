@@ -37,7 +37,7 @@ const initialFormat: "human" | "numpy" = "human";
 const isPauliInitial = initialView === ("pauli" as typeof initialView);
 
 const paneClass =
-  "code-matrix-pane text-sm leading-relaxed font-mono bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 px-3 py-2 overflow-x-auto";
+  "code-matrix-pane text-sm leading-relaxed font-mono bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-3 py-2 overflow-x-auto";
 
 // All pane combinations (stab × {pauli, symplectic.human, symplectic.numpy,
 // hxhz.human, hxhz.numpy} × {stab, logical}). The Pauli view has no NUMPY
@@ -68,7 +68,7 @@ function isPaneActive(view: string, format: "human" | "numpy"): boolean {
         <button
           type="button"
           class:list={[
-            "code-matrix-toggle px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500",
+            "code-matrix-toggle px-3 py-1.5 font-mono text-xs font-semibold cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500",
             initialView === tab.view ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS,
           ]}
           data-target={id}
@@ -82,7 +82,7 @@ function isPaneActive(view: string, format: "human" | "numpy"): boolean {
     <button
       type="button"
       class:list={[
-        "code-matrix-numpy px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500",
+        "code-matrix-numpy px-3 py-1.5 font-mono text-xs font-semibold cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500",
         TAB_INACTIVE_CLASS,
       ]}
       data-target={id}
@@ -135,7 +135,7 @@ function isPaneActive(view: string, format: "human" | "numpy"): boolean {
 
   // Shared tab styling — keep in lockstep with the Astro template above.
   const BASE_TAB_CLASS =
-    "px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500";
+    "px-3 py-1.5 font-mono text-xs font-semibold cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500";
   const ACTIVE_CLASS = `${BASE_TAB_CLASS} ${TAB_ACTIVE_CLASS}`;
   const INACTIVE_CLASS = `${BASE_TAB_CLASS} ${TAB_INACTIVE_CLASS}`;
 

@@ -322,7 +322,7 @@ export function initListFilter(config: ListFilterConfig): void {
       a.href = `${config.basePath}?tag=${encodeURIComponent(tag)}`;
       a.dataset.tag = tag;
       a.title = `Remove tag filter "${tag}"`;
-      a.className = `inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors ${TAG_SELECTED}`;
+      a.className = `inline-flex items-center gap-1 px-1.5 py-0.5 font-mono text-xs transition-colors ${TAG_SELECTED}`;
       a.textContent = tag;
       a.insertAdjacentHTML("beforeend", CHIP_X_ICON);
       chipsEl.append(a);

@@ -144,28 +144,32 @@ const CONTRIBUTE_STEPS = [
   "It appears in the library, credited to its source",
 ];
 
+// Ledger row: a hairline-ruled entry. The list carries a heavy top rule;
+// rows separate with hairlines and answer hover with a fill.
+const rowCls =
+  "flex items-baseline gap-2 flex-wrap px-1 py-2.5 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/60 transition-colors";
+// Ledger card: a square hairline box for the three side-by-side destinations.
 const cardCls =
-  "rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors";
-const previewLabelCls =
-  "text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5";
+  "border border-gray-200 dark:border-gray-800 p-4 hover:bg-gray-50 dark:hover:bg-gray-900/60 transition-colors";
+const previewLabelCls = "font-mono text-[11px] text-gray-500 dark:text-gray-400 mb-1.5";
 
 // The preview half sits on the page colour (HowToStep fills only the text
 // half), so a border is what frames these -- a fill would compete with the
 // explanation half opposite.
-const previewCardCls = "rounded border border-gray-200 dark:border-gray-800 p-3 space-y-2";
+const previewCardCls = "border border-gray-200 dark:border-gray-800 p-3 space-y-2";
 
 // Shared by the two filter-box previews (steps 1 and 2) so they read as the
 // same control, which on the real pages they are.
 const filterBoxCls =
-  "inline-flex items-center gap-1 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5 transition-colors";
-const filterFieldCls = "px-1 py-0.5 text-xs font-semibold";
+  "inline-flex items-center gap-1 border border-gray-300 dark:border-gray-700 px-1.5 py-0.5 transition-colors";
+const filterFieldCls = "px-1 py-0.5 font-mono text-xs font-semibold";
 const filterSortedCls = "text-amber-700 dark:text-amber-400";
 const filterPlainCls = "text-gray-600 dark:text-gray-400";
 const filterValueCls = "px-1 py-0.5 text-sm font-mono text-gray-500 dark:text-gray-400";
 
 // Matches about.astro's kbd styling.
 const kbdCls =
-  "inline-block min-w-[1.25rem] text-center px-1 py-0.5 font-mono text-xs border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800";
+  "inline-block min-w-[1.25rem] text-center px-1 py-0.5 font-mono text-xs border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800";
 
 const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
 const jsonLd = {
@@ -186,7 +190,7 @@ const jsonLd = {
   jsonLd={jsonLd}
 >
   <section class="max-w-2xl mb-8">
-    <h1 class="text-3xl font-bold mb-3">Quantum error correction circuits</h1>
+    <h1 class="text-2xl font-bold tracking-tight mb-3">Quantum error correction circuits</h1>
     {/* Name only what the library actually holds. Syndrome extraction said
         "still to come" until the first rounds landed; anything not yet here
         belongs in this list the same way — as scope, never as a promise. */}
@@ -207,12 +211,12 @@ const jsonLd = {
 
   </section>
 
-  {/* Search gets the same border language as the cards below, but full width and
-      tinted: it is the primary action, so it should read as more than a fourth
-      card. Not a link, so no hover treatment. */}
+  {/* The primary action, and highlighted as one: a tinted panel makes the
+      search read as more than a fourth card. Square corners and border-focus
+      keep it in the ledger vocabulary. */}
   <section class="mb-10">
-    <div class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
-      <h2 class="text-lg font-semibold mb-1">Find circuits</h2>
+    <div class="border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
+      <h2 class="text-base font-semibold mb-1">Find circuits</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
         Search all {fmt.format(circuitCount)} circuits by name, notes, tag or code, ranked
         by relevance.
@@ -223,11 +227,11 @@ const jsonLd = {
           name="q"
           placeholder="Search circuits by name, notes, tag or #id"
           aria-label="Search circuits"
-          class="flex-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm focus:outline-none focus:border-gray-900 dark:focus:border-gray-100"
         />
         <button
           type="submit"
-          class="rounded px-4 py-2 text-sm font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer"
+          class="px-4 py-2 text-sm font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer"
         >
           Search
         </button>
@@ -235,39 +239,43 @@ const jsonLd = {
     </div>
   </section>
 
+  {/* The library's totals: prominent numerals, ledger-labelled. Fixed columns
+      rather than flex-wrap: with five stats, wrapping strands the last one
+      alone on its own row at narrow widths. */}
   <section class="mb-10" aria-label="Library at a glance">
-    {/* Fixed columns rather than flex-wrap: with five stats, wrapping strands
-        the last one alone on its own row at narrow widths. */}
     <dl class="grid grid-cols-3 gap-x-6 gap-y-6 sm:grid-cols-5 sm:gap-x-8">
       {STATS.map((s) => (
         <div>
           <dd class="text-2xl font-bold tabular-nums">{fmt.format(s.value)}</dd>
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{s.label}</dt>
+          <dt class="font-mono text-xs lowercase text-gray-500 dark:text-gray-400">{s.label}</dt>
         </div>
       ))}
     </dl>
   </section>
 
-  <section class="grid gap-4 sm:grid-cols-3 mb-10">
+  {/* Three columns, one per destination: easier to read side by side than a
+      ruled list. Square hairline boxes; hover answers with a fill, not a
+      border change. */}
+  <nav class="grid gap-4 sm:grid-cols-3 mb-10" aria-label="Main sections">
     <a href="/codes" class={cardCls}>
-      <h2 class="font-medium mb-1">Browse codes &#8594;</h2>
+      <h2 class="text-sm font-medium mb-1">Browse codes &#8594;</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400">
         All {fmt.format(codeCount)} codes, filterable by [[n,k,d]] and tags.
       </p>
     </a>
     <a href="/tools" class={cardCls}>
-      <h2 class="font-medium mb-1">Tools &#8594;</h2>
+      <h2 class="text-sm font-medium mb-1">Tools &#8594;</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400">
         The software used to synthesise these circuits.
       </p>
     </a>
     <a href="/contribute" class={cardCls}>
-      <h2 class="font-medium mb-1">Contribute &#8594;</h2>
+      <h2 class="text-sm font-medium mb-1">Contribute &#8594;</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Add a circuit or import a dataset.
       </p>
     </a>
-  </section>
+  </nav>
 
   {/* Expands the cards above into what each one actually does, in the order a
       reader would meet them: find, narrow, inspect, keep, generate, give back.
@@ -277,7 +285,7 @@ const jsonLd = {
       second copy for dark mode, and could not be clicked. These cannot drift:
       restyle a tag and this restyles with it. */}
   <section class="mb-10">
-    <h2 class="text-lg font-semibold mb-1">How QECirc works</h2>
+    <h2 class="text-base font-semibold mb-1">How QECirc works</h2>
     <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
       From finding a circuit to contributing one. Most of what you see here is live, so you
       can click straight through.
@@ -381,7 +389,7 @@ const jsonLd = {
             </div>
             <div class="flex flex-wrap gap-1.5">
               {EXAMPLE_FORMATS.map((f) => (
-                <span class={`inline-block rounded px-1.5 py-0.5 text-xs ${TAG_UNSELECTED}`}>{f}</span>
+                <span class={`inline-block px-1 py-0.5 font-mono text-xs ${TAG_UNSELECTED}`}>{f}</span>
               ))}
             </div>
             {EXAMPLE_HAS_ORIGINAL && (
@@ -462,16 +470,13 @@ const jsonLd = {
 
   {latest.length > 0 && (
     <section>
-      <h2 class="text-lg font-semibold mb-3">Latest circuits</h2>
-      <div class="grid gap-2">
+      <h2 class="text-base font-semibold mb-2">Latest circuits</h2>
+      <div class="border-t-2 border-gray-900 dark:border-gray-100">
         {latest.map((circuit) => (
-          <a
-            href={`/circuits/${circuit.qec_id}`}
-            class="rounded border border-gray-200 dark:border-gray-800 px-4 py-2.5 flex items-baseline gap-2 flex-wrap hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
-          >
-            <span class="font-mono text-xs text-gray-500 dark:text-gray-400">{formatCircuitId(circuit.qec_id)}</span>
+          <a href={`/circuits/${circuit.qec_id}`} class={rowCls}>
+            <span class="font-mono text-xs tabular-nums text-gray-500 dark:text-gray-400">{formatCircuitId(circuit.qec_id)}</span>
             <span class="font-medium text-sm">{circuit.name}</span>
-            <span class="text-sm text-gray-500 dark:text-gray-400">{circuit.code_name}</span>
+            <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">{circuit.code_name}</span>
           </a>
         ))}
       </div>

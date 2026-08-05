@@ -5,6 +5,7 @@ import Layout from "../components/Layout.astro";
 import CircuitRow from "../components/CircuitRow.astro";
 import CircuitBodiesTemplate from "../components/CircuitBodiesTemplate.astro";
 import TagFilterDropdowns from "../components/TagFilterDropdowns.astro";
+import DensityToggle from "../components/DensityToggle.astro";
 import { TAG_CATEGORIES, categorizeTag } from "../lib/tag-categories";
 import {
   searchCircuitsRanked,
@@ -98,11 +99,11 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
         autofocus
         placeholder="Search circuits by name, notes, tag or #id"
         aria-label="Search circuits"
-        class="flex-1 rounded border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="flex-1 border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-transparent focus:outline-none focus:border-gray-900 dark:focus:border-gray-100"
       />
       <button
         type="submit"
-        class="rounded px-4 py-2 text-sm font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer"
+        class="px-4 py-2 text-sm font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer"
       >
         Search
       </button>
@@ -118,13 +119,13 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
           Filters{hasFilters && <span class="ml-1 text-amber-700 dark:text-amber-400">&#183; active</span>}
         </summary>
 
-        <div class="mt-3 space-y-3 rounded border border-gray-200 dark:border-gray-800 p-3">
+        <div class="mt-3 space-y-3 border border-gray-200 dark:border-gray-800 p-3">
           <div class="flex items-center gap-2 flex-wrap">
             <label for="code-select" class="text-xs font-medium text-gray-600 dark:text-gray-400">Code</label>
             <select
               id="code-select"
               name="code"
-              class="rounded border border-gray-300 dark:border-gray-700 px-2 py-1 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-sm bg-transparent focus:outline-none focus:border-gray-900 dark:focus:border-gray-100"
             >
               <option value="">Any code ({facets.codes.reduce((s, c) => s + c.count, 0)})</option>
               {staleCode && <option value={codeSlug} selected>No match for this query</option>}
@@ -276,20 +277,20 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
               order is relevance, which is the point of the page. Above md only,
               like the code page's: below it the row has no metric columns. */}
           <div
-            class="hidden md:grid items-center gap-x-1.5 px-4 py-1.5 text-[11px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400"
+            class="flex md:grid items-center gap-x-1.5 px-2 pt-1.5 pb-2.5 font-mono text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400"
             style="grid-template-columns: var(--circuit-grid);"
           >
-            <span></span>
-            <span></span>
-            <span></span>
-            <span class="text-center" title="Gate count">G</span>
-            <span class="text-center text-amber-700 dark:text-amber-400" title="Two-qubit gate count">2Q</span>
-            <span class="text-center" title="Circuit depth">D</span>
-            <span class="text-center" title="Qubit count">Q</span>
-            <span></span>
+            <span class="hidden md:block"></span>
+            <span class="hidden md:block"></span>
+            <span class="hidden md:block"></span>
             <span>Name</span>
+            <span class="hidden md:block text-right" title="Gate count">G</span>
+            <span class="hidden md:block text-right text-amber-700 dark:text-amber-400" title="Two-qubit gate count">2Q</span>
+            <span class="hidden md:block text-right" title="Circuit depth">D</span>
+            <span class="hidden md:block text-right" title="Qubit count">Q</span>
+            <span class="ml-auto md:ml-0 text-right">Tags<DensityToggle /></span>
           </div>
-          <div class="space-y-2">
+          <div class="border-t-2 border-gray-900 dark:border-gray-100">
             {results.map((circuit) => (
               <CircuitRow
                 circuit={circuit}

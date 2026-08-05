@@ -4,7 +4,7 @@ import { syncDetailHeight } from "./dom-helpers";
 // `format-tab` is the query selector used to find these buttons; it MUST be
 // part of the className we re-apply on toggle, hence it's repeated here.
 const BASE_CLASS =
-  "format-tab px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors";
+  "format-tab px-3 py-1.5 font-mono text-xs font-semibold cursor-pointer transition-colors";
 const ACTIVE_CLASS = `${BASE_CLASS} ${TAB_ACTIVE_CLASS}`;
 const INACTIVE_CLASS = `${BASE_CLASS} ${TAB_INACTIVE_CLASS}`;
 

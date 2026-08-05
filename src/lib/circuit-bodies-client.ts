@@ -26,7 +26,7 @@ interface BodyEntry {
 
 // Keep in sync with FormatSwitcher.astro / format-switcher-client.ts.
 const TAB_BASE_CLASS =
-  "format-tab px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors";
+  "format-tab px-3 py-1.5 font-mono text-xs font-semibold cursor-pointer transition-colors";
 
 const loaded = new WeakSet<HTMLElement>();
 

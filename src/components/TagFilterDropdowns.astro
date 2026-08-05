@@ -71,7 +71,7 @@ const selectedInGroup = (g: { tags: TagWithCount[] }) =>
           <details data-tag-dropdown class="relative">
             <summary
               class:list={[
-                "flex items-center gap-1.5 rounded px-2.5 py-1 text-xs cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden transition-colors",
+                "flex items-center gap-1.5 px-2.5 py-1 text-xs cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden transition-colors",
                 n > 0 ? SUMMARY_SELECTED : SUMMARY_UNSELECTED,
               ]}
             >
@@ -81,13 +81,13 @@ const selectedInGroup = (g: { tags: TagWithCount[] }) =>
                 <path d="M19 9l-7 7-7-7" />
               </svg>
             </summary>
-            <div data-tag-popover class="absolute left-0 top-full mt-1 z-20 min-w-max rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg p-1.5 flex flex-col gap-0.5">
+            <div data-tag-popover class="absolute left-0 top-full mt-1 z-20 min-w-max border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg p-1.5 flex flex-col gap-0.5">
               {g.tags.map((t) => (
                 <a
                   href={tagUrl(t.name)}
                   data-tag={t.name}
                   class:list={[
-                    "flex items-center justify-between gap-4 rounded px-2 py-1 text-xs transition-colors",
+                    "flex items-center justify-between gap-4 px-2 py-1 text-xs transition-colors",
                     selected.has(t.name) ? DROPDOWN_ENTRY_SELECTED : DROPDOWN_ENTRY_UNSELECTED,
                   ]}
                 >
@@ -108,7 +108,7 @@ const selectedInGroup = (g: { tags: TagWithCount[] }) =>
             href={tagUrl(tag)}
             data-tag={tag}
             title={`Remove tag filter "${tag}"`}
-            class:list={["inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors", TAG_SELECTED]}
+            class:list={["inline-flex items-center gap-1 px-2 py-0.5 text-xs transition-colors", TAG_SELECTED]}
           >
             {tag}
             <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">

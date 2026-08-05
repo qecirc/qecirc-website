@@ -1,0 +1,57 @@
+---
+/**
+ * Toggle between compact circuit rows (first tag + "+k" rest count, one line
+ * per row — the default) and full rows (every tag, wrapping as needed).
+ *
+ * Lives in the circuit list's column-header strip, in the Tags cell — so it
+ * sits on the thing it changes. The strip only renders above md; below it
+ * the list stays in the compact default.
+ *
+ * The state lives as `data-density="full"` on <html> — absent means compact —
+ * so the pure-CSS rules in global.css apply everywhere at once, and it
+ * persists in localStorage across pages. The default renders without JS;
+ * a stored "full" preference is applied on load.
+ *
+ * The label names what pressing it does: "show all" while compact,
+ * "show less" while full. normal-case/tracking-normal undo the header
+ * strip's uppercase so the control reads as a control, not a column.
+ */
+---
+
+<button
+  type="button"
+  data-density-toggle
+  class="normal-case tracking-normal font-normal underline text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer ml-1.5"
+  title="Toggle between compact rows (first tag only) and full rows (all tags)"></button>
+
+<script>
+  const KEY = "qecirc:circuit-density";
+
+  function currentDensity(): "full" | "compact" {
+    return localStorage.getItem(KEY) === "full" ? "full" : "compact";
+  }
+
+  function applyDensity(density: "full" | "compact"): void {
+    if (density === "full") {
+      document.documentElement.setAttribute("data-density", "full");
+    } else {
+      document.documentElement.removeAttribute("data-density");
+    }
+    document.querySelectorAll<HTMLButtonElement>("[data-density-toggle]").forEach((btn) => {
+      btn.textContent = density === "full" ? "(show less)" : "(show all)";
+      btn.setAttribute("aria-pressed", String(density === "full"));
+    });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>("[data-density-toggle]").forEach((btn) => {
+    if (btn.dataset.initialized) return;
+    btn.dataset.initialized = "1";
+    btn.addEventListener("click", () => {
+      const next = currentDensity() === "full" ? "compact" : "full";
+      localStorage.setItem(KEY, next);
+      applyDensity(next);
+    });
+  });
+
+  applyDensity(currentDensity());
+</script>

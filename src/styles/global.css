@@ -22,12 +22,15 @@
    reads whichever definition the viewport matches, so the two layouts stay in
    one place.
 
-   Below md the row is chevron | id | heart | name, and the metrics drop to a
+   Below md the row is chevron | heart | name, and the metrics drop to a
    line of their own (CircuitRow wraps them in `flex md:contents`, so above md
    they go back to being grid items in their own columns). The metric columns
    are worth 96px, which on a 375px screen left the name track 91px -- about ten
    characters of a name that routinely runs past sixty. The numbers are worth
-   less than knowing which circuit you are looking at. */
+   less than knowing which circuit you are looking at. The id column is md+
+   only for the same reason: a four-digit #1106 overran its 1.5rem track into
+   the heart, and the id stays reachable through the expanded panel and the
+   detail page. CircuitRow hides the permalink button below md to match. */
 /* Muted text is `text-gray-500 dark:text-gray-400`, and not the reverse.
    gray-400 measures 2.6:1 on white -- under the 4.5:1 WCAG AA asks for at the
    sizes it gets used at -- while gray-500 manages 4.84:1 on white and gray-400
@@ -36,13 +39,43 @@
    gray-400 on its own is fine for decorative svg, which carries no text. */
 
 :root {
-  --circuit-grid: 1rem 1.5rem 1.25rem 1fr;
+  --circuit-grid: 1rem 1.25rem 1fr;
 }
 
 @media (width >= 48rem) {
   :root {
-    /* Last column (tags) caps at 40% of the row so long tag lists wrap
-       instead of forcing a horizontal scroll. */
-    --circuit-grid: 1rem 1.5rem 1.25rem 1.5rem 1.5rem 1.5rem 1.5rem 0.5rem 1fr fit-content(40%);
+    /* chevron | id | heart | name | G | 2Q | D | Q | tags — name before the
+       metrics, matching the codes table: what you scan first sits leftmost,
+       and the numbers right-align into columns. Metric tracks are 1.75rem so
+       four digits of 13px mono fit right-aligned.
+
+       Name and tags are minmax(0, Nfr), NOT fit-content: every row (and the
+       header strip) is its own grid, so any content-sized track would put
+       the metric columns at a different x in every row. fr shares of the
+       same free space land identically everywhere; base 0 keeps a long name
+       (truncate) or tag list (flex-wrap) from stretching its share. */
+    /* The id track is 2.5rem: four-digit ids (#1145) are ~36px of 12px mono
+       and overran a 1.5rem track into the heart beside it. */
+    --circuit-grid: 1rem 2.5rem 1.25rem minmax(0, 3fr) 1.75rem 1.75rem 1.75rem 1.75rem
+      minmax(0, 2fr);
   }
+}
+
+/* Circuit-row tag density (see DensityToggle.astro). Compact — the default,
+   so it holds without JS — shows only the first tag chip plus the "+k"
+   rest-count, keeping every row one line tall. The toggle sets
+   data-density="full" on <html> to show every chip and hide the count.
+   Scoped to .circuit-tags (the row's tag cell): the expanded panel and the
+   detail page render their tag lists outside it and always show everything. */
+html:not([data-density="full"]) .circuit-tags > a:nth-child(n + 2) {
+  display: none;
+}
+/* Compact shows at most one chip and the count — never let those two wrap:
+   in a squeezed table cell (codes list on a phone) the flex-wrap fallback
+   stacked "CSS" over "+1" and doubled the row height. */
+html:not([data-density="full"]) .circuit-tags {
+  flex-wrap: nowrap;
+}
+html[data-density="full"] .circuit-tags > .tags-rest {
+  display: none;
 }

@@ -14,11 +14,13 @@ export const FILTER_PART_REGEX = /^(!=|>=|<=|>|<|=)?\s*(\d+)$/;
 
 // Shared tab-toggle styling (FormatSwitcher, CodeMatrices). Compose with any
 // component-specific base classes (e.g. `format-tab`, `code-matrix-toggle`,
-// focus rings) at the call site.
+// focus rings) at the call site. Both carry border-b-2 so switching tabs
+// never shifts the layout: the active tab underlines, it does not fill —
+// a solid ink block read heavier than the content it labelled.
 export const TAB_ACTIVE_CLASS =
-  "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-200 dark:ring-gray-700";
+  "text-gray-900 dark:text-gray-100 border-b-2 border-gray-900 dark:border-gray-100";
 export const TAB_INACTIVE_CLASS =
-  "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100";
+  "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 border-b-2 border-transparent";
 
 // Tag styling shared by the client-side filter (list-filter-client.ts, which
 // swaps these at runtime) and the server-rendered markup (TagList.astro,
@@ -28,7 +30,7 @@ export const TAB_INACTIVE_CLASS =
 export const TAG_SELECTED =
   "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300";
 export const TAG_UNSELECTED =
-  "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700";
+  "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:underline";
 
 export const DROPDOWN_ENTRY_SELECTED = TAG_SELECTED;
 export const DROPDOWN_ENTRY_UNSELECTED =

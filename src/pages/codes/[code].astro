@@ -9,6 +9,7 @@ import CircuitBodiesTemplate from "../../components/CircuitBodiesTemplate.astro"
 import CodeMatrices from "../../components/CodeMatrices.astro";
 import CodeMatricesDownload from "../../components/CodeMatricesDownload.astro";
 import CollapsibleSection from "../../components/CollapsibleSection.astro";
+import DensityToggle from "../../components/DensityToggle.astro";
 import HeartIcon from "../../components/HeartIcon.astro";
 import {
   getCodeBySlug,
@@ -127,7 +128,7 @@ const jsonLd = [
       <path d="M15 19l-7-7 7-7" />
     </svg>
     Codes
-    <kbd class="inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+    <kbd class="inline-block min-w-[1rem] text-center px-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
       ⌫
     </kbd>
   </a>
@@ -179,7 +180,7 @@ const jsonLd = [
       {circuits.length > 0 && (
         <button
           id="download-all-btn"
-          class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 rounded-md cursor-pointer"
+          class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 cursor-pointer"
           data-code-slug={codeSlug}
           title="Download all visible circuits — Shift+D"
           aria-label="Download all visible circuits"
@@ -188,7 +189,7 @@ const jsonLd = [
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
           </svg>
           <span data-list-count>{countLabel}</span>
-          <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+          <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
             ⇧D
           </kbd>
         </button>
@@ -199,13 +200,13 @@ const jsonLd = [
       <button
         type="button"
         id="fav-filter-toggle"
-        class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 aria-pressed:text-red-500 dark:aria-pressed:text-red-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 rounded-md cursor-pointer"
+        class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 aria-pressed:text-red-500 dark:aria-pressed:text-red-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 cursor-pointer"
         title="Show favorites only — Shift+F"
         aria-pressed="false"
       >
         <HeartIcon class="w-3.5 h-3.5" />
         <span>Favorites</span>
-        <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+        <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
           ⇧F
         </kbd>
       </button>
@@ -220,28 +221,31 @@ const jsonLd = [
     </div>
   ) : (
     <div>
-      {/* Headers only above md: below it the row has no metric columns to head,
-          and the numbers carry their own labels. Sorting stays reachable there
-          through the filter boxes, whose labels are the same sort links. */}
+      {/* Below md the strip collapses to a flex line of just NAME and
+          TAGS (+ density toggle): the metric columns do not exist there — the
+          numbers carry their own inline labels — so their headers hide, and
+          sorting stays reachable through the filter boxes, whose labels are
+          the same sort links. Above md it is the grid the rows share; the
+          inline grid-template is ignored while the strip is flex. */}
       <div
-        class="hidden md:grid items-center gap-x-1.5 px-4 py-1.5 text-[11px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400"
+        class="flex md:grid items-center gap-x-1.5 px-2 pt-1.5 pb-2.5 font-mono text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400"
         style="grid-template-columns: var(--circuit-grid);"
       >
-        <span></span>
-        <span></span>
-        <span></span>
-        <a href={sortHref("gate_count")} data-sort-field="gate_count" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100" title="Gate count — click to sort">G</a>
-        <a href={sortHref("two_qubit_gate_count")} data-sort-field="two_qubit_gate_count" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100 text-amber-700 dark:text-amber-400" title="Two-qubit gate count — click to sort">2Q</a>
-        <a href={sortHref("depth")} data-sort-field="depth" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100" title="Circuit depth — click to sort">D</a>
-        <a href={sortHref("qubit_count")} data-sort-field="qubit_count" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100" title="Qubit count — click to sort">Q</a>
-        <span></span>
+        <span class="hidden md:block"></span>
+        <span class="hidden md:block"></span>
+        <span class="hidden md:block"></span>
         <span>Name</span>
+        <a href={sortHref("gate_count")} data-sort-field="gate_count" data-sort-header class="hidden md:block text-right hover:text-gray-900 dark:hover:text-gray-100" title="Gate count — click to sort">G</a>
+        <a href={sortHref("two_qubit_gate_count")} data-sort-field="two_qubit_gate_count" data-sort-header class="hidden md:block text-right hover:text-gray-900 dark:hover:text-gray-100 text-amber-700 dark:text-amber-400" title="Two-qubit gate count — click to sort">2Q</a>
+        <a href={sortHref("depth")} data-sort-field="depth" data-sort-header class="hidden md:block text-right hover:text-gray-900 dark:hover:text-gray-100" title="Circuit depth — click to sort">D</a>
+        <a href={sortHref("qubit_count")} data-sort-field="qubit_count" data-sort-header class="hidden md:block text-right hover:text-gray-900 dark:hover:text-gray-100" title="Qubit count — click to sort">Q</a>
+        <span class="ml-auto md:ml-0 text-right">Tags<DensityToggle /></span>
       </div>
       <div data-list-empty class="hidden text-center py-8">
         <p class="text-gray-500 dark:text-gray-400 mb-2">No circuits match your filters.</p>
         <a href={basePath} data-clear-filters class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
       </div>
-      <div class="space-y-2" data-list-container>
+      <div class="border-t-2 border-gray-900 dark:border-gray-100" data-list-container>
         {circuits.map((circuit) => (
           <CircuitRow circuit={circuit} tool={toolsMap.get(circuit.id)} paper={papersMap.get(circuit.id)} codeSlug={codeSlug!} />
         ))}

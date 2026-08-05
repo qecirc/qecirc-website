@@ -124,7 +124,7 @@ const jsonLd = [
       <path d="M15 19l-7-7 7-7" />
     </svg>
     {circuit.code_name}
-    <kbd class="inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+    <kbd class="inline-block min-w-[1rem] text-center px-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
       ⌫
     </kbd>
   </a>
@@ -141,7 +141,7 @@ const jsonLd = [
     >
       <HeartIcon class="fav-outline w-5 h-5" />
       <HeartIcon filled class="fav-filled w-5 h-5 hidden" />
-      <kbd class="inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+      <kbd class="inline-block min-w-[1rem] text-center px-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
         f
       </kbd>
     </button>
@@ -198,7 +198,7 @@ const jsonLd = [
       {circuit.tags.map((tag) => (
         <a
           href={`/codes/${circuit.code_slug}?tag=${encodeURIComponent(tag)}`}
-          class="inline-block rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 px-1.5 py-0.5 text-xs transition-colors"
+          class="inline-block px-1 py-0.5 font-mono text-xs transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:underline"
           title={`Show ${circuit.code_name} circuits tagged "${tag}"`}
         >
           {tag}
