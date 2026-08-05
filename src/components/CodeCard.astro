@@ -1,6 +1,7 @@
 ---
 import TagList from "./TagList.astro";
 import type { CodeWithMeta } from "../types";
+import { formatCodeParams } from "../lib/queries";
 
 interface Props {
   code: CodeWithMeta;
@@ -14,6 +15,12 @@ interface Props {
 
 const { code, basePath, baseUrl, selectedTags } = Astro.props;
 const { name, slug, tags, circuit_count } = code;
+
+// [[n,k,d]] leads the name: many readers scan for the parameters, not the
+// title. Suppressed where the name IS the parameter string (e.g. "[[11,1,3]]"),
+// which would otherwise print twice.
+const params = formatCodeParams(code);
+const showParams = params !== "" && name !== params;
 
 // Row data consumed by list-filter-client.ts (client-side filtering/sorting).
 const rowMetrics = JSON.stringify({ n: code.n, k: code.k, d: code.d ?? null });
@@ -35,7 +42,11 @@ const numCls = "px-2 py-2 text-right align-baseline font-mono text-[13px] tabula
   data-tags={rowTags}
 >
   <td class="py-2 pr-3 align-baseline">
-    <a href={`/codes/${slug}`} class="text-sm font-medium hover:underline" data-list-link>{name}</a>
+    <a href={`/codes/${slug}`} class="text-sm hover:underline" data-list-link>
+      {showParams && (
+        <span class="font-mono text-xs tabular-nums text-gray-500 dark:text-gray-400 mr-1">{params}</span>
+      )}<span class="font-medium">{name}</span>
+    </a>
   </td>
   <td class={numCls}>{code.n ?? "–"}</td>
   <td class={numCls}>{code.k ?? "–"}</td>

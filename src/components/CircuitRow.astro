@@ -1,5 +1,6 @@
 ---
 import type { Circuit, Paper, Tool } from "../types";
+import { TAG_UNSELECTED } from "../lib/constants";
 import { formatCircuitId, formatCitation } from "../lib/queries";
 import { buildStimFilename } from "../lib/filename";
 import HeartIcon from "./HeartIcon.astro";
@@ -56,7 +57,7 @@ const stimFilename = buildStimFilename({
 
 <div
   id={anchorId}
-  class="rounded border border-gray-200 dark:border-gray-800"
+  class="border-b border-gray-200 dark:border-gray-800"
   data-filter-row
   data-name={circuit.name}
   data-metrics={rowMetrics}
@@ -149,7 +150,7 @@ const stimFilename = buildStimFilename({
           <a
             href={tagHref(tag)}
             data-tag={tag}
-            class="circuit-tag inline-block rounded px-1.5 py-0.5 text-xs transition-colors bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+            class={`circuit-tag inline-block px-1 py-0.5 font-mono text-xs transition-colors ${TAG_UNSELECTED}`}
           >
             {tag}
           </a>

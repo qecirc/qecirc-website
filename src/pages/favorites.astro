@@ -17,7 +17,7 @@ import Layout from "../components/Layout.astro";
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
         </svg>
-        <kbd class="inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+        <kbd class="inline-block min-w-[1rem] text-center px-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
           ⇧D
         </kbd>
       </span>
@@ -29,7 +29,7 @@ import Layout from "../components/Layout.astro";
       nothing said the rest existed. */}
   <p
     id="fav-truncated"
-    class="hidden mb-6 rounded border border-amber-300 dark:border-amber-800/70 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-sm text-amber-900 dark:text-amber-200"
+    class="hidden mb-6 border border-amber-300 dark:border-amber-800/70 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-sm text-amber-900 dark:text-amber-200"
     role="status"
   >
   </p>
@@ -157,11 +157,11 @@ import Layout from "../components/Layout.astro";
           section.appendChild(heading);
 
           const list = document.createElement("div");
-          list.className = "space-y-2";
+          list.className = "border-t-2 border-gray-900 dark:border-gray-100";
 
           for (const circuit of codeCircuits) {
             const row = document.createElement("div");
-            row.className = "rounded border border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3 flex-wrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
+            row.className = "border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3 flex-wrap hover:bg-gray-50 dark:hover:bg-gray-900/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/40";
             row.dataset.qecId = String(circuit.qec_id);
             row.tabIndex = 0;
             row.setAttribute("data-list-row", "");
@@ -235,7 +235,7 @@ import Layout from "../components/Layout.astro";
               tagWrap.className = "flex flex-wrap gap-1 ml-auto";
               for (const tag of circuit.tags) {
                 const tagEl = document.createElement("span");
-                tagEl.className = "inline-block rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 text-xs";
+                tagEl.className = "inline-block px-1 py-0.5 font-mono text-xs text-gray-600 dark:text-gray-400";
                 tagEl.textContent = tag;
                 tagWrap.appendChild(tagEl);
               }

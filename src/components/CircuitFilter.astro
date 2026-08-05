@@ -63,7 +63,7 @@ const tagGroups = TAG_CATEGORIES.map((c) => ({
     {FIELDS.map(({ field, label, aria }) => {
       const info = labelInfo(field);
       return (
-        <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5 min-w-0">
+        <div class="flex items-center gap-1.5 border border-gray-300 dark:border-gray-700 px-1.5 py-0.5 min-w-0">
           {/* nowrap: "2Q Gates" is two words and broke over two lines in the
               narrow grid column, making that box taller than its neighbours. */}
           <a href={sortHref(field)} data-sort-field={field} class={`px-1 py-0.5 text-xs whitespace-nowrap transition-colors ${info.cls}`} title={`Sort by ${label}`}>

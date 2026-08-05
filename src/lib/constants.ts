@@ -15,8 +15,7 @@ export const FILTER_PART_REGEX = /^(!=|>=|<=|>|<|=)?\s*(\d+)$/;
 // Shared tab-toggle styling (FormatSwitcher, CodeMatrices). Compose with any
 // component-specific base classes (e.g. `format-tab`, `code-matrix-toggle`,
 // focus rings) at the call site.
-export const TAB_ACTIVE_CLASS =
-  "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-200 dark:ring-gray-700";
+export const TAB_ACTIVE_CLASS = "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900";
 export const TAB_INACTIVE_CLASS =
   "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100";
 
