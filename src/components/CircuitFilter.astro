@@ -2,6 +2,7 @@
 import type { TagWithCount, CircuitSortField } from "../types";
 import { TAG_CATEGORIES, categorizeTag } from "../lib/tag-categories";
 import TagFilterDropdowns from "./TagFilterDropdowns.astro";
+import DensityToggle from "./DensityToggle.astro";
 import FilterStatus from "./FilterStatus.astro";
 
 // Filtering/sorting runs client-side (list-filter-client.ts, initialised by
@@ -82,5 +83,7 @@ const tagGroups = TAG_CATEGORIES.map((c) => ({
     groups={tagGroups}
     defaultView="grouped"
     storageKey="qecirc:tag-view"
-  />
+  >
+    <DensityToggle />
+  </TagFilterDropdowns>
 </form>

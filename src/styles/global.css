@@ -42,7 +42,22 @@
        the metric columns at a different x in every row. fr shares of the
        same free space land identically everywhere; base 0 keeps a long name
        (truncate) or tag list (flex-wrap) from stretching its share. */
-    --circuit-grid: 1rem 1.5rem 1.25rem minmax(0, 3fr) 1.75rem 1.75rem 1.75rem 1.75rem
+    /* The id track is 2.5rem: four-digit ids (#1145) are ~36px of 12px mono
+       and overran a 1.5rem track into the heart beside it. */
+    --circuit-grid: 1rem 2.5rem 1.25rem minmax(0, 3fr) 1.75rem 1.75rem 1.75rem 1.75rem
       minmax(0, 2fr);
   }
+}
+
+/* Circuit-row tag density (see DensityToggle.astro). Compact — the default,
+   so it holds without JS — shows only the first tag chip plus the "+k"
+   rest-count, keeping every row one line tall. The toggle sets
+   data-density="full" on <html> to show every chip and hide the count.
+   Scoped to .circuit-tags (the row's tag cell): the expanded panel and the
+   detail page render their tag lists outside it and always show everything. */
+html:not([data-density="full"]) .circuit-tags > a:nth-child(n + 2) {
+  display: none;
+}
+html[data-density="full"] .circuit-tags > .tags-rest {
+  display: none;
 }

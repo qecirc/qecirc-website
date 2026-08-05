@@ -5,6 +5,7 @@ import Layout from "../components/Layout.astro";
 import CircuitRow from "../components/CircuitRow.astro";
 import CircuitBodiesTemplate from "../components/CircuitBodiesTemplate.astro";
 import TagFilterDropdowns from "../components/TagFilterDropdowns.astro";
+import DensityToggle from "../components/DensityToggle.astro";
 import { TAG_CATEGORIES, categorizeTag } from "../lib/tag-categories";
 import {
   searchCircuitsRanked,
@@ -158,7 +159,9 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
               storageKey="qecirc:tag-view"
               baseUrl={Astro.url}
               selectedTags={selectedTags}
-            />
+            >
+              <DensityToggle />
+            </TagFilterDropdowns>
           )}
         </div>
       </details>

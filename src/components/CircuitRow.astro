@@ -45,14 +45,12 @@ const rowMetrics = JSON.stringify({
 const rowTags = JSON.stringify(circuit.tags);
 const anchorId = String(circuit.qec_id);
 
-// The row shows at most two tags plus a "+k" rest-count: full lists wrapped
-// to three lines in the tags column and tripled the row height. The complete
-// set stays one click away (detail page, or expand), the dropdowns above the
-// list filter on every tag regardless, and data-tags (above) still carries
-// them all for the client-side filter.
-const MAX_ROW_TAGS = 2;
-const visibleTags = circuit.tags.slice(0, MAX_ROW_TAGS);
-const hiddenTags = circuit.tags.slice(MAX_ROW_TAGS);
+// In the default compact density the row shows its first tag plus this "+k"
+// rest-count — full lists wrapped to three lines in the tags column and
+// tripled the row height. Which chips actually show is decided by the
+// density CSS in global.css (see DensityToggle), so ALL chips are rendered
+// here and the expanded panel below always lists every tag.
+const restTags = circuit.tags.slice(1);
 
 const stimFilename = buildStimFilename({
   codeSlug: codeSlug,
@@ -157,8 +155,8 @@ const stimFilename = buildStimFilename({
     </div>
 
     {circuit.tags.length > 0 && (
-      <div class="flex flex-wrap gap-1 justify-end col-span-full order-2 mt-1.5 md:col-auto md:order-none md:mt-0 md:justify-self-end">
-        {visibleTags.map((tag) => (
+      <div class="circuit-tags flex flex-wrap gap-1 justify-end col-span-full order-2 mt-1.5 md:col-auto md:order-none md:mt-0 md:justify-self-end">
+        {circuit.tags.map((tag) => (
           <a
             href={tagHref(tag)}
             data-tag={tag}
@@ -167,12 +165,12 @@ const stimFilename = buildStimFilename({
             {tag}
           </a>
         ))}
-        {hiddenTags.length > 0 && (
+        {restTags.length > 0 && (
           <span
-            class="inline-block px-1 py-0.5 font-mono text-xs text-gray-500 dark:text-gray-400"
-            title={hiddenTags.join(", ")}
+            class="tags-rest inline-block px-1 py-0.5 font-mono text-xs text-gray-500 dark:text-gray-400"
+            title={restTags.join(", ")}
           >
-            +{hiddenTags.length}
+            +{restTags.length}
           </span>
         )}
       </div>
@@ -234,6 +232,23 @@ const stimFilename = buildStimFilename({
           </div>
         )}
       </div>
+
+      {/* The full tag list, regardless of row density: the row may cap at one
+          tag, so the expanded panel is where every tag is always visible.
+          data-tag keeps these clickable filters, like the row chips. */}
+      {circuit.tags.length > 0 && (
+        <div class="flex flex-wrap gap-1">
+          {circuit.tags.map((tag) => (
+            <a
+              href={tagHref(tag)}
+              data-tag={tag}
+              class={`inline-block px-1 py-0.5 font-mono text-xs transition-colors ${TAG_UNSELECTED}`}
+            >
+              {tag}
+            </a>
+          ))}
+        </div>
+      )}
 
       {circuit.notes && (
         <div class="notes-wrapper">
