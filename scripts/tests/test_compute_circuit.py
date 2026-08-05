@@ -61,9 +61,14 @@ class TestComputeCircuitData:
         qasm_body = next(b for b in result["bodies"] if b["format"] == "qasm")
         assert "OPENQASM 2.0" in qasm_body["body"]
 
-    def test_crumble_url(self):
+    def test_no_crumble_url_is_stored(self):
+        """Derived at render time from the body — see crumbleHref in stim-format.ts."""
         result = compute_circuit_data(STEANE_STIM)
-        assert result["crumble_url"].startswith("https://algassert.com/crumble")
+        assert "crumble_url" not in result
+
+    def test_no_cirq_body(self):
+        result = compute_circuit_data(STEANE_STIM)
+        assert [b["format"] for b in result["bodies"]] == ["stim", "qasm"]
 
     def test_quirk_url(self):
         result = compute_circuit_data(STEANE_STIM)

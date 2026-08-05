@@ -4,7 +4,7 @@
 
 **QECirc** is a community-driven web library for quantum error correction (QEC) circuits.
 Users can browse and discover circuits, and contribute new ones by opening a GitHub Issue.
-Circuits are stored in STIM format and converted to QASM/Cirq for display.
+Circuits are stored in STIM format and converted to QASM for display.
 
 ---
 
@@ -78,19 +78,31 @@ papers
 circuits
   id, qec_id, code_id → codes, name, slug, notes, source,
   gate_count, two_qubit_gate_count, depth, qubit_count,
-  crumble_url, quirk_url, tool_id → tools, paper_id → papers, created_at
+  quirk_url, tool_id → tools, paper_id → papers, created_at
   -- paper_id: resolved from `source` at build time, NOT declared in YAML.
   --   NULL when the source names a tool or cites an uncatalogued work.
   -- qec_id: permanent globally unique circuit identifier (displayed as #N, never reused)
   -- source: provenance (DOI, URL, or citation)
   -- gate_count, two_qubit_gate_count, depth, qubit_count: numeric metrics for filtering
-  -- crumble_url, quirk_url: optional external visualization links
-  -- crumble_url_annotated: Crumble link for the 'stim-annotated' body (NULL if none)
+  -- quirk_url: optional Quirk link, and only below LARGE_CIRCUIT_MAX_QUBITS —
+  --   Quirk's UI tops out around 16 qubits, and the URL scales with width, so
+  --   above the gate it was a dead link costing up to 240 KB of page
+  -- There is deliberately NO crumble_url. A Crumble URL is a pure string
+  --   transform of the body, so it is derived where it is shown (`crumbleHref`
+  --   in src/lib/stim-format.ts) rather than stored: no staleness, and the
+  --   Detectors switch moves it by re-deriving from the body on screen.
+  --   Dropped in migration 021. It is capped on the length of the derived
+  --   string (CRUMBLE_MAX_URL_LENGTH), not on qubit count — measuring the
+  --   thing that actually gets big keeps the 144-qubit links the old
+  --   40-qubit gate denied, and still refuses the 782 KB one no browser opens.
+  -- `npm test` checks `crumbleUrl` against stim's own `to_crumble_url()` over
+  --   every committed body. It is a reimplementation of a stim function, and
+  --   nothing else in the repo would notice it drifting.
   -- tool_id: optional link to tool used to create the circuit
 
 circuit_bodies
   id, circuit_id → circuits, format, body
-  -- format: circuit format identifier (e.g. 'stim', 'qasm', 'cirq', 'stim-annotated')
+  -- format: circuit format identifier: 'stim', 'qasm', or 'stim-annotated'
   -- UNIQUE(circuit_id, format): one body per format per circuit
   -- 'stim-annotated' is a *view* of the stim body, not a display format: it adds an
      explicit reset prologue and (for CSS codes) a terminal readout with detectors.
@@ -120,9 +132,11 @@ taggings
 
 ## Circuit Format
 
-Circuits are stored in STIM format and converted to QASM/Cirq for display.
-The STIM body is the canonical source; QASM/Cirq are generated as alternate
-views in `circuit_bodies`.
+Circuits are stored in STIM format and converted to QASM for display.
+The STIM body is the canonical source; QASM is generated as the one alternate
+view in `circuit_bodies`. There was a Cirq view too: its text form is a
+per-moment ASCII grid whose width scales with the qubit count, so it cost 13 MB
+of repo to say less than the STIM body already says. Dropped in 0.8.0.
 
 **Matrices are stored once, and sparsely when large.** A code's `h`/`logical` and the
 matrices a circuit was submitted against are written as plain 0/1 rows up to
@@ -385,6 +399,7 @@ npm run format:check                # Check Prettier formatting
 npm run format                      # Auto-format with Prettier
 npm run papers:add -- 2402.17761    # Fetch a paper (arXiv id/DOI/link) into data_yaml/papers/
 npm run papers:missing              # Fetch every circuit source that has no paper yet
+npm test                            # Node tests (crumbleUrl vs stim's to_crumble_url, over every body)
 npm run validate:yaml               # Validate data_yaml/ schemas
 npm run validate:circuits           # Validate encoding/state-prep circuits against the code's symplectic h (CSS and non-CSS alike)
 uv run ruff check scripts/          # Lint Python code

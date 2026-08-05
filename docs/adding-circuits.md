@@ -447,8 +447,9 @@ Each `rebuild_all.py` classifies without writing by default and imports with `--
 - Logical operators (Lx, Lz)
 - Code extraction from circuits via Pauli propagation (`extract_code`)
 - Circuit metrics (gate count, depth, qubit count)
-- Compact STIM, QASM, and Cirq format conversions
-- Crumble and Quirk visualization URLs
+- Compact STIM and QASM format conversions
+- A Quirk visualization URL, below the width gate (the Crumble link is derived
+  from the body at render time, so it is not stored)
 - **Circuit ID (`qec_id`)**: auto-assigned as `max(existing IDs) + 1` — permanent, never reused
 - **Original submission data**: where a circuit was submitted in some other form, the pipeline preserves the pre-canonicalization STIM in `data_yaml/circuits/originals/` and the contributor's symplectic stabilizer / logical matrices in `data_yaml/matrices/<digest>.yaml` (see [Original submission](#original-submission) below). A circuit written directly with the pipeline helpers — the flag gadgets are — has no original, and the detail page's "Original submission (before canonicalization)" section is simply absent for it. The Hx/Hz/Lx/Lz view is derived in the UI.
 - Dedup: if the code already exists, the pipeline detects qubit ordering differences and relabels the circuit to match. Check `AddCircuitResult.qubit_permutation` to see if relabeling was applied (`None` = no relabeling, `list` = permutation applied)
@@ -503,14 +504,13 @@ gate_count: 12
 two_qubit_gate_count: 9
 depth: 5
 qubit_count: 7
-crumble_url: "https://algassert.com/crumble#circuit=..."
 quirk_url: "https://algassert.com/quirk#circuit=..."
 tags: [encoding]
 ```
 
 The `qec_id` is a **permanent, globally unique** integer identifier for the circuit (displayed as `#1` in the UI). It is auto-assigned by the generation pipeline (`max(existing IDs) + 1`). Once assigned, a `qec_id` must **never be reused or reassigned**, even if a circuit is removed.
 
-Body files (`.stim`, `.qasm`, `.cirq`) share the same stem as the circuit YAML.
+Body files (`.stim`, `.qasm`) share the same stem as the circuit YAML.
 
 Circuits get one more, `.stim-annotated`, written by
 `uv run python scripts/annotate_circuits.py` (idempotent — run it after adding

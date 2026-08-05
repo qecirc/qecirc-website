@@ -1,5 +1,6 @@
 // Keyboard shortcuts that act on the "active" circuit body on a page:
-// - 1 / 2 / 3 switch format tabs (STIM / QASM / CIRQ) inside the active FormatSwitcher.
+// - 1 / 2 / 3 switch format tabs inside the active FormatSwitcher. Only STIM
+//   and QASM exist today, so 3 finds no tab and falls through untouched.
 // - c / y copy the visible circuit body.
 // - d download the visible circuit body.
 // - D (Shift+d) clicks a page-level "download all" button (e.g. download all
@@ -7,7 +8,13 @@
 //
 // "Active" depends on context: on a circuit detail page there is exactly one
 // body; on a code page (with multiple expandable rows) it is the row whose
-// `.circuit-toggle` has `aria-expanded="true"`.
+// `.circuit-toggle` has `data-expanded="true"`. That is deliberately a data
+// attribute and not `aria-expanded`: the row is not the toggle — the chevron
+// button inside it is, and it owns the ARIA — so a page script that selected
+// on the ARIA would break the moment the row's semantics were corrected. It
+// did: `role="button"` + `aria-expanded` on the row announced a toggle that
+// Enter does not perform (Enter navigates), and flattened the row's eight
+// interactive descendants.
 //
 // All bindings reuse the existing click handlers on the underlying buttons,
 // so no copy/download/format logic is duplicated here.

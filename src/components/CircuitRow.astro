@@ -44,6 +44,9 @@ const rowMetrics = JSON.stringify({
 });
 const rowTags = JSON.stringify(circuit.tags);
 const anchorId = String(circuit.qec_id);
+// The expand button's aria-controls target. Distinct from the row's own
+// id (= the bare qec_id, which the URL fragment points at).
+const detailId = `circuit-detail-${anchorId}`;
 
 // In the default compact density the row shows its first tag plus this "+k"
 // rest-count — full lists wrapped to three lines in the tags column and
@@ -70,25 +73,55 @@ const stimFilename = buildStimFilename({
   data-metrics={rowMetrics}
   data-tags={rowTags}
 >
+  {/* role="group", not role="button". The row is focusable (j/k navigate
+      between rows) and clicking it expands, but Enter on it *navigates* to the
+      circuit page — so announcing "button, collapsed" promised a toggle the
+      row does not implement (WCAG 4.1.2). role="button" also carries ARIA's
+      Children Presentational: True, which dropped the semantics of all eight
+      interactive descendants (permalink, favourite, detail link, tag links)
+      and flattened them into one 149-character accessible name. `group` names
+      the row without either claim, and does not flatten its children.
+
+      Expansion state lives in TWO places on purpose: `aria-expanded` on the
+      chevron button, which is the only element that actually claims to be a
+      toggle, and `data-expanded` here, which is what page scripts select the
+      open row by (`[data-expanded="true"] + .circuit-detail`). Selecting on
+      the button's ARIA instead would put a page script's behaviour at the
+      mercy of an accessibility attribute; both are set together in one place,
+      `setExpanded()` below. */}
   <div
-    class="circuit-toggle w-full text-left px-2 py-2 grid items-center gap-x-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-inset"
+    class="circuit-toggle w-full text-left px-2 py-2 grid items-center gap-x-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
     style="grid-template-columns: var(--circuit-grid);"
-    role="button"
+    role="group"
+    aria-label={`Circuit ${displayId}: ${circuit.name}`}
     tabindex="0"
     data-qec-id={anchorId}
-    aria-expanded="false"
+    data-expanded="false"
     data-list-row
   >
-    <svg
-      class="chevron w-4 h-4 shrink-0 text-gray-400 transition-transform duration-200"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
+    {/* The accessible name is fixed and `aria-expanded` carries the state, so
+        a screen reader says "Circuit #190 details, collapsed, button". A name
+        that flipped between "Expand"/"Collapse" would say the same thing
+        twice, and gives one more thing to keep in sync. Sized to the 1rem
+        chevron track (--circuit-grid) so the row layout is unchanged. */}
+    <button
+      type="button"
+      class="circuit-expand-btn w-4 h-4 shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer rounded-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      aria-label={`Circuit ${displayId} details`}
+      aria-expanded="false"
+      aria-controls={detailId}
     >
-      <path d="M9 5l7 7-7 7" />
-    </svg>
+      <svg
+        class="chevron w-4 h-4 shrink-0 transition-transform duration-200"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
 
     {/* hidden below md: long ids (#1106) overran their 1.5rem track and
         collided with the heart. The id stays reachable there through the
@@ -183,7 +216,7 @@ const stimFilename = buildStimFilename({
        leaves every control inside it tabbable, so a keyboard user tabbing past
        a collapsed row fell into buttons and links they could not see. It must
        be kept in step with max-height by every handler that toggles one. -->
-  <div class="circuit-detail overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;" data-circuit-scope inert>
+  <div id={detailId} class="circuit-detail overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;" data-circuit-scope inert>
     <div class="border-t border-gray-200 dark:border-gray-800 px-2 py-4 space-y-3">
       <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
         <div>
@@ -208,29 +241,34 @@ const stimFilename = buildStimFilename({
             </a>
           </div>
         )}
-        {(circuit.crumble_url || circuit.quirk_url) && (
-          <div class="flex items-center gap-3">
-            <span class="text-gray-500 dark:text-gray-400">View in:</span>
-            {circuit.crumble_url && (
-              <a
-                href={circuit.crumble_url}
-                class="underline hover:text-gray-900 dark:hover:text-gray-100"
-                target="_blank"
-                rel="noopener"
-                data-crumble-link
-                data-crumble-url={circuit.crumble_url}
-                data-crumble-url-annotated={circuit.crumble_url_annotated ?? undefined}
-              >
-                Crumble &#x2197;
-              </a>
-            )}
-            {circuit.quirk_url && (
-              <a href={circuit.quirk_url} class="underline hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
-                Quirk &#x2197;
-              </a>
-            )}
-          </div>
-        )}
+        {/* The Crumble link is derived from the circuit body, and on a code page
+            the bodies are lazy-loaded — so the href is filled in by
+            circuit-bodies-client once the row's bodies arrive.
+            The whole block hides with the anchor, not just the anchor: a bare
+            "View in:" label pointing at nothing is what the user would otherwise
+            see with JS off, before the fetch resolves, or if it fails. A Quirk
+            link is server-rendered and shows on its own, so the block starts
+            visible whenever there is one. */}
+        <div
+          class:list={["flex items-center gap-3", !circuit.quirk_url && "hidden"]}
+          data-view-links
+        >
+          <span class="text-gray-500 dark:text-gray-400">View in:</span>
+          <a
+            href="#"
+            class="underline hover:text-gray-900 dark:hover:text-gray-100 hidden"
+            target="_blank"
+            rel="noopener"
+            data-crumble-link
+          >
+            Crumble &#x2197;
+          </a>
+          {circuit.quirk_url && (
+            <a href={circuit.quirk_url} class="underline hover:text-gray-900 dark:hover:text-gray-100" target="_blank" rel="noopener">
+              Quirk &#x2197;
+            </a>
+          )}
+        </div>
       </div>
 
       {/* The full tag list, regardless of row density: the row may cap at one
@@ -282,11 +320,24 @@ const stimFilename = buildStimFilename({
 <script>
   import { copyToClipboard, setFavState } from "../lib/dom-helpers";
 
+  // The single place expansion state is written. `data-expanded` on the row is
+  // what page scripts select the open row by; `aria-expanded` on the chevron
+  // button is what a screen reader reads; the chevron rotation is what everyone
+  // else sees. They must never disagree — see the markup comment above.
+  function setExpanded(toggle: HTMLElement, open: boolean) {
+    toggle.dataset.expanded = String(open);
+    toggle.querySelector(".circuit-expand-btn")?.setAttribute("aria-expanded", String(open));
+    toggle.querySelector(".chevron")?.classList.toggle("rotate-90", open);
+  }
+
   function initCircuitRows() {
     document.querySelectorAll(".circuit-toggle").forEach(function (btn) {
       if ((btn as HTMLElement).dataset.initialized) return;
       (btn as HTMLElement).dataset.initialized = "1";
 
+      // The chevron button is deliberately NOT in the guard list below: it has
+      // no click handler of its own, so its click bubbles to here and toggles
+      // exactly once, through the same code path a click on the row takes.
       btn.addEventListener("click", function (e) {
         if ((e.target as HTMLElement).closest(".circuit-tag")) return;
         if ((e.target as HTMLElement).closest(".circuit-code-link")) return;
@@ -297,7 +348,6 @@ const stimFilename = buildStimFilename({
         const qecId = (btn as HTMLElement).dataset.qecId!;
         const row = btn.closest("[id]") as HTMLElement;
         const detail = row.querySelector(".circuit-detail") as HTMLElement;
-        const chevron = btn.querySelector(".chevron") as HTMLElement;
         const isOpen = detail.style.maxHeight !== "0px";
 
         if (isOpen) {
@@ -305,8 +355,7 @@ const stimFilename = buildStimFilename({
           // Clipped content stays tabbable without this — see the inert note
           // on .circuit-detail in the markup above.
           detail.inert = true;
-          chevron.classList.remove("rotate-90");
-          btn.setAttribute("aria-expanded", "false");
+          setExpanded(btn as HTMLElement, false);
           if (location.hash === "#" + qecId) {
             history.replaceState(null, "", location.pathname + location.search);
           }
@@ -316,17 +365,21 @@ const stimFilename = buildStimFilename({
             if (d !== detail) {
               (d as HTMLElement).style.maxHeight = "0px";
               (d as HTMLElement).inert = true;
-              const otherBtn = (d as HTMLElement).closest("[id]")?.querySelector(".circuit-toggle");
-              if (otherBtn) {
-                otherBtn.querySelector(".chevron")?.classList.remove("rotate-90");
-                otherBtn.setAttribute("aria-expanded", "false");
+              // `previousElementSibling`, not `closest("[id]")`: the panel
+              // carries its own id now (the button's aria-controls target),
+              // and closest() starts at the element itself — so it returned
+              // the panel, found no .circuit-toggle under it, and left the
+              // other row's chevron and data-expanded saying "open" while it
+              // was visibly shut.
+              const otherBtn = (d as HTMLElement).previousElementSibling;
+              if (otherBtn?.classList.contains("circuit-toggle")) {
+                setExpanded(otherBtn as HTMLElement, false);
               }
             }
           });
           detail.inert = false;
           detail.style.maxHeight = detail.scrollHeight + "px";
-          chevron.classList.add("rotate-90");
-          btn.setAttribute("aria-expanded", "true");
+          setExpanded(btn as HTMLElement, true);
           history.replaceState(null, "", "#" + qecId);
           // Signal circuit-bodies-client (code pages) to lazy-load bodies.
           detail.dispatchEvent(new CustomEvent("circuit-expand", { bubbles: true }));
@@ -361,7 +414,7 @@ const stimFilename = buildStimFilename({
     const target = document.getElementById(hash);
     if (!target) return;
     const btn = target.querySelector(".circuit-toggle") as HTMLElement;
-    if (btn && btn.getAttribute("aria-expanded") !== "true") {
+    if (btn && btn.dataset.expanded !== "true") {
       btn.click();
       target.scrollIntoView({ behavior: "smooth", block: "start" });
     }

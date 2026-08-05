@@ -5,7 +5,242 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+**Breaking (0.7.11 → 0.8.0):** migration `021` drops `circuits.crumble_url` and
+`circuits.crumble_url_annotated`, and the two keys are gone from the circuit YAML schema.
+Nothing reads them any more — the link is derived where it is shown — but anything holding
+a copy of the database or parsing the YAML will need the columns removed.
+
+### Removed
+
+- **The Cirq body format, all 718 files and 13 MB of it.** A Cirq circuit's text form is a
+  per-moment ASCII grid whose width scales with the qubit count, so it grew fastest exactly
+  where it read worst — and it never said anything the STIM body does not say better. Gone
+  with it: the `stimcirq` dependency (and its `cirq-core`, `pandas`, `sympy` and `duet`
+  transitive weight), the CIRQ tab, and the `.cirq` extension from the two body-file
+  readers. The format shortcuts are `1`/`2` now; `3` finds no tab and does nothing, which is
+  what it already did past the last tab.
+- **The stored Crumble URLs — `crumble_url` on 725 circuits and `crumble_url_annotated` on
+  398, 528 KB of YAML.** A Crumble URL is a pure string transform of the body it shows: join
+  the lines with `;`, abbreviate `QUBIT_COORDS`/`DETECTOR`/`OBSERVABLE_INCLUDE`, write the
+  spaces as `_`. Storing it therefore kept a second, lossy copy of every circuit, and the
+  copy drifted — 76 of the 725 links pointed at a body the page had stopped displaying, and
+  32 more dropped a syndrome round's own measurement. `crumbleHref` in
+  `src/lib/stim-format.ts` now derives it: the detail page server-renders it from the body it
+  already has, code pages fill it in when the row's bodies are lazy-loaded, and the Detectors
+  switch moves it by re-deriving rather than by swapping to a second stored string. The
+  transform is stim's own, checked byte-for-byte against all 1123 URLs that used to be
+  stored.
+- **Quirk URLs above 40 qubits — 28 links, 1.70 MB.** Quirk's editor tops out around 16
+  qubits, so these were dead links, and the URL scales with width: one was 242,264
+  characters, and seven of them made up 91% of `/codes/144-12-12`. The width gate was already
+  in the pipeline (`LARGE_CIRCUIT_MAX_QUBITS`); the stored data predated it. Below the gate
+  nothing changed — 697 circuits keep their Quirk link.
+- **The `no-private-registries` CI job.** It failed the build on any `jfrog.io` reference —
+  a guard from the period when this code sat next to a private artifactory. Nothing in the
+  repository has referenced one for a long time (`git grep -F jfrog.io` is empty), and both
+  lockfiles resolve exclusively against public registries, so the job was spending a run on
+  every PR to assert something no longer at risk.
+
+### Changed
+
+- **The Crumble link is gated on the length of the URL, not on the qubit count.** It used to
+  be blanked past 40 qubits, which denied a link to every 144-qubit circuit in the library
+  while saying nothing about the number that actually matters. `CRUMBLE_MAX_URL_LENGTH` is
+  65,536 characters — the narrowest ceiling among current browsers (Chrome accepts ~2 MB and
+  Safari ~80 KB; Firefox is the binding constraint at ~64 KB) — so a link that is offered
+  opens everywhere. 950 of 972 circuits get one, against 697 before; the 22 refused are all
+  720 qubits or wider, where the string runs to 232 KB plain and 782 KB with detectors. The
+  cap looks at both views together, so the Detectors switch can never turn a working link
+  into a broken one.
+- **`/codes/144-12-12` is 90% smaller: 1,259,209 → 124,946 bytes.** `/codes/108-8-10`,
+  781,983 → 124,974. The circuit pages follow: `#27`, 426,081 → 150,455; `#163`, 738,916 →
+  95,579.
+
+### Added
+
+- **`npm test` — `crumbleUrl` against stim's own `to_crumble_url()`, over all 1646 committed
+  bodies.** The Crumble link is now derived by a hand-written reimplementation of a stim
+  function, and nothing else in the repository compares the two: a stim upgrade, or an edit
+  to the abbreviation table, would break every link on the site and pass every other check.
+  A second assertion keeps the corpus a fixed point of `str(stim.Circuit(...))`, because the
+  exactness only holds for canonical text — a hand-edited body using a gate alias
+  (`CORRELATED_ERROR` for `E`) or carrying a `#` comment would derive a link for
+  differently-spelled text. Runs in CI as `crumble-url-parity`, node's own test runner, no new
+  dependency.
+
 ### Fixed
+
+- **A circuit row announced itself as a button that does something else.** It carried
+  `role="button"`, `tabindex="0"` and `aria-expanded="false"`, so a screen reader said
+  "button, collapsed" — and then `Enter` on it navigated to the circuit page. `l`, Space and
+  a mouse click expanded; the one key the announced role promises did not. That is WCAG
+  4.1.2: the name, role and state have to describe what the thing actually does, and here
+  the role described a toggle that only some of the row implements.
+  `role="button"` also carries ARIA's _Children Presentational: True_ — a button's contents
+  are a label, not controls — so the row's eight interactive descendants (the permalink, the
+  favourite toggle, the detail link and five tag links) were stripped of their own roles and
+  folded into the row's accessible name, a 149-character run of
+  `#190G: 112Q: 8D: 3Q: 7Circuit-Synth Zero State Preparation…1D-AODlogical-state:zero…`.
+  Every affordance in the row existed for a mouse and for nobody else.
+  The row now claims nothing it does not do:
+  - **`role="group"` with a name** (`Circuit #190: <name>`), not a bare focusable `div`. It
+    still has to be focusable — `j`/`k` move between rows by focusing them — and something
+    focusable with no role announces as an unnamed container. `group` names it, and, unlike
+    `button`, does not flatten what is inside it: all eight descendants are individually
+    exposed again, and the row's own name is 76 characters that say which circuit it is.
+  - **The chevron is a real `<button>`**, which is the only element here that _is_ a toggle,
+    and it owns `aria-expanded` plus an `aria-controls` pointing at the panel. Its name is
+    fixed ("Circuit #190 details") rather than flipping between "Expand" and "Collapse":
+    `aria-expanded` already carries the state, and a name that repeats it says the same
+    thing twice. It has no click handler of its own — the click bubbles to the row's
+    existing one — so it cannot toggle twice, and there is one implementation, not two.
+  - **No documented keyboard behaviour changed.** `Enter` still navigates, `l`/`h`/Space
+    still expand and collapse, `j`/`k` still move, `f` still favourites, and clicking
+    anywhere on the row still expands it. `Enter` on the chevron toggles instead of
+    navigating, which is what a focused button should do.
+- **Two page scripts selected the open row by its `aria-expanded`, and would have died
+  silently.** `[id] > .circuit-toggle[aria-expanded="true"] + .circuit-detail` is how
+  `/codes/[code]` and `/search` find the row that `1`/`2`/`3`, `c`/`y` and `d` act on, and
+  `circuit-bodies-client` uses the same shape to load bodies for a row already expanded by a
+  `#id` deep link. Moving `aria-expanded` onto the chevron would have left all three
+  matching nothing, with no error and no test to catch it. The row therefore mirrors the
+  state in `data-expanded`, all three selectors read that, and `list-keynav`'s
+  `expandedAttr` is pointed at it on both pages. The split is deliberate rather than
+  incidental: ARIA describes the control to assistive technology, a data attribute is what
+  page scripts are allowed to depend on, and one function (`setExpanded`) writes both plus
+  the chevron rotation so they cannot drift.
+- **Giving the panel an `id` broke the "collapse the other rows" loop**, and only in the
+  state nobody looks at. `aria-controls` needs a target id, and the loop found each other
+  row's header with `panel.closest("[id]")` — which starts at the element itself, so it now
+  returned the panel, found no header under it, and left that row's `data-expanded`,
+  `aria-expanded` and chevron all saying "open" while the panel was visibly shut. Two rows
+  then matched the "open row" selector and `1`/`2`/`3` would have acted on the wrong one. It
+  walks to `previousElementSibling` now. Found by checking the collapsed row's attributes in
+  a browser after the change, not by anything that would have shown on screen.
+- **Every keypress on `/search` threw a `TypeError`.** `initCircuitActions()` was called with
+  no argument, so `findActiveContainer()` read `config.activeContainerSelector` off
+  `undefined` on any key that reached it. The page still worked: the throw is confined to
+  one of several `document` keydown listeners, so `j`/`k`/`Enter`/`f` — handled separately by
+  `initListKeynav` — kept working, and typing in the search box never reached it at all
+  (`isInputFocused()` returns first). What was missing was `1`/`2`/`3`, `c`/`y` and `d`,
+  plus an error per keystroke in the console. That is why it went unnoticed.
+  `/search` renders the same expandable `CircuitRow`s as a code page, so it now passes the
+  same selector, and `1`/`2`/`3`, `c`/`y` and `d` act on the open row. No `downloadAllSelector`:
+  there is no such button on `/search`, and `/api/download` reads URL filter params rather
+  than a query. Found by `astro check`, which had never run before this week.
+- **`aria-expanded={String(open)}`** on the collapsible section typed as `string` where the
+  attribute accepts `boolean | "true" | "false"`. Astro renders the boolean correctly, so
+  this was a type error rather than a rendered one — but it was the reason that file sat in
+  the typecheck exclusion list.
+- **`tsconfig.check.json` is gone, and `npm run typecheck` runs against the real config.**
+  It existed to hold two errors out of CI while the files they were in belonged to other
+  open PRs — a debt register with two entries, both now paid. The full project type-checks
+  clean: 92 files, 0 errors. The `check-json` exclusion that existed only to parse it went
+  with it.
+- **Seven accessibility defects, each measured in a browser rather than inferred from a
+  linter.** They had nothing in common but the failure mode: every one of them looked right
+  to a sighted mouse user, which is exactly why none had been noticed.
+  - **The focus ring was all but invisible.** `ring-blue-500/40` measured 1.64:1 against a
+    row in light mode and 1.74:1 in dark — WCAG 1.4.11 asks 3:1 — and, worse, only 1.33:1
+    and 1.27:1 against the row's own resting border, so "focused" and "not focused" were
+    nearly the same picture. Dropping the alpha leaves solid blue-500: 3.76:1 on white,
+    5.35:1 on gray-950, and 3.04:1 / 3.90:1 against the resting border. Six call sites, not
+    the two that were first found: `CircuitRow`, `CodeCard`, the `/search` query and filter
+    inputs, the `/` filter input, and the row `favorites` builds client-side. On the inputs
+    the ring also has the field's own `gray-300`/`gray-700` border beside it, and there it
+    goes 1.12:1 → 2.55:1 (light) / 2.74:1 (dark) — short of 3:1 against that one edge, but
+    the ring's other neighbour is the page background, which it clears.
+  - **`text-amber-600` measured 3.20:1 on white**, under the 4.5:1 body text needs, and
+    neither of the two places that show it — the alpha superscript in the header (14px/600)
+    and the active-sort label (12px/600) — is large enough to claim the 3:1 exception. Now
+    `amber-700`: 5.03:1 in light, and dark mode keeps `amber-400` at 11.69:1. Bumped at all
+    ten call sites at once, because a token that means "this is the sort you asked for"
+    stops meaning it the moment two shades are in play.
+  - **Two of those ten are links whose only hover feedback was that colour**, so darkening
+    the resting state flattened the hover step: the header α and "Clear all active filters"
+    went from a 2.22:1 step to 1.41:1. Both now go to `amber-900` on hover — 1.80:1, still
+    a slight step — and, more to the point, underline. Dark mode never had a usable step
+    either (`amber-400` → `amber-200` is 1.38:1) and gains the same underline. A hover
+    affordance that exists only as a colour change is one an awful lot of people cannot
+    see; this is the first of the two that does not depend on hue at all.
+  - **`/codes` skipped from `h1` straight to `h3`** — `CodeCard`'s heading, the only
+    heading-order violation on the site. It is an `h2` now; the class list is unchanged and
+    so is the rendering, since the card sets its own size and weight. `ToolCard` keeps its
+    `h3`, which is correct: `/tools` has a real `h2` above it.
+  - **Three `text-gray-500`s on `/search` had no dark variant**, measuring 4.16:1 against
+    `gray-950`. Every sibling paragraph in the file already had `dark:text-gray-400`, and
+    `global.css` states the pairing as house rule, so these were omissions rather than
+    choices. 7.74:1 now.
+  - **The format tabs said which format was active in colour only** (WCAG 4.1.2) — the
+    server emitted plain buttons and the client rewrote `className` and `display`. They now
+    carry `aria-pressed`, the pattern `CodeMatrices` already uses. The initial state is read
+    off the visible body rather than assumed to be the first tab, because the tabs on code
+    pages are cloned from `CircuitBodiesTemplate` and start with no ARIA of their own.
+  - **The header quick-search was an incomplete combobox.** The input had no
+    `role="combobox"`, `aria-expanded`, `aria-controls` or `aria-autocomplete`, and the
+    results list had no `id` — which made the `aria-activedescendant` the script had been
+    writing all along point at nothing, so no screen reader ever announced the highlighted
+    result. All five are wired up now, and `aria-expanded` tracks the dropdown. They are set
+    from the script, not the markup: without JS there is no dropdown, and an input that
+    claims to own a popup that cannot open is worse than a plain search field. Two
+    consequences of making it a real combobox:
+    - **`aria-live="polite"` came off the results list.** It was there because nothing else
+      announced the results — a reasonable call while `aria-activedescendant` pointed at
+      nothing. Now that the combobox announces the active option, the live region announces
+      the list on top of it, and the user hears everything twice. `role="listbox"` and the
+      label stay.
+    - **Tabbing out left `aria-expanded="true"` on an input nothing was focused on.**
+      `hide()` was reachable from Escape, a click outside, and a query under two characters
+      — not from losing focus. There is a `focusout` handler now, guarded on a non-null
+      `relatedTarget`: the result `<li>`s are not focusable, so pressing the mouse on one
+      blurs the input with a null `relatedTarget`, and hiding there would take the item away
+      between mousedown and the click that navigates.
+  - **`/about` re-documented the keyboard shortcuts and had drifted from them.** It omitted
+    `Home` and `End`, and described `Esc` as collapsing the open row when it also closes the
+    help overlay. Corrected in place. The duplication itself stays: `KeyboardHelp`'s flat
+    17-row table and `/about`'s topic-grouped prose are different shapes, and collapsing
+    them into one source would cost more than it saves.
+
+- **Writing about a Tailwind class put it back in the stylesheet.** Tailwind v4 finds its
+  own sources, which means it reads every tracked file — including prose that only _names_ a
+  class. The CHANGELOG entry above, explaining that `text-amber-600` had been replaced,
+  regenerated `.text-amber-600{}`; the design plans under `docs/` were keeping
+  `dark:text-amber-300` alive for a component that stopped using it months ago. The wasted
+  bytes are the small half. The large half is that "the class is gone from the built CSS"
+  stops being a way to check that a sweep across call sites was complete — and it fails in
+  the direction that hides a missed one, which is how four `ring-blue-500/40` sites survived
+  the first pass of the fix above. Both paths are now `@source not` in `global.css`.
+- **294 circuits displayed — and handed over on Copy and Download — a body missing its final
+  measurement.** `bodyForDisplay` subtracted the readout epilogue unconditionally, but a
+  circuit with no `stim-annotated` body has no Detectors switch to bring it back, so for
+  those the subtraction was permanent and invisible. `/circuits/662` rendered two lines while
+  its Crumble link opened the same circuit _with_ `M 10`, and a user could download a circuit
+  that no longer measured anything. `stripReadout` now subtracts only from a body that
+  carries annotations — which is exactly the condition under which the switch exists. The 674
+  circuits that do have an annotated body are unaffected: none of the 63 prologue-only ones
+  ends in a readout.
+
+- **The pre-commit hooks corrupted the repository, and nothing had noticed because nothing
+  ran them.** They were never wired into CI, so they only ever fired for someone who had run
+  `pre-commit install` — and on this repository a full run rewrites 2476 files and leaves
+  Python that does not parse. Three separate causes, each now configured out in `_typos.toml`
+  and `.pre-commit-config.yaml`:
+  - **`typos` rewrites `anc` to `and`.** It is how the importers spell "ancilla", 29 times,
+    and `for row, anc in enumerate(...)` becomes `for row, and in ...` — a syntax error in
+    `circuit_validate.py`, `syndrome_extraction.py` and three of the flag-at-origin drivers.
+    It also translates the German legal pages into English a word at a time (`Sie` → `Size`,
+    `oder` → `order`), which would quietly damage a compliance document, and "corrects" the
+    `ba` inside the content-addressed digest `18ed8bee546ba80f` that 32 circuits reference —
+    breaking `db:create`. Now: the German pages and `data_yaml/` are excluded, and the QEC
+    vocabulary (`anc`, `ket`, `IZ`), the author name `Wille` and the citation `Lond` are
+    named. Not `locale = "en-gb"`, which sounds right for the prose and would rewrite
+    Tailwind's `text-center` and the `/favorites` route: 178 findings become 2233.
+  - **`end-of-file-fixer` and `trailing-whitespace` rewrote 2476 circuit bodies.** `.stim`,
+    `.qasm` and `.cirq` files are emitted byte-for-byte by the pipeline; a hook that edits
+    them puts the stored body out of step with what the pipeline would produce. Excluded
+    from `data_yaml/`.
+  - **`check-json` cannot read `tsconfig.check.json`**, which is JSONC — it carries the
+    comments explaining which two files it excludes and why. Excluded.
 
 - **`/api/search` was cached at the edge for a week, keyed on `?q=`.** `middleware.ts`
   stamps `s-maxage=604800` on any response without its own `Cache-Control`, which is safe
@@ -175,13 +410,124 @@ the source-of-truth `package.json` version.
   unexplained repeat.
 - **The changelog claimed 61 of 127 circuits measured.** That count came from a branch that
   also held the AlphaSyndrome import when it was not yet merged, and counted 127 circuits
-  that were never all on `main` at once. With every round in place it is 91 of 159.
+  that were never all on `main` at once. With every round in place it is 87 of 155.
   Corrected, along with how many preserve the code's distance.
 - **`circuit-distance:` fell into the filter's "Other" group** while `distance:` sits under
   Fault tolerance. Same question, different number — they belong together.
+- **Every page had two indexable URLs, and the prerendered ones canonicalised to the URL
+  the sitemap does not list.** `astro.config.mjs` set no `trailingSlash`, so Astro defaulted
+  to `"ignore"` and `Layout.astro` echoed back whatever path the request carried. `/codes`
+  and `/codes/` both answered 200 and each named _itself_ canonical — one page, two
+  self-canonicalising URLs — while `/about` baked `https://qecirc.com/about/` against a
+  `sitemap.xml` that lists `https://qecirc.com/about`. Now `trailingSlash: "never"`, and the
+  canonical is normalised rather than echoed, so it holds for an SSR page whose request the
+  router did not shape. Crawled before and after on a built server, every route in both
+  forms: each slash-free form answers exactly as it did, and all 16 trailing-slash variants
+  — 12 of which used to answer 200 as a duplicate, 4 the 404 body — now `301` to the
+  slash-free URL with the query string intact
+  (`/search/?q=steane%20code&tag=x` → `/search?q=steane%20code&tag=x`).
+  Canonical, `og:url` and `sitemap.xml` now agree on one URL per page, prerendered and SSR
+  alike.
+- **The site-wide `SearchAction` advertised a path `robots.txt` forbids.** `Layout.astro`
+  told every crawler it could search at `/search?q={search_term_string}`; `robots.txt.ts`
+  disallows `/search` for every agent, and deliberately — the `?q=` key space is unbounded.
+  Both landed in `0abfe8c5`, whose PR justifies the `Disallow` without mentioning the
+  markup it contradicts. Removed rather than reconciled: Google retired the sitelinks
+  searchbox this fed in November 2024, so the four lines were inert as well as wrong.
+- **`/tools` shipped no structured data** though it is the exact sibling of `/codes`, which
+  has carried `CollectionPage` + `ItemList` + `BreadcrumbList` since the JSON-LD went in —
+  and CLAUDE.md asks for matching `jsonLd` when an entity page type is added. It now
+  carries the same graph, enumerating the **unfiltered** 11 tools: `?tag=` filters that page
+  on the server but every variant canonicalises to `/tools`, so the enumeration has to
+  describe that one URL. Tools have no page of their own, so each item links to its anchor
+  (`ToolCard` already renders `id={tool.slug}`). Not added to `/search`: it is `Disallow`ed,
+  so nothing would ever read it.
+- **Codes whose name already carries their parameters printed them twice** — "Gottesman
+  [[8,3,3]] Code [[8,3,3]]", "[[20,2,6]] Code [[20,2,6]]". The guard tested
+  `name === params`, which only catches a name that is _nothing but_ its parameters: of the
+  5 codes whose name contains them, 3 are exactly them, so 2 doubled. It had been written
+  out by hand at **eight** call sites — the `<title>`, the `<h1>`, the meta description, two
+  JSON-LD `name` fields, the code cards, `llms.txt`, the quick-search JSON and the `/search`
+  code filter — and correcting them one at a time is how the first pass fixed three and left
+  the page they link to still saying it twice. There is now one predicate,
+  `showCodeParams`/`codeDisplayName` beside `formatCodeParams`, and all eight sites call it.
+  Verified on the built server: all 84 code page titles, `/codes`, its ItemList, `llms.txt`,
+  `/api/search` and the `/search` filter — 0 doubled, with "Steane Code [[7,1,3]]" and the
+  bare "[[16,2,4]]" both still rendering exactly once.
+- **`/search` printed two different empty states, three lines apart** — "No circuits found
+  for X" from the result count, then "No circuits match this query." from the empty state
+  proper. One empty state now, the centred one, and it carries what the count line used to:
+  the query as actually resolved (a correction rewrites it), whether the filters are to
+  blame, and the way out of each. The three result-set notices are suppressed when there is
+  no result set — "Showing results for steane." sitting directly above "No circuits match"
+  told the user two opposite things — and the escape hatch from a correction moves into the
+  empty state, which is the only thing rendered in that case.
+- **The header quick-search could show results for a query the user had typed past.**
+  `doSearch` awaited `fetch` and `res.json()` and wrote `innerHTML` unconditionally: no
+  ordering guard, no `res.ok` check, no `catch` — and it is called from a `setTimeout` with
+  its promise dropped, so a 5xx (which answers with an HTML error page, making `res.json()`
+  reject) threw where nothing could catch it and left the dropdown frozen on stale results.
+  A generation counter now discards any response that is not the newest, and a failed
+  request leaves the previous list up for the next keystroke to replace. **Dismissing counts
+  as newest**: `hide()` bumps the counter too, so a response still in flight cannot reopen a
+  dropdown closed with Escape or an outside click, nor answer a query backspaced below the
+  two-character floor. Verified in the browser by holding responses open and releasing them
+  in a chosen order: the stale response never wins, a dismissed one leaves the list hidden
+  and untouched, a 500 changes nothing and logs no unhandled rejection, and the next
+  keystroke recovers.
+- **`aria-activedescendant` outlived the option it named.** Arrowing to the third result and
+  then typing on left the input pointing at `search-result-0-2` after that node had been
+  removed with the rest of the list — the attribute is cleared alongside `activeIndex` now.
+- **Ten unguarded `localStorage` calls, where a denied store throws on _read_.** Chrome's
+  "block all cookies" and some embedded webviews make every access raise `SecurityError`,
+  so these were not lost preferences but thrown exceptions mid-module. The worst sat in
+  `codes/[code].astro`: the favourites-filter read is above the "download all" wiring, so a
+  browser that refuses storage lost the download button, the keyboard shortcuts and the tag
+  dropdowns with it. `src/lib/safe-storage.ts` now wraps get/set — a read answers `null` —
+  and the two `is:inline` scripts that cannot import it (the theme, the search-filter
+  disclosure) inline the same try/catch. Proved by serving the built site through a proxy
+  that makes `localStorage` throw before any page script runs: `/codes/steane-code` renders
+  all 81 rows with zero page errors, the favourites filter, theme toggle and tag-view
+  toggle all still respond, and "Download all" still fetches `/api/download?code=steane-code`.
+
+  **A write reports whether it landed, and favourites act on that.** Swallowing the failure
+  is right for a theme or a tag view and wrong for the user's own list: `importFavorites`
+  counts a merge it performs in memory, so a dropped write would have toasted
+  "Imported 3 new favorites" and called `location.reload()`, landing the user back on an
+  empty page with nothing to explain it — and a heart would fill for something never stored.
+  `setItem` returns a boolean, favourite writes turn `false` into `StorageBlockedError`, and
+  the message says what actually happened ("this browser is blocking site storage") instead
+  of the file-format error the import's catch-all would have shown. The toast is raised in
+  `favorites-client` rather than at each call site, so the hearts in `CircuitRow.astro`
+  explain themselves too. Verified under denied storage: the import toasts the storage
+  message, does not claim a count and does not reload; the hearts on a code page and on a
+  circuit page stay in their old state. Verified with storage working: the import still
+  stores `[101,102,103]`, reloads, and renders 3 rows, and a heart still round-trips.
 
 ### Added
 
+- **Four gaps closed in what CI actually checks.**
+  - **A `pre-commit` job.** The hooks now run on every PR instead of only for contributors
+    who installed them, which is what let the corruption above sit unnoticed. `prettier` is
+    skipped — it is the one hook needing `node_modules`, and `quality` already runs the same
+    check.
+  - **`ruff` covers `data-imports/`.** Every importer lives there, it is where the ingestion
+    bugs have actually been, and it was outside both the lint and format gates. Clean when
+    widened, so it costs nothing now and stops the next drift.
+  - **The coverage gate measures five scripts, not one, and asks for 80% rather than 60%.**
+    It watched `scripts/add_circuit` alone, leaving the four top-level maintainer scripts
+    unmeasured — including `validate_circuits.py`, which CI runs as its own step and which
+    was carrying a live bug. All five together come to 85%.
+  - **`stim-annotated` bodies must be a fixed point of the annotator.** They are derived from
+    their circuit but committed rather than built, so editing a circuit without re-running
+    the annotator ships a memory experiment describing the previous schedule, and nothing
+    else in CI would ever notice.
+  - **The two whole-library sweeps now run as their own jobs, in parallel.** Each parses
+    every circuit through stim and they share nothing but the checkout, so as steps of one
+    job they added up: 78 s of tests + 246 s validating circuits + 236 s checking annotated
+    bodies, a 9m35s job. Split, the wall clock is the slowest of the three — about 4
+    minutes, quicker than the workflow was before either check existed — for two extra
+    `uv sync` setups at ~8 s each.
 - **`npm run typecheck`, because nothing in CI had ever read a TypeScript type.**
   `astro build` transpiles without checking and `eslint.config.mjs` uses the non-type-aware
   `tseslint.configs.recommended`, so all of `src/` was compiled and shipped on trust. The
@@ -191,27 +537,27 @@ the source-of-truth `package.json` version.
   `tsconfig.check.json`; that file is a debt register with two entries, not an ignore list.
   `typescript` becomes a direct dev dependency in the process, instead of whichever major
   `astro` and `typescript-eslint` happened to hoist between them.
-- **AlphaSyndrome syndrome-measurement schedules** (59 of them), imported from
+- **AlphaSyndrome syndrome-measurement schedules** (55 of them), imported from
   [acasta-yhliu/asyndrome](https://github.com/acasta-yhliu/asyndrome)
   ([arXiv:2601.12509](https://arxiv.org/abs/2601.12509), ASPLOS '26) by
-  [data-imports/asyndrome/](data-imports/asyndrome/README.md). 14 new codes come with
-  them — hyperbolic surface ×6, hyperbolic colour ×3, surface-with-defects ×2, plus the
-  [[61,1,9]] colour code, the 5×9 rotated surface code and a self-dual bivariate bicycle
-  code. Every schedule is scored against a named decoder, so `decoder:` is what separates
-  two otherwise identical rounds for one code.
+  [data-imports/asyndrome/](data-imports/asyndrome/README.md). 12 new codes come with
+  them — hyperbolic surface ×6, hyperbolic colour ×3, plus the [[61,1,9]] colour code,
+  the 5×9 rotated surface code and a self-dual bivariate bicycle code. Every schedule is
+  scored against a named decoder, so `decoder:` is what separates two otherwise identical
+  rounds for one code.
   - **10 of the dataset's 69 schedules do not survive validation and are left out** —
     every `google.json` and every `trivial.json`. Their X- and Z-checks interleave so
     that two ancillas sharing two data qubits come out entangled, which makes each
     outcome individually random even though every check is applied exactly once. The
     import README traces it to the hard-coded tick tables in `asyndrome/special.py` and
-    measures what it costs in the paper's own metric.
-  - **Three codes are stored with a distance the dataset does not give.**
-    `code_distance.py` computes the exact CSS distance by exhaustive enumeration, so
-    these are distances rather than bounds. The self-dual bivariate bicycle code ships
-    `d: -1` and is [[42,6,6]]. The two defect surface codes declare 5 and 7 but each
-    carry a **weight-2 X-logical** — the dataset's own second `logical_xs` entry — so
-    they are stored as [[24,2,2]] and [[40,2,2]]. A stored `[[n,k,d]]` has to describe
-    the `h` printed beside it.
+    measures what it costs in the paper's own metric. Their author has since confirmed
+    the two reference schedules were not meant to stand as correct, and points to
+    [arXiv:2602.09099](https://arxiv.org/abs/2602.09099) for one that is.
+  - **The two defect surface codes and their 4 schedules are left out too**, at the
+    author's request: they were exploratory, not a result of the paper.
+  - **One code is stored with a distance the dataset does not give.** `code_distance.py`
+    computes the exact CSS distance by exhaustive enumeration, so it is a distance rather
+    than a bound: the self-dual bivariate bicycle code ships `d: -1` and is [[42,6,6]].
   - The hyperbolic surface [[36,8,4]] shares `n` and `k` with the QUITS balanced-product
     `36-8-4-bpc` and nothing else: row-space ranks 11/17 against 14/14, which no
     relabeling reconciles. It gets its own entry, with the refutation recorded next to
@@ -441,7 +787,7 @@ the source-of-truth `package.json` version.
 - **`circuit-distance:<N>` on syndrome-extraction circuits** — the fewest faults
   _anywhere in the round_ (gate, idle, reset or readout) that flip a logical while
   firing no detector, measured rather than cited. It sits next to `distance:<N>`,
-  which is the **code's** distance and usually a larger number: 17 of the 91 circuits
+  which is the **code's** distance and usually a larger number: 13 of the 87 circuits
   measured so far preserve it, the rest lose at least one step to hook errors. Filter
   on it like any other tag.
   - `scripts/measure_circuit_distance.py` writes it;

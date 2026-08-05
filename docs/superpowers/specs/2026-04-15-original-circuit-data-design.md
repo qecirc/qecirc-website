@@ -1,5 +1,10 @@
 # Original Circuit Data Storage & Circuit Detail Page
 
+**Superseded in part (0.8.0):** the Cirq body format described below no longer exists —
+its per-moment ASCII grid scaled with the qubit count for no gain over the STIM body. The
+format tabs are STIM and QASM. Everything else here still holds; the mentions are left as
+written because this document is a record of what was decided at the time.
+
 ## Context
 
 When circuits are added to QECirc, they may undergo qubit permutation/canonicalization to match the code's canonical form. The original submission data (pre-permutation STIM circuit and contributor-provided check matrices) is currently discarded. Users should be able to access this original data for verification and debugging — if something looks wrong, they can compare the canonical form against the original submission.

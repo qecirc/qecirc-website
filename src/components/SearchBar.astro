@@ -13,7 +13,6 @@
   <ul
     class="search-results absolute right-0 top-full mt-1 w-96 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg hidden z-50 max-h-80 overflow-y-auto"
     role="listbox"
-    aria-live="polite"
     aria-label="Search results"
   >
   </ul>
@@ -26,6 +25,23 @@
   // runs this script once, so each instance is wired up individually.
   document.querySelectorAll<HTMLElement>(".search-bar").forEach(initSearchBar);
 
+  type SearchResult = {
+    type: string;
+    name: string;
+    slug: string;
+    qec_id?: string;
+    params: string;
+    tags: string[];
+    href: string;
+    subtitle?: string;
+  };
+
+  // Only the newest request may write to a dropdown. Responses can arrive out
+  // of order, and a slow one landing last would replace the list with results
+  // for a query the user has already typed past. Shared by both instances --
+  // only one of them is ever visible, so only one is ever being typed into.
+  let latestSearch = 0;
+
   function initSearchBar(container: HTMLElement, instance: number) {
   const input = container.querySelector("input") as HTMLInputElement;
   const resultsList = container.querySelector("ul") as HTMLUListElement;
@@ -34,12 +50,30 @@
   let activeIndex = -1;
   let cachedItems: NodeListOf<HTMLLIElement> | HTMLLIElement[] = [];
 
+  // The combobox wiring is applied here rather than in the markup for two
+  // reasons: the dropdown only exists when this script runs (without JS the
+  // input is a plain search field and must not claim to own a popup), and the
+  // layout renders two SearchBars, so the listbox id has to be per-instance --
+  // the same `instance` index the option ids below already use.
+  resultsList.id = `search-results-${instance}`;
+  input.setAttribute("role", "combobox");
+  input.setAttribute("aria-controls", resultsList.id);
+  input.setAttribute("aria-autocomplete", "list");
+  input.setAttribute("aria-expanded", "false");
+
   function show() {
     resultsList.classList.remove("hidden");
+    input.setAttribute("aria-expanded", "true");
   }
 
   function hide() {
+    // Bump the generation too. Dismissing the dropdown — Escape, an outside
+    // click, or backspacing below the two-character floor, which calls this —
+    // must also abandon whatever is in flight, or that response reopens a list
+    // the user just closed, or answers a query they have already deleted.
+    latestSearch++;
     resultsList.classList.add("hidden");
+    input.setAttribute("aria-expanded", "false");
     activeIndex = -1;
     input.removeAttribute("aria-activedescendant");
   }
@@ -72,11 +106,27 @@
       return;
     }
 
-    const res = await fetch("/api/search?q=" + encodeURIComponent(query));
-    const results: { type: string; name: string; slug: string; qec_id?: string; params: string; tags: string[]; href: string; subtitle?: string }[] = await res.json();
+    const seq = ++latestSearch;
+    let results: SearchResult[];
+    try {
+      const res = await fetch("/api/search?q=" + encodeURIComponent(query));
+      // A 5xx answers with an HTML error page, so res.json() rejects. This runs
+      // from a setTimeout with its promise dropped, where that rejection is
+      // unhandled and freezes the dropdown on stale results; leave the previous
+      // list up instead -- the next keystroke retries.
+      if (!res.ok) return;
+      results = await res.json();
+    } catch {
+      return;
+    }
+    if (seq !== latestSearch) return;
 
     resultsList.innerHTML = "";
     activeIndex = -1;
+    // The active item is about to be removed from the DOM; an
+    // aria-activedescendant naming a node that no longer exists points a
+    // screen reader at nothing.
+    input.removeAttribute("aria-activedescendant");
     cachedItems = [];
 
     if (results.length === 0) {
@@ -193,6 +243,17 @@
     } else if (e.key === "Escape") {
       hide();
     }
+  });
+
+  // Tabbing out of the input leaves a dropdown that still reports itself as
+  // expanded on a combobox nothing is focused on. Guarded on a non-null
+  // relatedTarget: the result <li>s are not focusable, so pressing the mouse on
+  // one blurs the input with relatedTarget null, and hiding there would take
+  // the item away between mousedown and the click that navigates. Pointer
+  // dismissal is the document listener below.
+  input.addEventListener("focusout", function (e) {
+    const next = (e as FocusEvent).relatedTarget as Node | null;
+    if (next && !container.contains(next)) hide();
   });
 
   document.addEventListener("click", function (e) {

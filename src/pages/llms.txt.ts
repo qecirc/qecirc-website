@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getAllCodes, formatCodeParams } from "../lib/queries";
+import { getAllCodes, codeDisplayName } from "../lib/queries";
 
 export const prerender = false;
 
@@ -13,8 +13,7 @@ export const GET: APIRoute = ({ site }) => {
   const totalCircuits = codes.reduce((sum, c) => sum + c.circuit_count, 0);
 
   const codeLines = codes.map((c) => {
-    const params = formatCodeParams(c);
-    const label = params === "" || c.name === params ? c.name : `${c.name} ${params}`;
+    const label = codeDisplayName(c);
     const n = c.circuit_count;
     return `- [${label}](${base}/codes/${c.slug}): ${n} circuit${n !== 1 ? "s" : ""}`;
   });
@@ -23,7 +22,7 @@ export const GET: APIRoute = ({ site }) => {
 
 > A community-driven library for quantum error correction (QEC) circuits. Browse and download reusable STIM circuits — encoding, state preparation, syndrome extraction, and more — organized by error-correcting code. ${codes.length} codes, ${totalCircuits} circuits.
 
-Circuits are stored in STIM format and also offered as QASM and Cirq. Each code page lists its circuits with metrics (gate count, two-qubit gate count, depth, qubit count) and links to the original source. Circuit data is licensed CC BY-SA 4.0; please cite the source of each circuit when using it.
+Circuits are stored in STIM format and also offered as QASM. Each code page lists its circuits with metrics (gate count, two-qubit gate count, depth, qubit count) and links to the original source. Circuit data is licensed CC BY-SA 4.0; please cite the source of each circuit when using it.
 
 ## Codes
 

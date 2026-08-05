@@ -1,0 +1,60 @@
+# Configuration for the `typos` pre-commit hook.
+#
+# Without this the hook does not merely report — it REWRITES, and on this
+# repository it rewrites working code into syntax errors. `anc` is how the
+# ingestion scripts spell "ancilla", and `typos` is confident it meant `and`:
+#
+#     for row, anc in enumerate(...)   ->   for row, and in enumerate(...)
+#
+# 29 occurrences across data-imports/ and scripts/. It also translates the
+# German legal pages into English one word at a time (`Sie` -> `Size`,
+# `oder` -> `order`, `ist` -> `is`), which would quietly corrupt a compliance
+# document, and Americanises British spellings the prose uses deliberately.
+#
+# So: exclude the German pages, name the vocabulary, and set the locale.
+
+[files]
+extend-exclude = [
+  # Required by German law and written in German. Every word in them is a
+  # "typo" to an English dictionary.
+  "src/pages/legal.astro",
+  "src/pages/privacy.astro",
+  # Generated, content-addressed, and machine-read. A spell-checker has no
+  # business here: 32 circuit files reference a matrices digest such as
+  # `18ed8bee546ba80f`, and `typos` reads the `ba` in it as a misspelt `by`.
+  # "Correcting" one breaks the reference and fails `npm run db:create`.
+  # Circuit bodies and check matrices are data, not prose.
+  "data_yaml/",
+  # The changelog quotes what the code and data contain — including, in the
+  # entry that added this file, the German words and the digest above. A record
+  # of a spelling problem trips the spell-checker by construction, and it will
+  # keep doing so every time an entry quotes a literal.
+  "CHANGELOG.md",
+]
+
+# No `locale` is set on purpose. The obvious move is `en-gb`, since the prose
+# is British — and it is wrong: identifiers here are American by necessity
+# (Tailwind's `text-center`, the `/favorites` route, "Color Code" as a code's
+# actual name), so `en-gb` turns 178 findings into 2233 and wants to rewrite
+# class names. The default locale accepts both for `colour`/`canonicalisation`;
+# `uncatalogued` is the one word it does not, and it is listed below.
+
+[default.extend-words]
+uncatalogued = "uncatalogued"
+
+# QEC and quantum-computing vocabulary.
+anc = "anc"     # ancilla, throughout the importers and add_circuit
+ANC = "ANC"
+ket = "ket"     # |psi>, as in "ket notation"
+IZ = "IZ"       # a two-qubit Pauli string; likewise XZ, ZI, ...
+iz = "iz"
+
+# Fragments that are correct in context.
+prepar = "prepar" # the FTS5 prefix query `prepar*` in migration 016
+mis = "mis"       # "mis-ranking", hyphenated
+PN = "PN"
+
+[default.extend-identifiers]
+# Author and citation names, in data_yaml/papers/.
+Wille = "Wille" # Robert Wille
+Lond = "Lond"   # Proc. R. Soc. Lond., the Steane 1996 citation

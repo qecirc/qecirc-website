@@ -60,6 +60,7 @@ const TAB_BASE_CLASS =
           class:list={[TAB_BASE_CLASS, i === 0 ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS]}
           data-format={b.format}
           title={`Switch to ${b.format.toUpperCase()} (${i + 1})`}
+          aria-pressed={i === 0}
         >
           {b.format.toUpperCase()}
           {i < 3 && (

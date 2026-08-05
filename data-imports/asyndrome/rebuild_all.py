@@ -10,7 +10,8 @@ is the tick assignment, so the emitter never re-packs it.
 One schedule becomes one library circuit: a single syndrome-extraction round.
 ``scripts/add_circuit/syndrome_extraction.build_se_round`` does the emitting and
 ``validate_syndrome_extraction_h`` gates every import — 10 of the dataset's 69
-schedules do not survive that check. See README.md for which, and why.
+schedules do not survive that check, and 4 more belong to codes their author has
+since asked us to leave out. 55 are imported; see README.md for the rest.
 
 Usage:
   python rebuild_all.py                    # classify only (no writes)
@@ -64,11 +65,6 @@ FAMILY = {
         "https://errorcorrectionzoo.org/c/488_color",
         ["CSS", "self-dual", "color-code", "topological"],
     ),
-    "Defect Surface Code": (
-        "Surface Code with Defects",
-        "",
-        ["CSS", "surface-code", "topological"],
-    ),
     "Hyperbolic Surface Code": (
         "Hyperbolic Surface Code",
         "https://errorcorrectionzoo.org/c/hyperbolic_surface",
@@ -101,7 +97,10 @@ DECODER = {
 }
 
 # Codes excluded outright, with the reason recorded for the README.
-EXCLUDED_CODES: dict[str, str] = {}
+EXCLUDED_CODES: dict[str, str] = {
+    "defect-5": "exploratory, not a result of the paper (upstream author, qecirc-website#135)",
+    "defect-7": "exploratory, not a result of the paper (upstream author, qecirc-website#135)",
+}
 
 # Codes whose cheap invariants align with a stored code that is NOT the same
 # code. `assume_new` is only safe with a proof, so the proof sits next to the
@@ -119,20 +118,11 @@ ASSUME_NEW = {
 }
 
 # Distances computed exactly by code_distance.py and committed here rather than
-# recomputed on every import. The enumeration is exhaustive, so these are the
-# distances, not bounds. Two reasons a code appears here:
-#
-#   self-dual-bbcode  the dataset ships `d: -1` — no distance at all.
-#   defect-5/-7       the dataset's declared d is the nominal lattice distance,
-#                     not the distance of the matrices it ships. Both have a
-#                     weight-2 X-logical — and it is the file's own second
-#                     `logical_xs` entry, supports {1,8} and {2,11}. Storing 5
-#                     and 7 would make the library's [[n,k,d]] contradict the
-#                     `h` printed beside it.
+# recomputed on every import. The enumeration is exhaustive, so this is the
+# distance, not a bound. `self-dual-bbcode` needs it because the dataset ships
+# `d: -1` — no distance at all.
 DISTANCE = {
     "self-dual-bbcode": 6,
-    "defect-5": 2,
-    "defect-7": 2,
 }
 
 # Two dataset codes that are one stored code: at d=3 both colour-code lattices
@@ -150,8 +140,6 @@ LATTICE = {
 # finds in the paper. The reasoning belongs in this README, not on 56 circuit
 # pages.
 DISTANCE_NOTE = {
-    "defect-5": "Stored d=2, not the source's 5: one of its own logical X operators has weight 2.",
-    "defect-7": "Stored d=2, not the source's 7: one of its own logical X operators has weight 2.",
     "self-dual-bbcode": "Stored d=6, computed exactly; the source gives none.",
 }
 
@@ -189,11 +177,10 @@ def load_code(path: Path) -> Code:
       Z-strings — and the dataset's own code reads the character, so everything
       downstream of it is self-consistent. Reading the key would silently build
       the wrong matrices.
-    * **A qubit in no stabilizer is not part of the code.** The two defect codes
-      each carry one (index 12 and 20): the stabilizer group gives k = 3 where
-      the file declares k = 2, and neither logical touches the qubit. It is
-      dropped and the remaining qubits are renumbered, which is a relabeling of
-      the schedule and nothing more.
+    * **A qubit in no stabilizer is not part of the code.** Such a qubit is
+      dropped and the rest renumbered, which is a relabeling of the schedule and
+      nothing more. No code currently imported has one — the two that did are
+      the excluded defect codes, where it was the defect itself.
     """
     doc = json.loads(path.read_text())
     stabilizers = doc["x_stabilizers"] + doc["z_stabilizers"]

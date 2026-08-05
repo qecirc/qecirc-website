@@ -1,7 +1,7 @@
 ---
 import TagList from "./TagList.astro";
 import type { CodeWithMeta } from "../types";
-import { formatCodeParams } from "../lib/queries";
+import { formatCodeParams, showCodeParams } from "../lib/queries";
 
 interface Props {
   code: CodeWithMeta;
@@ -20,7 +20,7 @@ const { name, slug, tags, circuit_count } = code;
 // title. Suppressed where the name IS the parameter string (e.g. "[[11,1,3]]"),
 // which would otherwise print twice.
 const params = formatCodeParams(code);
-const showParams = params !== "" && name !== params;
+const showParams = showCodeParams(code);
 
 // Row data consumed by list-filter-client.ts (client-side filtering/sorting).
 const rowMetrics = JSON.stringify({ n: code.n, k: code.k, d: code.d ?? null });
@@ -33,7 +33,7 @@ const numCls = "px-2 py-2 text-right align-baseline font-mono text-[13px] tabula
 ---
 
 <tr
-  class="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/40"
+  class="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
   tabindex="0"
   data-list-row
   data-filter-row

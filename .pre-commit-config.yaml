@@ -8,8 +8,14 @@ repos:
     rev: v6.0.0
     hooks:
       - id: check-merge-conflict
+      # data_yaml/ holds circuit bodies (.stim/.qasm/.stim-annotated) written
+      # byte-for-byte by the ingestion pipeline. These two hooks rewrite them —
+      # thousands of files on a full run — which dirties the whole library to no
+      # purpose and puts the stored body out of step with what the pipeline emits.
       - id: end-of-file-fixer
+        exclude: ^data_yaml/
       - id: trailing-whitespace
+        exclude: ^data_yaml/
       - id: check-yaml
       - id: check-json
       - id: check-added-large-files

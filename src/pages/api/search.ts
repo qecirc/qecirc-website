@@ -8,6 +8,7 @@ import {
   correctTokens,
   tokenizeQuery,
   formatCodeParams,
+  showCodeParams,
   formatCircuitId,
   MIN_QUERY_LENGTH,
 } from "../../lib/queries";
@@ -36,12 +37,13 @@ export const GET: APIRoute = ({ url }) => {
   const q = changed ? tokens.join(" ") : raw;
 
   const codes = searchCodes(q).map((c) => {
-    const params = formatCodeParams(c);
     return {
       type: "code" as const,
       name: c.name,
       slug: c.slug,
-      params: c.name === params ? "" : params,
+      // The dropdown renders name and params as adjacent spans, so a name that
+      // already carries them ("Gottesman [[8,3,3]] Code") must send none.
+      params: showCodeParams(c) ? formatCodeParams(c) : "",
       tags: c.tags,
       href: `/codes/${c.slug}`,
     };

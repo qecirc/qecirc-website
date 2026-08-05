@@ -19,6 +19,7 @@ import {
   formatCitation,
 } from "../../lib/queries";
 import { buildStimFilename } from "../../lib/filename";
+import { ANNOTATED_FORMAT, ANNOTATED_OF, crumbleLinks } from "../../lib/stim-format";
 import { notFound } from "../../lib/not-found";
 
 const qecId = Number(Astro.params.qec_id);
@@ -49,6 +50,16 @@ const stimFilename = buildStimFilename({
   depth: circuit.depth,
   qubitCount: circuit.qubit_count,
 });
+
+// Derived here rather than stored: a Crumble URL is a pure string transform of
+// the body, which this page already has in full. Rendered server-side so the
+// link works without JS; body-view-client repoints it when the Detectors switch
+// moves. Null when the circuit has no STIM body, or when the derived string
+// exceeds CRUMBLE_MAX_URL_LENGTH — a link no browser opens is not worth the
+// kilobytes it would add to this page's HTML.
+const stimBody = bodies.find((b) => b.format === ANNOTATED_OF)?.body;
+const annotatedBody = bodies.find((b) => b.format === ANNOTATED_FORMAT)?.body?.trimEnd();
+const crumbleUrl = stimBody ? (crumbleLinks(stimBody.trimEnd(), annotatedBody)?.plain ?? null) : null;
 
 const hasOriginalMatrices = original?.has_original_matrices === 1;
 const originalsUrl = `/api/circuits/${qecId}/originals`;
@@ -153,18 +164,16 @@ const jsonLd = [
         </a>
       </div>
     )}
-    {(circuit.crumble_url || circuit.quirk_url) && (
+    {(crumbleUrl || circuit.quirk_url) && (
       <div class="flex items-center gap-3">
         <span class="text-gray-500 dark:text-gray-400">View in:</span>
-        {circuit.crumble_url && (
+        {crumbleUrl && (
           <a
-            href={circuit.crumble_url}
+            href={crumbleUrl}
             class="underline hover:text-gray-900 dark:hover:text-gray-100"
             target="_blank"
             rel="noopener"
             data-crumble-link
-            data-crumble-url={circuit.crumble_url}
-            data-crumble-url-annotated={circuit.crumble_url_annotated ?? undefined}
           >
             Crumble &#x2197;
           </a>
@@ -247,7 +256,13 @@ const jsonLd = [
       setFavState(favBtn, isFavorite(qecId));
 
       favBtn.addEventListener("click", function () {
-        setFavState(favBtn, toggleFavorite(qecId));
+        try {
+          setFavState(favBtn, toggleFavorite(qecId));
+        } catch {
+          // Nothing was stored, so the heart must not change: a filled heart
+          // that survives no reload is worse than no heart at all.
+          // toggleFavorite has already told the user why.
+        }
       });
     });
   }
