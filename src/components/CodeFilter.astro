@@ -21,14 +21,15 @@ const DEFAULT_SORT_FIELD: CodeSortField = "n";
 
 // w-full below sm so the box fills its grid column; the fixed w-24 above it
 // keeps the flex-wrap row as it was.
-const INPUT_CLASS = "w-full min-w-0 sm:w-24 px-2 py-1 text-sm focus:outline-none bg-transparent";
+const INPUT_CLASS =
+  "w-full min-w-0 sm:w-24 px-2 py-1 font-mono text-[13px] focus:outline-none bg-transparent";
 
 function labelInfo(field: CodeSortField) {
   const isActive = field === DEFAULT_SORT_FIELD;
   return {
     arrow: isActive ? "▲" : "",
     cls: isActive
-      ? "text-amber-600 dark:text-amber-400 font-semibold cursor-pointer"
+      ? "text-amber-700 dark:text-amber-400 font-semibold cursor-pointer"
       : "text-gray-600 dark:text-gray-400 font-medium hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer",
   };
 }
@@ -52,8 +53,8 @@ const tagGroups = CODE_TAG_CATEGORIES.map((c) => ({
     {FIELDS.map((field) => {
       const info = labelInfo(field);
       return (
-        <div class="flex items-center gap-1.5 rounded border border-gray-300 dark:border-gray-700 px-1.5 py-0.5 min-w-0">
-          <a href={sortHref(field)} data-sort-field={field} class={`px-1 py-0.5 text-xs transition-colors ${info.cls}`} title={`Click to sort by ${field}`}>
+        <div class="flex items-center gap-1.5 border border-gray-300 dark:border-gray-700 px-1.5 py-0.5 min-w-0">
+          <a href={sortHref(field)} data-sort-field={field} class={`px-1 py-0.5 font-mono text-xs transition-colors ${info.cls}`} title={`Click to sort by ${field}`}>
             {field}<span data-sort-arrow class="ml-0.5 text-[10px] text-gray-500 dark:text-gray-500">{info.arrow}</span>
           </a>
           <input id={`filter-${field}`} type="text" name={field} class={INPUT_CLASS} aria-label={`Filter by ${field}`} data-filter />

@@ -13,6 +13,14 @@ const allTags = getTagsWithCount("code");
 const codes = filterCodes({});
 const totalCount = codes.length;
 
+// The table's sortable parameter columns. `n` renders active because the
+// server's default order is n ascending (matches defaultSort below).
+const SORT_COLUMNS = [
+  { field: "n", active: true },
+  { field: "k", active: false },
+  { field: "d", active: false },
+];
+
 const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
 const pageUrl = `${siteUrl}/codes`;
 const jsonLd = [
@@ -53,7 +61,7 @@ const jsonLd = [
 
   <CodeFilter allTags={allTags} basePath="/codes" />
 
-  <p data-list-count class="text-sm text-gray-500 mb-4">
+  <p data-list-count class="font-mono text-xs text-gray-500 dark:text-gray-400 mb-4">
     {totalCount} {totalCount === 1 ? "code" : "codes"}
   </p>
 
@@ -62,10 +70,37 @@ const jsonLd = [
     <a href="/codes" data-clear-filters class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
   </div>
 
-  <div class="grid gap-4" data-list-container>
-    {codes.map((code) => (
-      <CodeCard code={code} basePath="/codes" />
-    ))}
+  {/* A ruled table, not a card grid: 38 codes are tabular data, and the
+      header row doubles as the sort control. Sort headers carry no colour of
+      their own so the inactive state inherits the th's gray — that lets
+      list-filter-client toggle SORT_HEADER_ACTIVE on top without the two
+      colour utilities fighting over specificity. */}
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse">
+      <thead>
+        <tr class="border-b-2 border-gray-900 dark:border-gray-100 text-gray-500 dark:text-gray-400">
+          <th class="py-1.5 pr-3 text-left font-mono text-[11px] font-semibold uppercase tracking-wider">Code</th>
+          {SORT_COLUMNS.map(({ field, active }) => (
+            <th class="py-1.5 px-2 text-right font-mono text-[13px] font-semibold">
+              <a
+                href={`/codes?sort=${field}&sort_dir=asc`}
+                data-sort-field={field}
+                data-sort-header
+                class:list={["hover:underline", active && "text-amber-700 dark:text-amber-400"]}
+                title={`Sort by ${field}`}
+              >{field}<span data-sort-arrow class="ml-0.5 text-[9px]">{active ? "▲" : ""}</span></a>
+            </th>
+          ))}
+          <th class="py-1.5 px-2 text-right font-mono text-[11px] font-semibold uppercase tracking-wider">Circuits</th>
+          <th class="py-1.5 pl-4 text-right font-mono text-[11px] font-semibold uppercase tracking-wider hidden md:table-cell">Tags</th>
+        </tr>
+      </thead>
+      <tbody data-list-container>
+        {codes.map((code) => (
+          <CodeCard code={code} basePath="/codes" />
+        ))}
+      </tbody>
+    </table>
   </div>
 </Layout>
 

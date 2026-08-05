@@ -28,7 +28,7 @@ export const TAB_INACTIVE_CLASS =
 export const TAG_SELECTED =
   "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300";
 export const TAG_UNSELECTED =
-  "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700";
+  "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:underline";
 
 export const DROPDOWN_ENTRY_SELECTED = TAG_SELECTED;
 export const DROPDOWN_ENTRY_UNSELECTED =

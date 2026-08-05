@@ -1,7 +1,6 @@
 ---
 import TagList from "./TagList.astro";
 import type { CodeWithMeta } from "../types";
-import { formatCodeParams } from "../lib/queries";
 
 interface Props {
   code: CodeWithMeta;
@@ -15,16 +14,19 @@ interface Props {
 
 const { code, basePath, baseUrl, selectedTags } = Astro.props;
 const { name, slug, tags, circuit_count } = code;
-const params = formatCodeParams(code);
-const showParams = params !== "" && name !== params;
 
 // Row data consumed by list-filter-client.ts (client-side filtering/sorting).
 const rowMetrics = JSON.stringify({ n: code.n, k: code.k, d: code.d ?? null });
 const rowTags = JSON.stringify(tags);
+
+// n, k and d are columns of their own (the table header sorts on them), so a
+// missing value shows as a dash rather than being omitted — the column keeps
+// its width either way.
+const numCls = "px-2 py-2 text-right align-baseline font-mono text-[13px] tabular-nums";
 ---
 
-<div
-  class="rounded border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+<tr
+  class="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/40"
   tabindex="0"
   data-list-row
   data-filter-row
@@ -32,14 +34,20 @@ const rowTags = JSON.stringify(tags);
   data-metrics={rowMetrics}
   data-tags={rowTags}
 >
-  <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-    <a href={`/codes/${slug}`} class="flex items-baseline gap-2" data-list-link>
-      <h3 class="font-medium">{name}</h3>
-      {showParams && <span class="text-sm text-gray-500 dark:text-gray-400">{params}</span>}
-      <span class="text-xs text-gray-500 dark:text-gray-400">{circuit_count} {circuit_count === 1 ? "circuit" : "circuits"}</span>
-    </a>
-    <div class="ml-auto">
-      <TagList tags={tags} basePath={basePath} baseUrl={baseUrl} selectedTags={selectedTags} />
-    </div>
-  </div>
-</div>
+  <td class="py-2 pr-3 align-baseline">
+    <a href={`/codes/${slug}`} class="text-sm font-medium hover:underline" data-list-link>{name}</a>
+  </td>
+  <td class={numCls}>{code.n ?? "–"}</td>
+  <td class={numCls}>{code.k ?? "–"}</td>
+  <td class={numCls}>{code.d ?? "–"}</td>
+  <td class={`${numCls} text-gray-500 dark:text-gray-400`}>{circuit_count}</td>
+  <td class="py-2 pl-4 align-baseline hidden md:table-cell">
+    <TagList
+      tags={tags}
+      basePath={basePath}
+      baseUrl={baseUrl}
+      selectedTags={selectedTags}
+      class="justify-end"
+    />
+  </td>
+</tr>

@@ -69,12 +69,12 @@ interface ListState {
 // CircuitFilter.astro / CodeFilter.astro — KEEP THOSE IN SYNC.
 // ---------------------------------------------------------------------------
 
-const SORT_LABEL_ACTIVE = "text-amber-600 dark:text-amber-400 font-semibold cursor-pointer";
+const SORT_LABEL_ACTIVE = "text-amber-700 dark:text-amber-400 font-semibold cursor-pointer";
 const SORT_LABEL_INACTIVE =
   "text-gray-600 dark:text-gray-400 font-medium hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer";
 
 // Column-header links ([data-sort-header]) only toggle the highlight classes.
-const SORT_HEADER_ACTIVE = "text-amber-600 dark:text-amber-400";
+const SORT_HEADER_ACTIVE = "text-amber-700 dark:text-amber-400";
 
 const CHIP_X_ICON =
   '<svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18L18 6M6 6l12 12" /></svg>';
@@ -322,7 +322,7 @@ export function initListFilter(config: ListFilterConfig): void {
       a.href = `${config.basePath}?tag=${encodeURIComponent(tag)}`;
       a.dataset.tag = tag;
       a.title = `Remove tag filter "${tag}"`;
-      a.className = `inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors ${TAG_SELECTED}`;
+      a.className = `inline-flex items-center gap-1 px-1.5 py-0.5 font-mono text-xs transition-colors ${TAG_SELECTED}`;
       a.textContent = tag;
       a.insertAdjacentHTML("beforeend", CHIP_X_ICON);
       chipsEl.append(a);

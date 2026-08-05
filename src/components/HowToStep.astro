@@ -34,7 +34,7 @@ const flip = n % 2 === 0;
     reaches the edges and the two meet flush. overflow-hidden clips the fill to
     the rounded corners. */}
 <div
-  class="rounded border border-gray-200 dark:border-gray-800 overflow-hidden grid sm:grid-cols-2"
+  class="border border-gray-200 dark:border-gray-800 overflow-hidden grid sm:grid-cols-2"
 >
   <div class:list={["p-4 bg-gray-50 dark:bg-gray-900", flip && "sm:order-2"]}>
     <h3 class="font-medium mb-1 flex items-baseline gap-2">
@@ -47,9 +47,7 @@ const flip = n % 2 === 0;
     <a href={href} class="text-sm font-medium prose-link">{cta} &#8594;</a>
   </div>
   <div class:list={["p-4 min-w-0", flip && "sm:order-1"]}>
-    <p
-      class="text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5"
-    >
+    <p class="font-mono text-[11px] text-gray-500 dark:text-gray-400 mb-1.5">
       {previewLabel}
     </p>
     <slot />
