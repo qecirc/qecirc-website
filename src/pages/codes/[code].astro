@@ -9,6 +9,7 @@ import CircuitBodiesTemplate from "../../components/CircuitBodiesTemplate.astro"
 import CodeMatrices from "../../components/CodeMatrices.astro";
 import CodeMatricesDownload from "../../components/CodeMatricesDownload.astro";
 import CollapsibleSection from "../../components/CollapsibleSection.astro";
+import DensityToggle from "../../components/DensityToggle.astro";
 import HeartIcon from "../../components/HeartIcon.astro";
 import {
   getCodeBySlug,
@@ -233,7 +234,7 @@ const jsonLd = [
         <a href={sortHref("two_qubit_gate_count")} data-sort-field="two_qubit_gate_count" data-sort-header class="text-right hover:text-gray-900 dark:hover:text-gray-100 text-amber-700 dark:text-amber-400" title="Two-qubit gate count — click to sort">2Q</a>
         <a href={sortHref("depth")} data-sort-field="depth" data-sort-header class="text-right hover:text-gray-900 dark:hover:text-gray-100" title="Circuit depth — click to sort">D</a>
         <a href={sortHref("qubit_count")} data-sort-field="qubit_count" data-sort-header class="text-right hover:text-gray-900 dark:hover:text-gray-100" title="Qubit count — click to sort">Q</a>
-        <span class="text-right">Tags</span>
+        <span class="text-right">Tags<DensityToggle /></span>
       </div>
       <div data-list-empty class="hidden text-center py-8">
         <p class="text-gray-500 dark:text-gray-400 mb-2">No circuits match your filters.</p>

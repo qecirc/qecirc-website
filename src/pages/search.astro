@@ -159,9 +159,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
               storageKey="qecirc:tag-view"
               baseUrl={Astro.url}
               selectedTags={selectedTags}
-            >
-              <DensityToggle />
-            </TagFilterDropdowns>
+            />
           )}
         </div>
       </details>
@@ -259,7 +257,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
             <span class="text-right text-amber-700 dark:text-amber-400" title="Two-qubit gate count">2Q</span>
             <span class="text-right" title="Circuit depth">D</span>
             <span class="text-right" title="Qubit count">Q</span>
-            <span class="text-right">Tags</span>
+            <span class="text-right">Tags<DensityToggle /></span>
           </div>
           <div class="border-t-2 border-gray-900 dark:border-gray-100">
             {results.map((circuit) => (
