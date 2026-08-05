@@ -14,10 +14,13 @@ export const FILTER_PART_REGEX = /^(!=|>=|<=|>|<|=)?\s*(\d+)$/;
 
 // Shared tab-toggle styling (FormatSwitcher, CodeMatrices). Compose with any
 // component-specific base classes (e.g. `format-tab`, `code-matrix-toggle`,
-// focus rings) at the call site.
-export const TAB_ACTIVE_CLASS = "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900";
+// focus rings) at the call site. Both carry border-b-2 so switching tabs
+// never shifts the layout: the active tab underlines, it does not fill —
+// a solid ink block read heavier than the content it labelled.
+export const TAB_ACTIVE_CLASS =
+  "text-gray-900 dark:text-gray-100 border-b-2 border-gray-900 dark:border-gray-100";
 export const TAB_INACTIVE_CLASS =
-  "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100";
+  "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 border-b-2 border-transparent";
 
 // Tag styling shared by the client-side filter (list-filter-client.ts, which
 // swaps these at runtime) and the server-rendered markup (TagList.astro,

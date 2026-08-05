@@ -83,8 +83,12 @@ const stimFilename = buildStimFilename({
       <path d="M9 5l7 7-7 7" />
     </svg>
 
+    {/* hidden below md: long ids (#1106) overran their 1.5rem track and
+        collided with the heart. The id stays reachable there through the
+        expanded panel's ID button and the detail page; --circuit-grid drops
+        the track to match (see global.css). */}
     <button
-      class="circuit-permalink text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 font-mono text-xs shrink-0 cursor-pointer"
+      class="circuit-permalink hidden md:block text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 font-mono text-xs shrink-0 cursor-pointer"
       aria-label="Copy link to circuit"
       title="Copy link"
       data-qec-id={anchorId}
@@ -114,7 +118,7 @@ const stimFilename = buildStimFilename({
         col-start-4 is the name's column, so the metrics line up under the name
         without hard-coding the width of the three columns before it.
         See --circuit-grid in global.css. */}
-    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 col-start-4 order-1 mt-1.5 md:contents">
+    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 col-start-3 order-1 mt-1.5 md:contents">
       <span class="text-center">
         <MetricBadge value={circuit.gate_count} label="G:" labelClass="md:hidden" title="Gate count" />
       </span>
