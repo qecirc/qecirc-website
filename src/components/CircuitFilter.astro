@@ -54,7 +54,10 @@ const tagGroups = TAG_CATEGORIES.map((c) => ({
 }));
 ---
 
-<form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2 sm:sticky sm:top-0 sm:z-20 bg-white dark:bg-gray-950 sm:border-b sm:border-gray-200 sm:dark:border-gray-800 sm:pb-4 sm:-mb-2">
+{/* No border-b on the sticky bar: the list header's own heavy rule sits just
+    below it, and the extra hairline read as a second, stray line. The solid
+    background still masks rows scrolling underneath. */}
+<form id="circuit-filter" method="GET" action={basePath} class="mb-6 space-y-2 sm:sticky sm:top-0 sm:z-20 bg-white dark:bg-gray-950 sm:pb-4 sm:-mb-2">
   {/* An even 2-up grid below sm. Left to flex-wrap, the boxes measure 160-188px
       against a 343px line -- close enough to differ, too wide to pair -- so they
       landed one, one, two down the page. Above sm they all fit and flex-wrap is

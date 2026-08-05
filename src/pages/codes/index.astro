@@ -77,9 +77,9 @@ const jsonLd = [
     <table class="w-full border-collapse">
       <thead>
         <tr class="border-b-2 border-gray-900 dark:border-gray-100 text-gray-500 dark:text-gray-400">
-          <th class="py-1.5 pr-3 text-left font-mono text-[11px] font-semibold uppercase tracking-wider">Code</th>
+          <th class="pt-1.5 pb-2.5 pr-3 text-left font-mono text-[11px] font-semibold uppercase tracking-wider">Code</th>
           {SORT_COLUMNS.map(({ field, active }) => (
-            <th class="py-1.5 px-2 text-right font-mono text-[13px] font-semibold">
+            <th class="pt-1.5 pb-2.5 px-2 text-right font-mono text-[13px] font-semibold">
               <a
                 href={`/codes?sort=${field}&sort_dir=asc`}
                 data-sort-field={field}
@@ -89,8 +89,8 @@ const jsonLd = [
               >{field}<span data-sort-arrow class="ml-0.5 text-[9px]">{active ? "▲" : ""}</span></a>
             </th>
           ))}
-          <th class="py-1.5 px-2 text-right font-mono text-[11px] font-semibold uppercase tracking-wider">Circuits</th>
-          <th class="py-1.5 pl-4 text-right font-mono text-[11px] font-semibold uppercase tracking-wider">Tags<DensityToggle /></th>
+          <th class="pt-1.5 pb-2.5 px-2 text-right font-mono text-[11px] font-semibold uppercase tracking-wider">Circuits</th>
+          <th class="pt-1.5 pb-2.5 pl-4 text-right font-mono text-[11px] font-semibold uppercase tracking-wider">Tags<DensityToggle /></th>
         </tr>
       </thead>
       <tbody data-list-container>

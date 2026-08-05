@@ -70,6 +70,12 @@
 html:not([data-density="full"]) .circuit-tags > a:nth-child(n + 2) {
   display: none;
 }
+/* Compact shows at most one chip and the count — never let those two wrap:
+   in a squeezed table cell (codes list on a phone) the flex-wrap fallback
+   stacked "CSS" over "+1" and doubled the row height. */
+html:not([data-density="full"]) .circuit-tags {
+  flex-wrap: nowrap;
+}
 html[data-density="full"] .circuit-tags > .tags-rest {
   display: none;
 }
