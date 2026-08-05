@@ -45,6 +45,15 @@ const rowMetrics = JSON.stringify({
 const rowTags = JSON.stringify(circuit.tags);
 const anchorId = String(circuit.qec_id);
 
+// The row shows at most two tags plus a "+k" rest-count: full lists wrapped
+// to three lines in the tags column and tripled the row height. The complete
+// set stays one click away (detail page, or expand), the dropdowns above the
+// list filter on every tag regardless, and data-tags (above) still carries
+// them all for the client-side filter.
+const MAX_ROW_TAGS = 2;
+const visibleTags = circuit.tags.slice(0, MAX_ROW_TAGS);
+const hiddenTags = circuit.tags.slice(MAX_ROW_TAGS);
+
 const stimFilename = buildStimFilename({
   codeSlug: codeSlug,
   circuitSlug: circuit.slug,
@@ -64,7 +73,7 @@ const stimFilename = buildStimFilename({
   data-tags={rowTags}
 >
   <div
-    class="circuit-toggle w-full text-left px-4 py-3 grid items-center gap-x-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-inset"
+    class="circuit-toggle w-full text-left px-2 py-2 grid items-center gap-x-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-inset"
     style="grid-template-columns: var(--circuit-grid);"
     role="button"
     tabindex="0"
@@ -111,29 +120,6 @@ const stimFilename = buildStimFilename({
       <HeartIcon filled class="fav-filled w-3.5 h-3.5 hidden" />
     </button>
 
-    {/* `md:contents` dissolves this wrapper above md, so the four spans go back
-        to being grid items in their own columns and the desktop row is
-        unchanged. Below md the wrapper is one item on a line of its own
-        (order-1) carrying the labels the desktop column headers supply.
-        col-start-4 is the name's column, so the metrics line up under the name
-        without hard-coding the width of the three columns before it.
-        See --circuit-grid in global.css. */}
-    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 col-start-3 order-1 mt-1.5 md:contents">
-      <span class="text-center">
-        <MetricBadge value={circuit.gate_count} label="G:" labelClass="md:hidden" title="Gate count" />
-      </span>
-      <span class="text-center">
-        <MetricBadge value={circuit.two_qubit_gate_count} label="2Q:" labelClass="md:hidden" title="Two-qubit gate count" />
-      </span>
-      <span class="text-center">
-        <MetricBadge value={circuit.depth} label="D:" labelClass="md:hidden" title="Circuit depth" />
-      </span>
-      <span class="text-center">
-        <MetricBadge value={circuit.qubit_count} label="Q:" labelClass="md:hidden" title="Qubit count" />
-      </span>
-    </div>
-
-    <span class="hidden md:block"></span>
     <div class="flex items-baseline gap-2 min-w-0">
       <a href={`/circuits/${circuit.qec_id}`} class="circuit-detail-link font-medium text-sm hover:underline inline-flex items-baseline gap-1 w-fit max-w-full min-w-0" data-list-detail-link>
         <span class="truncate">{circuit.name}</span>
@@ -148,9 +134,31 @@ const stimFilename = buildStimFilename({
       )}
     </div>
 
+    {/* `md:contents` dissolves this wrapper above md, so the four spans become
+        grid items in their own right-aligned columns after the name, matching
+        the codes table. Below md the wrapper is one item on a line of its own
+        (order-1) carrying the labels the desktop column headers supply.
+        col-start-3 is the name's column, so the metrics line up under the name
+        without hard-coding the width of the columns before it.
+        See --circuit-grid in global.css. */}
+    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 col-start-3 order-1 mt-1.5 md:contents">
+      <span class="md:text-right">
+        <MetricBadge value={circuit.gate_count} label="G:" labelClass="md:hidden" title="Gate count" />
+      </span>
+      <span class="md:text-right">
+        <MetricBadge value={circuit.two_qubit_gate_count} label="2Q:" labelClass="md:hidden" title="Two-qubit gate count" />
+      </span>
+      <span class="md:text-right">
+        <MetricBadge value={circuit.depth} label="D:" labelClass="md:hidden" title="Circuit depth" />
+      </span>
+      <span class="md:text-right">
+        <MetricBadge value={circuit.qubit_count} label="Q:" labelClass="md:hidden" title="Qubit count" />
+      </span>
+    </div>
+
     {circuit.tags.length > 0 && (
       <div class="flex flex-wrap gap-1 justify-end col-span-full order-2 mt-1.5 md:col-auto md:order-none md:mt-0 md:justify-self-end">
-        {circuit.tags.map((tag) => (
+        {visibleTags.map((tag) => (
           <a
             href={tagHref(tag)}
             data-tag={tag}
@@ -159,6 +167,14 @@ const stimFilename = buildStimFilename({
             {tag}
           </a>
         ))}
+        {hiddenTags.length > 0 && (
+          <span
+            class="inline-block px-1 py-0.5 font-mono text-xs text-gray-500 dark:text-gray-400"
+            title={hiddenTags.join(", ")}
+          >
+            +{hiddenTags.length}
+          </span>
+        )}
       </div>
     )}
   </div>
@@ -170,7 +186,7 @@ const stimFilename = buildStimFilename({
        a collapsed row fell into buttons and links they could not see. It must
        be kept in step with max-height by every handler that toggles one. -->
   <div class="circuit-detail overflow-hidden transition-[max-height] duration-300 ease-in-out" style="max-height: 0px;" data-circuit-scope inert>
-    <div class="border-t border-gray-200 dark:border-gray-800 px-4 py-4 space-y-3">
+    <div class="border-t border-gray-200 dark:border-gray-800 px-2 py-4 space-y-3">
       <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
         <div>
           <span class="text-gray-500 dark:text-gray-400">ID:</span>{" "}

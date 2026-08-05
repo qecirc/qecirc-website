@@ -222,18 +222,18 @@ const jsonLd = [
           and the numbers carry their own labels. Sorting stays reachable there
           through the filter boxes, whose labels are the same sort links. */}
       <div
-        class="hidden md:grid items-center gap-x-1.5 px-4 py-1.5 font-mono text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400"
+        class="hidden md:grid items-center gap-x-1.5 px-2 py-1.5 font-mono text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400"
         style="grid-template-columns: var(--circuit-grid);"
       >
         <span></span>
         <span></span>
         <span></span>
-        <a href={sortHref("gate_count")} data-sort-field="gate_count" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100" title="Gate count — click to sort">G</a>
-        <a href={sortHref("two_qubit_gate_count")} data-sort-field="two_qubit_gate_count" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100 text-amber-700 dark:text-amber-400" title="Two-qubit gate count — click to sort">2Q</a>
-        <a href={sortHref("depth")} data-sort-field="depth" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100" title="Circuit depth — click to sort">D</a>
-        <a href={sortHref("qubit_count")} data-sort-field="qubit_count" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100" title="Qubit count — click to sort">Q</a>
-        <span></span>
         <span>Name</span>
+        <a href={sortHref("gate_count")} data-sort-field="gate_count" data-sort-header class="text-right hover:text-gray-900 dark:hover:text-gray-100" title="Gate count — click to sort">G</a>
+        <a href={sortHref("two_qubit_gate_count")} data-sort-field="two_qubit_gate_count" data-sort-header class="text-right hover:text-gray-900 dark:hover:text-gray-100 text-amber-700 dark:text-amber-400" title="Two-qubit gate count — click to sort">2Q</a>
+        <a href={sortHref("depth")} data-sort-field="depth" data-sort-header class="text-right hover:text-gray-900 dark:hover:text-gray-100" title="Circuit depth — click to sort">D</a>
+        <a href={sortHref("qubit_count")} data-sort-field="qubit_count" data-sort-header class="text-right hover:text-gray-900 dark:hover:text-gray-100" title="Qubit count — click to sort">Q</a>
+        <span class="text-right">Tags</span>
       </div>
       <div data-list-empty class="hidden text-center py-8">
         <p class="text-gray-500 dark:text-gray-400 mb-2">No circuits match your filters.</p>

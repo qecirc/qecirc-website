@@ -32,8 +32,17 @@
 
 @media (width >= 48rem) {
   :root {
-    /* Last column (tags) caps at 40% of the row so long tag lists wrap
-       instead of forcing a horizontal scroll. */
-    --circuit-grid: 1rem 1.5rem 1.25rem 1.5rem 1.5rem 1.5rem 1.5rem 0.5rem 1fr fit-content(40%);
+    /* chevron | id | heart | name | G | 2Q | D | Q | tags — name before the
+       metrics, matching the codes table: what you scan first sits leftmost,
+       and the numbers right-align into columns. Metric tracks are 1.75rem so
+       four digits of 13px mono fit right-aligned.
+
+       Name and tags are minmax(0, Nfr), NOT fit-content: every row (and the
+       header strip) is its own grid, so any content-sized track would put
+       the metric columns at a different x in every row. fr shares of the
+       same free space land identically everywhere; base 0 keeps a long name
+       (truncate) or tag list (flex-wrap) from stretching its share. */
+    --circuit-grid: 1rem 1.5rem 1.25rem minmax(0, 3fr) 1.75rem 1.75rem 1.75rem 1.75rem
+      minmax(0, 2fr);
   }
 }
