@@ -38,7 +38,7 @@
       document.documentElement.removeAttribute("data-density");
     }
     document.querySelectorAll<HTMLButtonElement>("[data-density-toggle]").forEach((btn) => {
-      btn.textContent = density === "full" ? "show less" : "show all";
+      btn.textContent = density === "full" ? "(show less)" : "(show all)";
       btn.setAttribute("aria-pressed", String(density === "full"));
     });
   }
