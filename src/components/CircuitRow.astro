@@ -165,11 +165,13 @@ const stimFilename = buildStimFilename({
       )}
     </div>
 
-    {/* `md:contents` dissolves this wrapper above md, so the four spans become
-        grid items in their own right-aligned columns after the name, matching
-        the codes table. Below md the wrapper is one item on a line of its own
-        (order-1) carrying the labels the desktop column headers supply.
-        col-start-3 is the name's column, so the metrics line up under the name
+    {/* `md:contents` dissolves this wrapper above md, so the four metric spans
+        AND the tags div become grid items in their own columns after the name,
+        matching the codes table. Below md the wrapper is one flex line of its
+        own (order-1): metrics on the left carrying the labels the desktop
+        column headers supply, tags pushed right by ml-auto — so a compact row
+        is exactly two lines, name then metrics-and-tags, instead of three.
+        col-start-3 is the name's column, so the line starts under the name
         without hard-coding the width of the columns before it.
         See --circuit-grid in global.css. */}
     <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 col-start-3 order-1 mt-1.5 md:contents">
@@ -185,29 +187,28 @@ const stimFilename = buildStimFilename({
       <span class="md:text-right">
         <MetricBadge value={circuit.qubit_count} label="Q:" labelClass="md:hidden" title="Qubit count" />
       </span>
+      {circuit.tags.length > 0 && (
+        <div class="circuit-tags flex flex-wrap gap-1 justify-end min-w-0 ml-auto md:ml-0 md:justify-self-end">
+          {circuit.tags.map((tag) => (
+            <a
+              href={tagHref(tag)}
+              data-tag={tag}
+              class={`circuit-tag inline-block px-1 py-0.5 font-mono text-xs transition-colors ${TAG_UNSELECTED}`}
+            >
+              {tag}
+            </a>
+          ))}
+          {restTags.length > 0 && (
+            <span
+              class="tags-rest inline-block px-1 py-0.5 font-mono text-xs text-gray-500 dark:text-gray-400"
+              title={restTags.join(", ")}
+            >
+              +{restTags.length}
+            </span>
+          )}
+        </div>
+      )}
     </div>
-
-    {circuit.tags.length > 0 && (
-      <div class="circuit-tags flex flex-wrap gap-1 justify-end col-span-full order-2 mt-1.5 md:col-auto md:order-none md:mt-0 md:justify-self-end">
-        {circuit.tags.map((tag) => (
-          <a
-            href={tagHref(tag)}
-            data-tag={tag}
-            class={`circuit-tag inline-block px-1 py-0.5 font-mono text-xs transition-colors ${TAG_UNSELECTED}`}
-          >
-            {tag}
-          </a>
-        ))}
-        {restTags.length > 0 && (
-          <span
-            class="tags-rest inline-block px-1 py-0.5 font-mono text-xs text-gray-500 dark:text-gray-400"
-            title={restTags.join(", ")}
-          >
-            +{restTags.length}
-          </span>
-        )}
-      </div>
-    )}
   </div>
 
   <!-- data-circuit-scope: the Detectors switch lives in the format-tab row but

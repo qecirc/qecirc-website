@@ -144,10 +144,13 @@ const CONTRIBUTE_STEPS = [
   "It appears in the library, credited to its source",
 ];
 
-// Ledger row: a hairline-ruled entry, not a card. The list carries a heavy
-// top rule; rows separate with hairlines and answer hover with a fill.
+// Ledger row: a hairline-ruled entry. The list carries a heavy top rule;
+// rows separate with hairlines and answer hover with a fill.
 const rowCls =
   "flex items-baseline gap-2 flex-wrap px-1 py-2.5 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/60 transition-colors";
+// Ledger card: a square hairline box for the three side-by-side destinations.
+const cardCls =
+  "border border-gray-200 dark:border-gray-800 p-4 hover:bg-gray-50 dark:hover:bg-gray-900/60 transition-colors";
 const previewLabelCls = "font-mono text-[11px] text-gray-500 dark:text-gray-400 mb-1.5";
 
 // The preview half sits on the page colour (HowToStep fills only the text
@@ -208,29 +211,32 @@ const jsonLd = {
 
   </section>
 
-  {/* The primary action: a full-width search line under its own heading.
-      Square input, solid ink button — no tinted card around it. */}
-  <section class="mb-8">
-    <h2 class="text-base font-semibold mb-1">Find circuits</h2>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
-      Search all {fmt.format(circuitCount)} circuits by name, notes, tag or code, ranked
-      by relevance.
-    </p>
-    <form method="GET" action="/search" class="flex gap-2 max-w-2xl">
-      <input
-        type="search"
-        name="q"
-        placeholder="Search circuits by name, notes, tag or #id"
-        aria-label="Search circuits"
-        class="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm focus:outline-none focus:border-gray-900 dark:focus:border-gray-100"
-      />
-      <button
-        type="submit"
-        class="px-4 py-2 text-sm font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer"
-      >
-        Search
-      </button>
-    </form>
+  {/* The primary action, and highlighted as one: a tinted panel makes the
+      search read as more than a fourth card. Square corners and border-focus
+      keep it in the ledger vocabulary. */}
+  <section class="mb-10">
+    <div class="border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
+      <h2 class="text-base font-semibold mb-1">Find circuits</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+        Search all {fmt.format(circuitCount)} circuits by name, notes, tag or code, ranked
+        by relevance.
+      </p>
+      <form method="GET" action="/search" class="flex gap-2">
+        <input
+          type="search"
+          name="q"
+          placeholder="Search circuits by name, notes, tag or #id"
+          aria-label="Search circuits"
+          class="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm focus:outline-none focus:border-gray-900 dark:focus:border-gray-100"
+        />
+        <button
+          type="submit"
+          class="px-4 py-2 text-sm font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer"
+        >
+          Search
+        </button>
+      </form>
+    </div>
   </section>
 
   {/* The library's totals: prominent numerals, ledger-labelled. Fixed columns
@@ -247,23 +253,27 @@ const jsonLd = {
     </dl>
   </section>
 
-  {/* The three destinations as a ruled list under a heavy top rule — the same
-      table language as the codes list, not a card grid. */}
-  <nav class="mb-10 border-t-2 border-gray-900 dark:border-gray-100" aria-label="Main sections">
-    <a href="/codes" class={rowCls}>
-      <span class="text-sm font-medium">Browse codes</span>
-      <span class="text-sm text-gray-500 dark:text-gray-400">All {fmt.format(codeCount)} codes, filterable by [[n,k,d]] and tags.</span>
-      <span aria-hidden="true" class="ml-auto font-mono text-sm text-gray-400 dark:text-gray-500">&#8594;</span>
+  {/* Three columns, one per destination: easier to read side by side than a
+      ruled list. Square hairline boxes; hover answers with a fill, not a
+      border change. */}
+  <nav class="grid gap-4 sm:grid-cols-3 mb-10" aria-label="Main sections">
+    <a href="/codes" class={cardCls}>
+      <h2 class="text-sm font-medium mb-1">Browse codes &#8594;</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        All {fmt.format(codeCount)} codes, filterable by [[n,k,d]] and tags.
+      </p>
     </a>
-    <a href="/tools" class={rowCls}>
-      <span class="text-sm font-medium">Tools</span>
-      <span class="text-sm text-gray-500 dark:text-gray-400">The software used to synthesise these circuits.</span>
-      <span aria-hidden="true" class="ml-auto font-mono text-sm text-gray-400 dark:text-gray-500">&#8594;</span>
+    <a href="/tools" class={cardCls}>
+      <h2 class="text-sm font-medium mb-1">Tools &#8594;</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        The software used to synthesise these circuits.
+      </p>
     </a>
-    <a href="/contribute" class={rowCls}>
-      <span class="text-sm font-medium">Contribute</span>
-      <span class="text-sm text-gray-500 dark:text-gray-400">Add a circuit or import a dataset.</span>
-      <span aria-hidden="true" class="ml-auto font-mono text-sm text-gray-400 dark:text-gray-500">&#8594;</span>
+    <a href="/contribute" class={cardCls}>
+      <h2 class="text-sm font-medium mb-1">Contribute &#8594;</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Add a circuit or import a dataset.
+      </p>
     </a>
   </nav>
 

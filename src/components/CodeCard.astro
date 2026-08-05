@@ -1,6 +1,7 @@
 ---
-import TagList from "./TagList.astro";
 import type { CodeWithMeta } from "../types";
+import { TAG_SELECTED, TAG_UNSELECTED } from "../lib/constants";
+import { tagToggleUrl } from "../lib/url";
 import { formatCodeParams, showCodeParams } from "../lib/queries";
 
 interface Props {
@@ -25,6 +26,20 @@ const showParams = showCodeParams(code);
 // Row data consumed by list-filter-client.ts (client-side filtering/sorting).
 const rowMetrics = JSON.stringify({ n: code.n, k: code.k, d: code.d ?? null });
 const rowTags = JSON.stringify(tags);
+
+// Same URL logic TagList uses: toggling links that preserve other params when
+// the host page is server-filtered (baseUrl set), plain ?tag= links otherwise.
+const selectedSet = selectedTags ? new Set(selectedTags) : null;
+const tagUrl = (tag: string) =>
+  baseUrl
+    ? tagToggleUrl(baseUrl.search, selectedTags ?? baseUrl.searchParams.getAll("tag"), tag, basePath)
+    : `${basePath}?tag=${encodeURIComponent(tag)}`;
+
+// The tags cell uses the circuit rows' density mechanism (.circuit-tags in
+// global.css): all chips are rendered, and the compact default shows the
+// first plus this "+k" rest-count so the row stays one line tall. That also
+// lets the cell stay visible below md, where it used to be hidden outright.
+const restTags = tags.slice(1);
 
 // n, k and d are columns of their own (the table header sorts on them), so a
 // missing value shows as a dash rather than being omitted — the column keeps
@@ -52,13 +67,30 @@ const numCls = "px-2 py-2 text-right align-baseline font-mono text-[13px] tabula
   <td class={numCls}>{code.k ?? "–"}</td>
   <td class={numCls}>{code.d ?? "–"}</td>
   <td class={`${numCls} text-gray-500 dark:text-gray-400`}>{circuit_count}</td>
-  <td class="py-2 pl-4 align-baseline hidden md:table-cell">
-    <TagList
-      tags={tags}
-      basePath={basePath}
-      baseUrl={baseUrl}
-      selectedTags={selectedTags}
-      class="justify-end"
-    />
+  <td class="py-2 pl-4 align-baseline">
+    {tags.length > 0 && (
+      <div class="circuit-tags flex flex-wrap gap-1 justify-end">
+        {tags.map((tag) => (
+          <a
+            href={tagUrl(tag)}
+            data-tag={tag}
+            class:list={[
+              "inline-block px-1 py-0.5 font-mono text-xs transition-colors",
+              selectedSet?.has(tag) ? TAG_SELECTED : TAG_UNSELECTED,
+            ]}
+          >
+            {tag}
+          </a>
+        ))}
+        {restTags.length > 0 && (
+          <span
+            class="tags-rest inline-block px-1 py-0.5 font-mono text-xs text-gray-500 dark:text-gray-400"
+            title={restTags.join(", ")}
+          >
+            +{restTags.length}
+          </span>
+        )}
+      </div>
+    )}
   </td>
 </tr>

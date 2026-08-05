@@ -4,6 +4,7 @@ export const prerender = false;
 import Layout from "../../components/Layout.astro";
 import CodeCard from "../../components/CodeCard.astro";
 import CodeFilter from "../../components/CodeFilter.astro";
+import DensityToggle from "../../components/DensityToggle.astro";
 import { filterCodes, getTagsWithCount, codeDisplayName } from "../../lib/queries";
 
 // Filtering/sorting happens client-side (list-filter-client.ts): the page
@@ -89,7 +90,7 @@ const jsonLd = [
             </th>
           ))}
           <th class="py-1.5 px-2 text-right font-mono text-[11px] font-semibold uppercase tracking-wider">Circuits</th>
-          <th class="py-1.5 pl-4 text-right font-mono text-[11px] font-semibold uppercase tracking-wider hidden md:table-cell">Tags</th>
+          <th class="py-1.5 pl-4 text-right font-mono text-[11px] font-semibold uppercase tracking-wider">Tags<DensityToggle /></th>
         </tr>
       </thead>
       <tbody data-list-container>
