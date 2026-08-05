@@ -277,18 +277,18 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
               order is relevance, which is the point of the page. Above md only,
               like the code page's: below it the row has no metric columns. */}
           <div
-            class="hidden md:grid items-center gap-x-1.5 px-2 py-1.5 font-mono text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400"
+            class="flex md:grid items-center gap-x-1.5 px-2 py-1.5 font-mono text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400"
             style="grid-template-columns: var(--circuit-grid);"
           >
-            <span></span>
-            <span></span>
-            <span></span>
+            <span class="hidden md:block"></span>
+            <span class="hidden md:block"></span>
+            <span class="hidden md:block"></span>
             <span>Name</span>
-            <span class="text-right" title="Gate count">G</span>
-            <span class="text-right text-amber-700 dark:text-amber-400" title="Two-qubit gate count">2Q</span>
-            <span class="text-right" title="Circuit depth">D</span>
-            <span class="text-right" title="Qubit count">Q</span>
-            <span class="text-right">Tags<DensityToggle /></span>
+            <span class="hidden md:block text-right" title="Gate count">G</span>
+            <span class="hidden md:block text-right text-amber-700 dark:text-amber-400" title="Two-qubit gate count">2Q</span>
+            <span class="hidden md:block text-right" title="Circuit depth">D</span>
+            <span class="hidden md:block text-right" title="Qubit count">Q</span>
+            <span class="ml-auto md:ml-0 text-right">Tags<DensityToggle /></span>
           </div>
           <div class="border-t-2 border-gray-900 dark:border-gray-100">
             {results.map((circuit) => (

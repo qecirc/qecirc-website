@@ -221,22 +221,25 @@ const jsonLd = [
     </div>
   ) : (
     <div>
-      {/* Headers only above md: below it the row has no metric columns to head,
-          and the numbers carry their own labels. Sorting stays reachable there
-          through the filter boxes, whose labels are the same sort links. */}
+      {/* Below md the strip collapses to a flex line of just NAME and
+          TAGS (+ density toggle): the metric columns do not exist there — the
+          numbers carry their own inline labels — so their headers hide, and
+          sorting stays reachable through the filter boxes, whose labels are
+          the same sort links. Above md it is the grid the rows share; the
+          inline grid-template is ignored while the strip is flex. */}
       <div
-        class="hidden md:grid items-center gap-x-1.5 px-2 py-1.5 font-mono text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400"
+        class="flex md:grid items-center gap-x-1.5 px-2 py-1.5 font-mono text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400"
         style="grid-template-columns: var(--circuit-grid);"
       >
-        <span></span>
-        <span></span>
-        <span></span>
+        <span class="hidden md:block"></span>
+        <span class="hidden md:block"></span>
+        <span class="hidden md:block"></span>
         <span>Name</span>
-        <a href={sortHref("gate_count")} data-sort-field="gate_count" data-sort-header class="text-right hover:text-gray-900 dark:hover:text-gray-100" title="Gate count — click to sort">G</a>
-        <a href={sortHref("two_qubit_gate_count")} data-sort-field="two_qubit_gate_count" data-sort-header class="text-right hover:text-gray-900 dark:hover:text-gray-100 text-amber-700 dark:text-amber-400" title="Two-qubit gate count — click to sort">2Q</a>
-        <a href={sortHref("depth")} data-sort-field="depth" data-sort-header class="text-right hover:text-gray-900 dark:hover:text-gray-100" title="Circuit depth — click to sort">D</a>
-        <a href={sortHref("qubit_count")} data-sort-field="qubit_count" data-sort-header class="text-right hover:text-gray-900 dark:hover:text-gray-100" title="Qubit count — click to sort">Q</a>
-        <span class="text-right">Tags<DensityToggle /></span>
+        <a href={sortHref("gate_count")} data-sort-field="gate_count" data-sort-header class="hidden md:block text-right hover:text-gray-900 dark:hover:text-gray-100" title="Gate count — click to sort">G</a>
+        <a href={sortHref("two_qubit_gate_count")} data-sort-field="two_qubit_gate_count" data-sort-header class="hidden md:block text-right hover:text-gray-900 dark:hover:text-gray-100 text-amber-700 dark:text-amber-400" title="Two-qubit gate count — click to sort">2Q</a>
+        <a href={sortHref("depth")} data-sort-field="depth" data-sort-header class="hidden md:block text-right hover:text-gray-900 dark:hover:text-gray-100" title="Circuit depth — click to sort">D</a>
+        <a href={sortHref("qubit_count")} data-sort-field="qubit_count" data-sort-header class="hidden md:block text-right hover:text-gray-900 dark:hover:text-gray-100" title="Qubit count — click to sort">Q</a>
+        <span class="ml-auto md:ml-0 text-right">Tags<DensityToggle /></span>
       </div>
       <div data-list-empty class="hidden text-center py-8">
         <p class="text-gray-500 dark:text-gray-400 mb-2">No circuits match your filters.</p>
