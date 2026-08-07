@@ -15,20 +15,33 @@ overrides. Import built against its initial 2026-08 state.
 Two JSON files hold 136 CSS codes with stabilizers/logicals as Pauli strings
 and 12,586 circuits as gate strings (grammar: the dataset's `data/README.md`):
 
-| file                    | codes | claim                                                            |
-| ----------------------- | ----- | ---------------------------------------------------------------- |
-| `full_codes_depth1.json`| 78    | depth-one two-local circuits generate the **full** Sp(2k,2)      |
-| `ldpc_codes_depth1.json`| 58    | generators realize a logical group of exactly the recorded order |
+| file                     | codes | claim                                                            |
+| ------------------------ | ----- | ---------------------------------------------------------------- |
+| `full_codes_depth1.json` | 78    | depth-one two-local circuits generate the **full** Sp(2k,2)      |
+| `ldpc_codes_depth1.json` | 58    | generators realize a logical group of exactly the recorded order |
 
 Every gate string is one **depth-one two-local** ("two-fold transversal")
 circuit: a single layer in which each qubit is touched by at most one
 two-qubit gate, optionally followed by a compensating qubit permutation.
 
-**All circuits are imported** (a deliberate decision — the generator lists are
-raw search output with heavy redundancy at the logical level, but the library
-keeps every distinct physical circuit). Only two classes are dropped:
-generators whose logical action is the **identity** (21 across both files —
-they enact no gate; autqec precedent), and **identical bodies** within a code.
+**The generating-set policy** (the dataset ships raw search output — 12,586
+gate strings with heavy redundancy at the logical level; the library keeps a
+set that still generates each code's recorded logical group):
+
+1. Generators whose logical action is the **identity** are dropped (21 across
+   both files — they enact no gate; autqec precedent).
+2. One circuit is kept per **distinct logical action** — dropping duplicate
+   actions provably cannot change the generated logical group.
+3. Full-group codes are further cut to the **certificate's verified generating
+   prefix** (`C_generators_used`: the paper's exact Schreier–Sims certificate
+   proved the first m distinct actions already generate Sp(2k,2); median 6,
+   max 183 per code). The 10 codes certified by order-free methods have no
+   such prefix and keep every distinct action, as do all QLDPC codes — the
+   strongest reduction that provably preserves their recorded group.
+
+`--all-circuits` disables step 3. Re-runs **reconcile**: two-fold circuits and
+seeded codes that the current policy no longer keeps are pruned; files of
+other tools are never touched.
 
 ## Gate map
 
@@ -61,21 +74,21 @@ All 136 codes are imported as **visible** entries (an explicit decision — no
 `codetables`-style hiding), named per the paper's Table III families with the
 `[[n,k,d]]` in the name, and tagged:
 
-| source        | family (Table III)                     | family tags                 | zoo link (fetch-verified)  |
-| ------------- | -------------------------------------- | --------------------------- | -------------------------- |
-| `se`          | self-dual even codes                   | —                           | —                          |
-| `ml`          | self-dual doubly-even codes            | —                           | —                          |
-| `eczoo`       | four individually named codes          | —                           | per code, see below        |
-| `qecdb`       | qecdb.org (Simon Burton)               | —                           | —                          |
-| `2bga`        | two-block group-algebra                | `two-block-group-algebra`   | `/c/2bga`                  |
-| `coset2bga`   | coset 2BGA                             | `two-block-group-algebra`   | —                          |
-| `toricdir`    | bivariate bicycle                      | `bivariate-bicycle-code`    | `/c/qcga`                  |
-| `kasai`       | affine block-circulant                 | —                           | —                          |
-| `cc`          | clustered-cyclic                       | —                           | —                          |
-| `copycup`     | abelian balanced-product               | `balanced-product`          | `/c/balanced_product`      |
-| `mm`          | multivariate multicycle                | —                           | —                          |
-| `dd422`       | [[4,2,2]]-concatenated symplectic double | `concatenated`            | —                          |
-| `cons:*`      | the paper's own constructions          | per construction            | per construction           |
+| source      | family (Table III)                       | family tags               | zoo link (fetch-verified) |
+| ----------- | ---------------------------------------- | ------------------------- | ------------------------- |
+| `se`        | self-dual even codes                     | —                         | —                         |
+| `ml`        | self-dual doubly-even codes              | —                         | —                         |
+| `eczoo`     | four individually named codes            | —                         | per code, see below       |
+| `qecdb`     | qecdb.org (Simon Burton)                 | —                         | —                         |
+| `2bga`      | two-block group-algebra                  | `two-block-group-algebra` | `/c/2bga`                 |
+| `coset2bga` | coset 2BGA                               | `two-block-group-algebra` | —                         |
+| `toricdir`  | bivariate bicycle                        | `bivariate-bicycle-code`  | `/c/qcga`                 |
+| `kasai`     | affine block-circulant                   | —                         | —                         |
+| `cc`        | clustered-cyclic                         | —                         | —                         |
+| `copycup`   | abelian balanced-product                 | `balanced-product`        | `/c/balanced_product`     |
+| `mm`        | multivariate multicycle                  | —                         | —                         |
+| `dd422`     | [[4,2,2]]-concatenated symplectic double | `concatenated`            | —                         |
+| `cons:*`    | the paper's own constructions            | per construction          | per construction          |
 
 `CSS` and `self-dual` are auto-detected by the pipeline, never hand-added.
 `LDPC` is added to every `ldpc_codes_depth1.json` entry (the paper's QLDPC
@@ -117,10 +130,22 @@ processes (`--workers`, default 8); all writes stay in the main process,
 which also caches the stored-code dedup index instead of reloading the
 library per code (together ~40× wall-clock over the naive loop).
 
+**Naming and classification.** A circuit whose exact action is short is named
+by it ("SWAP-transversal logical CNOT(4,5)·CNOT(11,10)"). For the rest, the
+gate list of stim's elimination decomposition is an artifact of the
+decomposition — naming by it made every circuit look alike — so the name
+states the action's **structural class** in the paper's own layer taxonomy
+(Z-diagonal S/CZ, X-diagonal √X/XX, CNOT circuit, qubit permutation,
+Hadamard-type, general Clifford), classified from the 2k×2k action matrix,
+plus its support: "Depth-one two-local logical Z-diagonal (S/CZ) gate on 8/12
+qubits (gen 173)". Every circuit carries a `logical-class:*` tag for
+filtering; `logical-op:*` tags are kept only where the exact decomposition is
+short enough to be faithful.
+
 Tags: `logical-gate`, `two-fold-transversal`, structure
 (`transversal`+`ft` / `swap-transversal` / none for entangling depth-one, per
-the autqec FT policy — entangling circuits make no FT claim), and
-`logical-op:*` from the action decomposition. Names:
+the autqec FT policy — entangling circuits make no FT claim), and the
+class/op tags above. Names:
 "Depth-one two-local logical S(0)·CZ(0,1)", falling back to
 "(gen N)" provenance names when the action is long. The dataset's per-code
 generator index and label are always in the notes.
@@ -143,7 +168,7 @@ Then the standard sequence: `npm run papers:add -- 2608.05688`,
 ## Provenance / certification
 
 Nothing is taken on trust from this import's side: every stored circuit is
-individually re-validated by `validate:circuits`. The *group-level* claims
+individually re-validated by `validate:circuits`. The _group-level_ claims
 (full Sp(2k,2), exact orders) are the paper's, backed by its machine-checkable
 certificates (`data/certify/` in the dataset repo) — the circuit notes cite
 them but the website does not re-prove them.

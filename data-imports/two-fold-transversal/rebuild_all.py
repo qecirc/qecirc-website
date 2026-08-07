@@ -36,9 +36,17 @@ identical to the pipeline's ``induced_logical_action`` — asserted on the
 first circuit of every code) and leaves the authoritative per-circuit
 re-verification to ``npm run validate:circuits``, which re-checks every
 stored circuit with the pipeline's own ``validate_logical_gate_h``.
-Generators with identity logical action are skipped; identical bodies within
-a code are deduplicated. Circuit conversion fans out over --workers processes;
-all writes stay in the main process.
+
+Selection (the generating-set policy): identity actions are dropped, one
+circuit is kept per distinct logical action (which provably preserves the
+generated logical group), and full-group codes are further cut to the
+certificate's verified generating prefix (``C_generators_used`` — its exact
+Schreier-Sims run proved that prefix generates Sp(2k,2); median 6 per code).
+Order-free-certified and QLDPC codes keep every distinct action.
+``--all-circuits`` disables the prefix cut. Runs reconcile: two-fold circuits
+and seeded codes a re-run no longer keeps are pruned (other tools' files are
+never touched). Circuit conversion fans out over --workers processes; all
+writes stay in the main process.
 
 Codes: all 136 are imported as visible entries with family tags and (where a
 page was verified to exist) an Error Correction Zoo link. Codes already in
@@ -56,7 +64,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import functools
 import json
 import re
 import sys
@@ -83,7 +90,6 @@ def _default_dataset() -> Path:
 
 sys.path.insert(0, str(REPO))
 
-import scripts.add_circuit.compute as compute_mod  # noqa: E402
 from scripts.add_circuit.circuit_validate import (  # noqa: E402
     induced_logical_action,
     transversality_class,
@@ -106,11 +112,6 @@ from scripts.add_circuit.yaml_helpers import (  # noqa: E402
 
 SOURCE = "https://arxiv.org/abs/2608.05688"
 TOOL = "two-fold-transversal"
-
-# The stored-code YAMLs are reloaded from disk by every dedup call — 4s per
-# code across a 300-file library, ~10 minutes over this import. The library
-# only changes when *we* seed a code, so cache and clear explicitly then.
-compute_mod._load_stored_codes = functools.lru_cache(maxsize=2)(compute_mod._load_stored_codes)
 
 # Offline qubit permutations shared with the autqec import (sigma[new] = old).
 # The gross code's labeling is common to autqec/qLDPC/QUITS; whether this
@@ -175,13 +176,21 @@ CONS = {
     "qrm6": ("Middle Reed-Muller Code QRM(6)", ["reed-muller"], ""),
     "johnson16": ("Cut-Complement Code", [], ""),
     "concat112": ("Concatenation-Lift Code", ["concatenated", "reed-muller"], ""),
-    "gross144": ("Gross Code", ["bivariate-bicycle-code"], "https://errorcorrectionzoo.org/c/gross"),
+    "gross144": (
+        "Gross Code",
+        ["bivariate-bicycle-code"],
+        "https://errorcorrectionzoo.org/c/gross",
+    ),
 }
 CONS_PREFIX = [
     ("grid", "Bipartite Grid Code", [], ""),
     ("quadric", "Quadric Tower Code", [], ""),
-    ("sdbb", "Self-Dual Bivariate Bicycle Code", ["bivariate-bicycle-code"],
-     "https://errorcorrectionzoo.org/c/qcga"),
+    (
+        "sdbb",
+        "Self-Dual Bivariate Bicycle Code",
+        ["bivariate-bicycle-code"],
+        "https://errorcorrectionzoo.org/c/qcga",
+    ),
 ]
 
 STRUCTURE_POLICY = {
@@ -193,8 +202,20 @@ STRUCTURE_POLICY = {
 _qec_id_re = re.compile(r"^qec_id:\s*(\d+)\s*$", re.MULTILINE)
 _label_re = re.compile(r"^\[\[(\d+),(\d+),(\d+)\]\](\w+):([\w.-]+)$")
 
-PRETTY = {"S": "S", "SQRT_X": "√X", "CX": "CNOT", "CZ": "CZ", "XCX": "C(X,X)", "H": "H",
-          "SWAP": "SWAP", "X": "X", "Y": "Y", "Z": "Z", "C_XYZ": "Γ(XYZ)", "C_ZYX": "Γ(XZY)"}
+PRETTY = {
+    "S": "S",
+    "SQRT_X": "√X",
+    "CX": "CNOT",
+    "CZ": "CZ",
+    "XCX": "C(X,X)",
+    "H": "H",
+    "SWAP": "SWAP",
+    "X": "X",
+    "Y": "Y",
+    "Z": "Z",
+    "C_XYZ": "Γ(XYZ)",
+    "C_ZYX": "Γ(XZY)",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -372,6 +393,38 @@ def action_from_u(u: np.ndarray, k: int) -> tuple[str, str, list[str]]:
     return text, pretty, tags
 
 
+def classify_u(u: np.ndarray, k: int) -> tuple[str, str, int]:
+    """Classify a logical action by the paper's own layer taxonomy.
+
+    The 2k x 2k symplectic u in blocks [[A, B], [C, D]] (X-bar images on top):
+    returns (tag-slug, display label, support = number of logical qubits acted
+    on non-trivially). This is what makes hundreds of same-code circuits
+    distinguishable — the gate list of stim's elimination decomposition is an
+    artifact of the decomposition, not of the action.
+    """
+    A, B = u[:k, :k], u[:k, k:]
+    C, D = u[k:, :k], u[k:, k:]
+    eye = np.eye(k, dtype=u.dtype)
+    ident_rows = np.concatenate(
+        [
+            (u[:k] == np.hstack([eye, 0 * eye])).all(axis=1),
+            (u[k:] == np.hstack([0 * eye, eye])).all(axis=1),
+        ]
+    )
+    support = int(sum(1 for j in range(k) if not (ident_rows[j] and ident_rows[k + j])))
+    if not C.any() and not B.any():
+        if ((A.sum(axis=0) == 1).all() and (A.sum(axis=1) == 1).all()) and np.array_equal(D, A):
+            return "permutation", "qubit permutation", support
+        return "cnot", "CNOT circuit", support
+    if np.array_equal(A, eye) and np.array_equal(D, eye) and not C.any():
+        return "z-diagonal", "Z-diagonal (S/CZ) gate", support
+    if np.array_equal(A, eye) and np.array_equal(D, eye) and not B.any():
+        return "x-diagonal", "X-diagonal (√X/XX) gate", support
+    if not A.any() and not D.any():
+        return "h-type", "Hadamard-type gate", support
+    return "general", "Clifford", support
+
+
 # ---------------------------------------------------------------------------
 # Worker: convert + classify one chunk of gate strings for one code
 # ---------------------------------------------------------------------------
@@ -407,15 +460,26 @@ def process_chunk(task: dict) -> list[dict]:
             continue
 
         action_text, pretty, op_tags = action_from_u(u, k)
+        cls_tag, cls_label, support = classify_u(u, k)
         struct, struct_tags = STRUCTURE_POLICY[transversality_class(paper_stim)]
-        if struct == "Depth-one two-local" and len(pretty) <= 48:
-            circ_name = f"Depth-one two-local logical {pretty}"
-        elif len(pretty) <= 48:
+        if len(pretty) <= 48:
+            # Short enough to name by the exact action; the op tags of its
+            # decomposition are faithful at this size.
             circ_name = f"{struct} logical {pretty}"
+            class_tags = [f"logical-class:{cls_tag}", *op_tags]
         else:
-            circ_name = f"{struct} logical Clifford (gen {i})"
+            # Long decompositions are artifacts of the elimination routine, so
+            # the name states the action's structural class and support, and
+            # the misleading per-op tags are dropped in favour of the class.
+            circ_name = f"{struct} logical {cls_label} on {support}/{k} qubits (gen {i})"
+            class_tags = [f"logical-class:{cls_tag}"]
+        action_summary = (
+            f"Logical {pretty} (gates in application order)"
+            if len(pretty) <= 160
+            else f"Logical {cls_label} acting on {support} of the {k} logical qubits"
+        )
         notes = (
-            f"Logical {pretty} (gates in application order) from generator {i} "
+            f"{action_summary}, from generator {i} "
             f"of dataset entry {task['label']} ({task['file']}) of arXiv:2608.05688. "
             "The physical circuit is depth-one two-local (two-fold transversal): "
             "one layer in which each qubit is touched by at most one two-qubit "
@@ -428,11 +492,9 @@ def process_chunk(task: dict) -> list[dict]:
         final["name"] = circ_name
         final["slug"] = slugify(circ_name)
         final["notes"] = notes
-        final["tags"] = ["logical-gate", "two-fold-transversal", *struct_tags, *op_tags]
+        final["tags"] = ["logical-gate", "two-fold-transversal", *struct_tags, *class_tags]
         final["logical_action"] = action_text
-        out.append(
-            {"index": i, "final": final, "body": body, "original_stim": str(paper_stim)}
-        )
+        out.append({"index": i, "final": final, "body": body, "original_stim": str(paper_stim)})
     return out
 
 
@@ -491,9 +553,24 @@ def sigma_verifies(H: np.ndarray, stored_h: np.ndarray, n: int, sigma: list[int]
     return a.shape == b.shape and np.array_equal(a, b)
 
 
+# The structural finder is a search: it costs ~10s per FAILED attempt at
+# n=22 and does not terminate in reasonable time on automorphism-rich codes
+# at n=64 (one such pair hung a full run). Every known true fit onto a
+# pre-existing code is tiny (carbon n=12, the 16-2-4/16-6-4/20-2-6 refusals)
+# or covered by an offline sigma (gross, n=144), so the finder only runs
+# below this bound; larger hash-missed codes are imported as new with a
+# printed note, the qLDPC-refutation precedent for offline verification.
+FIT_SEARCH_MAX_N = 20
+
+
 class StoredIndex:
-    """(n,k,d) -> [(slug, h)] over data_yaml/codes, loaded once and kept in
-    sync as this run seeds new codes."""
+    """(n,k,d) -> [(slug, h)] over the codes that existed BEFORE this run.
+
+    Codes seeded by this run are deliberately NOT candidates: the dataset's
+    uuid registry already asserts its entries are pairwise distinct codes,
+    and the se/ml/dd422 sweeps share parameters constantly — fitting each
+    new entry against its same-parameter predecessors is what made a full
+    run spend 34 minutes on doomed permutation searches."""
 
     def __init__(self, data_dir: Path):
         self.by_params: dict[tuple[int, int, int], list[tuple[str, np.ndarray]]] = {}
@@ -505,9 +582,6 @@ class StoredIndex:
             h = np.array(decode_matrix(stored["h"]), dtype=int)
             self.by_params.setdefault(key, []).append((code_file.stem, h))
 
-    def add(self, slug: str, n: int, k: int, d: int, h: np.ndarray) -> None:
-        self.by_params.setdefault((n, k, d), []).append((slug, h))
-
     def fit(self, H: np.ndarray, n: int, k: int, d: int):
         """Structural fallback when the canonical-hash dedup misses. Returns
         (slug, sigma) or None."""
@@ -515,6 +589,13 @@ class StoredIndex:
         for slug, h_stored in self.by_params.get((n, k, d), []):
             if slug in precomputed and sigma_verifies(H, h_stored, n, precomputed[slug]):
                 return slug, precomputed[slug]
+            if n > FIT_SEARCH_MAX_N:
+                print(
+                    f"   note: same-params stored code {slug} not fitted "
+                    f"(finder skipped at n={n} > {FIT_SEARCH_MAX_N}); importing as "
+                    "a distinct code — verify offline if identity is suspected"
+                )
+                continue
             css_mine = split_h_to_css(H, n)
             css_stored = split_h_to_css(h_stored, n)
             if css_mine is not None and css_stored is not None:
@@ -535,12 +616,45 @@ def main() -> None:
     ap.add_argument("--codes", nargs="*", help="only these dataset labels")
     ap.add_argument("--file", choices=("full", "ldpc", "both"), default="both")
     ap.add_argument("--workers", type=int, default=8)
+    ap.add_argument(
+        "--all-circuits",
+        action="store_true",
+        help="import every distinct-action circuit instead of the generating-set policy",
+    )
     args = ap.parse_args()
 
     dataset = Path(args.dataset)
     if not (dataset / "data" / "full_codes_depth1.json").is_file():
         sys.exit(f"dataset not found at {dataset} — clone valbert4/two-fold-transversal there")
     data_dir = Path(args.data_dir)
+
+    # The certificate's verified generating prefix per full-group code: after
+    # dropping identity images and duplicate logical actions, its Schreier-Sims
+    # run (gaporder.py) proved the first C_generators_used distinct actions
+    # already generate Sp(2k,2). None = the code was certified by an order-free
+    # method, so no prefix exists and every distinct action is kept.
+    cert_path = dataset / "data" / "certify" / "certificate_depth1_Sp.json"
+    prefix_of: dict[str, int | None] = {
+        e["label"]: e.get("C_generators_used") for e in json.loads(cert_path.read_text())["codes"]
+    }
+
+    # Slug assignment must not depend on leftovers of earlier runs: only codes
+    # tracked in git (the real pre-import library) block the plain n-k-d slug.
+    try:
+        import subprocess
+
+        tracked_code_slugs = {
+            Path(p).stem
+            for p in subprocess.run(
+                ["git", "ls-files", "data_yaml/codes/"],
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=REPO,
+            ).stdout.splitlines()
+        }
+    except Exception:
+        tracked_code_slugs = {p.stem for p in (data_dir / "codes").glob("*.yaml")}
 
     files = []
     if args.file in ("full", "both"):
@@ -585,7 +699,7 @@ def main() -> None:
 
             base = f"{n}-{k}-{d}"
             slug_pref = base
-            if (data_dir / "codes" / f"{base}.yaml").exists() or (
+            if base in tracked_code_slugs or (
                 slug_pref in used_slugs and used_slugs[slug_pref] != label
             ):
                 slug_pref = f"{base}-{src}"
@@ -617,12 +731,14 @@ def main() -> None:
                             dump_yaml(build_code_yaml(code)),
                             quiet=True,
                         )
-                        compute_mod._load_stored_codes.cache_clear()
                     print(f"== {label} -> {slug} (new)")
             else:
                 print(f"== {label} -> {slug} ({code['status']})")
             if code["status"] == "existing":
                 stats["codes_existing"] += 1
+            # Later same-params entries must not claim this slug, whether it
+            # was seeded now or matched an existing file.
+            used_slugs.setdefault(slug, label)
 
             code_path = data_dir / "codes" / f"{slug}.yaml"
             if not code_path.exists():
@@ -636,8 +752,6 @@ def main() -> None:
                 stored = load_yaml(code_path.read_text())
             h_stored = np.array(decode_matrix(stored["h"]), dtype=int)
             logical_stored = np.array(decode_matrix(stored["logical"]), dtype=int)
-            if code["status"] == "new" and args.write:
-                index.add(slug, n, k, d, h_stored)
 
             original_yaml = build_original_yaml({"h": S.tolist(), "logical": L.tolist()})
             digest = matrices_digest(original_yaml) if original_yaml else None
@@ -650,37 +764,74 @@ def main() -> None:
             gens = list(enumerate(entry["depth1_clif_generators"]))
             chunk_size = max(1, min(48, (len(gens) + args.workers - 1) // args.workers))
             base_task = {
-                "n": n, "k": k, "h": h_stored.tolist(), "logical": logical_stored.tolist(),
-                "perm": perm, "label": label, "file": path.name, "claim_note": claim_note,
+                "n": n,
+                "k": k,
+                "h": h_stored.tolist(),
+                "logical": logical_stored.tolist(),
+                "perm": perm,
+                "label": label,
+                "file": path.name,
+                "claim_note": claim_note,
             }
             futures = []
             for start in range(0, len(gens), chunk_size):
-                task = dict(base_task, gens=gens[start : start + chunk_size],
-                            selfcheck=(start == 0))
+                task = dict(
+                    base_task, gens=gens[start : start + chunk_size], selfcheck=(start == 0)
+                )
                 futures.append(pool.submit(process_chunk, task))
 
-            seen_bodies: set[str] = set()
-            for existing_stim in (data_dir / "circuits").glob(f"{slug}--*.stim"):
-                seen_bodies.add(existing_stim.read_text().strip())
-            slug_counts: dict[str, int] = {}
-            code_written = 0
             records = [rec for f in futures for rec in f.result()]
             records.sort(key=lambda rec: rec["index"])
+
+            # Selection: drop identities, dedupe by induced logical action
+            # (equal action text = equal action; dropping duplicates cannot
+            # change the generated logical group), then — unless
+            # --all-circuits — cut full-group codes at the certificate's
+            # verified generating prefix. Order-free and QLDPC codes keep
+            # every distinct action, the strongest reduction that provably
+            # preserves their recorded group.
+            prefix = None if args.all_circuits else prefix_of.get(label)
+            kept, seen_actions = [], set()
             for rec in records:
                 if rec.get("skip") == "identity":
                     stats["trivial"] += 1
                     continue
-                if rec["body"].strip() in seen_bodies:
+                action = rec["final"]["logical_action"]
+                if action in seen_actions:
                     stats["deduped"] += 1
                     continue
-                seen_bodies.add(rec["body"].strip())
+                seen_actions.add(action)
+                kept.append(rec)
+            if prefix is not None and len(kept) > prefix:
+                stats["beyond_prefix"] = stats.get("beyond_prefix", 0) + len(kept) - prefix
+                kept = kept[:prefix]
+            if prefix is not None:
+                selection_note = (
+                    f" This circuit is part of the certificate's verified generating "
+                    f"prefix: the paper's exact Schreier-Sims certificate confirms the "
+                    f"logical actions of these {len(kept)} circuits generate the full "
+                    "logical Clifford group Sp(2k,2)."
+                )
+            else:
+                selection_note = (
+                    " One circuit per distinct logical action is kept from the recorded "
+                    "generator set; dropping duplicate actions preserves the generated "
+                    "logical group."
+                )
+
+            slug_counts: dict[str, int] = {}
+            code_written = 0
+            kept_stems: set[str] = set()
+            for rec in kept:
                 final = rec["final"]
+                final["notes"] += selection_note
                 base_slug = final["slug"]
                 slug_counts[base_slug] = slug_counts.get(base_slug, 0) + 1
                 if slug_counts[base_slug] > 1:
                     final["name"] = f"{final['name']} ({slug_counts[base_slug]})"
                     final["slug"] = f"{base_slug}-{slug_counts[base_slug]}"
                 stem = f"{slug}--{final['slug']}"
+                kept_stems.add(stem)
                 if args.write:
                     circuits_dir = data_dir / "circuits"
                     existing = circuits_dir / f"{stem}.yaml"
@@ -706,10 +857,74 @@ def main() -> None:
                     )
                 stats["written"] += 1
                 code_written += 1
+
+            # Reconcile: any two-fold circuit of this code that this run did
+            # not keep is a leftover of an earlier run or policy — remove it.
+            # Circuits from other tools sharing the code are never touched.
+            if args.write:
+                circuits_dir = data_dir / "circuits"
+                for stale_yaml in sorted(circuits_dir.glob(f"{slug}--*.yaml")):
+                    stem = stale_yaml.stem
+                    if stem in kept_stems:
+                        continue
+                    if f"tool: {TOOL}" not in stale_yaml.read_text():
+                        continue
+                    for path_ in (
+                        stale_yaml,
+                        circuits_dir / f"{stem}.stim",
+                        circuits_dir / f"{stem}.qasm",
+                        circuits_dir / f"{stem}.stim-annotated",
+                        circuits_dir / "originals" / f"{stem}.original.stim",
+                    ):
+                        path_.unlink(missing_ok=True)
+                    stats["pruned"] = stats.get("pruned", 0) + 1
             print(
                 f"   {'wrote' if args.write else 'ok'} {code_written} circuits"
                 f" in {time.time() - t0:.1f}s"
             )
+
+    # Global reconcile (full runs only — a --codes/--file subset run sees only
+    # part of the dataset and must not judge the rest): remove code entries an
+    # earlier run seeded under a slug no current entry claims, with their
+    # circuits, and matrices files nothing references anymore. Only files not
+    # tracked in git are candidates — the pre-import library is never touched.
+    if args.write and not args.codes and args.file == "both":
+        import subprocess
+
+        untracked = subprocess.run(
+            ["git", "ls-files", "--others", "--exclude-standard", "data_yaml/"],
+            capture_output=True,
+            text=True,
+            cwd=REPO,
+        ).stdout.splitlines()
+        for rel in untracked:
+            p = REPO / rel
+            if p.parent == data_dir / "codes" and p.suffix == ".yaml":
+                if p.stem in used_slugs:
+                    continue
+                for circ_yaml in sorted((data_dir / "circuits").glob(f"{p.stem}--*.yaml")):
+                    stem = circ_yaml.stem
+                    for path_ in (
+                        circ_yaml,
+                        data_dir / "circuits" / f"{stem}.stim",
+                        data_dir / "circuits" / f"{stem}.qasm",
+                        data_dir / "circuits" / f"{stem}.stim-annotated",
+                        data_dir / "circuits" / "originals" / f"{stem}.original.stim",
+                    ):
+                        path_.unlink(missing_ok=True)
+                    stats["pruned"] = stats.get("pruned", 0) + 1
+                p.unlink()
+                stats["codes_pruned"] = stats.get("codes_pruned", 0) + 1
+        referenced = set()
+        for circ_yaml in (data_dir / "circuits").glob("*.yaml"):
+            m = re.search(r"^original_matrices: (\S+)$", circ_yaml.read_text(), re.M)
+            if m:
+                referenced.add(m.group(1))
+        for rel in untracked:
+            p = REPO / rel
+            if p.parent == data_dir / "matrices" and p.stem not in referenced:
+                p.unlink()
+                stats["matrices_pruned"] = stats.get("matrices_pruned", 0) + 1
 
     pool.shutdown()
     print(f"\n{stats}  ({time.time() - t_start:.0f}s total)")
