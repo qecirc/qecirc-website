@@ -8,16 +8,22 @@ import {
   correctTokens,
   tokenizeQuery,
   formatCodeParams,
+  showCodeParams,
   formatCircuitId,
   MIN_QUERY_LENGTH,
 } from "../../lib/queries";
+
+// Same reasoning as /search (src/pages/search.astro): this route varies by an
+// unbounded, attacker-fillable `?q=`, so it must not inherit the week-long
+// s-maxage that middleware.ts stamps on responses without their own value.
+const CACHE_CONTROL = "public, max-age=0, s-maxage=600";
 
 export const GET: APIRoute = ({ url }) => {
   const raw = url.searchParams.get("q")?.trim() ?? "";
 
   if (raw.length < MIN_QUERY_LENGTH) {
     return new Response(JSON.stringify([]), {
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Cache-Control": CACHE_CONTROL },
     });
   }
 
@@ -31,12 +37,13 @@ export const GET: APIRoute = ({ url }) => {
   const q = changed ? tokens.join(" ") : raw;
 
   const codes = searchCodes(q).map((c) => {
-    const params = formatCodeParams(c);
     return {
       type: "code" as const,
       name: c.name,
       slug: c.slug,
-      params: c.name === params ? "" : params,
+      // The dropdown renders name and params as adjacent spans, so a name that
+      // already carries them ("Gottesman [[8,3,3]] Code") must send none.
+      params: showCodeParams(c) ? formatCodeParams(c) : "",
       tags: c.tags,
       href: `/codes/${c.slug}`,
     };
@@ -68,6 +75,6 @@ export const GET: APIRoute = ({ url }) => {
   }));
 
   return new Response(JSON.stringify([...codes, ...circuits, ...tools]), {
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Cache-Control": CACHE_CONTROL },
   });
 };

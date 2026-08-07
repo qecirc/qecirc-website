@@ -1,0 +1,13 @@
+qec_id: 1290
+name: Depth-optimal schedule
+tool: asyndrome
+notes: One syndrome-extraction round. Data qubits 0-8, then the ancillas (X-checks
+  first), measured in index order. Hadamards once per X-ancilla, not per check (equivalent).
+source: https://arxiv.org/abs/2601.12509
+gate_count: 32
+two_qubit_gate_count: 24
+depth: 4
+qubit_count: 17
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,1,1,1,1,1,"ZDetectControlReset","ZDetectControlReset","ZDetectControlReset","ZDetectControlReset","ZDetectControlReset","ZDetectControlReset","ZDetectControlReset","ZDetectControlReset"],[1,1,1,1,1,1,1,1,1,"H","H","H"],[1,1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,1,"X",1,1,1,"•"],[1,1,1,1,"X",1,1,1,1,1,1,"•"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,"X",1,1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,"H"],[1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"X",1,1,1,1,"•"],[1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,"•",1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"H"],["X",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,"X",1,1,1,"•"],[1,1,1,1,1,1,1,1,"X",1,1,1,"•"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,"•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"H","H","H"],[1,1,1,1,1,1,1,1,1,"ZDetector","ZDetector","ZDetector","ZDetector","ZDetector","ZDetector","ZDetector","ZDetector"]]}
+tags: [syndrome-extraction, "schedule:depth-optimal", "circuit-distance:2"]
+original_matrices: 5f2b3a813de63df0

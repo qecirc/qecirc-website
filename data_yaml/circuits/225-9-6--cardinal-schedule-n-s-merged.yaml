@@ -1,0 +1,15 @@
+qec_id: 1204
+name: Cardinal schedule (N/S merged)
+tool: quits
+notes: "One syndrome-extraction round. As the cardinal schedule, with the north and
+  south edges coloured together. Data qubits 0-224, then the ancillas (Z-checks first),
+  measured in index order. X- and Z-checks share ticks. Code construction: Tillich
+  and Zemor, arXiv:0903.0566. Distance 6 from the classical code's distance; the
+  transpose code has k = 0."
+source: https://arxiv.org/abs/2504.02673
+gate_count: 1728
+two_qubit_gate_count: 1512
+depth: 8
+qubit_count: 441
+tags: [syndrome-extraction, "schedule:interleaved"]
+original_matrices: e43f7a4c6c2e5e3f

@@ -1,0 +1,19 @@
+qec_id: 1119
+name: Edge-coloring schedule (X/Z split)
+tool: qldpc
+notes: "One syndrome-extraction round. The X- and Z-check subgraphs are coloured separately,
+  then run one colour per tick. Data qubits 0-8, then the ancillas, measured in index
+  order; every ancilla is prepared and read in the X basis. The library states this
+  strategy is not guaranteed to be distance-preserving or fault-tolerant. Reproduce
+  with: qldpc.circuits.get_memory_experiment_parts(qldpc.codes.SurfaceCode(3), qldpc.objects.Pauli.Z,
+  num_rounds=2, syndrome_measurement_strategy=qldpc.circuits.EdgeColoringXZ()).qec_cycle
+  — the body stored here is that cycle's REPEAT block with the detectors and observable
+  removed, since they belong to the memory experiment rather than to the round."
+source: https://arxiv.org/abs/2109.14609
+gate_count: 24
+two_qubit_gate_count: 24
+depth: 8
+qubit_count: 17
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,1,1,1,1,1,"XDetectControlReset","XDetectControlReset","XDetectControlReset","XDetectControlReset","XDetectControlReset","XDetectControlReset","XDetectControlReset","XDetectControlReset"],[1,1,1,1,1,1,1,1,1,"H","H","H","H","H","H","H","H"],["X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,"X",1,"•"],[1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"X",1,1,1,1,1,1,"•"],[1,1,1,"X",1,1,1,1,1,"•"],[1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,"X",1,1,1,"•"],["X",1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"X",1,1,1,1,"•"],[1,1,1,1,1,1,"X",1,1,1,1,1,"•"],[1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,"X",1,1,1,"•"],[1,1,1,1,"Z",1,1,1,1,1,1,1,1,"•"],["Z",1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,"Z",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"Z",1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,"Z",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"Z",1,1,1,1,1,1,1,1,1,"•"],[1,"Z",1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,"Z",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,"Z",1,1,1,1,1,"•"],[1,1,1,1,1,"Z",1,1,1,1,1,1,1,1,1,"•"],[1,1,"Z",1,1,1,1,1,1,1,1,1,1,1,"•"],["Z",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"XDetector","XDetector","XDetector","XDetector","XDetector","XDetector","XDetector","XDetector"]]}
+tags: [syndrome-extraction, "schedule:xz-separated", "circuit-distance:2"]
+original_matrices: a937a7b3b68825f5

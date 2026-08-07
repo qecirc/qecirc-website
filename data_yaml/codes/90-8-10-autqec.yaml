@@ -1,4 +1,4 @@
-name: Bivariate Bicycle Code (autqec)
+name: Bivariate Bicycle Code (Bravyi Table 3)
 n: 90
 k: 8
 d: 10
@@ -17841,4 +17841,4 @@ logical:
       0,
       0,
     ]
-tags: [CSS]
+tags: [CSS, bivariate-bicycle-code, LDPC]

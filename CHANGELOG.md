@@ -5,6 +5,641 @@ the source-of-truth `package.json` version.
 
 ## Unreleased
 
+**Breaking (0.7.11 → 0.8.0):** migration `021` drops `circuits.crumble_url` and
+`circuits.crumble_url_annotated`, and the two keys are gone from the circuit YAML schema.
+Nothing reads them any more — the link is derived where it is shown — but anything holding
+a copy of the database or parsing the YAML will need the columns removed.
+
+### Removed
+
+- **The Cirq body format, all 718 files and 13 MB of it.** A Cirq circuit's text form is a
+  per-moment ASCII grid whose width scales with the qubit count, so it grew fastest exactly
+  where it read worst — and it never said anything the STIM body does not say better. Gone
+  with it: the `stimcirq` dependency (and its `cirq-core`, `pandas`, `sympy` and `duet`
+  transitive weight), the CIRQ tab, and the `.cirq` extension from the two body-file
+  readers. The format shortcuts are `1`/`2` now; `3` finds no tab and does nothing, which is
+  what it already did past the last tab.
+- **The stored Crumble URLs — `crumble_url` on 725 circuits and `crumble_url_annotated` on
+  398, 528 KB of YAML.** A Crumble URL is a pure string transform of the body it shows: join
+  the lines with `;`, abbreviate `QUBIT_COORDS`/`DETECTOR`/`OBSERVABLE_INCLUDE`, write the
+  spaces as `_`. Storing it therefore kept a second, lossy copy of every circuit, and the
+  copy drifted — 76 of the 725 links pointed at a body the page had stopped displaying, and
+  32 more dropped a syndrome round's own measurement. `crumbleHref` in
+  `src/lib/stim-format.ts` now derives it: the detail page server-renders it from the body it
+  already has, code pages fill it in when the row's bodies are lazy-loaded, and the Detectors
+  switch moves it by re-deriving rather than by swapping to a second stored string. The
+  transform is stim's own, checked byte-for-byte against all 1123 URLs that used to be
+  stored.
+- **Quirk URLs above 40 qubits — 28 links, 1.70 MB.** Quirk's editor tops out around 16
+  qubits, so these were dead links, and the URL scales with width: one was 242,264
+  characters, and seven of them made up 91% of `/codes/144-12-12`. The width gate was already
+  in the pipeline (`LARGE_CIRCUIT_MAX_QUBITS`); the stored data predated it. Below the gate
+  nothing changed — 697 circuits keep their Quirk link.
+- **The `no-private-registries` CI job.** It failed the build on any `jfrog.io` reference —
+  a guard from the period when this code sat next to a private artifactory. Nothing in the
+  repository has referenced one for a long time (`git grep -F jfrog.io` is empty), and both
+  lockfiles resolve exclusively against public registries, so the job was spending a run on
+  every PR to assert something no longer at risk.
+
+### Changed
+
+- **The Crumble link is gated on the length of the URL, not on the qubit count.** It used to
+  be blanked past 40 qubits, which denied a link to every 144-qubit circuit in the library
+  while saying nothing about the number that actually matters. `CRUMBLE_MAX_URL_LENGTH` is
+  65,536 characters — the narrowest ceiling among current browsers (Chrome accepts ~2 MB and
+  Safari ~80 KB; Firefox is the binding constraint at ~64 KB) — so a link that is offered
+  opens everywhere. 950 of 972 circuits get one, against 697 before; the 22 refused are all
+  720 qubits or wider, where the string runs to 232 KB plain and 782 KB with detectors. The
+  cap looks at both views together, so the Detectors switch can never turn a working link
+  into a broken one.
+- **`/codes/144-12-12` is 90% smaller: 1,259,209 → 124,946 bytes.** `/codes/108-8-10`,
+  781,983 → 124,974. The circuit pages follow: `#27`, 426,081 → 150,455; `#163`, 738,916 →
+  95,579.
+
+### Added
+
+- **`npm test` — `crumbleUrl` against stim's own `to_crumble_url()`, over all 1646 committed
+  bodies.** The Crumble link is now derived by a hand-written reimplementation of a stim
+  function, and nothing else in the repository compares the two: a stim upgrade, or an edit
+  to the abbreviation table, would break every link on the site and pass every other check.
+  A second assertion keeps the corpus a fixed point of `str(stim.Circuit(...))`, because the
+  exactness only holds for canonical text — a hand-edited body using a gate alias
+  (`CORRELATED_ERROR` for `E`) or carrying a `#` comment would derive a link for
+  differently-spelled text. Runs in CI as `crumble-url-parity`, node's own test runner, no new
+  dependency.
+
+### Fixed
+
+- **A circuit row announced itself as a button that does something else.** It carried
+  `role="button"`, `tabindex="0"` and `aria-expanded="false"`, so a screen reader said
+  "button, collapsed" — and then `Enter` on it navigated to the circuit page. `l`, Space and
+  a mouse click expanded; the one key the announced role promises did not. That is WCAG
+  4.1.2: the name, role and state have to describe what the thing actually does, and here
+  the role described a toggle that only some of the row implements.
+  `role="button"` also carries ARIA's _Children Presentational: True_ — a button's contents
+  are a label, not controls — so the row's eight interactive descendants (the permalink, the
+  favourite toggle, the detail link and five tag links) were stripped of their own roles and
+  folded into the row's accessible name, a 149-character run of
+  `#190G: 112Q: 8D: 3Q: 7Circuit-Synth Zero State Preparation…1D-AODlogical-state:zero…`.
+  Every affordance in the row existed for a mouse and for nobody else.
+  The row now claims nothing it does not do:
+  - **`role="group"` with a name** (`Circuit #190: <name>`), not a bare focusable `div`. It
+    still has to be focusable — `j`/`k` move between rows by focusing them — and something
+    focusable with no role announces as an unnamed container. `group` names it, and, unlike
+    `button`, does not flatten what is inside it: all eight descendants are individually
+    exposed again, and the row's own name is 76 characters that say which circuit it is.
+  - **The chevron is a real `<button>`**, which is the only element here that _is_ a toggle,
+    and it owns `aria-expanded` plus an `aria-controls` pointing at the panel. Its name is
+    fixed ("Circuit #190 details") rather than flipping between "Expand" and "Collapse":
+    `aria-expanded` already carries the state, and a name that repeats it says the same
+    thing twice. It has no click handler of its own — the click bubbles to the row's
+    existing one — so it cannot toggle twice, and there is one implementation, not two.
+  - **No documented keyboard behaviour changed.** `Enter` still navigates, `l`/`h`/Space
+    still expand and collapse, `j`/`k` still move, `f` still favourites, and clicking
+    anywhere on the row still expands it. `Enter` on the chevron toggles instead of
+    navigating, which is what a focused button should do.
+- **Two page scripts selected the open row by its `aria-expanded`, and would have died
+  silently.** `[id] > .circuit-toggle[aria-expanded="true"] + .circuit-detail` is how
+  `/codes/[code]` and `/search` find the row that `1`/`2`/`3`, `c`/`y` and `d` act on, and
+  `circuit-bodies-client` uses the same shape to load bodies for a row already expanded by a
+  `#id` deep link. Moving `aria-expanded` onto the chevron would have left all three
+  matching nothing, with no error and no test to catch it. The row therefore mirrors the
+  state in `data-expanded`, all three selectors read that, and `list-keynav`'s
+  `expandedAttr` is pointed at it on both pages. The split is deliberate rather than
+  incidental: ARIA describes the control to assistive technology, a data attribute is what
+  page scripts are allowed to depend on, and one function (`setExpanded`) writes both plus
+  the chevron rotation so they cannot drift.
+- **Giving the panel an `id` broke the "collapse the other rows" loop**, and only in the
+  state nobody looks at. `aria-controls` needs a target id, and the loop found each other
+  row's header with `panel.closest("[id]")` — which starts at the element itself, so it now
+  returned the panel, found no header under it, and left that row's `data-expanded`,
+  `aria-expanded` and chevron all saying "open" while the panel was visibly shut. Two rows
+  then matched the "open row" selector and `1`/`2`/`3` would have acted on the wrong one. It
+  walks to `previousElementSibling` now. Found by checking the collapsed row's attributes in
+  a browser after the change, not by anything that would have shown on screen.
+- **Every keypress on `/search` threw a `TypeError`.** `initCircuitActions()` was called with
+  no argument, so `findActiveContainer()` read `config.activeContainerSelector` off
+  `undefined` on any key that reached it. The page still worked: the throw is confined to
+  one of several `document` keydown listeners, so `j`/`k`/`Enter`/`f` — handled separately by
+  `initListKeynav` — kept working, and typing in the search box never reached it at all
+  (`isInputFocused()` returns first). What was missing was `1`/`2`/`3`, `c`/`y` and `d`,
+  plus an error per keystroke in the console. That is why it went unnoticed.
+  `/search` renders the same expandable `CircuitRow`s as a code page, so it now passes the
+  same selector, and `1`/`2`/`3`, `c`/`y` and `d` act on the open row. No `downloadAllSelector`:
+  there is no such button on `/search`, and `/api/download` reads URL filter params rather
+  than a query. Found by `astro check`, which had never run before this week.
+- **`aria-expanded={String(open)}`** on the collapsible section typed as `string` where the
+  attribute accepts `boolean | "true" | "false"`. Astro renders the boolean correctly, so
+  this was a type error rather than a rendered one — but it was the reason that file sat in
+  the typecheck exclusion list.
+- **`tsconfig.check.json` is gone, and `npm run typecheck` runs against the real config.**
+  It existed to hold two errors out of CI while the files they were in belonged to other
+  open PRs — a debt register with two entries, both now paid. The full project type-checks
+  clean: 92 files, 0 errors. The `check-json` exclusion that existed only to parse it went
+  with it.
+- **Seven accessibility defects, each measured in a browser rather than inferred from a
+  linter.** They had nothing in common but the failure mode: every one of them looked right
+  to a sighted mouse user, which is exactly why none had been noticed.
+  - **The focus ring was all but invisible.** `ring-blue-500/40` measured 1.64:1 against a
+    row in light mode and 1.74:1 in dark — WCAG 1.4.11 asks 3:1 — and, worse, only 1.33:1
+    and 1.27:1 against the row's own resting border, so "focused" and "not focused" were
+    nearly the same picture. Dropping the alpha leaves solid blue-500: 3.76:1 on white,
+    5.35:1 on gray-950, and 3.04:1 / 3.90:1 against the resting border. Six call sites, not
+    the two that were first found: `CircuitRow`, `CodeCard`, the `/search` query and filter
+    inputs, the `/` filter input, and the row `favorites` builds client-side. On the inputs
+    the ring also has the field's own `gray-300`/`gray-700` border beside it, and there it
+    goes 1.12:1 → 2.55:1 (light) / 2.74:1 (dark) — short of 3:1 against that one edge, but
+    the ring's other neighbour is the page background, which it clears.
+  - **`text-amber-600` measured 3.20:1 on white**, under the 4.5:1 body text needs, and
+    neither of the two places that show it — the alpha superscript in the header (14px/600)
+    and the active-sort label (12px/600) — is large enough to claim the 3:1 exception. Now
+    `amber-700`: 5.03:1 in light, and dark mode keeps `amber-400` at 11.69:1. Bumped at all
+    ten call sites at once, because a token that means "this is the sort you asked for"
+    stops meaning it the moment two shades are in play.
+  - **Two of those ten are links whose only hover feedback was that colour**, so darkening
+    the resting state flattened the hover step: the header α and "Clear all active filters"
+    went from a 2.22:1 step to 1.41:1. Both now go to `amber-900` on hover — 1.80:1, still
+    a slight step — and, more to the point, underline. Dark mode never had a usable step
+    either (`amber-400` → `amber-200` is 1.38:1) and gains the same underline. A hover
+    affordance that exists only as a colour change is one an awful lot of people cannot
+    see; this is the first of the two that does not depend on hue at all.
+  - **`/codes` skipped from `h1` straight to `h3`** — `CodeCard`'s heading, the only
+    heading-order violation on the site. It is an `h2` now; the class list is unchanged and
+    so is the rendering, since the card sets its own size and weight. `ToolCard` keeps its
+    `h3`, which is correct: `/tools` has a real `h2` above it.
+  - **Three `text-gray-500`s on `/search` had no dark variant**, measuring 4.16:1 against
+    `gray-950`. Every sibling paragraph in the file already had `dark:text-gray-400`, and
+    `global.css` states the pairing as house rule, so these were omissions rather than
+    choices. 7.74:1 now.
+  - **The format tabs said which format was active in colour only** (WCAG 4.1.2) — the
+    server emitted plain buttons and the client rewrote `className` and `display`. They now
+    carry `aria-pressed`, the pattern `CodeMatrices` already uses. The initial state is read
+    off the visible body rather than assumed to be the first tab, because the tabs on code
+    pages are cloned from `CircuitBodiesTemplate` and start with no ARIA of their own.
+  - **The header quick-search was an incomplete combobox.** The input had no
+    `role="combobox"`, `aria-expanded`, `aria-controls` or `aria-autocomplete`, and the
+    results list had no `id` — which made the `aria-activedescendant` the script had been
+    writing all along point at nothing, so no screen reader ever announced the highlighted
+    result. All five are wired up now, and `aria-expanded` tracks the dropdown. They are set
+    from the script, not the markup: without JS there is no dropdown, and an input that
+    claims to own a popup that cannot open is worse than a plain search field. Two
+    consequences of making it a real combobox:
+    - **`aria-live="polite"` came off the results list.** It was there because nothing else
+      announced the results — a reasonable call while `aria-activedescendant` pointed at
+      nothing. Now that the combobox announces the active option, the live region announces
+      the list on top of it, and the user hears everything twice. `role="listbox"` and the
+      label stay.
+    - **Tabbing out left `aria-expanded="true"` on an input nothing was focused on.**
+      `hide()` was reachable from Escape, a click outside, and a query under two characters
+      — not from losing focus. There is a `focusout` handler now, guarded on a non-null
+      `relatedTarget`: the result `<li>`s are not focusable, so pressing the mouse on one
+      blurs the input with a null `relatedTarget`, and hiding there would take the item away
+      between mousedown and the click that navigates.
+  - **`/about` re-documented the keyboard shortcuts and had drifted from them.** It omitted
+    `Home` and `End`, and described `Esc` as collapsing the open row when it also closes the
+    help overlay. Corrected in place. The duplication itself stays: `KeyboardHelp`'s flat
+    17-row table and `/about`'s topic-grouped prose are different shapes, and collapsing
+    them into one source would cost more than it saves.
+
+- **Writing about a Tailwind class put it back in the stylesheet.** Tailwind v4 finds its
+  own sources, which means it reads every tracked file — including prose that only _names_ a
+  class. The CHANGELOG entry above, explaining that `text-amber-600` had been replaced,
+  regenerated `.text-amber-600{}`; the design plans under `docs/` were keeping
+  `dark:text-amber-300` alive for a component that stopped using it months ago. The wasted
+  bytes are the small half. The large half is that "the class is gone from the built CSS"
+  stops being a way to check that a sweep across call sites was complete — and it fails in
+  the direction that hides a missed one, which is how four `ring-blue-500/40` sites survived
+  the first pass of the fix above. Both paths are now `@source not` in `global.css`.
+- **294 circuits displayed — and handed over on Copy and Download — a body missing its final
+  measurement.** `bodyForDisplay` subtracted the readout epilogue unconditionally, but a
+  circuit with no `stim-annotated` body has no Detectors switch to bring it back, so for
+  those the subtraction was permanent and invisible. `/circuits/662` rendered two lines while
+  its Crumble link opened the same circuit _with_ `M 10`, and a user could download a circuit
+  that no longer measured anything. `stripReadout` now subtracts only from a body that
+  carries annotations — which is exactly the condition under which the switch exists. The 674
+  circuits that do have an annotated body are unaffected: none of the 63 prologue-only ones
+  ends in a readout.
+
+- **The pre-commit hooks corrupted the repository, and nothing had noticed because nothing
+  ran them.** They were never wired into CI, so they only ever fired for someone who had run
+  `pre-commit install` — and on this repository a full run rewrites 2476 files and leaves
+  Python that does not parse. Three separate causes, each now configured out in `_typos.toml`
+  and `.pre-commit-config.yaml`:
+  - **`typos` rewrites `anc` to `and`.** It is how the importers spell "ancilla", 29 times,
+    and `for row, anc in enumerate(...)` becomes `for row, and in ...` — a syntax error in
+    `circuit_validate.py`, `syndrome_extraction.py` and three of the flag-at-origin drivers.
+    It also translates the German legal pages into English a word at a time (`Sie` → `Size`,
+    `oder` → `order`), which would quietly damage a compliance document, and "corrects" the
+    `ba` inside the content-addressed digest `18ed8bee546ba80f` that 32 circuits reference —
+    breaking `db:create`. Now: the German pages and `data_yaml/` are excluded, and the QEC
+    vocabulary (`anc`, `ket`, `IZ`), the author name `Wille` and the citation `Lond` are
+    named. Not `locale = "en-gb"`, which sounds right for the prose and would rewrite
+    Tailwind's `text-center` and the `/favorites` route: 178 findings become 2233.
+  - **`end-of-file-fixer` and `trailing-whitespace` rewrote 2476 circuit bodies.** `.stim`,
+    `.qasm` and `.cirq` files are emitted byte-for-byte by the pipeline; a hook that edits
+    them puts the stored body out of step with what the pipeline would produce. Excluded
+    from `data_yaml/`.
+  - **`check-json` cannot read `tsconfig.check.json`**, which is JSONC — it carries the
+    comments explaining which two files it excludes and why. Excluded.
+
+- **`/api/search` was cached at the edge for a week, keyed on `?q=`.** `middleware.ts`
+  stamps `s-maxage=604800` on any response without its own `Cache-Control`, which is safe
+  for a page whose output is fixed at deploy time and not for one whose key space anyone
+  can enumerate. `/search` had set its own 600 s for exactly this reason since it was
+  written; the quick-search behind it had not. It does now.
+- **A zip download only type-checked by accident.** `/api/download` handed a Node `Buffer`
+  straight to `Response`, whose `BodyInit` wants a view onto a plain `ArrayBuffer` and not
+  the `ArrayBufferLike` union Node declares. The bytes were always right; the types said
+  otherwise. It now copies into its own `Uint8Array`, which also stops `.buffer` meaning
+  "Node's shared allocation pool" rather than "this zip".
+- **Renovate could auto-merge a moving target.** `pyproject.toml` pins `mqt-qecc` to a git
+  branch, and `lockFileMaintenance` runs with `automerge: true` — so a weekend lock refresh
+  landed whatever that branch pointed at, unread, in the ingestion pipeline. It already had:
+  f476ffa1. Git-sourced dependencies and `uv.lock` refreshes now need a human.
+- **`.gitignore` ignored a directory nobody uses.** It listed `.worktrees/`, while agent
+  worktrees are created under `.claude/worktrees/` — so every worktree showed up as
+  untracked in the main checkout. Corrected, narrowly: `.claude/` itself stays tracked,
+  because `.claude/agents/` and `.claude/commands/` are committed.
+- **Six documentation defects, five of them the same defect: a maintained count.** CLAUDE.md
+  said "1028 circuit files", "1019 of 1028" and "one paper backs up to 370 circuits"; each
+  was right the day it was written and wrong within days, three times over as imports landed.
+  Updating them would only reset the clock, so the counts are **gone** and the arguments they
+  supported are stated without one — a paper backs "hundreds" of circuits, and widening
+  `toric code` to "any term" matches "all but a handful" because "code" occurs in nearly every
+  circuit's text. Same treatment for the stale counts in code comments
+  (`index.astro`, `CircuitRow.astro`, `add_circuit/annotate.py`) and for the sample
+  `Papers: N, linked to M circuits.` build output quoted in `docs/database.md` and
+  `/add-circuit`.
+- **CLAUDE.md's static/SSR page lists were wrong on the day they were written**, and read as
+  an inventory: `/favorites` was missing from the static list, `/tools` and five `/api/*`
+  routes from the SSR one. Replaced with the rule that actually decides it — a route that
+  reads SQLite is `prerender = false` — plus examples marked as examples and a pointer to
+  `grep -rn "prerender" src/pages/`, which cannot go stale.
+- **The matrices lived in three places at once, on paper.** They moved to content-addressed
+  `data_yaml/matrices/<digest>.yaml` and no `*.original.yaml` has existed since, but
+  `docs/database.md` still omitted the directory from its tree and filed matrices under
+  `circuits/originals/`, `/add-circuit` still named `*.original.yaml`, and
+  `docs/adding-circuits.md` contradicted **itself** — line 444 against its own "Original
+  submission" section. All four now match CLAUDE.md and the pipeline.
+- **"The pipeline always preserves the original" was never true.** The flag gadgets are
+  written directly with the pipeline helpers, so there is nothing earlier to preserve: they
+  have no `circuit_originals` row and no "Original submission" section, which `index.astro`
+  already knew and the docs did not. Corrected in `docs/adding-circuits.md`,
+  `docs/adding-circuits-agent.md`, `docs/database.md` and CLAUDE.md's schema comment.
+- **The QUITS README pointed at a file in an unmerged branch.**
+  `data-imports/autqec/find_sigma.py` does not exist here — that import is still PR #127 —
+  so a reader had no way to reproduce the two BB permutations. The README now says so
+  outright and points at the matcher that _is_ in the repo
+  (`scripts/add_circuit/find_sigma.py`, with `data-imports/qldpc/find_sigma.py` as the
+  worked example of driving it); `sigma_precomputed.json`'s two provenance strings say the
+  same. The permutations themselves are untouched, and `add_circuit` still re-verifies each
+  by row-space equality on every run — which is what makes shipping them acceptable.
+- **The agent doc's "Current tags" table listed about a third of the vocabulary.** It was
+  missing seven code tags (`LDPC`, `topological`, `subsystem`, `bivariate-bicycle-code`, …)
+  and six circuit tags and families (`gadget`, `partial-ft`, `x-type`/`z-type`, `distance:*`,
+  `circuit-distance:*`, …) while telling the agent it may only use tags that already exist.
+  A second copy of a table that imports extend was never going to hold, so it is replaced by
+  the query against `tags`/`taggings` that returns the real vocabulary, plus the shape of it
+  in prose.
+- **`scripts/annotate_circuits.py` described itself as state-prep/encoding-only** though it
+  has dispatched to `build_annotated_se` for syndrome extraction since that landed. Its
+  docstring now covers both branches and why a round cannot be reset-free.
+- **A collapsed circuit row kept every one of its controls in the tab order.** The panel is
+  hidden with `max-height: 0` and `overflow: hidden`, which clips it visually and does
+  nothing at all to focus — so a keyboard user tabbing down a code page fell through
+  hundreds of buttons and links inside rows they could not see, with no way to tell where
+  the focus ring had gone. Measured on the built site: **396 focusable controls inside the
+  collapsed rows of `/codes/steane-code`, 1366 on `/codes/flag-gadgets`, and 7 in the
+  closed mobile nav below 640px** — now 0 in all three. The collapsed check-matrices
+  section was the same bug (3 controls). The containers carry `inert`, and every handler
+  that writes `max-height` now writes `inert` beside it; expanding a row makes its ten
+  controls focusable again, collapsing takes them back out.
+- **66 of the 84 code pages shared a `<title>` with another page.** 17 groups of codes have the same
+  bare name — nine are called "Balanced Product Cyclic Code" — so their tabs, bookmarks and
+  search results were indistinguishable. The page already computed the disambiguated
+  `codeTitle` (name plus `[[n,k,d]]`) and handed it to the JSON-LD; the `<title>` was the
+  one place still getting `code.name`. All 84 code page titles are now distinct.
+- **The `<h1>` ran the name into the parameters: "Steane Code[[7,1,3]]".** Astro strips the
+  whitespace between two adjacent expressions, and the measured gap was 0.00px. Laid out
+  the same way `CodeCard.astro` already does it — flex with an explicit gap — which renders
+  8px of space.
+- **`/favorites` stopped at 200 circuits and did not say so.** `/api/circuits` capped the id
+  list at 200 "to prevent abuse" while the client allows 5000 favourites and sends them all
+  in one request, so a reader who favourited the whole library saw a fifth of it and had no
+  reason to suspect the rest existed. It was never a URL-length guard either: 200 four-digit
+  ids is ~1000 characters. The cap stays — an unbounded id list is a real way to make the
+  server build an arbitrarily large query — but it is now 2000, comfortably above the
+  library's 972 circuits and still inside Node's 16 KB header limit, and truncation is
+  reported (`X-Truncated`) instead of hidden, with `/favorites` showing a notice naming
+  both counts and pointing at "Export list". Verified: 400 ids in, 400 back; all 972 in,
+  all 972 back; 2100 in, `X-Truncated: true`.
+- **"Download all visible circuits" was not true while the Favorites filter was on.** That
+  filter lives in localStorage and hides rows client-side, but `/api/download` reads the
+  query string — by design, and the contract is unchanged — so the zip still contained the
+  hidden non-favourites. The label and tooltip now say so while the filter is active, and
+  revert when it is switched off. The `[data-list-count]` label is untouched: it describes
+  the URL filters, which the download does honour.
+- **`/about` hotlinked its funding badge from img.shields.io** — the site's only third-party
+  request, on a page whose privacy policy discloses no external content, and one that
+  reserved no space so the paragraph below it moved when the badge arrived. The badge is
+  now committed at `public/unitary-foundation-badge.svg` and served locally with explicit
+  `width`/`height`. `/about` now issues zero cross-origin requests.
+- **Dedup absorbed a subsystem code into a different one with the same centre.** A code's
+  `canonical_hash` is taken over the **gauge** group precisely because two subsystem codes
+  can share a stabilizer group and differ in what a decoder may measure — so Phase 1 of the
+  scan separates them, and Phase 2 compared only `h` and merged them again. A [[9,4,3]] with
+  Bacon-Shor's centre but a smaller gauge group came back `match / existing / 9-1-3`, its
+  computed k=4 discarded. A candidate now has to agree on the gauge group too: presence (a
+  subsystem code is not the stabilizer code at its centre, which also stops a genuine
+  [[9,5,3]] being absorbed), rank, and row space under the **same** permutation the
+  stabilizer search returned. A permutation that fits the centre but not the gauge is
+  reported `uncertain` rather than guessed at — the search returns the first σ that fits and
+  does not enumerate the rest.
+- **`validate_circuits.py` recorded a "skipped" result and then crashed on it.** The
+  `inputs is None` branch of the encoder input-count check never returned, so `len(None)`
+  raised, the blanket `except` downgraded it to an "error", and a circuit that was merely
+  unanalysable FAILED — exit 1 in CI. Dead against all 86 stored encoders, but a real
+  regression: #136 rewrote `elif len(inputs) != k:` into an `if` and dropped the
+  exclusivity.
+- **`npm run generate` produced a tree `npm run db:create` rejects.** It assembled the
+  `data_yaml/` files itself rather than going through `add_circuit`, and had drifted from it:
+  a per-circuit `originals/<stem>.original.yaml` with no `original_matrices` reference — the
+  exact shape `create_database.mjs` throws on — a `qec_id` reallocated on every run against
+  the documented "permanent, never reused" rule, and one filename for every `--stim` when
+  `--circuit-name` was omitted. It now delegates, so all three are gone by construction
+  rather than by keeping two writers in step. `--circuit-name` is required one per `--stim`,
+  and `--overwrite` / `--assume-new` expose the matching `add_circuit` arguments.
+- **24 circuits were missing their `.cirq` body.** Eight codes from #44 were added with only
+  `.yaml`/`.stim`/`.qasm`, before `LARGE_CIRCUIT_MAX_QUBITS` existed to explain an absent
+  one. At 15–37 qubits they are well under the threshold of 40. Regenerated from each
+  circuit's canonical `.stim` with the pipeline's own converter, so the bodies are what
+  ingestion would have written.
+- **Re-running an import silently dropped its measured `circuit-distance:` tags, and no
+  document said so.** All three syndrome-extraction importers hardcode `overwrite=True`,
+  and `add_circuit` carries over only `qec_id`, so a re-import writes a fresh `tags:` list
+  — losing all 91 stored tags (47 asyndrome, 26 qLDPC, 18 QUITS). Nothing is
+  unrecoverable: `scripts/measure_circuit_distance.py --write` strips and re-measures, so
+  one idempotent command restores them. It is now in the "Next:" recipe each importer
+  prints, and each README has a "## Re-running" section saying what is lost and what is
+  not — `crumble_url_annotated` and the `stim-annotated` bodies are regenerated by
+  `annotate_circuits.py`, so nobody goes looking for a loss that is not there.
+- **The qLDPC rounds were never measured for circuit-level distance**, and the docs say an
+  absent `circuit-distance:` tag means the search ran out of budget. It did not: 26 of the
+  28 settle, 20 of them in under a second. `scripts/measure_circuit_distance.py` arrived in
+  #137 and #136 had already merged, so nothing ever pointed it at them. Now tagged, which
+  puts a number on the caveat those circuits already carry — the library states the
+  strategy is not guaranteed distance-preserving, and **[[4,2,2]], [[6,2,2]] and
+  [[15,7,3]] come out at `circuit-distance:1`**: one fault anywhere in the round flips a
+  logical without firing a detector. Two circuits exceed even a 400 s budget and stay
+  untagged.
+- **Fifty-six flag gadgets were stored twice or more.** A gadget depends on the
+  stabiliser's weight, not on the code distance it was verified at, so the same file ships
+  at every distance from the one it first appears in up to 11 — the weight-4 X gadget is
+  byte-identical at d=3, 5, 7, 9 and 11 and was five circuits, distinguishable only by the
+  number in the title. The distances are the information, not the copies: 20 circuits now
+  carry several `distance:` tags each, stay findable by filtering on any of them, and name
+  the span (`X-type weight-4 FT gadget (d=3-11)`). 354 source files, 298 circuits.
+- **Five pairs of qLDPC rounds were identical without saying so.** Colouring the X- and
+  Z-check subgraphs separately returns the joint colouring, byte for byte, whenever the
+  Tanner graph is small enough that the joint one already separates them — [[4,2,2]],
+  [[6,2,2]], [[7,1,3]], [[15,7,3]] and the tetrahedral code, 5 of the 14 codes carrying
+  both. Nothing on either page said so, which left two entries a reader had to diff by
+  hand. Both are still stored: they are different algorithms, and on the other 9 codes
+  they differ, the toric [[16,2,4]] by depth 4 against 9. Each now names the other
+  strategy in its notes, so the agreement is a stated property of the code rather than an
+  unexplained repeat.
+- **The changelog claimed 61 of 127 circuits measured.** That count came from a branch that
+  also held the AlphaSyndrome import when it was not yet merged, and counted 127 circuits
+  that were never all on `main` at once. With every round in place it is 87 of 155.
+  Corrected, along with how many preserve the code's distance.
+- **`circuit-distance:` fell into the filter's "Other" group** while `distance:` sits under
+  Fault tolerance. Same question, different number — they belong together.
+- **Every page had two indexable URLs, and the prerendered ones canonicalised to the URL
+  the sitemap does not list.** `astro.config.mjs` set no `trailingSlash`, so Astro defaulted
+  to `"ignore"` and `Layout.astro` echoed back whatever path the request carried. `/codes`
+  and `/codes/` both answered 200 and each named _itself_ canonical — one page, two
+  self-canonicalising URLs — while `/about` baked `https://qecirc.com/about/` against a
+  `sitemap.xml` that lists `https://qecirc.com/about`. Now `trailingSlash: "never"`, and the
+  canonical is normalised rather than echoed, so it holds for an SSR page whose request the
+  router did not shape. Crawled before and after on a built server, every route in both
+  forms: each slash-free form answers exactly as it did, and all 16 trailing-slash variants
+  — 12 of which used to answer 200 as a duplicate, 4 the 404 body — now `301` to the
+  slash-free URL with the query string intact
+  (`/search/?q=steane%20code&tag=x` → `/search?q=steane%20code&tag=x`).
+  Canonical, `og:url` and `sitemap.xml` now agree on one URL per page, prerendered and SSR
+  alike.
+- **The site-wide `SearchAction` advertised a path `robots.txt` forbids.** `Layout.astro`
+  told every crawler it could search at `/search?q={search_term_string}`; `robots.txt.ts`
+  disallows `/search` for every agent, and deliberately — the `?q=` key space is unbounded.
+  Both landed in `0abfe8c5`, whose PR justifies the `Disallow` without mentioning the
+  markup it contradicts. Removed rather than reconciled: Google retired the sitelinks
+  searchbox this fed in November 2024, so the four lines were inert as well as wrong.
+- **`/tools` shipped no structured data** though it is the exact sibling of `/codes`, which
+  has carried `CollectionPage` + `ItemList` + `BreadcrumbList` since the JSON-LD went in —
+  and CLAUDE.md asks for matching `jsonLd` when an entity page type is added. It now
+  carries the same graph, enumerating the **unfiltered** 11 tools: `?tag=` filters that page
+  on the server but every variant canonicalises to `/tools`, so the enumeration has to
+  describe that one URL. Tools have no page of their own, so each item links to its anchor
+  (`ToolCard` already renders `id={tool.slug}`). Not added to `/search`: it is `Disallow`ed,
+  so nothing would ever read it.
+- **Codes whose name already carries their parameters printed them twice** — "Gottesman
+  [[8,3,3]] Code [[8,3,3]]", "[[20,2,6]] Code [[20,2,6]]". The guard tested
+  `name === params`, which only catches a name that is _nothing but_ its parameters: of the
+  5 codes whose name contains them, 3 are exactly them, so 2 doubled. It had been written
+  out by hand at **eight** call sites — the `<title>`, the `<h1>`, the meta description, two
+  JSON-LD `name` fields, the code cards, `llms.txt`, the quick-search JSON and the `/search`
+  code filter — and correcting them one at a time is how the first pass fixed three and left
+  the page they link to still saying it twice. There is now one predicate,
+  `showCodeParams`/`codeDisplayName` beside `formatCodeParams`, and all eight sites call it.
+  Verified on the built server: all 84 code page titles, `/codes`, its ItemList, `llms.txt`,
+  `/api/search` and the `/search` filter — 0 doubled, with "Steane Code [[7,1,3]]" and the
+  bare "[[16,2,4]]" both still rendering exactly once.
+- **`/search` printed two different empty states, three lines apart** — "No circuits found
+  for X" from the result count, then "No circuits match this query." from the empty state
+  proper. One empty state now, the centred one, and it carries what the count line used to:
+  the query as actually resolved (a correction rewrites it), whether the filters are to
+  blame, and the way out of each. The three result-set notices are suppressed when there is
+  no result set — "Showing results for steane." sitting directly above "No circuits match"
+  told the user two opposite things — and the escape hatch from a correction moves into the
+  empty state, which is the only thing rendered in that case.
+- **The header quick-search could show results for a query the user had typed past.**
+  `doSearch` awaited `fetch` and `res.json()` and wrote `innerHTML` unconditionally: no
+  ordering guard, no `res.ok` check, no `catch` — and it is called from a `setTimeout` with
+  its promise dropped, so a 5xx (which answers with an HTML error page, making `res.json()`
+  reject) threw where nothing could catch it and left the dropdown frozen on stale results.
+  A generation counter now discards any response that is not the newest, and a failed
+  request leaves the previous list up for the next keystroke to replace. **Dismissing counts
+  as newest**: `hide()` bumps the counter too, so a response still in flight cannot reopen a
+  dropdown closed with Escape or an outside click, nor answer a query backspaced below the
+  two-character floor. Verified in the browser by holding responses open and releasing them
+  in a chosen order: the stale response never wins, a dismissed one leaves the list hidden
+  and untouched, a 500 changes nothing and logs no unhandled rejection, and the next
+  keystroke recovers.
+- **`aria-activedescendant` outlived the option it named.** Arrowing to the third result and
+  then typing on left the input pointing at `search-result-0-2` after that node had been
+  removed with the rest of the list — the attribute is cleared alongside `activeIndex` now.
+- **Ten unguarded `localStorage` calls, where a denied store throws on _read_.** Chrome's
+  "block all cookies" and some embedded webviews make every access raise `SecurityError`,
+  so these were not lost preferences but thrown exceptions mid-module. The worst sat in
+  `codes/[code].astro`: the favourites-filter read is above the "download all" wiring, so a
+  browser that refuses storage lost the download button, the keyboard shortcuts and the tag
+  dropdowns with it. `src/lib/safe-storage.ts` now wraps get/set — a read answers `null` —
+  and the two `is:inline` scripts that cannot import it (the theme, the search-filter
+  disclosure) inline the same try/catch. Proved by serving the built site through a proxy
+  that makes `localStorage` throw before any page script runs: `/codes/steane-code` renders
+  all 81 rows with zero page errors, the favourites filter, theme toggle and tag-view
+  toggle all still respond, and "Download all" still fetches `/api/download?code=steane-code`.
+
+  **A write reports whether it landed, and favourites act on that.** Swallowing the failure
+  is right for a theme or a tag view and wrong for the user's own list: `importFavorites`
+  counts a merge it performs in memory, so a dropped write would have toasted
+  "Imported 3 new favorites" and called `location.reload()`, landing the user back on an
+  empty page with nothing to explain it — and a heart would fill for something never stored.
+  `setItem` returns a boolean, favourite writes turn `false` into `StorageBlockedError`, and
+  the message says what actually happened ("this browser is blocking site storage") instead
+  of the file-format error the import's catch-all would have shown. The toast is raised in
+  `favorites-client` rather than at each call site, so the hearts in `CircuitRow.astro`
+  explain themselves too. Verified under denied storage: the import toasts the storage
+  message, does not claim a count and does not reload; the hearts on a code page and on a
+  circuit page stay in their old state. Verified with storage working: the import still
+  stores `[101,102,103]`, reloads, and renders 3 rows, and a heart still round-trips.
+
+### Added
+
+- **Four gaps closed in what CI actually checks.**
+  - **A `pre-commit` job.** The hooks now run on every PR instead of only for contributors
+    who installed them, which is what let the corruption above sit unnoticed. `prettier` is
+    skipped — it is the one hook needing `node_modules`, and `quality` already runs the same
+    check.
+  - **`ruff` covers `data-imports/`.** Every importer lives there, it is where the ingestion
+    bugs have actually been, and it was outside both the lint and format gates. Clean when
+    widened, so it costs nothing now and stops the next drift.
+  - **The coverage gate measures five scripts, not one, and asks for 80% rather than 60%.**
+    It watched `scripts/add_circuit` alone, leaving the four top-level maintainer scripts
+    unmeasured — including `validate_circuits.py`, which CI runs as its own step and which
+    was carrying a live bug. All five together come to 85%.
+  - **`stim-annotated` bodies must be a fixed point of the annotator.** They are derived from
+    their circuit but committed rather than built, so editing a circuit without re-running
+    the annotator ships a memory experiment describing the previous schedule, and nothing
+    else in CI would ever notice.
+  - **The two whole-library sweeps now run as their own jobs, in parallel.** Each parses
+    every circuit through stim and they share nothing but the checkout, so as steps of one
+    job they added up: 78 s of tests + 246 s validating circuits + 236 s checking annotated
+    bodies, a 9m35s job. Split, the wall clock is the slowest of the three — about 4
+    minutes, quicker than the workflow was before either check existed — for two extra
+    `uv sync` setups at ~8 s each.
+- **`npm run typecheck`, because nothing in CI had ever read a TypeScript type.**
+  `astro build` transpiles without checking and `eslint.config.mjs` uses the non-type-aware
+  `tseslint.configs.recommended`, so all of `src/` was compiled and shipped on trust. The
+  new script runs `astro check` as its own CI step, and found three errors on `main` — one
+  of them a page whose keyboard shortcuts have simply never worked. Two of the three live
+  in files owned by other open PRs and are excluded, individually and by name, in
+  `tsconfig.check.json`; that file is a debt register with two entries, not an ignore list.
+  `typescript` becomes a direct dev dependency in the process, instead of whichever major
+  `astro` and `typescript-eslint` happened to hoist between them.
+- **AlphaSyndrome syndrome-measurement schedules** (55 of them), imported from
+  [acasta-yhliu/asyndrome](https://github.com/acasta-yhliu/asyndrome)
+  ([arXiv:2601.12509](https://arxiv.org/abs/2601.12509), ASPLOS '26) by
+  [data-imports/asyndrome/](data-imports/asyndrome/README.md). 12 new codes come with
+  them — hyperbolic surface ×6, hyperbolic colour ×3, plus the [[61,1,9]] colour code,
+  the 5×9 rotated surface code and a self-dual bivariate bicycle code. Every schedule is
+  scored against a named decoder, so `decoder:` is what separates two otherwise identical
+  rounds for one code.
+  - **10 of the dataset's 69 schedules do not survive validation and are left out** —
+    every `google.json` and every `trivial.json`. Their X- and Z-checks interleave so
+    that two ancillas sharing two data qubits come out entangled, which makes each
+    outcome individually random even though every check is applied exactly once. The
+    import README traces it to the hard-coded tick tables in `asyndrome/special.py` and
+    measures what it costs in the paper's own metric. Their author has since confirmed
+    the two reference schedules were not meant to stand as correct, and points to
+    [arXiv:2602.09099](https://arxiv.org/abs/2602.09099) for one that is.
+  - **The two defect surface codes and their 4 schedules are left out too**, at the
+    author's request: they were exploratory, not a result of the paper.
+  - **One code is stored with a distance the dataset does not give.** `code_distance.py`
+    computes the exact CSS distance by exhaustive enumeration, so it is a distance rather
+    than a bound: the self-dual bivariate bicycle code ships `d: -1` and is [[42,6,6]].
+  - The hyperbolic surface [[36,8,4]] shares `n` and `k` with the QUITS balanced-product
+    `36-8-4-bpc` and nothing else: row-space ranks 11/17 against 14/14, which no
+    relabeling reconciles. It gets its own entry, with the refutation recorded next to
+    the `assume_new` that allows it.
+- **Syndrome-extraction circuits are a supported kind.** The pipeline could describe an
+  encoder and a state prep; a round of syndrome extraction fitted neither, and there was
+  nothing to check one against.
+  - **`validate_syndrome_extraction_h`** (`scripts/add_circuit/circuit_validate.py`) — a
+    round must measure exactly the stabilizer group and leave the encoded state, logicals
+    included, alone. It cannot be a codespace test the way the prep and encoder checks
+    are: a round acts on an already-encoded state, so there is nothing to simulate it on.
+    It is a **stabilizer-flow** check instead, and the ancilla-to-check correspondence is
+    derived rather than assumed.
+  - **`build_se_round`** (`scripts/add_circuit/syndrome_extraction.py`) — ticks of
+    (data, ancilla, basis) into one canonical round, refusing a tick that reuses a qubit
+    or an ancilla asked to carry both bases.
+  - **`round_check_matrix`** — which operator each measurement reads, which is what
+    placing detectors needs. Deliberately narrow: no map is better than a wrong one, and
+    nothing in validation depends on it.
+  - **A round's `stim-annotated` body is the memory experiment it belongs to** — reset the
+    data, `REPEAT d` of the round, terminal readout, detectors, observable. Unlike a prep
+    or an encoder, a round is not reset-free and has no tableau, so none of the derive/fit
+    machinery may be pointed at it.
+  - `schedule:` and `decoder:` join the `method` tag category. They pair up: a schedule
+    found by search is co-designed with the decoder it was scored against, so two rounds
+    for one code can differ only by `decoder:`.
+  - **`scripts/add_circuit/find_sigma.py`** — the codeword-based permutation matcher,
+    for codes that match a stored one on every cheap invariant but defeat
+    `find_code_permutation`'s budget. Written for the asyndrome import; three importers
+    need it, so it lives in the shared package rather than in one of them.
+
+### Added
+
+- **Bacon-Shor [[9,1,3]], [[16,1,4]] and SHYPS [[49,9,4]]**, the library's first subsystem
+  codes, now that #144 gives them somewhere to live. `code.matrix` is qLDPC's _gauge_
+  group, so the importer passes the stabilizer group (`get_stabilizer_ops()`) as `h` and
+  the gauge group alongside it; k comes out `n - rank(h) - gauge_qubits` rather than
+  `n - rank(h)`, which is the difference between [[9,1,3]] and [[9,5,3]].
+  - An encoder and a |0> prep each. qLDPC's memory experiments do not support subsystem
+    codes, so the two syndrome-extraction strategies report `unsupported` for them rather
+    than silently producing nothing.
+  - **A subsystem encoder exposes `k + gauge_qubits` free inputs**, not `k` — five for
+    Bacon-Shor, one logical and four gauge. `logical_input_count` and the annotator both
+    compared against `k` alone and refused every such circuit. Both now add the stored
+    gauge count. Deliberately _added to the stored k_ rather than derived from `h`: the
+    latter is the same number but would compare the circuit against itself and stop
+    catching a stored k that disagrees with the code, which is what the check is for.
+  - `add_circuit(gauge=...)` passes the group through; #144 stopped at
+    `compute_code_data_h`.
+
+- **Subsystem codes can be stored** (`data/migrations/020`). A subsystem code is described
+  by two groups, not one: the **gauge** group a decoder may measure, and the **stabilizer**
+  group — its centre — whose outcomes are deterministic. The difference between them is
+  real qubits, `(rank(G) − rank(S)) / 2` of them, which carry no information and are not
+  corrected.
+
+  The library read k off a single check matrix as `n − rank(h)`, which counts those gauge
+  qubits as logical ones: Bacon-Shor [[9,1,3]] would have been stored as **[[9,5,3]]** and
+  SHYPS [[49,9,4]] as **[[49,25,4]]**, so both were excluded rather than recorded wrongly.
+  Codes now carry an optional `gauge` matrix and `gauge_qubits` count, and
+
+      k = n − rank(S) − (rank(G) − rank(S)) / 2
+
+  which for a stabilizer code has a zero gauge term and is the formula already in use — one
+  implementation, not two.
+  - **`h` still means the stabilizer group**, for every code. Validators, dedup, the CSS
+    split and the matrices view are untouched: a circuit is checked against the operators
+    that are actually deterministic, which is what those checks want. Stabilizer codes gain
+    no fields at all.
+  - **Logicals are the bare ones.** `_compute_symplectic_logicals` takes the kernel of the
+    gauge group rather than of `h` when there is one, so they commute with everything a
+    decoder may measure, while still quotienting by the stabilizers.
+  - **Identity is the gauge group's.** Two subsystem codes can share a stabilizer group and
+    differ in gauge group, so `canonical_hash` is computed over the gauge group when there
+    is one — it determines the stabilizer group as its centre, so it is the more
+    informative of the two.
+  - Tagged `subsystem`, so a reader who sees [[9,1,3]] over a rank-4 `h` is told why rather
+    than left to think it a bug.
+
+  Verified against qLDPC's own `get_code_params()` on Bacon-Shor(3), Bacon-Shor(4),
+  SHYPS(3) and Steane. Importing the codes themselves is a follow-up.
+
 ### Changed
 
 - **Submitted check matrices are stored once instead of once per circuit.** They are a
@@ -64,6 +699,137 @@ the source-of-truth `package.json` version.
   `annotate_circuits.py` reported `code '...' not found` and `db:create` rejected it.
   `code_slug` is documented as naming a _new_ code, and on a match there is no new code
   to name.
+
+### Added
+
+- **Every qLDPC circuit records the one-liner that rebuilds it**, at the end of its notes:
+  `Reproduce with: qldpc.circuits.get_encoding_circuit(qldpc.codes.ToricCode(4), only_zero=True)`.
+  Asked for by the library's author
+  ([qLDPCOrg/qLDPC#554](https://github.com/qLDPCOrg/qLDPC/issues/554)) — a reader who wants
+  to rebuild one should not have to reverse-engineer the constructor from `[[n,k,d]]`.
+  The snippet cannot drift from the circuit, because the constructor string **is** what the
+  importer evaluates: `CodeSpec.constructor` replaced the lambda it used to hold, and
+  `CodeSpec.build()` evaluates it. A snippet that stopped building the code would fail the
+  import rather than mislead a reader.
+
+- **qLDPC circuits** (58 of them), imported from
+  [qLDPC](https://github.com/qLDPCOrg/qLDPC) by [data-imports/qldpc/](data-imports/qldpc/README.md):
+  28 syndrome-extraction rounds in two edge-colouring schedules
+  ([arXiv:2109.14609](https://arxiv.org/abs/2109.14609)), plus a tableau encoder and a
+  tableau |0> preparation for each of 15 codes. Six new codes come with them — the
+  Iceberg codes [[4,2,2]] and [[6,2,2]], toric d=6, two hypergraph product codes
+  [[58,16,3]] and [[241,121,3]], and a toric [[16,2,4]] that is **not** the stored
+  one (its X row space has 16 weight-6 codewords where the stored code has none, and
+  weight enumerators are permutation invariants).
+  - Upstream states both syndrome-extraction strategies are **not guaranteed
+    distance-preserving or fault-tolerant**, and that its encoders are not
+    fault-tolerant. That claim is reproduced in each circuit's notes rather than
+    dropped: the library tags what its sources claim, and here the source claims the
+    opposite.
+  - Subsystem codes are excluded, not broken. `BaconShorCode` and `SHYPSCode` validate
+    fine against their stabilizer group, but the library derives k as n - rank(h),
+    which is only correct for stabilizer codes — Bacon-Shor [[9,1,3]] would be stored
+    as [[9,5,3]]. They need a gauge-group field and a k that is not derived.
+
+### Fixed
+
+- **`round_check_matrix` reads rounds that hold their ancillas in the X basis**
+  (`RX` ... `MX`, with Z-checks as `CZ`), not only the Z-basis form. The two are the
+  same construction in different frames; before this, every X-basis round returned no
+  check map and silently lost its annotated memory experiment. It now tracks the basis
+  each ancilla is prepared in, pulls back that operator rather than always `Z`, and
+  requires the measurement basis to match the reset basis — a round reset in X and read
+  in Z has a random outcome however correct its check pattern looks.
+- **QUITS syndrome-extraction schedules** (72 of them), imported from
+  [QUITS](https://github.com/mkangquantum/quits)
+  ([arXiv:2504.02673](https://arxiv.org/abs/2504.02673), Quantum 9, 1931 (2025)) by
+  [data-imports/quits/](data-imports/quits/README.md). These are the library's first
+  circuits for **balanced-product, hypergraph-product, lifted-product and
+  lift-connected-surface codes** — 23 new codes, from [[36,8,4]] to
+  [[1428,184,<=24]] — and its first competing schedules for the same code from an
+  independent source: a bivariate bicycle round is 7 CX layers under the code's own
+  schedule and 12 under ZX-coloration.
+  - QUITS ships no circuits; it is a generator, so the importer calls it. One stored
+    circuit is one round, lifted out of the memory experiment's `REPEAT` block. The
+    `custom` bivariate bicycle schedule needed two normalisations, both identities on
+    a steady-state round: it renumbers the qubits (X-checks first) and ends on `MR`.
+  - Source is the paper that defines the **schedule**, not the code: only `cardinal`
+    and its N/S-merged variant are QUITS' own, while ZX-coloration is
+    [arXiv:2308.08648](https://arxiv.org/abs/2308.08648) and the bivariate bicycle
+    schedule is [arXiv:2308.07915](https://arxiv.org/abs/2308.07915).
+  - Schedules are tagged `schedule:interleaved` or `schedule:xz-separated` by
+    **measuring** the emitted circuit — reading the check type off each two-qubit gate
+    and asking whether any tick mixes them — rather than by trusting the strategy's
+    name. The source's own vocabulary lives in the circuit name instead.
+  - **One extra seed is imported, and only one.** QUITS' cardinal strategies take a
+    `seed` that reorders the schedule at identical depth and gate count, and its author
+    suggested varying it. Sweeping 12 seeds over the five cardinal-family codes whose
+    circuit distance is measurable found the default already at the best distance
+    available everywhere but one — and the two lift-connected-surface codes emit only
+    two distinct schedules however it is set. So the import adds exactly the
+    improvement: BPC [[36,8,4]] cardinal at seed 2, circuit distance **4** against
+    seed 1's 3, same depth and same 216 two-qubit gates. `EXTRA_SEEDS` in the importer
+    records it; a variant that measures the same as one already stored earns a reader
+    nothing and costs them a row.
+  - Three codes share [[n,k,d]] with an unrelated stored code and are refuted rather
+    than merged into it: BPC [[36,8,4]] against the hyperbolic surface code (row-space
+    ranks 14/14 against 11/17), BPC [[108,8,8]] against the bivariate bicycle
+    [[108,8,10]] (different distance), and BB [[90,8,10]] against the stored
+    `90-8-10` — enumerating every weight-4 vector against each X row space gives 0
+    codewords here and 90 there, and the weight enumerator is a permutation invariant.
+    All three get distinct slugs. The last is filed as `90-8-10-autqec`, the slug
+    autqec's import (#127) gives the same code, so whichever lands first creates the
+    single shared entry; its name, **Bivariate Bicycle Code (Bravyi Table 3)**, says
+    what distinguishes it from the stored entry carrying the "(15,3) BB6 code" alias.
+
+### Added
+
+- **`circuit-distance:<N>` on syndrome-extraction circuits** — the fewest faults
+  _anywhere in the round_ (gate, idle, reset or readout) that flip a logical while
+  firing no detector, measured rather than cited. It sits next to `distance:<N>`,
+  which is the **code's** distance and usually a larger number: 13 of the 87 circuits
+  measured so far preserve it, the rest lose at least one step to hook errors. Filter
+  on it like any other tag.
+  - `scripts/measure_circuit_distance.py` writes it;
+    `scripts/add_circuit/circuit_distance.py` is the measurement. The search is stim's
+    `search_for_undetectable_logical_errors` over a `d`-round memory experiment under
+    uniform circuit-level depolarizing noise — every gate, **every idle qubit each
+    tick**, every reset and every measurement. Cross-checked against QUITS'
+    `examples/circuit_distance_search.py`, which computes the same number the same way:
+    identical answers on BPC [[36,8,4]] across seeds.
+  - **Both memories are measured and the smaller wins.** A CSS code's Z and X
+    experiments fail at different weights — the rotated surface code d=5 under the
+    depth-optimal schedule survives 5 faults in Z and 3 in X — and the Z number is not
+    even bounded by `d`, since a Z observable is flipped by X errors. Measuring Z alone
+    would have called that schedule distance-preserving and put `circuit-distance:6` on
+    a `distance:5` code. `build_annotated_se` gained a `basis` argument for this; the
+    stored Z bodies are byte-identical.
+  - The search cost grows with `n` and, harder, with `d`: 91 of the library's 159 rounds
+    settle inside a 120 s budget. `d` is what hurts — [[241,121,3]] takes 3 s and
+    [[49,1,7]] runs out. An **absent tag means not measured**, never "no faults found".
+
+### Fixed
+
+- **A round built from two sequential sub-rounds gets its annotated view.**
+  `round_check_matrix` answers which operator each measurement reads, and it pulled
+  every measurement back through the _same_ whole-round unitary — so a round that
+  resets and reads the Z-ancillas and only then the X-ancillas was refused outright,
+  costing all 25 ZX-coloration circuits their `stim-annotated` body and Crumble
+  detector view. Each measurement is now pulled back through the gates that precede
+  _it_. A later sub-round's operator picks up support on the earlier sub-round's
+  ancillas unless it cancels — which it does exactly when the checks commute — so a
+  schedule where they do not is still refused rather than given a wrong detector.
+  Requiring each ancilla to be reset before any gate touches it is what makes the
+  pull-back past the reset legitimate.
+
+### Changed
+
+- **A code too large to display offers its matrices as a download** instead of
+  rendering them. The stored `h` is (n-k) x 2n, so the lifted product code
+  [[1428,184,<=24]] is 3.6M entries and ~14 MB of JSON — neither readable as text nor
+  worth sending to everyone who expands the section. Below
+  `MATRIX_INLINE_ENTRY_LIMIT` nothing changes; matrices were already fetched lazily,
+  so no page ever shipped them in its HTML.
 
 ### Added
 

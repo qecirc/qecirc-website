@@ -11,7 +11,7 @@ const { tool, baseUrl } = Astro.props;
 const hiddenCount = tool.hidden_circuit_count ?? 0;
 ---
 
-<div id={tool.slug} class="scroll-mt-4 rounded border border-gray-200 dark:border-gray-800 p-4">
+<div id={tool.slug} class="scroll-mt-4 border border-gray-200 dark:border-gray-800 p-4">
   <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
     <h3 class="font-medium">{tool.name}</h3>
     <span class="text-xs text-gray-500 dark:text-gray-400">

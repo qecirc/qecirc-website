@@ -29,6 +29,7 @@ import stim
 from .circuit_validate import (  # noqa: F401
     extract_code,
     induced_logical_action,
+    measured_stabilizers,
     transversality_class,
     validate_encoding,
     validate_encoding_h,
@@ -36,6 +37,7 @@ from .circuit_validate import (  # noqa: F401
     validate_state_prep,
     validate_state_prep_h,
     validate_syndrome_extraction,
+    validate_syndrome_extraction_h,
 )
 from .code_identify import gf2_row_basis
 from .compute import compute_code_data, compute_code_data_h
@@ -53,6 +55,7 @@ from .helpers import (  # noqa: F401
 from .ids import next_qec_id
 from .matrix_format import decode as decode_matrix
 from .models import ExtractedCode  # noqa: F401
+from .syndrome_extraction import build_se_round  # noqa: F401
 from .yaml_helpers import (
     build_circuit_yaml,
     build_code_yaml,
@@ -206,6 +209,7 @@ def add_circuit(
     Hx: Optional[np.ndarray] = None,
     Hz: Optional[np.ndarray] = None,
     H: Optional[np.ndarray] = None,
+    gauge: Optional[np.ndarray] = None,
     n: Optional[int] = None,
     source: str = "",
     code_name: str = "",
@@ -231,6 +235,10 @@ def add_circuit(
       * General path: pass ``H`` (symplectic stabilizer matrix of shape
         ``(m, 2n)``) along with ``n``. CSS-decomposable H is auto-detected
         and the ``CSS`` tag is set; the Hx/Hz view is reconstructed in the UI.
+      * Subsystem codes: pass the **stabilizer** group as ``H`` and the gauge
+        group as ``gauge``. k is then n - rank(H) - gauge qubits rather than
+        n - rank(H), which is the difference between storing Bacon-Shor as
+        [[9,1,3]] and as [[9,5,3]].
 
     Args:
         circuit: STIM circuit (stim.Circuit object or string).
@@ -239,6 +247,8 @@ def add_circuit(
         Hx: X-check matrix (CSS path).
         Hz: Z-check matrix (CSS path).
         H: Symplectic stabilizer matrix (general path).
+        gauge: Gauge group of a subsystem code, symplectic. Omit for a
+            stabilizer code, where it would equal ``H`` and change nothing.
         n: Number of physical qubits (required with H).
         source: Provenance (DOI, URL, or citation).
         code_name: Name for the code. Optional if code already exists in data_yaml/.
@@ -319,6 +329,7 @@ def add_circuit(
             data_dir=dedup_dir,
             code_slug=code_slug,
             code_tags=code_tags,
+            gauge=None if gauge is None else np.asarray(gauge, dtype=int),
         )
 
     # A caller-supplied qubit permutation short-circuits the (possibly
@@ -478,6 +489,8 @@ __all__ = [  # noqa: F822  (names defined above / re-exported)
     "validate_state_prep",
     "validate_state_prep_h",
     "validate_syndrome_extraction",
+    "validate_syndrome_extraction_h",
+    "measured_stabilizers",
     "extract_code",
     "ExtractedCode",
     "ExistingCodeMatch",
@@ -496,4 +509,5 @@ __all__ = [  # noqa: F822  (names defined above / re-exported)
     "import_state_prep",
     # perm_find re-exports
     "find_code_permutation",
+    "build_se_round",
 ]

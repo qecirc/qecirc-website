@@ -9,7 +9,7 @@ const SHORTCUTS: { keys: string[]; action: string }[] = [
   { keys: ["Enter"], action: "Open detail page" },
   { keys: ["f"], action: "Toggle favorite (focused row / detail page)" },
   { keys: ["⇧F"], action: "Toggle favorites-only filter" },
-  { keys: ["1", "2", "3"], action: "Switch format (STIM / QASM / CIRQ)" },
+  { keys: ["1", "2"], action: "Switch format (STIM / QASM)" },
   { keys: ["c", "y"], action: "Copy active circuit" },
   { keys: ["d"], action: "Download active circuit" },
   { keys: ["⇧D"], action: "Download all on page" },
@@ -33,12 +33,12 @@ const SHORTCUTS: { keys: string[]; action: string }[] = [
   ></div>
   <div class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
     <div
-      class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-w-md w-full p-5 pointer-events-auto max-h-[85vh] overflow-y-auto"
+      class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl max-w-md w-full p-5 pointer-events-auto max-h-[85vh] overflow-y-auto"
     >
       <div class="flex items-center justify-between mb-3">
         <h2 id="keyboard-help-title" class="text-base font-semibold">Keyboard shortcuts</h2>
         <button
-          class="kbd-help-close text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+          class="kbd-help-close text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 "
           aria-label="Close help"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -55,7 +55,7 @@ const SHORTCUTS: { keys: string[]; action: string }[] = [
                   {keys.map((k, i) => (
                     <>
                       {i > 0 && <span class="mx-1 text-gray-500 dark:text-gray-400">/</span>}
-                      <kbd class="inline-block min-w-[1.5rem] text-center px-1.5 py-0.5 font-mono text-xs border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800">
+                      <kbd class="inline-block min-w-[1.5rem] text-center px-1.5 py-0.5 font-mono text-xs border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                         {k}
                       </kbd>
                     </>

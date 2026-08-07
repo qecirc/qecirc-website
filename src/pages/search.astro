@@ -5,6 +5,7 @@ import Layout from "../components/Layout.astro";
 import CircuitRow from "../components/CircuitRow.astro";
 import CircuitBodiesTemplate from "../components/CircuitBodiesTemplate.astro";
 import TagFilterDropdowns from "../components/TagFilterDropdowns.astro";
+import DensityToggle from "../components/DensityToggle.astro";
 import { TAG_CATEGORIES, categorizeTag } from "../lib/tag-categories";
 import {
   searchCircuitsRanked,
@@ -12,7 +13,7 @@ import {
   resolveQuery,
   getToolsForCircuits,
   getPapersForCircuits,
-  formatCodeParams,
+  codeDisplayName,
   MIN_QUERY_LENGTH,
 } from "../lib/queries";
 import { tagToggleUrl } from "../lib/url";
@@ -64,10 +65,7 @@ const tagGroups = TAG_CATEGORIES.map((c) => ({
 }));
 
 const hasFilters = selectedTags.length > 0 || codeSlug !== "";
-const codeLabel = (c: { name: string; n: number; k: number; d: number | null }) => {
-  const p = formatCodeParams(c);
-  return p === "" || c.name === p ? c.name : `${c.name} ${p}`;
-};
+const codeLabel = codeDisplayName;
 const clearHref = `/search?q=${encodeURIComponent(q)}${literal ? "&literal=1" : ""}`;
 // Escape hatch from a correction: same query, spelling left alone.
 const literalHref = `/search?q=${encodeURIComponent(q)}&literal=1`;
@@ -101,11 +99,11 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
         autofocus
         placeholder="Search circuits by name, notes, tag or #id"
         aria-label="Search circuits"
-        class="flex-1 rounded border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+        class="flex-1 border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-transparent focus:outline-none focus:border-gray-900 dark:focus:border-gray-100"
       />
       <button
         type="submit"
-        class="rounded px-4 py-2 text-sm font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer"
+        class="px-4 py-2 text-sm font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer"
       >
         Search
       </button>
@@ -118,16 +116,16 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
       <Fragment>
       <details id="search-filters" open={hasFilters} class="mt-3">
         <summary class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer select-none">
-          Filters{hasFilters && <span class="ml-1 text-amber-600 dark:text-amber-400">&#183; active</span>}
+          Filters{hasFilters && <span class="ml-1 text-amber-700 dark:text-amber-400">&#183; active</span>}
         </summary>
 
-        <div class="mt-3 space-y-3 rounded border border-gray-200 dark:border-gray-800 p-3">
+        <div class="mt-3 space-y-3 border border-gray-200 dark:border-gray-800 p-3">
           <div class="flex items-center gap-2 flex-wrap">
             <label for="code-select" class="text-xs font-medium text-gray-600 dark:text-gray-400">Code</label>
             <select
               id="code-select"
               name="code"
-              class="rounded border border-gray-300 dark:border-gray-700 px-2 py-1 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-sm bg-transparent focus:outline-none focus:border-gray-900 dark:focus:border-gray-100"
             >
               <option value="">Any code ({facets.codes.reduce((s, c) => s + c.count, 0)})</option>
               {staleCode && <option value={codeSlug} selected>No match for this query</option>}
@@ -138,7 +136,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
               ))}
             </select>
             {hasFilters && (
-              <a href={clearHref} class="text-xs underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">
+              <a href={clearHref} class="text-xs underline text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
                 Clear
               </a>
             )}
@@ -173,9 +171,20 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
           const d = document.getElementById("search-filters");
           if (!d) return;
           const KEY = "qecirc:search-filters-open";
-          if (localStorage.getItem(KEY) === "1") d.open = true;
+          // Inline copy of src/lib/safe-storage.ts: an is:inline script cannot
+          // import. Reading throws where storage is denied, which would leave
+          // the disclosure without its toggle listener as well as its state.
+          try {
+            if (localStorage.getItem(KEY) === "1") d.open = true;
+          } catch {
+            // Storage denied — keep the server-rendered open state.
+          }
           d.addEventListener("toggle", function () {
-            localStorage.setItem(KEY, d.open ? "1" : "0");
+            try {
+              localStorage.setItem(KEY, d.open ? "1" : "0");
+            } catch {
+              // Storage denied — the choice does not survive the page.
+            }
           });
         })();
       </script>
@@ -200,14 +209,24 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
 
   {hasQuery && (
     <>
-      <p class="text-sm text-gray-500 mb-3">
-        {results.length === 0
-          ? "No circuits found"
-          : `${truncated ? `Top ${results.length}` : results.length} ${results.length === 1 ? "circuit" : "circuits"}`}
-        {" for "}<span class="font-medium text-gray-900 dark:text-gray-100">{resolved?.display ?? q}</span>
-      </p>
+      {/* A count, and only a count: the empty state further down is the single
+          place that says nothing matched. It knows whether filters are to
+          blame and offers the way out of them, and two "no results" sentences
+          three lines apart read as a rendering fault. */}
+      {results.length > 0 && (
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          {`${truncated ? `Top ${results.length}` : results.length} ${results.length === 1 ? "circuit" : "circuits"}`}
+          {" for "}<span class="font-medium text-gray-900 dark:text-gray-100">{resolved?.display ?? q}</span>
+        </p>
+      )}
 
-      {resolved?.corrected && (
+      {/* All three notices describe a result set ("these are closely related
+          codes", "these match at least one term"), so they are nonsense with
+          nothing to point at: "Showing results for steane." directly above
+          "No circuits match" told the user two opposite things. The escape
+          hatch from a correction is not lost — it moves into the empty state
+          below, which is the only thing rendered in that case. */}
+      {results.length > 0 && resolved?.corrected && (
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
           Showing results for <span class="font-medium text-gray-900 dark:text-gray-100">{resolved.display}</span>.
           {" "}Search instead for{" "}
@@ -215,26 +234,39 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
         </p>
       )}
 
-      {resolved?.relatedOnly && (
+      {results.length > 0 && resolved?.relatedOnly && (
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
           No code goes by that name here. These are closely related codes that people
           often mean by it &mdash; check the code on each result before relying on it.
         </p>
       )}
 
-      {resolved?.partial && (
+      {results.length > 0 && resolved?.partial && (
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
           No circuit matches every term, so these match at least one.
         </p>
       )}
 
       {results.length === 0 ? (
+        /* The one place a zero-result page speaks, so it has to carry
+           everything the count line above used to: what was actually searched
+           for (which is not always what was typed — a correction rewrites it),
+           whether the filters are to blame, and the way out of each. */
         <div class="text-center py-8">
           <p class="text-gray-500 dark:text-gray-400 mb-2">
-            No circuits match {hasFilters ? "this query and these filters." : "this query."}
+            No circuits match{" "}
+            <span class="font-medium text-gray-900 dark:text-gray-100">{resolved?.display ?? q}</span>
+            {hasFilters ? " with these filters." : "."}
           </p>
+          {resolved?.corrected && (
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              Corrected from <span class="font-medium text-gray-900 dark:text-gray-100">{resolved.raw}</span>.
+              {" "}Search instead for{" "}
+              <a href={`${literalHref}`} class="underline hover:text-gray-900 dark:hover:text-gray-100">{resolved.raw}</a>.
+            </p>
+          )}
           {hasFilters && (
-            <a href={clearHref} class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">
+            <a href={clearHref} class="text-sm underline text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
               Clear filters
             </a>
           )}
@@ -245,20 +277,20 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
               order is relevance, which is the point of the page. Above md only,
               like the code page's: below it the row has no metric columns. */}
           <div
-            class="hidden md:grid items-center gap-x-1.5 px-4 py-1.5 text-[11px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400"
+            class="flex md:grid items-center gap-x-1.5 px-2 pt-1.5 pb-2.5 font-mono text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400"
             style="grid-template-columns: var(--circuit-grid);"
           >
-            <span></span>
-            <span></span>
-            <span></span>
-            <span class="text-center" title="Gate count">G</span>
-            <span class="text-center text-amber-600 dark:text-amber-400" title="Two-qubit gate count">2Q</span>
-            <span class="text-center" title="Circuit depth">D</span>
-            <span class="text-center" title="Qubit count">Q</span>
-            <span></span>
+            <span class="hidden md:block"></span>
+            <span class="hidden md:block"></span>
+            <span class="hidden md:block"></span>
             <span>Name</span>
+            <span class="hidden md:block text-right" title="Gate count">G</span>
+            <span class="hidden md:block text-right text-amber-700 dark:text-amber-400" title="Two-qubit gate count">2Q</span>
+            <span class="hidden md:block text-right" title="Circuit depth">D</span>
+            <span class="hidden md:block text-right" title="Qubit count">Q</span>
+            <span class="ml-auto md:ml-0 text-right">Tags<DensityToggle /></span>
           </div>
-          <div class="space-y-2">
+          <div class="border-t-2 border-gray-900 dark:border-gray-100">
             {results.map((circuit) => (
               <CircuitRow
                 circuit={circuit}
@@ -290,7 +322,24 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
   import { initCircuitActions } from "../lib/circuit-actions-client";
 
   initCircuitBodies();
-  initCircuitActions();
+
+  // Same expandable `CircuitRow`s as a code page, so the same selector finds
+  // the open one.
+  //
+  // No `downloadAllSelector`, so Shift+D is deliberately inert here even though
+  // `KeyboardHelp` lists it: `/search` has no "download all" button to click.
+  // It could grow one — `/api/download` accepts `?ids=`, which is how
+  // `/favorites` implements the same shortcut — but that is a feature, not part
+  // of fixing this, and `/search` filters server-side so which results it would
+  // cover needs deciding first.
+  //
+  // Passing nothing here used to throw: `findActiveContainer()` reads
+  // `config.activeContainerSelector`, so every key that reached this listener
+  // raised a TypeError off `undefined`.
+  initCircuitActions({
+    activeContainerSelector:
+      '[id] > .circuit-toggle[data-expanded="true"] + .circuit-detail',
+  });
 
   // Tags apply the moment they are clicked (they are plain links), so the code
   // select has to apply on change too. Without this it looks inert: the choice
@@ -307,5 +356,7 @@ Astro.response.headers.set("Cache-Control", "public, max-age=0, s-maxage=600");
     favoritable: true,
     favoriteSelector: "[data-list-fav]",
     hashAttr: "data-qec-id",
+    // See the code page: the row mirrors the chevron button's aria-expanded.
+    expandedAttr: "data-expanded",
   });
 </script>

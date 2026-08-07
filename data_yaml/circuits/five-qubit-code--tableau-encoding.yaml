@@ -1,0 +1,14 @@
+qec_id: 1108
+name: Tableau encoding
+tool: qldpc
+notes: "Encodes 1 logical qubits; the first 1 qubits are the input. Synthesised from
+  the code's tableau, so it carries no flag qubits and no distance guarantee; the
+  library states its encoders are not fault-tolerant. Reproduce with: qldpc.circuits.get_encoding_circuit(qldpc.codes.FiveQubitCode())"
+source: qldpc
+gate_count: 49
+two_qubit_gate_count: 16
+depth: 15
+qubit_count: 5
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,"X","•"],["H","Z^½","Z^½"],[1,1,1,"•","X"],[1,"H","H"],[1,1,1,"X","•"],[1,1,1,"•","X"],[1,1,"•","X"],["•",1,1,"X"],[1,1,"X",1,"•"],[1,1,"•",1,"X"],[1,1,1,"H"],[1,1,"X",1,"•"],[1,1,"H","Z^½","Z^½"],[1,1,"Z^½","Z^½"],[1,1,1,"H"],["X",1,"•"],[1,1,"•",1,"X"],["H"],[1,"•","X"],[1,1,1,1,"Z^½"],["•",1,"X"],[1,"H",1,1,"H"],["Z^½","Z^½"],["H"],["•","X"],[1,"X",1,1,"•"],["H"],["Z^½","Z^½",1,1,"H"],["X",1,1,1,"•"],["Z^½","Z^½",1,1,"Z^½"],["Z^½",1,1,1,"H"],[1,1,1,1,"Z^½"],[1,1,1,1,"Z^½"],[1,1,1,1,"H"],[1,1,1,1,"Z^½"],[1,1,1,1,"Z^½"]]}
+tags: [encoding, non-ft]
+original_matrices: 8f7ea2188cc9bdb8

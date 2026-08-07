@@ -1,8 +1,8 @@
-name: "[[4,2,2]]"
+name: Iceberg Code
 n: 4
 k: 2
 d: 2
-zoo_url: https://errorcorrectionzoo.org/c/stab_4_2_2
+zoo_url: https://errorcorrectionzoo.org/c/iceberg
 canonical_hash: 3c5bd207dc7443ff5f954d81afbf37df3e76c4fa0f540b4c4617e5ed0c959765
 h:
   - [1, 1, 1, 1, 0, 0, 0, 0]

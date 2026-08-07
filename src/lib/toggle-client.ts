@@ -9,9 +9,13 @@ export function initToggle(buttonId: string, detailId: string): void {
     const isOpen = detail.style.maxHeight !== "0px";
     if (isOpen) {
       detail.style.maxHeight = "0px";
+      // `max-height: 0` + `overflow: hidden` clips the panel but leaves its
+      // controls tabbable; inert has to track max-height, not just the class.
+      detail.inert = true;
       chevron?.classList.remove("rotate-90");
       toggle.setAttribute("aria-expanded", "false");
     } else {
+      detail.inert = false;
       detail.style.maxHeight = detail.scrollHeight + "px";
       chevron?.classList.add("rotate-90");
       toggle.setAttribute("aria-expanded", "true");

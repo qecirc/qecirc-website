@@ -23,6 +23,9 @@ export interface ListKeynavConfig {
   expandSelfClick?: boolean;
   expandSelector?: string;
   // Attribute on the row that reflects expansion state. Default: aria-expanded.
+  // `CircuitRow` passes `data-expanded`: there, `aria-expanded` lives on the
+  // chevron button (the only element that claims to be a toggle), and the row
+  // mirrors the state in a data attribute for scripts to read.
   expandedAttr?: string;
   // If true, f triggers a click on `favoriteSelector` inside the focused row.
   favoritable?: boolean;

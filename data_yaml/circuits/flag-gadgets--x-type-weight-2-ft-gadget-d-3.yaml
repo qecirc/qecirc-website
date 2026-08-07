@@ -1,16 +1,17 @@
 qec_id: 646
-name: X-type weight-2 FT gadget (d=3)
+name: X-type weight-2 FT gadget (d=3-11)
 tool: flag-at-origin
-notes: "Fault-tolerant gadget for a weight-2 X-type stabiliser, verified to distance
-  3 via the 'flag at origin' construction (arXiv:2508.14200). A reusable building
-  block (2 data qubits + no flag ancillas needed) that is not tied to a specific code.
-  Source file: Notebook_2/3_2_X_ft_plaquette.txt."
+notes: "Fault-tolerant gadget for a weight-2 X-type stabiliser, verified to distances
+  3, 5, 7, 9 and 11 via the 'flag at origin' construction (arXiv:2508.14200). A
+  reusable building block (2 data qubits + no flag ancillas needed) that is not tied
+  to a specific code. The same circuit ships at each of those distances; source files:
+  Notebook_2/3_2_X_ft_plaquette.txt, Notebook_2/5_2_X_ft_plaquette.txt, Notebook_2/7_2_X_ft_plaquette.txt,
+  Notebook_2/9_2_X_ft_plaquette.txt, Notebook_2/11_2_X_ft_plaquette.txt."
 source: https://arxiv.org/abs/2508.14200
 gate_count: 2
 two_qubit_gate_count: 1
 depth: 1
 qubit_count: 2
 weight: 2
-crumble_url: https://algassert.com/crumble#circuit=H_0;CX_0_1_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H"],["•","X"]]}
-tags: [gadget, ft, "distance:3", x-type]
+tags: [gadget, ft, "distance:3", "distance:5", "distance:7", "distance:9", "distance:11", x-type]

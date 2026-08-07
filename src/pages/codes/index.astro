@@ -5,7 +5,8 @@ import Layout from "../../components/Layout.astro";
 import CodeCard from "../../components/CodeCard.astro";
 import CodeFilter from "../../components/CodeFilter.astro";
 import HiddenCodesToggle from "../../components/HiddenCodesToggle.astro";
-import { filterCodes, getTagsWithCount, formatCodeParams } from "../../lib/queries";
+import DensityToggle from "../../components/DensityToggle.astro";
+import { filterCodes, getTagsWithCount, codeDisplayName } from "../../lib/queries";
 import { HIDDEN_CODE_TAG } from "../../lib/constants";
 
 // Filtering/sorting happens client-side (list-filter-client.ts): the page
@@ -18,6 +19,14 @@ const codes = filterCodes({});
 const visibleCodes = codes.filter((c) => !c.tags.includes(HIDDEN_CODE_TAG));
 const totalCount = visibleCodes.length;
 const hiddenCount = codes.length - totalCount;
+
+// The table's sortable parameter columns. `n` renders active because the
+// server's default order is n ascending (matches defaultSort below).
+const SORT_COLUMNS = [
+  { field: "n", active: true },
+  { field: "k", active: false },
+  { field: "d", active: false },
+];
 
 const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
 const pageUrl = `${siteUrl}/codes`;
@@ -35,15 +44,12 @@ const jsonLd = [
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: totalCount,
-      itemListElement: visibleCodes.slice(0, 200).map((code, i) => {
-        const params = formatCodeParams(code);
-        return {
-          "@type": "ListItem",
-          position: i + 1,
-          name: params === "" || code.name === params ? code.name : `${code.name} ${params}`,
-          url: `${siteUrl}/codes/${code.slug}`,
-        };
-      }),
+      itemListElement: visibleCodes.slice(0, 200).map((code, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: codeDisplayName(code),
+        url: `${siteUrl}/codes/${code.slug}`,
+      })),
     },
   },
   {
@@ -60,7 +66,7 @@ const jsonLd = [
   <CodeFilter allTags={allTags} basePath="/codes" />
 
   <div class="flex items-center justify-between mb-4">
-    <p data-list-count class="text-sm text-gray-500">
+    <p data-list-count class="font-mono text-xs text-gray-500 dark:text-gray-400">
       {totalCount}
       {totalCount === 1 ? "code" : "codes"}{hiddenCount > 0 ? ` (+${hiddenCount} codetables)` : ""}
     </p>
@@ -72,10 +78,37 @@ const jsonLd = [
     <a href="/codes" data-clear-filters class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
   </div>
 
-  <div class="grid gap-4" data-list-container>
-    {codes.map((code) => (
-      <CodeCard code={code} basePath="/codes" />
-    ))}
+  {/* A ruled table, not a card grid: 38 codes are tabular data, and the
+      header row doubles as the sort control. Sort headers carry no colour of
+      their own so the inactive state inherits the th's gray — that lets
+      list-filter-client toggle SORT_HEADER_ACTIVE on top without the two
+      colour utilities fighting over specificity. */}
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse">
+      <thead>
+        <tr class="border-b-2 border-gray-900 dark:border-gray-100 text-gray-500 dark:text-gray-400">
+          <th class="pt-1.5 pb-2.5 pr-3 text-left font-mono text-[11px] font-semibold uppercase tracking-wider">Code</th>
+          {SORT_COLUMNS.map(({ field, active }) => (
+            <th class="pt-1.5 pb-2.5 px-2 text-right font-mono text-[13px] font-semibold">
+              <a
+                href={`/codes?sort=${field}&sort_dir=asc`}
+                data-sort-field={field}
+                data-sort-header
+                class:list={["hover:underline", active && "text-amber-700 dark:text-amber-400"]}
+                title={`Sort by ${field}`}
+              >{field}<span data-sort-arrow class="ml-0.5 text-[9px]">{active ? "▲" : ""}</span></a>
+            </th>
+          ))}
+          <th class="pt-1.5 pb-2.5 px-2 text-right font-mono text-[11px] font-semibold uppercase tracking-wider">Circuits</th>
+          <th class="pt-1.5 pb-2.5 pl-4 text-right font-mono text-[11px] font-semibold uppercase tracking-wider">Tags<DensityToggle /></th>
+        </tr>
+      </thead>
+      <tbody data-list-container>
+        {codes.map((code) => (
+          <CodeCard code={code} basePath="/codes" />
+        ))}
+      </tbody>
+    </table>
   </div>
 </Layout>
 

@@ -10,10 +10,12 @@ import stim
 from .circuit_validate import circuit_properties, has_ticks
 from .compute import slugify
 
-# Above this qubit count a circuit is too wide for the per-qubit artifacts to be
-# useful, and they bloat the repo: the Crumble/Quirk URLs and the Cirq ASCII
-# grid all scale with width (a 475-qubit prep yields a ~700 KB URL and a ~9 MB
-# Cirq string). Past the threshold we keep only STIM (canonical) + QASM.
+# Above this qubit count a Quirk URL is useless and enormous: Quirk's own UI
+# tops out around 16 qubits, and the URL scales with width (a 144-qubit
+# syndrome round serializes to ~240 KB, which is most of the page it sits on).
+# Past the threshold we omit it. The Crumble link has no such gate — it is
+# derived from the body at render time (`crumbleUrl` in src/lib/stim-format.ts)
+# and so costs nothing to keep at any width.
 LARGE_CIRCUIT_MAX_QUBITS = 40
 
 
@@ -49,21 +51,14 @@ def compute_circuit_data(
     # 3. Metrics
     props = circuit_properties(str(circ))
 
-    # 4. Links (omitted for large circuits — unusable and bloat the YAML)
-    if props.qubit_count <= LARGE_CIRCUIT_MAX_QUBITS:
-        crumble_url = circ.to_crumble_url()
-        quirk_url = circ.to_quirk_url()
-    else:
-        crumble_url = ""
-        quirk_url = ""
+    # 4. Links. Only Quirk is stored, and only below the width gate — see
+    # LARGE_CIRCUIT_MAX_QUBITS. The Crumble link is derived from the body the
+    # page is showing, so there is nothing to compute or store here.
+    quirk_url = circ.to_quirk_url() if props.qubit_count <= LARGE_CIRCUIT_MAX_QUBITS else ""
 
-    # 5. Format conversions. Cirq's text form is a per-moment ASCII grid whose
-    # width scales with the qubit count, so for wide circuits it explodes (a
-    # 475-qubit prep serializes to ~9 MB) while adding no value — skip it there.
-    # STIM (canonical) and QASM stay compact and are always kept.
+    # 5. Format conversions. STIM is canonical; QASM is the one alternate view.
     stim_body = str(circ)
     qasm_body = _to_qasm(circ)
-    cirq_body = "" if props.qubit_count > LARGE_CIRCUIT_MAX_QUBITS else _to_cirq_str(circ)
 
     # 6. Slug
     slug = slugify(circuit_name) if circuit_name else ""
@@ -72,8 +67,6 @@ def compute_circuit_data(
     bodies = [{"format": "stim", "body": stim_body}]
     if qasm_body:
         bodies.append({"format": "qasm", "body": qasm_body})
-    if cirq_body:
-        bodies.append({"format": "cirq", "body": cirq_body})
 
     return {
         "name": circuit_name,
@@ -85,7 +78,6 @@ def compute_circuit_data(
         "depth": props.depth,
         "gate_count": props.gate_count,
         "two_qubit_gate_count": props.two_qubit_gate_count,
-        "crumble_url": crumble_url,
         "quirk_url": quirk_url,
         "original_stim": original_stim,
         "bodies": bodies,
@@ -171,16 +163,4 @@ def _to_qasm(circ):
         return circ.to_qasm(open_qasm_version=2, skip_dets_and_obs=True)
     except Exception as e:
         warnings.warn(f"QASM conversion failed: {e}")
-        return ""
-
-
-def _to_cirq_str(circ):
-    """Convert stim circuit to cirq string representation."""
-    try:
-        from stimcirq import stim_circuit_to_cirq_circuit
-
-        cirq_circ = stim_circuit_to_cirq_circuit(circ)
-        return str(cirq_circ)
-    except Exception as e:
-        warnings.warn(f"Cirq conversion failed: {e}")
         return ""

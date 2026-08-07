@@ -2,8 +2,8 @@
 
 The stored ``stim`` body is reset-free and unannotated — ``to_tableau()`` and the
 derive/fit machinery need a circuit with no resets, and it leaves the ``|0...0>``
-input implied. (It is not gate-only: 399 of 834 bodies carry flag or verification
-measurements, which are part of the circuit.) This module builds a *separate*
+input implied. (It is not gate-only: a large share of bodies carry flag or
+verification measurements, which are part of the circuit.) This module builds a *separate*
 ``stim-annotated`` body stating what the stored one leaves out: an explicit reset
 prologue, then the body verbatim, then — where derivable — a terminal readout and
 the deterministic stabilizer outcomes as ``DETECTOR``s.
@@ -253,6 +253,7 @@ def build_annotated(
     k: int,
     kind: str,
     logical_state: str = "",
+    gauge_qubits: int = 0,
     original_h: Optional[np.ndarray] = None,
     notes: str = "",
 ) -> Optional[stim.Circuit]:
@@ -285,10 +286,16 @@ def build_annotated(
     source = stim.Circuit(body)
 
     # Which qubits are fixed in |0>. For an encoder that is everything except the
-    # k logical inputs, which the reader supplies and which must stay free.
+    # free inputs the reader supplies: `k` of them for a stabilizer code, and
+    # `k + gauge_qubits` for a subsystem one, whose encoder takes the gauge
+    # qubits as inputs too — a Bacon-Shor [[9,1,3]] encoder has five.
+    #
+    # Deliberately *not* `n - rank(h)`, which is the same number: that would
+    # compare the circuit against itself and stop noticing a stored `k` that
+    # disagrees with the code, which is the failure this check exists for.
     if kind == "encoding":
         inputs = logical_input_qubits(source, stored_h, n)
-        if inputs is None or len(inputs) != k:
+        if inputs is None or len(inputs) != k + gauge_qubits:
             return None
         reset = [q for q in range(source.num_qubits) if q not in set(inputs)]
     else:
@@ -344,6 +351,120 @@ def build_annotated(
     return out
 
 
+def build_annotated_se(
+    body: str,
+    stored_h: np.ndarray,
+    logical: np.ndarray,
+    n: int,
+    rounds: int,
+    basis: str = "Z",
+) -> Optional[stim.Circuit]:
+    """Build the ``stim-annotated`` body for a syndrome-extraction round.
+
+    The stored body is *one* round, which is the reusable unit. What a reader
+    actually runs is a memory experiment, and that is what this returns: the data
+    reset to ``|0...0>``, the round repeated ``rounds`` times, a terminal readout,
+    and the detectors that make the whole thing decodable.
+
+    So this is the same idea as :func:`build_annotated` — state what the stored
+    body leaves out — but nothing about the construction is shared. A prep gets a
+    prologue because it starts from ``|0...0>``; a round does not, because it acts
+    on whatever it is given. The round count is the thing that has to be supplied
+    from outside, and ``d`` is the standard choice.
+
+    Which measurement reads which check comes from
+    :func:`~.circuit_validate.round_check_matrix`; ``None`` from there means no
+    annotated body, since without the map no detector can be placed.
+
+    Three families of detector, and the split is just about what is deterministic
+    when:
+
+    * **first round** — only the checks with no X component. The data starts in a
+      Z-basis product state, so those read ``+1`` and everything else is random.
+    * **later rounds** — every check, against the same check in the round before.
+      Nothing needs to be known about the code for these.
+    * **terminal** — each no-X check again, this time against the transversal Z
+      readout that recomputes it from the data.
+
+    A code with **no** pure-Z check — a non-CSS code, whose stabilizers all mix X
+    and Z on the same qubit — gets no body at all, and returns ``None``. Only the
+    middle family would survive, and inter-round detectors with no readout and no
+    observable describe an experiment with no outcome. That is the same narrowing
+    :func:`_readout_basis` applies to preps and for the same reason; it just costs
+    more here, because for a prep the prologue alone is still worth showing.
+
+    ``basis`` mirrors the whole thing into X — reset to ``|+...+>``, keep the
+    checks with no *Z* component, read out transversally in X. The stored body is
+    the Z one, because that is what the site shows; the X one exists because a
+    CSS code's two memories can fail at different weights, and measuring only one
+    of them answers only half the question (see
+    :mod:`~.circuit_distance`).
+
+    The result is *not* validated here; run :func:`validate_annotated` on it.
+    """
+    from .circuit_validate import round_check_matrix
+
+    if rounds < 1:
+        return None
+    checks = round_check_matrix(body, n)
+    if checks is None or not checks.size:
+        return None
+
+    if basis not in ("Z", "X"):
+        raise ValueError(f"basis must be 'Z' or 'X', got {basis!r}")
+    # The half of the symplectic matrix that must be empty for an operator to be
+    # readable in this basis, and the half that carries its support.
+    dead = slice(0, n) if basis == "Z" else slice(n, 2 * n)
+    live = n if basis == "Z" else 0  # column offset of the support half
+
+    source = stim.Circuit(body)
+    per_round = checks.shape[0]
+    basis_checks = [j for j in range(per_round) if not checks[j, dead].any()]
+    basis_logicals = (
+        [row for row in np.atleast_2d(logical) if not row[dead].any()] if logical.size else []
+    )
+    if not basis_checks:
+        return None
+
+    gates = stim.Circuit()
+    for op in source:
+        if isinstance(op, stim.CircuitRepeatBlock):
+            return None
+        if op.name == "QUBIT_COORDS":
+            continue
+        gates.append(op.name, op.targets_copy(), op.gate_args_copy())
+
+    out = stim.Circuit()
+    for qubit, coord in sorted(source.get_final_qubit_coordinates().items()):
+        if coord:
+            out.append("QUBIT_COORDS", [qubit], coord)
+    out.append("R" if basis == "Z" else "RX", list(range(n)))
+    out.append("TICK")
+
+    out += gates
+    for j in basis_checks:
+        out.append("DETECTOR", [stim.target_rec(j - per_round)])
+
+    if rounds > 1:
+        repeat = gates.copy()
+        for j in range(per_round):
+            repeat.append(
+                "DETECTOR",
+                [stim.target_rec(j - per_round), stim.target_rec(j - 2 * per_round)],
+            )
+        out.append(stim.CircuitRepeatBlock(rounds - 1, repeat))
+
+    out.append("TICK")
+    out.append("M" if basis == "Z" else "MX", list(range(n)))
+    for j in basis_checks:
+        support = [stim.target_rec(q - n) for q in range(n) if checks[j, live + q]]
+        out.append("DETECTOR", [*support, stim.target_rec(j - per_round - n)])
+    for index, row in enumerate(basis_logicals):
+        support = [stim.target_rec(q - n) for q in range(n) if row[live + q]]
+        out.append("OBSERVABLE_INCLUDE", support, index)
+    return out
+
+
 def strip_readout(circ: stim.Circuit) -> stim.Circuit:
     """Drop the readout epilogue, keeping the reset prologue and the body.
 
@@ -353,10 +474,15 @@ def strip_readout(circ: stim.Circuit) -> stim.Circuit:
     leaving it implied.
 
     Only the *added* epilogue goes. Pre-existing mid-circuit measurements are
-    part of the circuit (399 of 834 bodies carry flag/verification measurements)
-    and must survive. :func:`build_annotated` appends exactly one readout
+    part of the circuit — a large share of bodies carry flag/verification
+    measurements — and must survive. :func:`build_annotated` appends exactly one readout
     instruction, last, so after the annotations are dropped it is the final
     instruction — anything earlier belongs to the body.
+
+    Annotations inside a ``REPEAT`` block go too — a syndrome-extraction round is
+    annotated as a repeated memory experiment, so that is where most of its
+    detectors live. The browser's mirror strips lines and so has always reached
+    them; this one had to be taught to recurse.
 
     Mirrors ``stripReadout`` in src/lib/stim-format.ts, which does the same for
     the browser. Keep the two in step.
@@ -370,7 +496,7 @@ def strip_readout(circ: stim.Circuit) -> stim.Circuit:
     out = stim.Circuit()
     for op in ops:
         if isinstance(op, stim.CircuitRepeatBlock):
-            out.append(op)
+            out.append(stim.CircuitRepeatBlock(op.repeat_count, strip_readout(op.body_copy())))
             continue
         out.append(op.name, op.targets_copy(), op.gate_args_copy())
     return out

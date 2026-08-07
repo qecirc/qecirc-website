@@ -51,5 +51,29 @@
       matchCurrentVersion: "!/^0\\./",
       automerge: true,
     },
+
+    // Last, so nothing above can hand the automerge back.
+    //
+    // `pyproject.toml` pins `mqt-qecc` to a git BRANCH (`@encoding-circuits`),
+    // not a release, so the sha it resolves to is whatever that branch points
+    // at today. Auto-merging a refresh of it lands arbitrary new upstream code
+    // in the circuit ingestion pipeline with nobody having read it — which is
+    // what f476ffa1 did. These two rules keep the updates coming and take away
+    // only the automerge. Two of them because there are two routes in: a digest
+    // bump of the ref itself (`:automergeDigest` above), and a
+    // `lockFileMaintenance` run re-resolving the branch inside `uv.lock`.
+    {
+      description: "Never auto-merge a git-sourced dependency — its ref is mutable",
+      matchDatasources: ["git-refs", "git-tags"],
+      automerge: false,
+      addLabels: ["needs-manual-review"],
+    },
+    {
+      description: "Never auto-merge a uv.lock refresh — it can move the mqt-qecc branch",
+      matchManagers: ["pep621"],
+      matchUpdateTypes: ["lockFileMaintenance"],
+      automerge: false,
+      addLabels: ["needs-manual-review"],
+    },
   ],
 }

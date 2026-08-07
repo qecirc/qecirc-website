@@ -21,7 +21,6 @@ from scripts.add_circuit.annotate import (
 )
 from scripts.add_circuit.circuit_validate import extract_code
 from scripts.add_circuit.code_identify import build_symplectic_h, build_symplectic_logical
-from scripts.annotate_circuits import _with_urls
 
 # The Steane encoder from test_circuit_validate, which that module already
 # asserts maps |0...0> into the code space. Deriving the check matrices from it
@@ -539,58 +538,6 @@ def test_strip_readout_is_still_a_unitary_free_circuit_stim_accepts():
     text = str(strip_readout(circ))
     assert stim.Circuit(text).num_detectors == 0
     assert "R 0 1 2 3 4 5 6" in text
-
-
-# --- the YAML edit in the backfill script ------------------------------------
-
-_YAML = "qec_id: 1\ncrumble_url: https://a\nquirk_url: https://q\ntags: [encoding]\n"
-
-
-def test_both_urls_are_written_in_order():
-    out = _with_urls(_YAML, "https://plain", "https://ann")
-    lines = out.splitlines()
-    assert lines[1] == "crumble_url: https://plain"
-    assert lines[2] == "crumble_url_annotated: https://ann"
-    assert lines[3] == "quirk_url: https://q"
-
-
-def test_plain_url_is_overwritten_not_left_stale():
-    """`crumble_url` must follow the default view, which now carries the reset
-    prologue — the stored canonical body's link would no longer match."""
-    out = _with_urls(_YAML, "https://with-resets", "https://ann")
-    assert "https://a\n" not in out
-    assert out.count("crumble_url:") == 1
-
-
-def test_url_edit_is_idempotent():
-    """The regression: a single-pass edit wrote the key twice on re-run, and the
-    duplicate parsed to the same value — so a value-based change check missed it."""
-    once = _with_urls(_YAML, "https://p", "https://b")
-    twice = _with_urls(once, "https://p", "https://b")
-    assert once == twice
-    assert twice.count("crumble_url_annotated:") == 1
-    assert twice.count("crumble_url:") == 1
-
-
-def test_annotated_url_replaces_a_stale_value():
-    stale = _with_urls(_YAML, "https://p", "https://old")
-    fresh = _with_urls(stale, "https://p", "https://new")
-    assert "https://old" not in fresh
-    assert fresh.count("crumble_url_annotated:") == 1
-
-
-def test_empty_annotated_url_removes_the_key():
-    """Wide circuits have no Crumble link; the key must not linger as an empty."""
-    present = _with_urls(_YAML, "https://p", "https://b")
-    removed = _with_urls(present, "", "")
-    assert "crumble_url_annotated" not in removed
-
-
-def test_annotated_url_appended_when_no_crumble_url_key():
-    text = "qec_id: 1\ntags: [encoding]\n"
-    out = _with_urls(text, "", "https://b")
-    assert out.count("crumble_url_annotated:") == 1
-    assert out.startswith(text)
 
 
 def test_sparsified_basis_still_validates():

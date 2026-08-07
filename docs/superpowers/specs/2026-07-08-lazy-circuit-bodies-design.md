@@ -3,6 +3,11 @@
 **Date:** 2026-07-08
 **Status:** Approved
 
+**Superseded in part (0.8.0):** the Cirq body format described below no longer exists —
+its per-moment ASCII grid scaled with the qubit count for no gain over the STIM body. The
+format tabs are STIM and QASM. Everything else here still holds; the mentions are left as
+written because this document is a record of what was decided at the time.
+
 ## Problem
 
 Code pages (`/codes/[code]`) render every circuit's body in every format

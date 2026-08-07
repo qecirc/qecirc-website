@@ -4,7 +4,7 @@
 
 **QECirc** is a community-driven web library for quantum error correction (QEC) circuits.
 Users can browse and discover circuits, and contribute new ones by opening a GitHub Issue.
-Circuits are stored in STIM format and converted to QASM/Cirq for display.
+Circuits are stored in STIM format and converted to QASM for display.
 
 ---
 
@@ -20,10 +20,10 @@ is represented as a tag, not a separate entity.
 
 Both levels support **tags** to aid discovery and filtering:
 
-| Level   | Example tags                               |
-| ------- | ------------------------------------------ |
-| Code    | `CSS`, `topological`, `bosonic`            |
-| Circuit | `encoding`, `fault-tolerant`, `distance:3` |
+| Level   | Example tags                                                                            |
+| ------- | --------------------------------------------------------------------------------------- |
+| Code    | `CSS`, `topological`, `bosonic`                                                         |
+| Circuit | `encoding`, `syndrome-extraction`, `fault-tolerant`, `distance:3`, `circuit-distance:2` |
 
 Tags can be either **structured** (`key:value`, e.g. `distance:3`) or **free-form strings**.
 
@@ -45,7 +45,7 @@ Circuits also have numeric **metrics** for filtering: `gate_count`, `depth`, `qu
 A circuit taken from a published work also links to a **paper**, which is what makes it
 findable by title, author or arXiv id. The link is **derived, not declared**: `circuits.source`
 already holds the provenance link, so `create_database.mjs` matches it against each paper's
-`url`/`arxiv_id`/`doi` rather than making 833 circuit files repeat it. Add a paper and every
+`url`/`arxiv_id`/`doi` rather than making every circuit file repeat it. Add a paper and every
 circuit citing it is enriched at the next build; a source with no paper is not an error
 (`source: circuit-synth` names a tool, not a work), it just leaves the circuit searchable by
 URL alone. Both the build and `validate:yaml` report such sources.
@@ -55,7 +55,7 @@ URL alone. Both the build and `validate:yaml` report such sources.
 ```
 codes
   id, name, slug, n, k, d, zoo_url, aliases, related,
-  h, logical, canonical_hash, created_at
+  h, logical, gauge, gauge_qubits, canonical_hash, created_at
   -- n, k, d: code parameters [[n,k,d]] for direct querying/sorting
   -- zoo_url: optional link to QEC Zoo
   -- aliases: other names for THIS code, space-joined (e.g. "Laflamme code")
@@ -65,7 +65,14 @@ codes
   -- h: symplectic stabilizer matrix, shape (n−k) × 2n, JSON-encoded
   -- logical: symplectic logical operators, shape 2k × 2n, JSON-encoded
   -- For CSS codes, the Hx/Hz/Lx/Lz view is derived in the UI via splitHToCss
-  -- canonical_hash: SHA256 of canonical form for dedup (indexed)
+  -- gauge: subsystem codes only — the gauge group a decoder may measure,
+  --   symplectic, JSON-encoded. NULL when it coincides with `h`.
+  -- gauge_qubits: (rank(gauge) - rank(h)) / 2. Qubits that carry no
+  --   information and are not corrected, so k = n - rank(h) - gauge_qubits.
+  --   Reading k off `h` alone stored Bacon-Shor [[9,1,3]] as [[9,5,3]].
+  -- canonical_hash: SHA256 of canonical form for dedup (indexed) — of the
+  --   gauge group when there is one, since two subsystem codes can share a
+  --   stabilizer group and differ in what a decoder may measure
 
 tools
   id, name, slug, description, homepage_url, github_url, paper_urls, aliases, created_at
@@ -84,19 +91,31 @@ papers
 circuits
   id, qec_id, code_id → codes, name, slug, notes, source,
   gate_count, two_qubit_gate_count, depth, qubit_count,
-  crumble_url, quirk_url, tool_id → tools, paper_id → papers, created_at
+  quirk_url, tool_id → tools, paper_id → papers, created_at
   -- paper_id: resolved from `source` at build time, NOT declared in YAML.
   --   NULL when the source names a tool or cites an uncatalogued work.
   -- qec_id: permanent globally unique circuit identifier (displayed as #N, never reused)
   -- source: provenance (DOI, URL, or citation)
   -- gate_count, two_qubit_gate_count, depth, qubit_count: numeric metrics for filtering
-  -- crumble_url, quirk_url: optional external visualization links
-  -- crumble_url_annotated: Crumble link for the 'stim-annotated' body (NULL if none)
+  -- quirk_url: optional Quirk link, and only below LARGE_CIRCUIT_MAX_QUBITS —
+  --   Quirk's UI tops out around 16 qubits, and the URL scales with width, so
+  --   above the gate it was a dead link costing up to 240 KB of page
+  -- There is deliberately NO crumble_url. A Crumble URL is a pure string
+  --   transform of the body, so it is derived where it is shown (`crumbleHref`
+  --   in src/lib/stim-format.ts) rather than stored: no staleness, and the
+  --   Detectors switch moves it by re-deriving from the body on screen.
+  --   Dropped in migration 021. It is capped on the length of the derived
+  --   string (CRUMBLE_MAX_URL_LENGTH), not on qubit count — measuring the
+  --   thing that actually gets big keeps the 144-qubit links the old
+  --   40-qubit gate denied, and still refuses the 782 KB one no browser opens.
+  -- `npm test` checks `crumbleUrl` against stim's own `to_crumble_url()` over
+  --   every committed body. It is a reimplementation of a stim function, and
+  --   nothing else in the repo would notice it drifting.
   -- tool_id: optional link to tool used to create the circuit
 
 circuit_bodies
   id, circuit_id → circuits, format, body
-  -- format: circuit format identifier (e.g. 'stim', 'qasm', 'cirq', 'stim-annotated')
+  -- format: circuit format identifier: 'stim', 'qasm', or 'stim-annotated'
   -- UNIQUE(circuit_id, format): one body per format per circuit
   -- 'stim-annotated' is a *view* of the stim body, not a display format: it adds an
      explicit reset prologue and (for CSS codes) a terminal readout with detectors.
@@ -105,10 +124,12 @@ circuit_bodies
 circuit_originals
   id, circuit_id → circuits (UNIQUE),
   original_stim, original_h, original_logical
-  -- pre-canonicalization data as submitted by contributors
+  -- pre-canonicalization data as submitted by contributors — NOT every
+  --   circuit has a row: a circuit written directly by the pipeline helpers
+  --   (the flag gadgets) was never submitted in some other form
   -- matrix fields are JSON-encoded (same format as codes.h / codes.logical)
-  -- original_stim from data_yaml/circuits/originals/ (one per circuit);
-  --   matrices from data_yaml/matrices/<digest>.yaml, shared by every circuit
+  -- original_stim from data_yaml/circuits/originals/, one file per circuit
+  --   that has one; matrices from data_yaml/matrices/<digest>.yaml, shared by every circuit
   --   of a code and referenced by the circuit YAML's `original_matrices`.
   --   create_database.mjs resolves the reference, so this table is unchanged.
 
@@ -124,9 +145,11 @@ taggings
 
 ## Circuit Format
 
-Circuits are stored in STIM format and converted to QASM/Cirq for display.
-The STIM body is the canonical source; QASM/Cirq are generated as alternate
-views in `circuit_bodies`.
+Circuits are stored in STIM format and converted to QASM for display.
+The STIM body is the canonical source; QASM is generated as the one alternate
+view in `circuit_bodies`. There was a Cirq view too: its text form is a
+per-moment ASCII grid whose width scales with the qubit count, so it cost 13 MB
+of repo to say less than the STIM body already says. Dropped in 0.8.0.
 
 **Matrices are stored once, and sparsely when large.** A code's `h`/`logical` and the
 matrices a circuit was submitted against are written as plain 0/1 rows up to
@@ -136,12 +159,30 @@ the code's density. Submitted matrices are shared: they live once in
 `data_yaml/matrices/<digest>.yaml` and circuits reference them by digest. Readers call
 `matrix_format.decode` / `decodeMatrix` and never need to know which encoding was used.
 
-The canonical STIM body is **reset-free** — `to_tableau()` and the derive/fit
-machinery need a circuit with no resets — so it leaves the `|0…0⟩` input implied.
-State-prep and encoding circuits therefore also carry a `stim-annotated` body
-that states it explicitly, plus a terminal readout and detectors where a readout
-basis exists. Generate it with `uv run python scripts/annotate_circuits.py`
-(idempotent); the canonical body must stay reset-free.
+The canonical STIM body of a **prep or encoding** circuit is **reset-free** —
+`to_tableau()` and the derive/fit machinery need a circuit with no resets — so it
+leaves the `|0…0⟩` input implied. Those circuits therefore also carry a
+`stim-annotated` body that states it explicitly, plus a terminal readout and
+detectors where a readout basis exists.
+
+**Syndrome extraction is the exception, and has to be.** A round _is_ reset,
+gates, measure — the resets and measurements are the circuit, not an annotation
+of it. So those bodies are not reset-free and have no tableau, and none of the
+derive/fit machinery may be pointed at them. They are checked by stabilizer flows
+instead (`validate_syndrome_extraction_h`), and their `stim-annotated` body is the
+memory experiment the round belongs to: reset the data, `REPEAT d` of the round,
+terminal readout, detectors, observable.
+
+Generate both with `uv run python scripts/annotate_circuits.py` (idempotent).
+
+**`distance:<N>` and `circuit-distance:<N>` are different numbers.** The first is the
+code's, and it is carried over from the source. The second is the _schedule's_ — the
+fewest faults anywhere in the round that flip a logical while firing no detector — and
+it is measured, by `scripts/measure_circuit_distance.py`, over both the Z and the X
+memory experiment under uniform circuit-level depolarizing noise. It is never larger
+than the code's and usually smaller: a fault on an ancilla can land on several data
+qubits at once. An absent tag means the search did not finish in its budget, not that
+the circuit is fault-free.
 
 ---
 
@@ -166,8 +207,9 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 
 **Rendering strategy — Astro v7 (static default, SSR opt-in):**
 
-- Static pages: 404, `/about`, `/contribute`, `/privacy`, `/legal` (pre-rendered at build time)
-- SSR pages (`prerender = false`): the landing page `/`, all `/codes/...` and `/circuits/...` routes, `/search`, `/api/search` (rendered on request, read from SQLite)
+- **The rule: a route that reads SQLite is `prerender = false`; everything else stays static.** `grep -rn "prerender" src/pages/` is the authoritative list — an enumeration here goes stale the day a page is added, so what follows is examples only.
+  - Static (pre-rendered at build time): the prose pages (`/about`, `/contribute`, `/privacy`, `/legal`), `/404`, and `/favorites`, which reads `localStorage` and nothing else.
+  - SSR (`prerender = false`, rendered on request): `/`, `/codes/...`, `/circuits/...`, `/tools`, `/search`, every `/api/*` endpoint, and the machine-facing `sitemap.xml` / `llms.txt` / `robots.txt`.
   - **`/` must stay SSR.** `@astrojs/node` serves pre-rendered pages straight from disk without running middleware, so a static `/` would silently lose the `s-maxage` edge caching (see below). The DB is baked at build time either way, so pre-rendering buys nothing here.
 - **Unknown id/slug → `return notFound()`** (`src/lib/not-found.ts`), which returns a bodiless 404; Astro fills the body with the prerendered /404 page. Never `Astro.rewrite("/404")` from an SSR page — /404 is prerendered, so the rewrite finds no component instance and 500s (`scripts/smoke.sh` guards this).
 - Client-side JS: search bar (debounced fetch), circuit row expand/collapse, format switching, favorites (toggle/filter/export/import), CodeBlock copy/download, lazy-loaded circuit bodies on code pages (fetched from `/api/circuits/[qec_id]/bodies` on first row expand), and filtering/sorting on the listing pages (`list-filter-client.ts` over `data-metrics`/`data-tags` row attributes — the server always renders the canonical full list and ignores filter params; `/api/download` still parses them)
@@ -186,7 +228,7 @@ A maintainer reviews the issue, then uses the ingestion pipeline to add the circ
 
 **Do not "unify" these by pointing the quick-search at the FTS index.** LIKE matches mid-word (`ycle` → Bivariate Bicycle Code), which token-based FTS cannot — that is what makes a type-ahead usable. There is also no FTS index for codes or tools, and pulling `notes` into a 10-item navigation list would surface circuits that merely mention the term. Enter with nothing highlighted hands over to `/search`; that is where the two meet.
 
-**Paper text is `/search`-only, for the same reason.** One paper backs up to 370 circuits, so matching a title in a 10-item navigation dropdown would fill it with near-identical rows and bury the code or tool the user was actually jumping to. A paper is something you _find circuits by_, not something you navigate to — there is no paper page to land on.
+**Paper text is `/search`-only, for the same reason.** A single paper can back hundreds of circuits, so matching a title in a 10-item navigation dropdown would fill it with near-identical rows and bury the code or tool the user was actually jumping to. A paper is something you _find circuits by_, not something you navigate to — there is no paper page to land on.
 
 `/search` ranks by BM25 over the `circuit_search` FTS5 table (migrations `016`–`019`), which `scripts/db/create_database.mjs` repopulates on every build. Its **nine columns** are `circuit_id, name, code_name, aliases, related, tags, code_tags, paper, notes` — and that order is load-bearing (see `BM25_WEIGHTS` below).
 
@@ -211,7 +253,7 @@ What a circuit is findable by, and where each comes from:
    3. any term, `STRICT_COLUMNS` — `partial`
    4. any term, allowing `related`
 
-   (2) precedes (3) deliberately: widening `toric code` to "any term" matches every circuit containing "code" (824 of 833), whereas allowing `related` returns the 98 surface codes actually meant.
+   (2) precedes (3) deliberately: widening `toric code` to "any term" matches all but a handful of circuits in the library — "code" occurs in nearly every one's text — whereas allowing `related` returns only the surface codes actually meant.
 
 **Column weights and the strict column set are DERIVED, not restated** (`src/lib/queries/search-schema.ts`). Both used to be hand-maintained constants, and both drifted from the table within a week despite shouty comments. `PRAGMA table_info(circuit_search)` returns the real columns in declaration order — which is exactly what `bm25()` wants — so:
 
@@ -219,7 +261,7 @@ What a circuit is findable by, and where each comes from:
 - **Forget the weight and it throws**, naming the column, instead of FTS5 silently scoring it 1.0 and mis-ranking everything.
 - **The strict set needs no upkeep**: it is every column minus `circuit_id` (UNINDEXED — naming it in a filter is an FTS5 error) and minus `LOOSE_COLUMNS`. New columns are strict by default, which is the safe direction — wrongly-loose tells a user their exact query found nothing.
 
-**Aliases — a data layer, not a forgiveness layer** (`data/migrations/017`). Codes and tools carry optional `aliases:` (and codes, `related:`) in their YAML; a circuit inherits its code's. The layers above cannot substitute for it: `bb` is two characters, so `editBudget` allows it zero edits, and before this existed `bb codes` returned 824 of 833 circuits — the OR fallback firing on `codes`.
+**Aliases — a data layer, not a forgiveness layer** (`data/migrations/017`). Codes and tools carry optional `aliases:` (and codes, `related:`) in their YAML; a circuit inherits its code's. The layers above cannot substitute for it: `bb` is two characters, so `editBudget` allows it zero edits, and before this existed `bb codes` returned almost every circuit — the OR fallback firing on `codes`.
 
 - `aliases` = **another name for this code**. Matched silently; the gross code _is_ a BB code.
 - `related` = **a different, adjacent code** people reach for loosely. Matched only as a last resort, and `/search` says so. The quick-search ignores `related` entirely: a dropdown has no room to explain itself.
@@ -265,7 +307,7 @@ This keeps the site fast and simple while scaling comfortably to thousands of ci
 │   ├── papers/            # One YAML per cited paper (e.g. zen-2024-rl-state-prep.yaml)
 │   ├── codes/             # One YAML per code (e.g. steane-code.yaml)
 │   ├── circuits/          # YAML + body files per circuit (e.g. steane-code--standard-encoding.yaml/.stim)
-│   │   └── originals/     # Original (pre-canonicalization) STIM, one per circuit
+│   │   └── originals/     # Original (pre-canonicalization) STIM, where one was submitted
 │   └── matrices/          # Submitted check matrices, stored once, content-addressed
 ├── .github/
 │   └── ISSUE_TEMPLATE/    # Circuit submission issue template
@@ -370,6 +412,7 @@ npm run format:check                # Check Prettier formatting
 npm run format                      # Auto-format with Prettier
 npm run papers:add -- 2402.17761    # Fetch a paper (arXiv id/DOI/link) into data_yaml/papers/
 npm run papers:missing              # Fetch every circuit source that has no paper yet
+npm test                            # Node tests (crumbleUrl vs stim's to_crumble_url, over every body)
 npm run validate:yaml               # Validate data_yaml/ schemas
 npm run validate:circuits           # Validate encoding/state-prep/logical-gate circuits against the code's symplectic h (CSS and non-CSS alike)
 uv run ruff check scripts/          # Lint Python code

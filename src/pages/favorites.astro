@@ -17,12 +17,22 @@ import Layout from "../components/Layout.astro";
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
         </svg>
-        <kbd class="inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+        <kbd class="inline-block min-w-[1rem] text-center px-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
           ⇧D
         </kbd>
       </span>
     </button>
   </div>
+
+  {/* Shown only when the id list actually had to be cut (see
+      MAX_CIRCUIT_IDS_PER_REQUEST). Before this, the list simply stopped and
+      nothing said the rest existed. */}
+  <p
+    id="fav-truncated"
+    class="hidden mb-6 border border-amber-300 dark:border-amber-800/70 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-sm text-amber-900 dark:text-amber-200"
+    role="status"
+  >
+  </p>
 
   <div id="fav-loading" class="text-center py-8">
     <p class="text-gray-500 dark:text-gray-400">Loading favorites...</p>
@@ -61,6 +71,7 @@ import Layout from "../components/Layout.astro";
   import { getFavorites, toggleFavorite, exportFavorites, importFavorites } from "../lib/favorites-client";
   import { initListKeynav } from "../lib/list-keynav-client";
   import { initCircuitActions } from "../lib/circuit-actions-client";
+  import { MAX_CIRCUIT_IDS_PER_REQUEST } from "../lib/constants";
 
   // No expandable bodies on this page; only Shift+D applies (download all).
   initCircuitActions({ downloadAllSelector: "#download-all-favs" });
@@ -84,19 +95,39 @@ import Layout from "../components/Layout.astro";
   const content = document.getElementById("fav-content")!;
   const downloadBtn = document.getElementById("download-all-favs")!;
 
-  const favIds = getFavorites();
+  const truncatedNote = document.getElementById("fav-truncated")!;
+
+  function showTruncationNotice(shown: number, total: number): void {
+    const fmt = new Intl.NumberFormat("en-US");
+    truncatedNote.textContent =
+      `Showing the first ${fmt.format(shown)} of your ${fmt.format(total)} favorites — ` +
+      `this page can load ${fmt.format(MAX_CIRCUIT_IDS_PER_REQUEST)} at a time. ` +
+      `Nothing was lost: “Export list” below writes out all of them.`;
+    truncatedNote.classList.remove("hidden");
+  }
+
+  const allFavIds = getFavorites();
+  // Cut here as well as server-side, so the request never grows past what the
+  // server would accept (or what fits in a request line) in the first place.
+  const favIds = allFavIds.slice(0, MAX_CIRCUIT_IDS_PER_REQUEST);
 
   if (favIds.length === 0) {
     loading.classList.add("hidden");
     empty.classList.remove("hidden");
   } else {
+    let serverTruncated = false;
     fetch(`/api/circuits?ids=${favIds.join(",")}`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        serverTruncated = r.headers.get("X-Truncated") === "true";
         return r.json();
       })
       .then((circuits: FavCircuit[]) => {
         loading.classList.add("hidden");
+
+        if (serverTruncated || allFavIds.length > favIds.length) {
+          showTruncationNotice(favIds.length, allFavIds.length);
+        }
 
         if (circuits.length === 0) {
           empty.classList.remove("hidden");
@@ -126,11 +157,11 @@ import Layout from "../components/Layout.astro";
           section.appendChild(heading);
 
           const list = document.createElement("div");
-          list.className = "space-y-2";
+          list.className = "border-t-2 border-gray-900 dark:border-gray-100";
 
           for (const circuit of codeCircuits) {
             const row = document.createElement("div");
-            row.className = "rounded border border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3 flex-wrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
+            row.className = "border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3 flex-wrap hover:bg-gray-50 dark:hover:bg-gray-900/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500";
             row.dataset.qecId = String(circuit.qec_id);
             row.tabIndex = 0;
             row.setAttribute("data-list-row", "");
@@ -143,7 +174,14 @@ import Layout from "../components/Layout.astro";
             unfavBtn.setAttribute("data-list-fav", "");
             unfavBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="currentColor" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" /></svg>`;
             unfavBtn.addEventListener("click", function () {
-              toggleFavorite(circuit.qec_id);
+              try {
+                toggleFavorite(circuit.qec_id);
+              } catch {
+                // Storage refused the write, so the circuit is still a
+                // favourite. Removing the row would say otherwise.
+                // toggleFavorite has already told the user why.
+                return;
+              }
               row.remove();
               // Remove section if empty
               if (list.children.length === 0) {
@@ -204,7 +242,7 @@ import Layout from "../components/Layout.astro";
               tagWrap.className = "flex flex-wrap gap-1 ml-auto";
               for (const tag of circuit.tags) {
                 const tagEl = document.createElement("span");
-                tagEl.className = "inline-block rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 text-xs";
+                tagEl.className = "inline-block px-1 py-0.5 font-mono text-xs text-gray-600 dark:text-gray-400";
                 tagEl.textContent = tag;
                 tagWrap.appendChild(tagEl);
               }
@@ -309,8 +347,18 @@ import Layout from "../components/Layout.astro";
         } else {
           if (toast) toast("All circuits in this list are already in your favorites.");
         }
-      } catch {
-        if (toast) toast("Invalid file format. Expected a QECirc favorites JSON file.");
+      } catch (err) {
+        // A blocked store is not a malformed file, and saying so matters here:
+        // the count comes from an in-memory merge, so reporting success and
+        // reloading would drop the user on the same empty list they started
+        // with, with nothing to explain it.
+        const blocked = err instanceof Error && err.name === "StorageBlockedError";
+        if (toast)
+          toast(
+            blocked
+              ? "Couldn't save — this browser is blocking site storage. Allow cookies/site data for qecirc.com and try again."
+              : "Invalid file format. Expected a QECirc favorites JSON file.",
+          );
       }
       // Reset so the same file can be re-imported
       importFile.value = "";

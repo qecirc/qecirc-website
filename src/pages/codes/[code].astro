@@ -7,12 +7,16 @@ import CircuitFilter from "../../components/CircuitFilter.astro";
 import CircuitRow from "../../components/CircuitRow.astro";
 import CircuitBodiesTemplate from "../../components/CircuitBodiesTemplate.astro";
 import CodeMatrices from "../../components/CodeMatrices.astro";
+import CodeMatricesDownload from "../../components/CodeMatricesDownload.astro";
 import CollapsibleSection from "../../components/CollapsibleSection.astro";
+import DensityToggle from "../../components/DensityToggle.astro";
 import HeartIcon from "../../components/HeartIcon.astro";
 import {
   getCodeBySlug,
   getTagsFor,
   formatCodeParams,
+  showCodeParams,
+  codeDisplayName,
   codeHasWeightedCircuits,
   getCircuitTagsForCode,
   getCircuitsForCode,
@@ -21,6 +25,7 @@ import {
 } from "../../lib/queries";
 import type { CircuitSort, CircuitSortField } from "../../types";
 import { notFound } from "../../lib/not-found";
+import { MATRIX_INLINE_ENTRY_LIMIT, matrixEntryEstimate } from "../../lib/constants";
 
 const { code: codeSlug } = Astro.params;
 const code = getCodeBySlug(codeSlug!);
@@ -35,6 +40,10 @@ const params = formatCodeParams(code);
 const matricesUrl = code.canonical_hash
   ? `/api/codes/${codeSlug}/matrices?v=${code.canonical_hash}`
   : `/api/codes/${codeSlug}/matrices`;
+
+// Large qLDPC codes have matrices that are neither readable as text nor cheap
+// to send — offer them as a download instead of rendering them inline.
+const matricesTooLarge = matrixEntryEstimate(code.n, code.k) > MATRIX_INLINE_ENTRY_LIMIT;
 
 // Filtering/sorting happens client-side (list-filter-client.ts): the page
 // always renders the full list in the default order and ignores filter
@@ -57,7 +66,7 @@ const sortHref = (field: CircuitSortField) => `${basePath}?sort=${field}&sort_di
 
 const siteUrl = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, "");
 const pageUrl = `${siteUrl}/codes/${codeSlug}`;
-const codeTitle = params && code.name !== params ? `${code.name} ${params}` : code.name;
+const codeTitle = codeDisplayName(code);
 const collection: Record<string, unknown> = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
@@ -99,9 +108,14 @@ const jsonLd = [
 ];
 ---
 
+{/* codeTitle, not code.name: 17 groups of codes share a bare name (nine are
+    called "Balanced Product Cyclic Code"), so 66 of the 84 pages had a
+    <title> identical to another page's and were indistinguishable in a tab
+    strip, a bookmark list or a search result. The [[n,k,d]] tells them
+    apart, and the JSON-LD on this page already used it. */}
 <Layout
-  title={code.name}
-  description={`Circuits for ${code.name}${params && code.name !== params ? ` ${params}` : ""}`}
+  title={codeTitle}
+  description={`Circuits for ${codeTitle}`}
   jsonLd={jsonLd}
 >
   <a
@@ -114,15 +128,18 @@ const jsonLd = [
       <path d="M15 19l-7-7 7-7" />
     </svg>
     Codes
-    <kbd class="inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+    <kbd class="inline-block min-w-[1rem] text-center px-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
       ⌫
     </kbd>
   </a>
 
   <div class="flex items-baseline flex-wrap gap-x-3.5 gap-y-1 mb-2">
-    <h1 class="text-2xl font-bold">
-      {code.name}
-      {params !== "" && code.name !== params && <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>}
+    {/* flex + gap, not two adjacent expressions: Astro strips the whitespace
+        between them, so the heading rendered as "Steane Code[[7,1,3]]" with a
+        measured 0.00px gap. Same construction as CodeCard.astro. */}
+    <h1 class="text-2xl font-bold flex items-baseline flex-wrap gap-x-2">
+      <span>{code.name}</span>
+      {showCodeParams(code) && <span class="text-gray-500 dark:text-gray-400 font-normal">{params}</span>}
     </h1>
     {code.zoo_url && (
       <a
@@ -143,7 +160,16 @@ const jsonLd = [
   {code.has_matrices === 1 && (
     <div class="mb-6">
       <CollapsibleSection id="matrices" label="Check Matrices & Logical Operators">
-        <CodeMatrices id="code-matrices" dataUrl={matricesUrl} />
+        {matricesTooLarge ? (
+          <CodeMatricesDownload
+            dataUrl={matricesUrl}
+            slug={codeSlug!}
+            n={code.n}
+            k={code.k}
+          />
+        ) : (
+          <CodeMatrices id="code-matrices" dataUrl={matricesUrl} />
+        )}
       </CollapsibleSection>
     </div>
   )}
@@ -154,7 +180,7 @@ const jsonLd = [
       {circuits.length > 0 && (
         <button
           id="download-all-btn"
-          class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 rounded-md cursor-pointer"
+          class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 cursor-pointer"
           data-code-slug={codeSlug}
           title="Download all visible circuits — Shift+D"
           aria-label="Download all visible circuits"
@@ -163,7 +189,7 @@ const jsonLd = [
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
           </svg>
           <span data-list-count>{countLabel}</span>
-          <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+          <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
             ⇧D
           </kbd>
         </button>
@@ -174,13 +200,13 @@ const jsonLd = [
       <button
         type="button"
         id="fav-filter-toggle"
-        class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 aria-pressed:text-red-500 dark:aria-pressed:text-red-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 rounded-md cursor-pointer"
+        class="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 aria-pressed:text-red-500 dark:aria-pressed:text-red-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 px-1.5 py-1 cursor-pointer"
         title="Show favorites only — Shift+F"
         aria-pressed="false"
       >
         <HeartIcon class="w-3.5 h-3.5" />
         <span>Favorites</span>
-        <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+        <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
           ⇧F
         </kbd>
       </button>
@@ -195,28 +221,31 @@ const jsonLd = [
     </div>
   ) : (
     <div>
-      {/* Headers only above md: below it the row has no metric columns to head,
-          and the numbers carry their own labels. Sorting stays reachable there
-          through the filter boxes, whose labels are the same sort links. */}
+      {/* Below md the strip collapses to a flex line of just NAME and
+          TAGS (+ density toggle): the metric columns do not exist there — the
+          numbers carry their own inline labels — so their headers hide, and
+          sorting stays reachable through the filter boxes, whose labels are
+          the same sort links. Above md it is the grid the rows share; the
+          inline grid-template is ignored while the strip is flex. */}
       <div
-        class="hidden md:grid items-center gap-x-1.5 px-4 py-1.5 text-[11px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400"
+        class="flex md:grid items-center gap-x-1.5 px-2 pt-1.5 pb-2.5 font-mono text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400"
         style="grid-template-columns: var(--circuit-grid);"
       >
-        <span></span>
-        <span></span>
-        <span></span>
-        <a href={sortHref("gate_count")} data-sort-field="gate_count" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100" title="Gate count — click to sort">G</a>
-        <a href={sortHref("two_qubit_gate_count")} data-sort-field="two_qubit_gate_count" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100 text-amber-600 dark:text-amber-400" title="Two-qubit gate count — click to sort">2Q</a>
-        <a href={sortHref("depth")} data-sort-field="depth" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100" title="Circuit depth — click to sort">D</a>
-        <a href={sortHref("qubit_count")} data-sort-field="qubit_count" data-sort-header class="text-center hover:text-gray-900 dark:hover:text-gray-100" title="Qubit count — click to sort">Q</a>
-        <span></span>
+        <span class="hidden md:block"></span>
+        <span class="hidden md:block"></span>
+        <span class="hidden md:block"></span>
         <span>Name</span>
+        <a href={sortHref("gate_count")} data-sort-field="gate_count" data-sort-header class="hidden md:block text-right hover:text-gray-900 dark:hover:text-gray-100" title="Gate count — click to sort">G</a>
+        <a href={sortHref("two_qubit_gate_count")} data-sort-field="two_qubit_gate_count" data-sort-header class="hidden md:block text-right hover:text-gray-900 dark:hover:text-gray-100 text-amber-700 dark:text-amber-400" title="Two-qubit gate count — click to sort">2Q</a>
+        <a href={sortHref("depth")} data-sort-field="depth" data-sort-header class="hidden md:block text-right hover:text-gray-900 dark:hover:text-gray-100" title="Circuit depth — click to sort">D</a>
+        <a href={sortHref("qubit_count")} data-sort-field="qubit_count" data-sort-header class="hidden md:block text-right hover:text-gray-900 dark:hover:text-gray-100" title="Qubit count — click to sort">Q</a>
+        <span class="ml-auto md:ml-0 text-right">Tags<DensityToggle /></span>
       </div>
       <div data-list-empty class="hidden text-center py-8">
         <p class="text-gray-500 dark:text-gray-400 mb-2">No circuits match your filters.</p>
         <a href={basePath} data-clear-filters class="text-sm underline text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">Clear filters</a>
       </div>
-      <div class="space-y-2" data-list-container>
+      <div class="border-t-2 border-gray-900 dark:border-gray-100" data-list-container>
         {circuits.map((circuit) => (
           <CircuitRow circuit={circuit} tool={toolsMap.get(circuit.id)} paper={papersMap.get(circuit.id)} codeSlug={codeSlug!} />
         ))}
@@ -229,6 +258,7 @@ const jsonLd = [
 
 <script>
   import { getFavorites } from "../../lib/favorites-client";
+  import { safeStorage } from "../../lib/safe-storage";
   import { initListKeynav } from "../../lib/list-keynav-client";
   import { initListFilter } from "../../lib/list-filter-client";
   import { initCircuitActions } from "../../lib/circuit-actions-client";
@@ -270,17 +300,37 @@ const jsonLd = [
     // toggle, so /codes/foo#42 focuses (and the existing expandFromHash
     // handler expands) the right row.
     hashAttr: "data-qec-id",
+    // The row is not the toggle: `aria-expanded` belongs to the chevron button
+    // inside it, and the row mirrors the state in `data-expanded`.
+    expandedAttr: "data-expanded",
   });
 
   // 1/2/3 + c/y + d target the currently expanded circuit row (if any);
   // Shift+D triggers the page-level "download all visible" button.
   initCircuitActions({
     activeContainerSelector:
-      '[id] > .circuit-toggle[aria-expanded="true"] + .circuit-detail',
+      '[id] > .circuit-toggle[data-expanded="true"] + .circuit-detail',
     downloadAllSelector: "#download-all-btn",
   });
 
   const FAV_FILTER_LS_KEY = "qecirc:fav-filter-active";
+
+  // "Download all visible circuits" is true of the URL filters — /api/download
+  // reads the same query string the filter form writes — but not of the
+  // Favorites filter, which lives in localStorage and hides rows the download
+  // still contains. The download's contract is deliberately URL-params-only,
+  // so the label is what has to change, not the behaviour.
+  const DOWNLOAD_LABEL = "Download all visible circuits";
+  const DOWNLOAD_LABEL_FAV_FILTERED =
+    "Download all circuits matching the filters — the Favorites filter is not applied, so this includes rows it is hiding";
+
+  function setDownloadLabel(favFilterActive: boolean): void {
+    const btn = document.getElementById("download-all-btn");
+    if (!btn) return;
+    const label = favFilterActive ? DOWNLOAD_LABEL_FAV_FILTERED : DOWNLOAD_LABEL;
+    btn.setAttribute("aria-label", label);
+    btn.setAttribute("title", `${label} — Shift+D`);
+  }
 
   function applyFavFilter(active: boolean): void {
     const favSet = new Set(getFavorites());
@@ -290,11 +340,12 @@ const jsonLd = [
       const qecId = Number(row.id);
       row.style.display = active && !favSet.has(qecId) ? "none" : "";
     });
+    setDownloadLabel(active);
   }
 
   const favToggle = document.getElementById("fav-filter-toggle");
   if (favToggle) {
-    let active = localStorage.getItem(FAV_FILTER_LS_KEY) === "true";
+    let active = safeStorage.getItem(FAV_FILTER_LS_KEY) === "true";
     if (active) {
       favToggle.setAttribute("aria-pressed", "true");
       applyFavFilter(true);
@@ -302,7 +353,7 @@ const jsonLd = [
     favToggle.addEventListener("click", function () {
       active = !active;
       favToggle.setAttribute("aria-pressed", active ? "true" : "false");
-      localStorage.setItem(FAV_FILTER_LS_KEY, String(active));
+      safeStorage.setItem(FAV_FILTER_LS_KEY, String(active));
       applyFavFilter(active);
     });
   }

@@ -3,7 +3,7 @@ import Layout from "../components/Layout.astro";
 import { CONTRIBUTORS } from "../lib/contributors";
 
 const kbdCls =
-  "inline-block min-w-[1.25rem] text-center px-1 py-0.5 font-mono text-xs border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800";
+  "inline-block min-w-[1.25rem] text-center px-1 py-0.5 font-mono text-xs border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800";
 ---
 
 <Layout title="About" description="About the QECirc project — goals, data model, and how to contribute">
@@ -29,17 +29,17 @@ const kbdCls =
 
     <h2 class="text-xl font-semibold mb-3">Keyboard shortcuts</h2>
     <p class="text-gray-600 dark:text-gray-400 mb-3">
-      Listing pages support keyboard navigation. Press <kbd class="inline-block min-w-[1.25rem] text-center px-1 py-0.5 font-mono text-xs border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800">?</kbd> anywhere to open the full reference.
+      Listing pages support keyboard navigation. Press <kbd class="inline-block min-w-[1.25rem] text-center px-1 py-0.5 font-mono text-xs border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">?</kbd> anywhere to open the full reference.
     </p>
     <ul class="list-disc pl-5 text-gray-600 dark:text-gray-400 mb-6 space-y-1 text-sm">
       <li>
-        <kbd class={kbdCls}>j</kbd> / <kbd class={kbdCls}>k</kbd> or arrow keys to move; <kbd class={kbdCls}>gg</kbd> / <kbd class={kbdCls}>G</kbd> for first / last
+        <kbd class={kbdCls}>j</kbd> / <kbd class={kbdCls}>k</kbd> or arrow keys to move; <kbd class={kbdCls}>gg</kbd> / <kbd class={kbdCls}>Home</kbd> jumps to the first row, <kbd class={kbdCls}>G</kbd> / <kbd class={kbdCls}>End</kbd> to the last
       </li>
       <li>
         <kbd class={kbdCls}>l</kbd> / <kbd class={kbdCls}>→</kbd> or <kbd class={kbdCls}>Space</kbd> toggle a circuit row; <kbd class={kbdCls}>h</kbd> / <kbd class={kbdCls}>←</kbd> collapse; <kbd class={kbdCls}>Enter</kbd> opens the detail page
       </li>
       <li>
-        <kbd class={kbdCls}>f</kbd> to toggle favorite (focused row or current circuit), <kbd class={kbdCls}>⇧F</kbd> to toggle the favorites-only filter; <kbd class={kbdCls}>/</kbd> focuses search; <kbd class={kbdCls}>Esc</kbd> collapses the open row
+        <kbd class={kbdCls}>f</kbd> to toggle favorite (focused row or current circuit), <kbd class={kbdCls}>⇧F</kbd> to toggle the favorites-only filter; <kbd class={kbdCls}>/</kbd> focuses search; <kbd class={kbdCls}>Esc</kbd> collapses the open row, or closes this shortcut reference when it is open
       </li>
       <li>
         <kbd class={kbdCls}>1</kbd> / <kbd class={kbdCls}>2</kbd> / <kbd class={kbdCls}>3</kbd> switch format on the open circuit; <kbd class={kbdCls}>c</kbd> or <kbd class={kbdCls}>y</kbd> copy, <kbd class={kbdCls}>d</kbd> download; <kbd class={kbdCls}>⇧D</kbd> downloads all on the page
@@ -62,12 +62,21 @@ const kbdCls =
       QECirc is funded by the <a href="https://unitary.foundation" class="prose-link" target="_blank" rel="noopener">Unitary Foundation</a> and supported by the <a href="https://www.cda.cit.tum.de/" class="prose-link" target="_blank" rel="noopener">Chair for Design Automation</a> at the Technical University of Munich.
     </p>
     <a href="https://unitary.foundation" target="_blank" rel="noopener" class="inline-block mb-6">
+      {/* Self-hosted, not hotlinked from img.shields.io: this was the site's
+          only third-party request, and /privacy declares no external content.
+          Regenerate by re-fetching the shields.io badge if the wording changes.
+          width/height are the asset's own, so the box is reserved before it
+          decodes and the paragraph below it cannot shift. */}
       <img
-        src="https://img.shields.io/badge/Supported%20By-UNITARY%20FOUNDATION-brightgreen.svg?style=for-the-badge"
+        src="/unitary-foundation-badge.svg"
         alt="Supported by Unitary Foundation"
+        width="295"
         height="28"
       />
     </a>
+    <p class="text-gray-600 dark:text-gray-400 mb-6">
+      QECirc is open source. If you find it useful, <a href="https://github.com/qecirc/qecirc-website" class="prose-link" target="_blank" rel="noopener">star the repository on GitHub</a> — it helps others discover the project.
+    </p>
 
     {/* Maintained by hand — the repository's human contributors, excluding bots
         (Claude, Renovate) and the `qecirc` service account, PLUS people who
@@ -90,12 +99,10 @@ const kbdCls =
 
     <h2 class="text-xl font-semibold mb-3">License</h2>
     <p class="text-gray-600 dark:text-gray-400 mb-2">
-      The source code is licensed under the
-      <a href="https://opensource.org/licenses/MIT" class="prose-link" target="_blank" rel="noopener">MIT License</a>.
+      The source code is licensed under the <a href="https://opensource.org/licenses/MIT" class="prose-link" target="_blank" rel="noopener">MIT License</a>.
     </p>
     <p class="text-gray-600 dark:text-gray-400">
-      The circuit data is licensed under
-      <a href="https://creativecommons.org/licenses/by-sa/4.0/" class="prose-link" target="_blank" rel="noopener">CC BY-SA 4.0</a>.
+      The circuit data is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/" class="prose-link" target="_blank" rel="noopener">CC BY-SA 4.0</a>.
     </p>
   </div>
 </Layout>

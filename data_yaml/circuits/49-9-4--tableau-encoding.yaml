@@ -1,0 +1,13 @@
+qec_id: 1166
+name: Tableau encoding
+tool: qldpc
+notes: "Encodes 9 logical qubits; the first 9 qubits are the input. Synthesised from
+  the code's tableau, so it carries no flag qubits and no distance guarantee; the
+  library states its encoders are not fault-tolerant. Reproduce with: qldpc.circuits.get_encoding_circuit(qldpc.codes.SHYPSCode(3))"
+source: qldpc
+gate_count: 306
+two_qubit_gate_count: 294
+depth: 130
+qubit_count: 49
+tags: [encoding, non-ft]
+original_matrices: e8600072df37974b

@@ -23,12 +23,13 @@ uv sync                # install Python dependencies
 
 Pick the path that matches what you have — they all end at the same YAML files and the same `npm run db:create`.
 
-| You have…                                                   | Use                   | Section                                                           |
-| ----------------------------------------------------------- | --------------------- | ----------------------------------------------------------------- |
-| An **encoding** circuit + check matrices (`Hx/Hz` or `H`)   | `add_circuit()`       | [Steps 1–4](#step-1-inspect)                                      |
-| A **state-preparation** circuit (matrices optional)         | `import_state_prep()` | [State-preparation circuits](#adding-a-state-preparation-circuit) |
-| A circuit whose qubit labeling differs from the stored code | either, with a _fit_  | [Fitting to an existing code](#fitting-to-an-existing-code)       |
-| **Many** circuits from one source/paper                     | a dataset importer    | [Bulk / dataset imports](#bulk--dataset-imports)                  |
+| You have…                                                   | Use                                  | Section                                                               |
+| ----------------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------- |
+| An **encoding** circuit + check matrices (`Hx/Hz` or `H`)   | `add_circuit()`                      | [Steps 1–4](#step-1-inspect)                                          |
+| A **state-preparation** circuit (matrices optional)         | `import_state_prep()`                | [State-preparation circuits](#adding-a-state-preparation-circuit)     |
+| A **syndrome-extraction** round, or a check schedule        | `build_se_round()` + `add_circuit()` | [Syndrome-extraction circuits](#adding-a-syndrome-extraction-circuit) |
+| A circuit whose qubit labeling differs from the stored code | either, with a _fit_                 | [Fitting to an existing code](#fitting-to-an-existing-code)           |
+| **Many** circuits from one source/paper                     | a dataset importer                   | [Bulk / dataset imports](#bulk--dataset-imports)                      |
 
 Only have a circuit? That's fine: [`extract_code`](#extract-code-from-circuit-optional) recovers `Hx/Hz` from an encoding circuit, and the [state-prep helpers](#get-the-check-matrices-from-the-circuit) derive them from a prep circuit. New here? See the [FAQ](#faq).
 
@@ -81,13 +82,18 @@ print(summarize_circuit(circuit_text))
 ### Validate (optional)
 
 ```python
-from scripts.add_circuit import validate_encoding, validate_state_prep
+from scripts.add_circuit import (
+    validate_encoding, validate_state_prep, validate_syndrome_extraction,
+)
 
 # For encoding circuits:
 print(validate_encoding(circuit, Hx, Hz))   # 'passed' or 'failed: ...'
 
 # For state-preparation circuits:
 print(validate_state_prep(circuit, Hx, Hz)) # 'passed' or 'failed: ...'
+
+# For syndrome-extraction circuits (one round):
+print(validate_syndrome_extraction(circuit, Hx, Hz))  # 'passed' or 'failed: ...'
 ```
 
 Validation uses your provided Hx/Hz (same source as the circuit). If the code already exists in the library with a different qubit ordering, `add_circuit()` handles the relabeling separately.
@@ -96,16 +102,29 @@ For a **non-CSS** code there is no Hx/Hz split; pass the symplectic `h` (shape
 `(m, 2n)`, X-half then Z-half — the form stored in `codes.h`) instead:
 
 ```python
-from scripts.add_circuit import validate_encoding_h, validate_state_prep_h
+from scripts.add_circuit import (
+    validate_encoding_h, validate_state_prep_h, validate_syndrome_extraction_h,
+)
 
 print(validate_encoding_h(circuit, h, n))    # 'passed' or 'failed: ...'
 print(validate_state_prep_h(circuit, h, n))  # 'passed' or 'failed: ...'
+print(validate_syndrome_extraction_h(circuit, h, n, logical=logical))
 ```
 
 These are the general implementations — the Hx/Hz pair above is a thin wrapper —
 so CSS codes may use either. Both check each stabilizer up to **sign** (`|⟨S⟩| = 1`,
 not `⟨S⟩ = +1`): a sign-free binary `h` names a stabilizer group only up to a Pauli
 frame, so a circuit preparing a codeword in a different frame is still valid.
+
+**Syndrome extraction is checked differently**, because it acts on an
+already-encoded state: there is no fixed input to simulate it on, and its resets
+and measurements leave it with no tableau. `validate_syndrome_extraction_h` uses
+stim's _stabilizer flows_ instead, and asks three things of one round: the group
+it measures is exactly the code's stabilizer group, every stabilizer survives
+(`S -> S`), and — when `logical` is passed — every logical does too (`L -> L`).
+Which ancilla reads which stabilizer is **derived** from the circuit, never
+assumed from the measurement order, since nothing in the stored data records it.
+Data qubits are `0..n-1`; anything above is treated as an ancilla.
 
 ### Extract code from circuit (optional)
 
@@ -196,8 +215,12 @@ print(result.summary())
 
 ### Option B: CLI
 
+A thin shell over `add_circuit()` — same write path, same guarantees. It covers
+the CSS (`Hx`/`Hz`) case only; for a symplectic `H`, a subsystem code, an explicit
+`qubit_permutation` or circuit `tags`, use Option A.
+
 ```bash
-python -m scripts.add_circuit.generate \
+npm run generate -- \
   --hx path/to/hx.json \
   --hz path/to/hz.json \
   --stim circuit.stim \
@@ -210,6 +233,11 @@ python -m scripts.add_circuit.generate \
 ```
 
 Add `--dry-run` to preview without writing. Multiple circuits per code: pass multiple `--stim` files with matching `--circuit-name`, `--source`, `--tool` values.
+
+`--circuit-name` is **required, one per `--stim` file** — every circuit is filed as
+`<code-slug>--<circuit-slug>`, so two circuits without distinct names are one filename.
+As in Option A, an existing `<code>--<circuit>` slug is refused; pass `--overwrite` to
+replace it in place (keeping its `qec_id`). `--assume-new` is the CLI's `assume_new=True`.
 
 ---
 
@@ -320,6 +348,67 @@ print(result.summary())
 
 The full circuit (flags included) is what gets stored; the pipeline dedups it to the canonical code, applies any qubit permutation, and preserves the original in `originals/`. Provenance you pass (`source_file`, `logical_state`, `connectivity`, `gate_set`, `device`, `qubit_placement`) is folded into the circuit notes, and the categorical ones also become `key:value` tags — nothing is dropped.
 
+## Adding a syndrome-extraction circuit
+
+A syndrome-extraction round is the odd one out, and in a way worth understanding before you
+add one: it acts on an **already-encoded** state. There is no `|0…0⟩` input to simulate it on,
+and its resets and measurements are the circuit rather than an annotation of it, so it has no
+tableau. Nothing in the derive/fit machinery applies.
+
+### From a check schedule
+
+The reusable description of a round is a **schedule**: ticks of `(data, ancilla, pauli)` checks
+that run in parallel. `build_se_round` turns one into STIM.
+
+```python
+from scripts.add_circuit import build_se_round, validate_syndrome_extraction_h
+
+ticks = [
+    [(0, 7, "X"), (1, 10, "Z")],   # tick 0: two checks, in parallel
+    [(2, 7, "X"), (3, 10, "Z")],   # tick 1
+]
+circuit = build_se_round(ticks, n=7)          # hadamards="basis" | "per-check"
+```
+
+Data qubits are `0..n-1`; every ancilla must be `>= n`. The ticks are emitted **verbatim** — a
+scheduling result _is_ its tick assignment, so nothing is re-packed — and the ancillas are
+measured in ascending index order. A tick that uses the same qubit twice is rejected rather
+than silently serialised.
+
+### Validate
+
+```python
+print(validate_syndrome_extraction_h(circuit, h, n, logical=logical))  # 'passed' | 'failed: ...'
+```
+
+Three checks, on stabilizer flows: the group the round **measures** is exactly the code's, every
+stabilizer is **preserved** (`S -> S`), and every logical is too (`L -> L`, when `logical` is
+given). Which ancilla reads which check is _derived_ from the circuit, never assumed from the
+measurement order.
+
+Run it. The interesting failure is invisible to inspection: when an X-check and a Z-check share
+two data qubits and their CNOTs are ordered inconsistently, the two ancillas come out entangled
+and each outcome is random — with every check applied exactly once, on the right qubits, in a
+conflict-free schedule. `measured_stabilizers` reports what the round actually measures, and
+`round_check_matrix` the per-ancilla map, if you need to see why.
+
+### Store
+
+`add_circuit()` takes it from there unchanged — pass the symplectic `h`, tag it
+`syndrome-extraction`, and run `scripts/annotate_circuits.py` afterwards to get the
+`stim-annotated` memory experiment (reset the data, `REPEAT d` of the round, terminal readout,
+detectors, observable).
+
+```python
+add_circuit(circuit=circuit, circuit_name="Depth-optimal schedule", d=3,
+            H=h, n=n, source="https://arxiv.org/abs/...",
+            tags=["syndrome-extraction", "schedule:depth-optimal"])
+```
+
+The importers under `data-imports/` are the worked examples —
+[`asyndrome/`](../data-imports/asyndrome/README.md), [`qldpc/`](../data-imports/qldpc/README.md)
+and [`quits/`](../data-imports/quits/README.md) all import rounds.
+
 ## Fitting to an existing code
 
 Published circuits rarely use the same qubit labeling as the stored code, so the circuit must be **fitted** by a qubit permutation (convention `σ[new] = old`). Both `add_circuit()` and `import_state_prep()` resolve this for you, trying in order:
@@ -343,6 +432,9 @@ Worked examples to copy from:
 - [`data-imports/mqt-ftsp/`](../data-imports/mqt-ftsp/README.md) — MQT QECC fault-tolerant state-prep circuits.
 - [`data-imports/rlftqc/`](../data-imports/rlftqc/README.md) — RL-discovered fault-tolerant state-prep circuits.
 - [`data-imports/flag-at-origin/`](../data-imports/flag-at-origin/README.md) — flag-at-origin FT preps (converts pytket circuits to STIM, fits via precomputed/`assume_new` strategies) **and** standalone flag gadgets collected under a placeholder `flag-gadgets` code (`n = k = 0`, no check matrices) for circuits that don't belong to a code.
+- [`data-imports/qldpc/`](../data-imports/qldpc/README.md) — qLDPC encoders, state preps and rounds, including the first subsystem codes. Shows building the codes by calling a library rather than reading files.
+- [`data-imports/quits/`](../data-imports/quits/README.md) — QUITS schedules. Shows lifting one round out of a generated memory experiment, and importing a second schedule for a code that already has one.
+- [`data-imports/asyndrome/`](../data-imports/asyndrome/README.md) — AlphaSyndrome syndrome-measurement schedules. Shows what to do when the source is wrong: 10 of its 69 schedules fail `validate_syndrome_extraction_h` and are left out, three codes need their distance computed because the dataset's is missing or contradicted by its own matrices, and one code needs `assume_new` against a stored code it merely shares `n` and `k` with.
 
 Each `rebuild_all.py` classifies without writing by default and imports with `--write`, then you run the standard `npm run format && npm run validate:yaml && npm run validate:circuits && npm run db:create`.
 
@@ -355,10 +447,11 @@ Each `rebuild_all.py` classifies without writing by default and imports with `--
 - Logical operators (Lx, Lz)
 - Code extraction from circuits via Pauli propagation (`extract_code`)
 - Circuit metrics (gate count, depth, qubit count)
-- Compact STIM, QASM, and Cirq format conversions
-- Crumble and Quirk visualization URLs
+- Compact STIM and QASM format conversions
+- A Quirk visualization URL, below the width gate (the Crumble link is derived
+  from the body at render time, so it is not stored)
 - **Circuit ID (`qec_id`)**: auto-assigned as `max(existing IDs) + 1` — permanent, never reused
-- **Original submission data**: the pipeline always preserves the original (pre-canonicalization) STIM circuit and the contributor-provided symplectic stabilizer / logical matrices in `data_yaml/circuits/originals/`. These are displayed on the circuit detail page under "Original submission (before canonicalization)"; the Hx/Hz/Lx/Lz view is derived in the UI.
+- **Original submission data**: where a circuit was submitted in some other form, the pipeline preserves the pre-canonicalization STIM in `data_yaml/circuits/originals/` and the contributor's symplectic stabilizer / logical matrices in `data_yaml/matrices/<digest>.yaml` (see [Original submission](#original-submission) below). A circuit written directly with the pipeline helpers — the flag gadgets are — has no original, and the detail page's "Original submission (before canonicalization)" section is simply absent for it. The Hx/Hz/Lx/Lz view is derived in the UI.
 - Dedup: if the code already exists, the pipeline detects qubit ordering differences and relabels the circuit to match. Check `AddCircuitResult.qubit_permutation` to see if relabeling was applied (`None` = no relabeling, `list` = permutation applied)
 - Use `find_existing_code_full()` to check for qubit permutations before generating files
 
@@ -411,31 +504,36 @@ gate_count: 12
 two_qubit_gate_count: 9
 depth: 5
 qubit_count: 7
-crumble_url: "https://algassert.com/crumble#circuit=..."
 quirk_url: "https://algassert.com/quirk#circuit=..."
 tags: [encoding]
 ```
 
 The `qec_id` is a **permanent, globally unique** integer identifier for the circuit (displayed as `#1` in the UI). It is auto-assigned by the generation pipeline (`max(existing IDs) + 1`). Once assigned, a `qec_id` must **never be reused or reassigned**, even if a circuit is removed.
 
-Body files (`.stim`, `.qasm`, `.cirq`) share the same stem as the circuit YAML.
+Body files (`.stim`, `.qasm`) share the same stem as the circuit YAML.
 
-State-prep and encoding circuits get one more, `.stim-annotated`, written by
+Circuits get one more, `.stim-annotated`, written by
 `uv run python scripts/annotate_circuits.py` (idempotent — run it after adding
-such a circuit). It restates the `|0…0⟩` input that the canonical `.stim` body
-leaves implied, and adds a terminal readout with detectors where a readout basis
-exists. It is a view of the STIM body rather than a display format, so it gets no
-format tab; the Detectors toggle derives both views from it. The canonical
-`.stim` body must stay reset-free — `to_tableau()` and the derive/fit machinery
-depend on that.
+one). For a prep or encoder it restates the `|0…0⟩` input that the canonical
+`.stim` body leaves implied and adds a terminal readout with detectors; for a
+syndrome-extraction round it is the memory experiment (reset the data, `REPEAT d`,
+readout, detectors, observable). Either way it is a view of the STIM body rather
+than a display format, so it gets no format tab; the Detectors toggle derives both
+views from it.
+
+A prep or encoder's canonical `.stim` body must stay **reset-free** —
+`to_tableau()` and the derive/fit machinery depend on that. A syndrome-extraction
+body cannot be: its resets and measurements are the circuit.
 
 ### Original submission
 
 The pipeline preserves what a circuit was submitted with, before any canonicalization or
-qubit relabeling. It lives in two places, because the two halves have different owners:
+qubit relabeling. There is nothing to preserve for a circuit the pipeline helpers wrote
+themselves — the flag gadgets have no original — but where there is, it lives in two
+places, because the two halves have different owners:
 
 - `data_yaml/circuits/originals/<code-slug>--<circuit-slug>.original.stim` — the STIM
-  circuit as submitted. Per circuit, since every circuit has its own.
+  circuit as submitted. Per circuit, since no two circuits share one.
 - `data_yaml/matrices/<digest>.yaml` — the contributor's symplectic stabilizer / logical
   matrices. **Shared**: every circuit of one code was submitted against the same matrices,
   so they are written once and named by a content digest, and the circuit YAML points at
@@ -575,8 +673,8 @@ quote it and save yourself the round trip.
 **I only have a circuit, no check matrices. Can I still add it?**
 Yes. For an encoding circuit use [`extract_code`](#extract-code-from-circuit-optional); for a state-prep circuit use the [derive-matrices helpers](#get-the-check-matrices-from-the-circuit). Both recover the code from the circuit.
 
-**Encoding vs state-preparation — which is my circuit?**
-An _encoding_ circuit maps `k` data qubits (plus ancillas) into the codespace; the first `k` qubits carry the logical input. A _state-preparation_ circuit starts from `|0…0⟩` and outputs a fixed logical state (`|0⟩_L`, `|+⟩_L`, …). Most library circuits are state-prep. The choice sets the `encoding` / `state-preparation` tag, which routes `validate:circuits`. (A third type, `logical-gate`, marks unitary logical Clifford operations — currently produced by the autqec bulk import, validated via their `logical_action` field.)
+**Encoding vs state-preparation vs syndrome extraction — which is my circuit?**
+An _encoding_ circuit maps `k` data qubits (plus ancillas) into the codespace; the first `k` qubits carry the logical input. A _state-preparation_ circuit starts from `|0…0⟩` and outputs a fixed logical state (`|0⟩_L`, `|+⟩_L`, …). A _syndrome-extraction_ round acts on a state that is **already** encoded, and reads the checks into ancillas. Most library circuits are state-prep. The choice sets the `encoding` / `state-preparation` / `syndrome-extraction` tag, which routes `validate:circuits` — and the three are validated by genuinely different means, so tagging it wrong means checking the wrong property. (A fourth type, `logical-gate`, marks unitary logical Clifford operations — produced by the autqec and two-fold-transversal bulk imports, validated via their `logical_action` field.)
 
 **My circuit uses different qubit indices than the stored code.**
 Expected — see [Fitting to an existing code](#fitting-to-an-existing-code). You rarely need to work out the permutation by hand.

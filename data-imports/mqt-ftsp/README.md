@@ -94,7 +94,7 @@ is **not** part of the stored circuit — in practice it is absorbed into the
 Pauli frame; the complete correction tables (all branches) are rendered into
 each circuit's notes. Metrics are therefore an honest upper bound on the
 quantum operations, the noiseless body stays in the codespace (validation
-passes), and bodies contain only H/CX/MR so QASM and Cirq views generate.
+passes), and bodies contain only H/CX/MR so the QASM view generates.
 
 - One entry per file; verification variant preference **global → optimal →
   heuristic** (only `carbon zero_heuristic` lacks a global row → optimal).

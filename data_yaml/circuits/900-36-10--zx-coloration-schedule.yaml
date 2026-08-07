@@ -1,0 +1,15 @@
+qec_id: 1224
+name: ZX-coloration schedule
+tool: quits
+notes: "One syndrome-extraction round. Z-checks and X-checks in two separate edge-coloured
+  passes. Data qubits 0-899, then the ancillas (Z-checks first), measured in index
+  order. X- and Z-checks run in separate passes. Code construction: Tillich and Zemor,
+  arXiv:0903.0566. Distance 10 from the classical code's distance; the transpose
+  code has k = 0."
+source: https://arxiv.org/abs/2308.08648
+gate_count: 6912
+two_qubit_gate_count: 6048
+depth: 14
+qubit_count: 1764
+tags: [syndrome-extraction, "schedule:xz-separated"]
+original_matrices: 81a67b2641b137ce

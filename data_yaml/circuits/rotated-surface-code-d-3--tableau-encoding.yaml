@@ -1,0 +1,14 @@
+qec_id: 1120
+name: Tableau encoding
+tool: qldpc
+notes: "Encodes 1 logical qubits; the first 1 qubits are the input. Synthesised from
+  the code's tableau, so it carries no flag qubits and no distance guarantee; the
+  library states its encoders are not fault-tolerant. Reproduce with: qldpc.circuits.get_encoding_circuit(qldpc.codes.SurfaceCode(3))"
+source: qldpc
+gate_count: 42
+two_qubit_gate_count: 38
+depth: 30
+qubit_count: 9
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,"X",1,1,1,1,"•"],["H","H","H",1,"H"],[1,1,1,"•",1,1,1,1,"X"],[1,"X","•"],[1,1,1,"X",1,1,1,1,"•"],["X",1,"•"],[1,"X",1,1,1,"•"],[1,1,1,"•",1,1,1,1,"X"],[1,"•",1,1,1,"X"],[1,1,1,"X","•"],[1,"X",1,1,1,"•"],[1,1,1,"X",1,1,1,"•"],[1,1,1,1,"X",1,1,"•"],[1,1,1,1,"•",1,1,"X"],[1,1,1,1,"X",1,1,"•"],[1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,"X",1,1,"•"],[1,1,"•",1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,"X"],[1,"X",1,1,1,1,1,"•"],[1,"X",1,1,1,"•"],["X",1,1,1,1,1,1,"•"],[1,"X",1,1,1,1,"•"],["•",1,1,1,1,1,1,"X"],["X",1,1,1,1,1,1,"•"],["X",1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,"X",1,1,"•"],[1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,"X","•"],[1,1,1,1,1,"•","X"],[1,1,1,1,1,"X","•"],[1,1,1,1,1,"X","•"]]}
+tags: [encoding, non-ft]
+original_matrices: a937a7b3b68825f5

@@ -5,12 +5,12 @@ Uses stim.Circuit built-ins and stim.gate_data() for accurate metrics.
 """
 
 from collections.abc import Sequence
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import stim
 
-from .code_identify import gf2_rank, gf2_rref
+from .code_identify import gf2_rank, gf2_row_basis, gf2_rref, gf2_rref_pivots
 from .models import CircuitProperties, ExtractedCode
 
 # Gate data for classification (computed once at module level)
@@ -357,14 +357,286 @@ def validate_state_prep(circuit: Union[stim.Circuit, str], Hx: np.ndarray, Hz: n
     return validate_state_prep_h(circuit, h, n)
 
 
+# ---------------------------------------------------------------------------
+# Syndrome extraction
+# ---------------------------------------------------------------------------
+#
+# A syndrome-extraction round is validated by *stabilizer flows*, not by
+# simulation on |0...0>: it acts on an already-encoded state, so there is no
+# fixed input to simulate, and it contains resets and measurements, so it has no
+# tableau. Two independent things must hold, and neither implies the other:
+#
+#   measured   for every stabilizer S there is a flow  1 -> S xor rec[...]
+#              — the ancillas are reset, so their input is trivial, and the
+#              measurement record carries S's eigenvalue out of the round
+#   preserved  for every stabilizer S there is a flow  S -> S
+#              — the round leaves the code state where it found it
+#
+# The measured set is *derived* from the circuit rather than assumed from the
+# measurement order: see :func:`measured_stabilizers`. That matters because
+# nothing in the stored data records which ancilla measures which stabilizer,
+# and because deriving it is what catches the interesting failure — an X- and a
+# Z-check sharing two data qubits whose CNOTs are ordered inconsistently leave
+# their two ancillas entangled, so the outcome is individually random and the
+# round measures nothing, even though every check was applied exactly once.
+
+
+def measured_stabilizers(circuit: Union[stim.Circuit, str], n: int) -> np.ndarray:
+    """The data-qubit Paulis a round measures deterministically.
+
+    Returns a symplectic matrix of shape ``(r, 2n)`` (X-half then Z-half) whose
+    row space is the group of operators on qubits ``0..n-1`` whose eigenvalue the
+    round writes into its measurement record. Qubits ``>= n`` are the ancillas.
+
+    Derived from :meth:`stim.Circuit.flow_generators`, which returns a complete
+    basis for the circuit's flows. The ones that count are those with a **trivial
+    input** (the ancillas are reset, so nothing has to be supplied) and **no
+    residual support on the ancillas** (an ancilla term means the outcome is
+    entangled with another ancilla rather than determined — exactly the
+    interleaving failure described above). Gaussian elimination over the ancilla
+    columns extracts that subspace; whatever remains, restricted to the data
+    qubits, is what the round actually measures.
+
+    A flow with no measurement record is excluded: ``1 -> P`` with no ``rec``
+    says the round *prepares* a P eigenstate, which is a state-prep property,
+    not a measurement.
+    """
+    circ = _widen(_to_stim_circuit(circuit), n)
+    width = circ.num_qubits
+    n_anc = max(width - n, 0)
+    n_meas = circ.num_measurements
+
+    # Column layout: ancilla halves first, so RREF pivots on them and the rows
+    # left without an ancilla pivot are precisely the ancilla-free subspace.
+    anc_cols = 2 * n_anc
+    rows: list[np.ndarray] = []
+    for flow in circ.flow_generators():
+        if flow.input_copy().weight:
+            continue
+        out = flow.output_copy()
+        vec = np.zeros(anc_cols + 2 * n + n_meas, dtype=int)
+        # stim trims a flow's Pauli strings to their support, so `out` may be
+        # narrower than the circuit (and empty for a measurement-only flow).
+        for q in range(min(width, len(out))):
+            p = out[q]
+            if not p:
+                continue
+            x, z = (p in (1, 2)), (p in (2, 3))
+            if q < n:
+                vec[anc_cols + q] = x
+                vec[anc_cols + n + q] = z
+            else:
+                vec[q - n] = x
+                vec[n_anc + q - n] = z
+        for m in flow.measurements_copy():
+            vec[anc_cols + 2 * n + (m % n_meas)] = 1
+        rows.append(vec)
+
+    if not rows:
+        return np.zeros((0, 2 * n), dtype=int)
+
+    reduced, pivots = gf2_rref_pivots(np.array(rows, dtype=int))
+    n_anc_pivots = sum(1 for c in pivots if c < anc_cols)
+    ancilla_free = reduced[n_anc_pivots:]
+    if not ancilla_free.size:
+        return np.zeros((0, 2 * n), dtype=int)
+
+    # Keep only rows that carry a measurement record and touch a data qubit.
+    data = ancilla_free[:, anc_cols : anc_cols + 2 * n]
+    meas = ancilla_free[:, anc_cols + 2 * n :]
+    keep = np.any(data, axis=1) & np.any(meas, axis=1)
+    return data[keep]
+
+
+def round_check_matrix(circuit: Union[stim.Circuit, str], n: int) -> Optional[np.ndarray]:
+    """Which operator *each measurement* of a round reads, or ``None``.
+
+    Returns a symplectic matrix with one row per measurement, in measurement
+    order. Where :func:`measured_stabilizers` answers "what does this round
+    measure" as a group — the question validation asks — this answers "and which
+    ancilla reads which", which is what building detectors needs.
+
+    That extra precision costs generality, so this one is deliberately narrow. An
+    ancilla must be reset once, before any gate touches it, and measured once;
+    nothing else non-unitary may appear. Anything outside that — ``MR``, a flag
+    qubit re-used, a data qubit measured — returns ``None``, and the caller falls
+    back to whatever it can do without the map. Validation never depends on this
+    function, so a ``None`` here can cost an annotation but never a verdict.
+
+    The operator is obtained by pulling ``Z_ancilla`` back through the gates that
+    precede *that* measurement: whatever it becomes at the start of the round is
+    what the measurement reports, given the reset fixes ``Z_ancilla = +1``.
+    Residual support on *another* ancilla means the two are entangled and the
+    outcome is not determined by the data at all — that also returns ``None``.
+
+    **Per measurement, not per round**, which is what lets a round be built from
+    several sequential sub-rounds — reset and read the Z-ancillas, then reset and
+    read the X-ancillas, as the ZX-coloration schedules do. A later sub-round's
+    operator is pulled back through the earlier ones too, so it picks up support
+    on their ancillas unless that support cancels — and it cancels exactly when
+    the checks commute, which for a valid schedule they do. Where they do not,
+    the ancilla check above rejects the round rather than inventing a detector.
+    Requiring the reset to come before any gate on that qubit is what makes the
+    pull-back past it legitimate.
+    """
+    circ = _widen(_to_stim_circuit(circuit), n)
+    width = circ.num_qubits
+
+    # Both bases are in scope. A round may hold its ancillas in Z (`R` … `M`,
+    # with the basis change on the data side) or in X (`RX` … `MX`, with
+    # Z-checks applied as `CZ`) — the second is what qLDPC emits, and the two are
+    # the same construction seen from different frames. What matters is only that
+    # an ancilla is measured in the basis it was reset in, since that is what
+    # makes its outcome a function of the data.
+    unitary = stim.Circuit()
+    measured: list[int] = []
+    reset_basis: dict[int, int] = {}  # qubit -> stim Pauli code (1 = X, 3 = Z)
+    measured_basis: dict[int, int] = {}
+    prefix_len: list[int] = []  # gates preceding each measurement, in `unitary`
+    touched: set[int] = set()  # qubits a gate has already acted on
+    for op in circ:
+        if isinstance(op, stim.CircuitRepeatBlock):
+            return None
+        if op.name in ("R", "RZ", "RX"):
+            targets = [t.value for t in op.targets_copy()]
+            if any(q in touched or q in reset_basis for q in targets):
+                return None  # reset twice, or reset after a gate already moved it
+            pauli = 1 if op.name == "RX" else 3
+            for q in targets:
+                reset_basis[q] = pauli
+        elif op.name in ("M", "MZ", "MX"):
+            pauli = 1 if op.name == "MX" else 3
+            for t in op.targets_copy():
+                measured.append(t.value)
+                measured_basis[t.value] = pauli
+                prefix_len.append(len(unitary))
+        elif op.name == "TICK" or op.name == "QUBIT_COORDS":
+            continue
+        elif _ALL_GATES.get(op.name) is not None and _ALL_GATES[op.name].is_unitary:
+            unitary.append(op.name, op.targets_copy(), op.gate_args_copy())
+            touched.update(t.value for t in op.targets_copy())
+        else:
+            return None  # some other non-unitary op; out of scope
+
+    if not measured or not set(measured) <= set(reset_basis):
+        return None
+    if len(set(measured)) != len(measured) or any(q < n for q in measured):
+        return None
+    if any(measured_basis[q] != reset_basis[q] for q in measured):
+        return None  # measured in a different basis than it was prepared in
+
+    # One tableau per distinct prefix — a two-sub-round schedule has two, not one
+    # per measurement.
+    inverses: dict[int, stim.Tableau] = {}
+    for k in set(prefix_len):
+        try:
+            inverses[k] = _widen(unitary[:k], width).to_tableau().inverse()
+        except ValueError:
+            return None
+
+    rows = np.zeros((len(measured), 2 * n), dtype=int)
+    for row, (anc, k) in enumerate(zip(measured, prefix_len)):
+        basis = reset_basis[anc]
+        ps = stim.PauliString(width)
+        ps[anc] = basis  # the operator the reset fixes to +1
+        pulled = inverses[k](ps)
+        for q in range(width):
+            p = pulled[q]
+            if not p:
+                continue
+            if q >= n:
+                if q != anc or p != basis:
+                    return None  # entangled with another ancilla, or basis-changed
+                continue
+            rows[row, q] = p in (1, 2)
+            rows[row, n + q] = p in (2, 3)
+    return rows
+
+
+def validate_syndrome_extraction_h(
+    circuit: Union[stim.Circuit, str],
+    h: np.ndarray,
+    n: int,
+    logical: Optional[np.ndarray] = None,
+) -> str:
+    """Verify one syndrome-extraction round for the code with stabilizers ``h``.
+
+    ``h`` is the symplectic stabilizer matrix (shape ``(m, 2n)``, X-half then
+    Z-half) — the form stored in ``codes.h``. Data qubits are ``0..n-1``;
+    everything above is an ancilla. ``logical`` is the optional ``codes.logical``
+    matrix (shape ``(2k, 2n)``).
+
+    Three checks, in the order they are reported:
+
+    1. **measured** — the group the round measures (:func:`measured_stabilizers`)
+       is exactly the stabilizer group of ``h``. Both inclusions matter: a round
+       that measures too little is not extracting the full syndrome, and one that
+       measures an operator outside the group is measuring something that does
+       not commute with the code, which destroys the logical state.
+    2. **preserved** — every stabilizer satisfies the flow ``S -> S``.
+    3. **logical** — every logical operator satisfies ``L -> L`` (skipped when
+       ``logical`` is not given).
+
+    All flows are checked with ``unsigned=True``, matching the sign-free ``h``
+    everywhere else in this module: a round that measures ``-S`` measures S in a
+    different Pauli frame, which is a labeling difference, not an error.
+
+    Note on (3): a round that mapped ``L -> L·S`` for some stabilizer ``S`` would
+    act identically on the codespace but be reported as failing. No such circuit
+    has come up; if one does, the check should be relaxed to equality modulo the
+    stabilizer group rather than dropped.
+
+    Returns 'passed' or 'failed: <reason>'.
+    """
+    h = np.atleast_2d(np.asarray(h, dtype=int)) % 2
+    if h.size and h.shape[1] != 2 * n:
+        raise ValueError(f"Expected h with 2n={2 * n} columns, got {h.shape[1]}")
+
+    circ = _widen(_to_stim_circuit(circuit), n)
+    if circ.num_measurements == 0:
+        return "failed: circuit has no measurements, so it extracts no syndrome"
+
+    measured = measured_stabilizers(circ, n)
+    stab_basis, meas_basis = gf2_row_basis(h), gf2_row_basis(measured)
+    if stab_basis.shape != meas_basis.shape or not np.array_equal(stab_basis, meas_basis):
+        extra = gf2_rank(np.vstack([h, measured])) - gf2_rank(h) if measured.size else 0
+        missing = gf2_rank(h) - (gf2_rank(measured) - extra) if measured.size else gf2_rank(h)
+        return (
+            f"failed: the round measures a group of rank {gf2_rank(measured)}, but the code "
+            f"has {gf2_rank(h)} independent stabilizers "
+            f"({missing} not measured, {extra} measured outside the stabilizer group)"
+        )
+
+    width = circ.num_qubits
+    for row in h:
+        ps = _row_to_pauli_string(row, n, width)
+        if not circ.has_flow(stim.Flow(input=ps, output=ps), unsigned=True):
+            return f"failed: stabilizer {ps} is not preserved by the round"
+
+    if logical is not None:
+        logical = np.atleast_2d(np.asarray(logical, dtype=int)) % 2
+        if logical.size and logical.shape[1] != 2 * n:
+            raise ValueError(f"Expected logical with 2n={2 * n} columns, got {logical.shape[1]}")
+        for row in logical:
+            ps = _row_to_pauli_string(row, n, width)
+            if not circ.has_flow(stim.Flow(input=ps, output=ps), unsigned=True):
+                return f"failed: logical operator {ps} is not preserved by the round"
+
+    return "passed"
+
+
 def validate_syndrome_extraction(
     circuit: Union[stim.Circuit, str], Hx: np.ndarray, Hz: np.ndarray
 ) -> str:
-    """Verify syndrome extraction circuit.
+    """Verify a syndrome-extraction round for a CSS code.
 
-    Not yet implemented.
+    Thin wrapper over :func:`validate_syndrome_extraction_h` for callers holding
+    CSS halves.
+
+    Returns 'passed' or 'failed: <reason>'.
     """
-    raise NotImplementedError("Syndrome extraction validation not yet implemented")
+    h, n = _css_to_h(Hx, Hz)
+    return validate_syndrome_extraction_h(circuit, h, n)
 
 
 def transversality_class(circuit: Union[stim.Circuit, str]) -> str:

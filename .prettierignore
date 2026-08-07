@@ -6,3 +6,7 @@ data/
 .mypy_cache/
 uv.lock
 *.db
+# Local agent worktrees and generated caches. Note this is deliberately not a
+# blanket `.claude/` — the tracked agents/ and commands/ markdown stays formatted.
+.claude/worktrees/
+**/.cache/

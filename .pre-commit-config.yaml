@@ -8,8 +8,14 @@ repos:
     rev: v6.0.0
     hooks:
       - id: check-merge-conflict
+      # data_yaml/ holds circuit bodies (.stim/.qasm/.stim-annotated) written
+      # byte-for-byte by the ingestion pipeline. These two hooks rewrite them —
+      # thousands of files on a full run — which dirties the whole library to no
+      # purpose and puts the stored body out of step with what the pipeline emits.
       - id: end-of-file-fixer
+        exclude: ^data_yaml/
       - id: trailing-whitespace
+        exclude: ^data_yaml/
       - id: check-yaml
       - id: check-json
       - id: check-added-large-files
@@ -21,7 +27,7 @@ repos:
       - id: check-github-workflows
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.29
+    rev: 0.11.32
     hooks:
       - id: uv-lock
 
@@ -39,7 +45,7 @@ repos:
         files: \.(astro|ts|tsx|js|jsx|css|json|md|yml|yaml)$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.22
+    rev: v0.16.0
     hooks:
       - id: ruff
         args: ["--fix"]

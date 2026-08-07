@@ -1,7 +1,7 @@
 {
   "name": "qecirc-website",
   "type": "module",
-  "version": "0.6.5",
+  "version": "0.8.3",
   "license": "MIT",
   "scripts": {
     "dev": "astro dev",
@@ -13,12 +13,14 @@
     "db:clear": "node scripts/db/clear.mjs",
     "db:clear:circuits": "node scripts/db/clear.mjs --circuits-only",
     "db:clear:tools": "node scripts/db/clear.mjs --tools-only",
-    "generate": "python -m scripts.add_circuit.generate",
+    "generate": "uv run python -m scripts.add_circuit.generate",
     "papers:add": "uv run python scripts/add_paper.py",
     "papers:missing": "uv run python scripts/add_paper.py --missing",
+    "typecheck": "astro check",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test": "node --test scripts/tests/*.test.mjs",
     "validate:yaml": "node scripts/validate-yaml.mjs",
     "validate:circuits": "uv run python scripts/validate_circuits.py"
   },
@@ -26,10 +28,11 @@
     "@astrojs/node": "^11.0.0",
     "@tailwindcss/vite": "4.3.3",
     "astro": "^7.0.0",
-    "better-sqlite3": "^12.0.0",
+    "better-sqlite3": "^13.0.0",
     "tailwindcss": "4.3.3"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.10",
     "@eslint/js": "^10.0.1",
     "@types/better-sqlite3": "^7.6.13",
     "eslint": "^10.1.0",
@@ -38,6 +41,7 @@
     "js-yaml": "^5.0.0",
     "prettier": "^3.8.1",
     "sharp": "^0.35.0",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.57.2"
   },
   "engines": {

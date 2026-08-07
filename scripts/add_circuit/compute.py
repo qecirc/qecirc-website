@@ -8,6 +8,7 @@ from typing import Literal, NamedTuple, Optional
 
 import numpy as np
 
+from . import subsystem
 from .code_identify import (
     build_symplectic_h,
     build_symplectic_logical,
@@ -204,6 +205,7 @@ def compute_code_data_h(
     data_dir: Optional[str] = None,
     code_slug: str = "",
     code_tags: Optional[list[str]] = None,
+    gauge: Optional[np.ndarray] = None,
 ) -> dict:
     """
     Compute all code-level data from a single symplectic stabilizer matrix H.
@@ -219,10 +221,12 @@ def compute_code_data_h(
     if H.shape[1] != 2 * n:
         raise ValueError(f"Expected H with 2n={2 * n} columns, got {H.shape[1]}")
 
-    # Try CSS detection first; if the row space is CSS-decomposable, route
-    # through the CSS path so we get the CSS tag and the canonical-form h.
-    css_split = split_h_to_css(H, n)
-    if css_split is not None:
+    # A subsystem code takes the symplectic path whatever its stabilizer group
+    # looks like. The CSS route below re-derives k as n - rank, which is the
+    # very thing the gauge group is here to correct — Bacon-Shor's stabilizer
+    # group *is* CSS, so it would take that route and store [[9,5,3]].
+    gauge_k, gauge_qubit_count, gauge_to_store = subsystem.describe(gauge, H, n)
+    if css_split := (None if gauge_to_store is not None else split_h_to_css(H, n)):
         Hx, Hz = css_split
         result = compute_code_data(
             Hx,
@@ -245,16 +249,40 @@ def compute_code_data_h(
         result["original_matrices"]["h"] = H.tolist()
         return result
 
-    # Non-CSS path
-    k = n - gf2_rank(H)
+    # Non-CSS path — and the subsystem path, which is the same one.
+    k = gauge_k
     canon_H, qubit_perm = canonical_form_h(H, n)
-    c_hash = canonical_hash_h(H, n)
+    # Identity is the *gauge* group's when there is one: two subsystem codes can
+    # share a stabilizer group and differ in what a decoder may measure, and
+    # hashing only the centre would merge them. The gauge group determines the
+    # stabilizer group as its centre, so it is the more informative of the two.
+    c_hash = canonical_hash_h(gauge_to_store if gauge_to_store is not None else H, n)
 
-    logical = _compute_symplectic_logicals(canon_H, n, k)
-    orig_logical = _compute_symplectic_logicals(H, n, k)
+    # The canonical form permutes qubits, so the gauge group has to follow it —
+    # logicals that commute with the gauge group in one labelling do not in
+    # another. `qubit_perm` maps canonical column -> original column, which is
+    # exactly the gather these two halves need.
+    gauge_canon = (
+        None
+        if gauge_to_store is None
+        else np.hstack(
+            [gauge_to_store[:, list(qubit_perm)], gauge_to_store[:, [q + n for q in qubit_perm]]]
+        )
+    )
+    logical = _compute_symplectic_logicals(canon_H, n, k, gauge=gauge_canon)
+    orig_logical = _compute_symplectic_logicals(H, n, k, gauge=gauge_to_store)
 
-    params_with_d = CodeParams(n=n, k=k, is_css=False, d=d)
+    # CSS-ness is a property of the stabilizer group, and a subsystem code can
+    # have a CSS one — Bacon-Shor does. It only reaches this path because k
+    # cannot be derived the CSS way, so the tag would otherwise be lost and the
+    # code would not be findable as CSS while the page rendered its X/Z split.
+    is_css = gauge_to_store is not None and split_h_to_css(H, n) is not None
+    params_with_d = CodeParams(n=n, k=k, is_css=is_css, d=d)
     tags = suggest_code_tags(params_with_d)
+    if gauge_to_store is not None:
+        # Worth surfacing: a reader who sees [[9,1,3]] over a rank-4 `h` should
+        # be told why the two do not line up, not left to think it a bug.
+        tags.append(TagEntry(name="subsystem", status="derived"))
     # Caller-supplied family tags (only CSS/self-dual are auto-derived).
     tags += [TagEntry(name=name, status="provided") for name in code_tags or []]
     seen = set()
@@ -272,7 +300,7 @@ def compute_code_data_h(
     uncertain_candidates: list[str] = []
     existing_perm: Optional[list[int]] = None
     if data_dir:
-        dedup = _check_yaml_dedup_h(data_dir, c_hash, H, n)
+        dedup = _check_yaml_dedup_h(data_dir, c_hash, H, n, gauge=gauge_to_store)
         dedup_status = dedup.status
         uncertain_candidates = dedup.uncertain_candidates
         if dedup.status == "match":
@@ -313,7 +341,9 @@ def compute_code_data_h(
             "zoo_url": zoo_url or None,
             "h": canon_H.tolist(),
             "logical": logical.tolist(),
-            "is_css": False,
+            "is_css": is_css,
+            "gauge": None if gauge_canon is None else gauge_canon.tolist(),
+            "gauge_qubits": gauge_qubit_count or None,
             "canonical_hash": c_hash,
             "tags": [{"name": t.name, "status": t.status} for t in tags],
         },
@@ -401,7 +431,11 @@ def _reduce_logical_weight(L: np.ndarray, H: np.ndarray, n: int) -> np.ndarray:
 
 
 def _compute_symplectic_logicals(
-    H: np.ndarray, n: int, k: int, minimize: bool = True
+    H: np.ndarray,
+    n: int,
+    k: int,
+    minimize: bool = True,
+    gauge: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """Compute logical operators for any stabilizer code in symplectic form.
 
@@ -419,6 +453,12 @@ def _compute_symplectic_logicals(
     representative — a brute-force over ``2^m`` stabilizer combinations that is
     purely cosmetic. Pass ``minimize=False`` when any valid logical suffices
     (adding a circuit to an existing code, or a logical expectation) to skip it.
+
+    ``gauge`` makes these the **bare** logicals of a subsystem code: step 1 takes
+    the kernel of the *gauge* group rather than of ``H``, so the result commutes
+    with everything a decoder may measure, while step 2 still quotients by the
+    stabilizers. For a stabilizer code the two groups coincide and passing it
+    changes nothing, which is why there is one implementation and not two.
     """
     if k == 0:
         return np.zeros((0, 2 * n), dtype=int)
@@ -426,9 +466,11 @@ def _compute_symplectic_logicals(
     if H.shape[1] != 2 * n:
         raise ValueError(f"Expected H with 2n={2 * n} columns, got {H.shape[1]}")
 
-    # H @ Lambda swaps the X and Z halves of each row.
-    H_swap = np.hstack([H[:, n:], H[:, :n]])
-    ker = gf2_nullspace(H_swap)
+    # H @ Lambda swaps the X and Z halves of each row. For a subsystem code the
+    # operators that must be commuted with are the gauge group's, not H's.
+    centralize = H if gauge is None else np.asarray(gauge, dtype=int) % 2
+    swapped = np.hstack([centralize[:, n:], centralize[:, :n]])
+    ker = gf2_nullspace(swapped)
     im = gf2_row_basis(H)
 
     stacked = np.vstack([im, ker]).astype(int) % 2
@@ -601,17 +643,45 @@ def _check_yaml_dedup(data_dir, c_hash, Hx, Hz) -> DedupResult:
     return _phase2_permutation_scan(stored, H_user, n, rank_user)
 
 
+def _gauge_agrees(
+    gauge_user: np.ndarray, gauge_stored: np.ndarray, n: int, sigma: list[int]
+) -> bool:
+    """Do the two gauge groups span the same row space under `sigma`?
+
+    `sigma` is the permutation `is_permutation_equivalent` returned, whose
+    contract is that gathering columns `sigma + [s + n for s in sigma]` from the
+    user's matrix reproduces the stored one's row space. The gauge group has to
+    survive the same gather, or the two codes differ in what a decoder may
+    measure even though their centres coincide.
+    """
+    gauge_user = np.asarray(gauge_user, dtype=int) % 2
+    gauge_stored = np.asarray(gauge_stored, dtype=int) % 2
+    permuted = gauge_user[:, list(sigma) + [s + n for s in sigma]]
+    return np.array_equal(gf2_row_basis(permuted), gf2_row_basis(gauge_stored))
+
+
 def _phase2_permutation_scan(
     stored: list[tuple[str, dict]],
     H_user: np.ndarray,
     n: int,
     rank_user: int,
+    gauge_user: Optional[np.ndarray] = None,
 ) -> DedupResult:
     """Common Phase-2 scan shared by the CSS and non-CSS dedup paths.
 
     For each stored code with matching (n, rank), run is_permutation_equivalent
     against the user's symplectic H. Returns "match" on the first equivalent,
     "uncertain" if any candidate timed out and none matched, else "new".
+
+    `H_user` is the *stabilizer* group, which for a subsystem code is only the
+    centre of the gauge group — and two subsystem codes can share a centre while
+    differing in what a decoder may measure. That is exactly why
+    `compute_code_data_h` hashes the gauge group rather than `h`, so Phase 1
+    separates such codes; comparing only `h` here merged them again, absorbing a
+    [[9,4,3]] into the stored Bacon-Shor [[9,1,3]] and discarding the computed k.
+    So a permutation match must carry the gauge group over too, and `gauge_user`
+    is passed whenever the submission has one (`None` for a plain stabilizer
+    code, including every CSS submission).
     """
     uncertain: list[str] = []
     for slug, data in stored:
@@ -620,10 +690,27 @@ def _phase2_permutation_scan(
         H_stored = decode_matrix(data["h"])
         if H_stored.shape[1] != 2 * n or gf2_rank(H_stored) != rank_user:
             continue
+        gauge_stored = decode_matrix(data["gauge"]) if data.get("gauge") is not None else None
+        # A subsystem code is not the stabilizer code sitting at its centre:
+        # same `h`, different k. Cheap and definite, so it runs before the
+        # permutation search rather than after it.
+        if (gauge_user is None) != (gauge_stored is None):
+            continue
+        if gauge_user is not None and gf2_rank(gauge_user) != gf2_rank(gauge_stored):
+            continue  # different gauge-qubit counts, so different k
         status, sigma = is_permutation_equivalent(
             H_user, H_stored, n, budget_seconds=DEDUP_BUDGET_SECONDS
         )
         if status == "equivalent":
+            if gauge_user is not None and not _gauge_agrees(gauge_user, gauge_stored, n, sigma):
+                # The centres coincide under this sigma but the gauge groups do
+                # not. Another sigma might carry both — the search returns the
+                # first that fits the centre and does not enumerate the rest —
+                # so this is genuinely unresolved, and gets the same answer a
+                # budget timeout does rather than a silent merge or a silent
+                # duplicate.
+                uncertain.append(slug)
+                continue
             perm = sigma if sigma != list(range(n)) else None
             return DedupResult("match", slug, perm, [])
         if status == "uncertain":
@@ -633,11 +720,15 @@ def _phase2_permutation_scan(
     return DedupResult("new", None, None, [])
 
 
-def _check_yaml_dedup_h(data_dir, c_hash, H, n) -> DedupResult:
+def _check_yaml_dedup_h(data_dir, c_hash, H, n, gauge=None) -> DedupResult:
     """Two-phase dedup against data_yaml/codes/ for a non-CSS submission.
 
     Same shape as :func:`_check_yaml_dedup`: hash lookup, then a permutation-
     equivalence scan against same-shape candidates.
+
+    `gauge` is the submission's gauge group when it has one (subsystem codes).
+    Phase 1 already accounts for it — `c_hash` is taken over the gauge group in
+    that case — and Phase 2 needs it explicitly.
     """
     codes_dir = Path(data_dir) / "codes"
     if not codes_dir.exists():
@@ -663,7 +754,7 @@ def _check_yaml_dedup_h(data_dir, c_hash, H, n) -> DedupResult:
             f"Hash collision: code '{slug}' has matching canonical_hash but different canonical H."
         )
 
-    return _phase2_permutation_scan(stored, H, n, rank_user)
+    return _phase2_permutation_scan(stored, H, n, rank_user, gauge_user=gauge)
 
 
 def slugify(name: str) -> str:

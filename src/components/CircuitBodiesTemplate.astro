@@ -8,7 +8,7 @@ import CoordsToggle from "./CoordsToggle.astro";
 import DetectorsToggle from "./DetectorsToggle.astro";
 
 const TAB_BASE_CLASS =
-  "format-tab px-3 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors";
+  "format-tab px-3 py-1.5 font-mono text-xs font-semibold cursor-pointer transition-colors";
 ---
 
 <template id="circuit-bodies-template">
@@ -17,7 +17,7 @@ const TAB_BASE_CLASS =
       <button class={`${TAB_BASE_CLASS} ${TAB_INACTIVE_CLASS}`} data-format="">
         <span class="tab-label"></span>
         <kbd
-          class="ml-1.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-300 dark:border-gray-700 bg-white/60 dark:bg-gray-900/60 text-[10px] text-gray-500 dark:text-gray-400 font-mono"
+          class="ml-1.5 inline-block min-w-[1rem] text-center px-1 border border-gray-300 dark:border-gray-700 bg-white/60 dark:bg-gray-900/60 text-[10px] text-gray-500 dark:text-gray-400 font-mono"
         ></kbd>
       </button>
       <div class="coords-slot ml-auto flex items-center gap-0.5" data-body-switches>
@@ -27,7 +27,7 @@ const TAB_BASE_CLASS =
     </div>
     <div class="format-body" data-format="">
       <div
-        class="rounded border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden"
+        class="border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 overflow-hidden"
         data-code-block
       >
         <div
@@ -43,7 +43,7 @@ const TAB_BASE_CLASS =
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
               </svg>
               <span>Download</span>
-              <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+              <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
                 d
               </kbd>
             </button>
@@ -56,7 +56,7 @@ const TAB_BASE_CLASS =
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
               <span class="copy-label">Copy</span>
-              <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+              <kbd class="ml-0.5 inline-block min-w-[1rem] text-center px-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 font-mono">
                 c
               </kbd>
             </button>

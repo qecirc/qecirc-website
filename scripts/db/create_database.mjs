@@ -40,11 +40,11 @@ const stmts = {
     INSERT INTO papers (slug, title, authors, year, arxiv_id, doi, journal_ref, url)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`),
   insertCode: db.prepare(`
-    INSERT INTO codes (name, slug, n, k, d, zoo_url, aliases, related, h, logical, canonical_hash)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+    INSERT INTO codes (name, slug, n, k, d, zoo_url, aliases, related, h, logical, gauge, gauge_qubits, canonical_hash)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertCircuit: db.prepare(`
-    INSERT INTO circuits (qec_id, code_id, name, slug, notes, source, gate_count, two_qubit_gate_count, depth, qubit_count, weight, crumble_url, crumble_url_annotated, quirk_url, tool_id, paper_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+    INSERT INTO circuits (qec_id, code_id, name, slug, notes, source, gate_count, two_qubit_gate_count, depth, qubit_count, weight, quirk_url, tool_id, paper_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   insertBody: db.prepare(`
     INSERT INTO circuit_bodies (circuit_id, format, body)
     VALUES (?, ?, ?)`),
@@ -104,7 +104,7 @@ function listYamlFiles(dir) {
 // Body format extensions. `stim-annotated` is the canonical STIM body plus a
 // reset prologue, a terminal readout and derived detectors/observables; the
 // canonical `stim` body stays unitary because the derive/fit pipeline needs it.
-const BODY_EXTENSIONS = new Set(["stim", "qasm", "cirq", "stim-annotated"]);
+const BODY_EXTENSIONS = new Set(["stim", "qasm", "stim-annotated"]);
 
 // --- 4. Insert data ---
 const toolSlugToId = new Map();
@@ -227,6 +227,10 @@ try {
         joinAliases(data.related),
         data.h == null ? null : JSON.stringify(decodeMatrix(data.h)),
         data.logical == null ? null : JSON.stringify(decodeMatrix(data.logical)),
+        // Present only for a subsystem code, where the gauge group is bigger
+        // than the stabilizer group in `h` and is what makes its k make sense.
+        data.gauge == null ? null : JSON.stringify(decodeMatrix(data.gauge)),
+        data.gauge_qubits ?? null,
         data.canonical_hash || null,
       );
       codeSlugToId.set(slug, Number(lastInsertRowid));
@@ -334,8 +338,6 @@ try {
         data.depth ?? null,
         data.qubit_count ?? null,
         data.weight ?? null,
-        data.crumble_url || null,
-        data.crumble_url_annotated || null,
         data.quirk_url || null,
         toolId,
         paperId,

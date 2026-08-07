@@ -12,8 +12,8 @@ The stored body linearizes the WORST branch per layer (max round-2 CNOTs,
 tie-break max correction weight, hook branches included) — but only its
 measurements: the outcome-dependent Pauli correction is NOT part of the stored
 circuit (in practice it is absorbed into the Pauli frame; the full correction
-tables live in the notes). Bodies therefore contain only H/CX/MR, so QASM and
-Cirq views can be generated.
+tables live in the notes). Bodies therefore contain only H/CX/MR, so the QASM
+view can be generated.
 
 Verification measurement sub-circuit ordering is ported verbatim from
 simulation_det.py::_create_stab_measurement_circuit:

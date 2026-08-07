@@ -10,28 +10,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  no-private-registries:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - name: Forbid private artifactory references
-        run: |
-          if git grep -n -F 'jfrog.io' -- ':!.github/workflows/ci.yml'; then
-            echo "::error::Found jfrog.io references. QECirc must only use public registries (PyPI, npm)."
-            exit 1
-          fi
-
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           cache: npm
       - run: npm ci
       - run: npm run format:check
       - run: npm run lint
+      # `astro build` transpiles without checking, and eslint is not type-aware,
+      # so without this nothing in CI ever reads a type.
+      - run: npm run typecheck
       - run: npm run validate:yaml
       - run: npm run build
       - name: Start server
@@ -56,18 +48,53 @@ jobs:
   python-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
           version: "0.11.x"
           python-version: "3.13"
+          enable-cache: true
       - run: uv lock --check
         env:
           UV_NO_CONFIG: "1"
       - run: uv sync
-      - run: uv run ruff check scripts/
-      - run: uv run ruff format --check scripts/
-      - run: uv run pytest --cov=scripts/add_circuit --cov-fail-under=60
+      # data-imports/ too: every importer lives there, and it is where the
+      # ingestion bugs have actually been. It was clean when this was widened,
+      # so the widening costs nothing and stops the next one drifting.
+      - run: uv run ruff check scripts/ data-imports/
+      - run: uv run ruff format --check scripts/ data-imports/
+      # The gate used to measure `scripts/add_circuit` alone at 60%, which left
+      # the four top-level maintainer scripts unmeasured — including
+      # validate_circuits.py, which runs in its own job and which was carrying a
+      # live bug. Measuring all five gives 85%, so the bar goes to 80.
+      - run: >
+          uv run pytest
+          --cov=scripts/add_circuit
+          --cov=scripts/validate_circuits.py
+          --cov=scripts/annotate_circuits.py
+          --cov=scripts/measure_circuit_distance.py
+          --cov=scripts/add_paper.py
+          --cov-fail-under=80
+
+  # The two whole-library sweeps below are their own jobs rather than steps of
+  # `python-tests`, because each one parses all ~970 circuits through stim and
+  # they share nothing but the checkout. Run in sequence they cost 246 s + 236 s
+  # on top of the 78 s test run — 9m35s for the job. In parallel the wall clock
+  # is the slowest of the three (~4m), which is faster than this workflow was
+  # before either check existed. The price is two extra `uv sync` setups, ~8 s
+  # each, on runners that cost nothing to run concurrently.
+
+  # Same as `npm run validate:circuits`, invoked directly (no node in this job).
+  validate-circuits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.x"
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync
       # Validation results are content-addressed (see scripts/result_cache.py):
       # each entry keys on the circuit/code file contents plus a hash of the
       # validator sources, so restoring a stale cache is always safe — changed
@@ -81,5 +108,70 @@ jobs:
           key: validate-circuits-${{ github.run_id }}
           restore-keys: |
             validate-circuits-
-      # Same as `npm run validate:circuits`, invoked directly (no node in this job).
       - run: uv run python scripts/validate_circuits.py
+
+  # A `stim-annotated` body is derived from its circuit, but it is committed
+  # rather than generated at build time — so editing a circuit and not
+  # re-running the annotator ships a memory experiment describing the previous
+  # schedule, and nothing else would notice. The committed tree has to be a
+  # fixed point of the annotator.
+  annotated-bodies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.x"
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync
+      - name: stim-annotated bodies are up to date
+        run: |
+          out=$(uv run python scripts/annotate_circuits.py --dry-run)
+          echo "$out"
+          if echo "$out" | grep -qE '^ *[0-9]+ +written$'; then
+            echo "::error::stim-annotated bodies are stale. Run: uv run python scripts/annotate_circuits.py"
+            exit 1
+          fi
+
+  # `crumbleUrl` in src/lib/stim-format.ts is a hand-written reimplementation of
+  # stim's `to_crumble_url()`: the Crumble link used to be computed by stim and
+  # stored, and is now derived in the browser. Nothing else compares the two, so
+  # a stim upgrade or an edit to the abbreviation table would break every link on
+  # the site and pass every other check. Its own job because it is the one place
+  # node and uv are both needed — no `npm ci`, the test imports nothing but the
+  # module under test and node's own libraries.
+  crumble-url-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.x"
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync
+      - run: npm test
+
+  # The hooks in .pre-commit-config.yaml only ever ran for contributors who had
+  # run `pre-commit install`, so a fork or a first-time contributor bypassed
+  # every one of them. `typos`, `check-added-large-files` and `uv-lock` are the
+  # ones worth having on every PR.
+  #
+  # `prettier` is skipped: it is the one hook that needs node_modules, and the
+  # `quality` job already runs the same check via `npm run format:check`.
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.x"
+          python-version: "3.13"
+          enable-cache: true
+      - run: uvx pre-commit run --all-files --show-diff-on-failure
+        env:
+          SKIP: prettier

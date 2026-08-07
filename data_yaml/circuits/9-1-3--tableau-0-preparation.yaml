@@ -1,0 +1,15 @@
+qec_id: 1163
+name: Tableau |0> preparation
+tool: qldpc
+notes: "Prepares the logical |0> state. Synthesised from the code's tableau, so it
+  carries no flag qubits and no distance guarantee; the library states its encoders
+  are not fault-tolerant. Reproduce with: qldpc.circuits.get_encoding_circuit(qldpc.codes.BaconShorCode(3),
+  only_zero=True)"
+source: qldpc
+gate_count: 24
+two_qubit_gate_count: 22
+depth: 12
+qubit_count: 9
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,"H"],[1,"•",1,"X"],[1,1,1,1,"•","X"],[1,"X",1,"•"],["X",1,1,1,"•"],[1,"•",1,"X"],[1,1,1,1,"•",1,"X"],[1,1,1,"X",1,"•"],[1,"H"],[1,1,1,1,"•",1,1,1,"X"],["•",1,1,"X"],[1,1,1,"X",1,1,1,"•"],["•",1,1,1,1,"X"],[1,1,1,"X",1,1,"•"],[1,1,"•",1,1,"X"],["X","•"],[1,1,1,1,1,"X",1,1,"•"],[1,"•","X"],[1,"•",1,1,1,1,1,"X"],[1,"•",1,1,1,1,"X"],["X",1,1,1,1,1,1,"•"],[1,"•",1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,"X"],["X",1,1,1,1,1,1,"•"]]}
+tags: [state-preparation, non-ft, "logical-state:zero"]
+original_matrices: 272e6415932f307b

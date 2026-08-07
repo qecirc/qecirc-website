@@ -10,7 +10,6 @@ gate_count: 15
 two_qubit_gate_count: 8
 depth: 6
 qubit_count: 5
-crumble_url: https://algassert.com/crumble#circuit=SQRT_X_0_3_2;CX_3_4_0_1_3_1;SQRT_X_0_3;CX_1_3_3_4_4_2_3_1;SQRT_X_4;X_2;CX_3_4_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["X^½",1,"X^½","X^½"],[1,1,1,"•","X"],["•","X"],[1,"X",1,"•"],["X^½",1,1,"X^½"],[1,"•",1,"X"],[1,1,1,"•","X"],[1,1,"X",1,"•"],[1,"X",1,"•"],[1,1,"X",1,"X^½"],[1,1,1,"•","X"]]}
 tags: [state-preparation, non-ft, "connectivity:ibm", "device:manila", "logical-state:zero"]
 original_matrices: 063c4d18c5fe5001

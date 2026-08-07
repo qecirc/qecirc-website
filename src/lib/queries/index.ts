@@ -1,6 +1,8 @@
 export { getTagsFor, parseFilterString, hasActiveFilters, getTagsWithCount } from "./shared";
 export {
   formatCodeParams,
+  showCodeParams,
+  codeDisplayName,
   getAllCodes,
   getCodeBySlug,
   filterCodes,

@@ -1,3 +1,5 @@
+import { safeStorage } from "./safe-storage";
+
 /**
  * Behavior for a tag filter block rendered by TagFilterDropdowns.astro:
  * one category dropdown open at a time, close on outside click / Escape, and
@@ -55,13 +57,13 @@ export function initTagDropdowns(root: HTMLElement): void {
     cloud!.classList.toggle("hidden", view !== "all");
   }
 
-  const stored = localStorage.getItem(storageKey);
+  const stored = safeStorage.getItem(storageKey);
   applyView(stored === "all" || stored === "grouped" ? stored : defaultView);
 
   toggles.forEach(function (btn) {
     btn.addEventListener("click", function () {
       const view = grouped!.classList.contains("hidden") ? "grouped" : "all";
-      localStorage.setItem(storageKey, view);
+      safeStorage.setItem(storageKey, view);
       applyView(view);
     });
   });

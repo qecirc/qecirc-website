@@ -1,16 +1,16 @@
 qec_id: 912
-name: X-type weight-11 FT gadget (d=9)
+name: X-type weight-11 FT gadget (d=9-11)
 tool: flag-at-origin
-notes: "Fault-tolerant gadget for a weight-11 X-type stabiliser, verified to distance
-  9 via the 'flag at origin' construction (arXiv:2508.14200). A reusable building
-  block (11 data qubits + 6 flag ancillas) that is not tied to a specific code. Source
-  file: Notebook_2/9_11_X_ft_plaquette.txt."
+notes: "Fault-tolerant gadget for a weight-11 X-type stabiliser, verified to distances
+  9 and 11 via the 'flag at origin' construction (arXiv:2508.14200). A reusable
+  building block (11 data qubits + 6 flag ancillas) that is not tied to a specific
+  code. The same circuit ships at each of those distances; source files: Notebook_2/9_11_X_ft_plaquette.txt,
+  Notebook_2/11_11_X_ft_plaquette.txt."
 source: https://arxiv.org/abs/2508.14200
 gate_count: 23
 two_qubit_gate_count: 22
 depth: 20
 qubit_count: 17
 weight: 11
-crumble_url: https://algassert.com/crumble#circuit=H_0;CX_0_16_0_13_0_10_0_12_12_9_0_8_12_15_0_14_0_11_0_7_0_16_0_6;M_16;CX_0_15_0_5;M_15;CX_0_4_0_14_0_3;M_14;CX_0_13_0_2;M_13;CX_0_12_0_1;M_12;CX_0_11;M_11_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"X",1,1,"•"],["•",1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],["•",1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetector"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],["•",1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetector"],["•",1,1,1,"X"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],["•",1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetector"],["•",1,1,1,1,1,1,1,1,1,1,1,1,"X"],["•",1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetector"],["•",1,1,1,1,1,1,1,1,1,1,1,"X"],["•","X"],[1,1,1,1,1,1,1,1,1,1,1,1,"ZDetector"],["•",1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,"ZDetector"]]}
-tags: [gadget, flag, ft, "distance:9", x-type]
+tags: [gadget, flag, ft, "distance:9", "distance:11", x-type]

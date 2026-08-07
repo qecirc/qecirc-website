@@ -1,0 +1,15 @@
+qec_id: 1217
+name: Bivariate bicycle schedule
+tool: quits
+notes: "One syndrome-extraction round. The seven-layer schedule built from the code's
+  own six shift permutations. Data qubits 0-755, then the ancillas (Z-checks first),
+  measured in index order. X- and Z-checks share ticks. Code construction: Bravyi
+  et al., arXiv:2308.07915, Table 3. Stored d=34 is the source's upper bound, not
+  a proven distance."
+source: https://arxiv.org/abs/2308.07915
+gate_count: 5292
+two_qubit_gate_count: 4536
+depth: 7
+qubit_count: 1512
+tags: [syndrome-extraction, "schedule:interleaved"]
+original_matrices: ed7d9eba8412a327
