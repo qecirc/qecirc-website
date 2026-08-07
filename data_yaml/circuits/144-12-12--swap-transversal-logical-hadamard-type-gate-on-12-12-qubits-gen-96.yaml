@@ -1,0 +1,88 @@
+qec_id: 17558
+name: SWAP-transversal logical Hadamard-type gate on 12/12 qubits (gen 96)
+tool: two-fold-transversal
+notes: "Logical Hadamard-type gate acting on 12 of the 12 logical qubits, from generator
+  96 of dataset entry [[144,12,12]]cons:gross144 (ldpc_codes_depth1.json) of arXiv:2608.05688.
+  The physical circuit is depth-one two-local (two-fold transversal): one layer in
+  which each qubit is touched by at most one two-qubit gate; a trailing SWAP network,
+  where present, is the string's compensating qubit permutation. The dataset is binary-symplectic
+  (sign-free), so the circuit is one Pauli frame of the gate — the paper's certificate
+  verifies the exact order of the logical group the full recorded generator set realizes.
+  The logical_action field states the claim in the stored code's logical basis; validate:circuits
+  checks it. One circuit per distinct logical action is kept from the recorded generator
+  set; dropping duplicate actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  CX 11 0
+  CX 0 11
+  CX 11 0
+  H 0
+  H 1
+  H 3
+  H 6
+  H 7
+  H 8
+  H 9
+  CX 1 0
+  CX 3 0
+  CX 6 0
+  CX 7 0
+  CX 8 0
+  CX 9 0
+  CX 9 1
+  CX 1 9
+  CX 9 1
+  CX 1 8
+  H 4
+  H 5
+  H 10
+  H 11
+  CX 4 1
+  CX 5 1
+  CX 7 1
+  CX 10 1
+  CX 11 1
+  CX 6 2
+  CX 2 6
+  CX 6 2
+  CX 2 5
+  CX 2 7
+  CX 2 8
+  CX 10 2
+  CX 7 3
+  CX 3 7
+  CX 7 3
+  CX 3 4
+  CX 3 5
+  CX 11 3
+  CX 5 4
+  CX 4 5
+  CX 5 4
+  CX 4 7
+  CX 4 8
+  CX 9 4
+  CX 10 4
+  H 6
+  CX 5 6
+  CX 5 7
+  CX 9 5
+  CX 10 5
+  CX 6 8
+  CX 7 6
+  CX 11 6
+  CX 9 7
+  CX 11 7
+  CX 10 8
+  CX 8 10
+  CX 10 8
+  CX 8 9
+  CX 8 10
+  CX 11 8
+  CX 9 10
+  CX 11 9
+gate_count: 144
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 144
+tags: [logical-gate, two-fold-transversal, swap-transversal, "logical-class:h-type"]
+original_matrices: 1b6f8dbf6e6e8880

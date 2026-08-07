@@ -1,0 +1,84 @@
+qec_id: 15711
+name: Depth-one two-local logical Z-diagonal (S/CZ) gate on 16/24 qubits (gen 11)
+tool: two-fold-transversal
+notes: "Logical Z-diagonal (S/CZ) gate acting on 16 of the 24 logical qubits, from
+  generator 11 of dataset entry [[48,24,4]]cons:grid6x8 (full_codes_depth1.json) of
+  arXiv:2608.05688. The physical circuit is depth-one two-local (two-fold transversal):
+  one layer in which each qubit is touched by at most one two-qubit gate; a trailing
+  SWAP network, where present, is the string's compensating qubit permutation. The
+  dataset is binary-symplectic (sign-free), so the circuit is one Pauli frame of the
+  gate — the paper's certificate verifies the full recorded generator set realizes
+  the full logical Clifford group Sp(2k,2). The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. One circuit per
+  distinct logical action is kept from the recorded generator set; dropping duplicate
+  actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 5
+  H 9
+  H 13
+  H 17
+  CX 4 5
+  CX 4 9
+  CX 4 13
+  CX 4 17
+  H 5
+  H 8
+  H 12
+  H 16
+  CX 5 8
+  CX 5 12
+  CX 5 16
+  H 7
+  H 11
+  H 15
+  H 19
+  CX 6 7
+  CX 6 11
+  CX 6 15
+  CX 6 19
+  H 7
+  H 10
+  H 14
+  H 18
+  CX 7 10
+  CX 7 14
+  CX 7 18
+  H 8
+  CX 8 9
+  CX 8 13
+  CX 8 17
+  H 9
+  CX 9 12
+  CX 9 16
+  H 10
+  CX 10 11
+  CX 10 15
+  CX 10 19
+  H 11
+  CX 11 14
+  CX 11 18
+  H 12
+  CX 12 13
+  CX 12 17
+  H 13
+  CX 13 16
+  H 14
+  CX 14 15
+  CX 14 19
+  H 15
+  CX 15 18
+  H 16
+  CX 16 17
+  H 17
+  H 18
+  CX 18 19
+  H 19
+  H 23
+  H 23
+gate_count: 19
+two_qubit_gate_count: 6
+depth: 1
+qubit_count: 48
+tags: [logical-gate, two-fold-transversal, "logical-class:z-diagonal"]
+original_matrices: 531d2290d8ef5648

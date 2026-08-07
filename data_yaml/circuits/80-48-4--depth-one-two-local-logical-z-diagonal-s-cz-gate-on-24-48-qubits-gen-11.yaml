@@ -1,0 +1,114 @@
+qec_id: 15752
+name: Depth-one two-local logical Z-diagonal (S/CZ) gate on 24/48 qubits (gen 11)
+tool: two-fold-transversal
+notes: "Logical Z-diagonal (S/CZ) gate acting on 24 of the 48 logical qubits, from
+  generator 11 of dataset entry [[80,48,4]]cons:grid8x10 (full_codes_depth1.json)
+  of arXiv:2608.05688. The physical circuit is depth-one two-local (two-fold transversal):
+  one layer in which each qubit is touched by at most one two-qubit gate; a trailing
+  SWAP network, where present, is the string's compensating qubit permutation. The
+  dataset is binary-symplectic (sign-free), so the circuit is one Pauli frame of the
+  gate — the paper's certificate verifies the full recorded generator set realizes
+  the full logical Clifford group Sp(2k,2). The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. One circuit per
+  distinct logical action is kept from the recorded generator set; dropping duplicate
+  actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 13
+  H 25
+  H 31
+  H 37
+  CX 12 13
+  CX 12 25
+  CX 12 31
+  CX 12 37
+  H 13
+  H 24
+  H 30
+  H 36
+  CX 13 24
+  CX 13 30
+  CX 13 36
+  H 15
+  H 27
+  H 33
+  H 39
+  CX 14 15
+  CX 14 27
+  CX 14 33
+  CX 14 39
+  H 15
+  H 26
+  H 32
+  H 38
+  CX 15 26
+  CX 15 32
+  CX 15 38
+  H 17
+  H 29
+  H 35
+  H 41
+  CX 16 17
+  CX 16 29
+  CX 16 35
+  CX 16 41
+  H 17
+  H 28
+  H 34
+  H 40
+  CX 17 28
+  CX 17 34
+  CX 17 40
+  H 24
+  CX 24 25
+  CX 24 31
+  CX 24 37
+  H 25
+  CX 25 30
+  CX 25 36
+  H 26
+  CX 26 27
+  CX 26 33
+  CX 26 39
+  H 27
+  CX 27 32
+  CX 27 38
+  H 28
+  CX 28 29
+  CX 28 35
+  CX 28 41
+  H 29
+  CX 29 34
+  CX 29 40
+  H 30
+  CX 30 31
+  CX 30 37
+  H 31
+  CX 31 36
+  H 32
+  CX 32 33
+  CX 32 39
+  H 33
+  CX 33 38
+  H 34
+  CX 34 35
+  CX 34 41
+  H 35
+  CX 35 40
+  H 36
+  CX 36 37
+  H 37
+  H 38
+  CX 38 39
+  H 39
+  H 40
+  CX 40 41
+  H 41
+  H 47
+  H 47
+gate_count: 25
+two_qubit_gate_count: 8
+depth: 1
+qubit_count: 80
+tags: [logical-gate, two-fold-transversal, "logical-class:z-diagonal"]
+original_matrices: 4cff03c7ffea1c0c

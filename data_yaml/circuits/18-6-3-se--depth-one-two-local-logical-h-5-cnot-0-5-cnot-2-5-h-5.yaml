@@ -1,0 +1,27 @@
+qec_id: 13755
+name: Depth-one two-local logical H(5)·CNOT(0,5)·CNOT(2,5)·H(5)
+tool: two-fold-transversal
+notes: "Logical H(5)·CNOT(0,5)·CNOT(2,5)·H(5) (gates in application order), from generator
+  1 of dataset entry [[18,6,3]]se:61280883 (ldpc_codes_depth1.json) of arXiv:2608.05688.
+  The physical circuit is depth-one two-local (two-fold transversal): one layer in
+  which each qubit is touched by at most one two-qubit gate; a trailing SWAP network,
+  where present, is the string's compensating qubit permutation. The dataset is binary-symplectic
+  (sign-free), so the circuit is one Pauli frame of the gate — the paper's certificate
+  verifies the exact order of the logical group the full recorded generator set realizes.
+  The logical_action field states the claim in the stored code's logical basis; validate:circuits
+  checks it. One circuit per distinct logical action is kept from the recorded generator
+  set; dropping duplicate actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 5
+  CX 0 5
+  CX 2 5
+  H 5
+gate_count: 13
+two_qubit_gate_count: 4
+depth: 1
+qubit_count: 18
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,"Z^½","Z^½",1,1,1,"Z^½","Z^½",1,1,"Z^½","Z^½","…",1,"Z^½",1,1,"Z^½"],[1,1,1,1,1,1,1,1,1,1,"•",1,1,1,"Z"],[1,1,"Z",1,1,1,"•"],[1,"•",1,1,1,1,1,"Z"],[1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,"Z"]]}
+tags:
+  [logical-gate, two-fold-transversal, "logical-class:z-diagonal", "logical-op:H", "logical-op:CX"]
+original_matrices: e68ecb00fd0fda89
