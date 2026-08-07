@@ -85,9 +85,12 @@ search_finds "topological"   "code_tags column"
 search_finds "forlivesi"     "paper column (authors)"
 search_finds "reinforcement" "paper column (title)"
 
-# Discover a code slug from the sitemap
+# Discover a code slug from the sitemap. No `head` here: under pipefail,
+# `grep | head -1` fails the whole script with a SIGPIPE write error once the
+# sitemap is large enough that grep is still writing when head exits — which
+# it is, at thousands of circuit URLs. `sed -n 1p` reads all input instead.
 slug=$(curl -fsS "$BASE/sitemap.xml" \
-       | grep -oE "/codes/[a-z0-9-]+" | head -1 | sed "s|/codes/||")
+       | grep -oE "/codes/[a-z0-9-]+" | sed -n "1s|/codes/||p")
 if [ -z "$slug" ]; then
   echo "FAIL: no code slug found in sitemap"; fail=1
 else
