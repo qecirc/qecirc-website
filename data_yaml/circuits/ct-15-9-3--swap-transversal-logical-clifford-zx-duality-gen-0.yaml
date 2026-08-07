@@ -33,7 +33,6 @@ gate_count: 0
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 15
-crumble_url: https://algassert.com/crumble#circuit=SWAP_3_12_11_5_14_9_0_6_2_10_4_13_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],["Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1],[1,1,"Swap",1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1]]}
 tags:
   [

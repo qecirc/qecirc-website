@@ -38,7 +38,6 @@ gate_count: 18
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 18
-crumble_url: https://algassert.com/crumble#circuit=Z_12_8_4_1;X_16;Z_13;Y_9;X_17_15;C_XYZ_5;C_ZYX_7_11;SWAP_3_2;I_0;C_ZYX_8;C_XYZ_4_1_16;C_ZYX_9;SWAP_6_13_16_9_1_7_4_11_8_5_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,"Z",1,1,"Z","~Cxyz",1,"~Czyx","Z","Y",1,"~Czyx","Z","Z",1,"X","X","X"],[1,1,"Swap","Swap"],[1,1,1,1],["…","~Cxyz",1,1,"~Cxyz",1,1,1,"~Czyx","~Czyx",1,1,1,1,1,1,"~Cxyz"],[1,1,1,1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"},{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
 tags:
   [

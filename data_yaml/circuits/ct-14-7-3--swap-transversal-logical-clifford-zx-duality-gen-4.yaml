@@ -1,4 +1,4 @@
-qec_id: 1278
+qec_id: 14492
 name: SWAP-transversal logical Clifford (ZX-duality gen 4)
 tool: autqec
 notes:
@@ -25,7 +25,6 @@ gate_count: 1
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 14
-crumble_url: https://algassert.com/crumble#circuit=SWAP_9_8_13_12_6_5_2_1;I_0;SWAP_11_9_10_13_3_6_4_2_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1],[1,"Swap","Swap"],[1,1,1],["…"],[1,1,1,1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1],[1,1,"Swap",1,"Swap"],[1,1,1,1,1]]}
 tags:
   [

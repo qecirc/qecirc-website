@@ -38,7 +38,6 @@ gate_count: 33
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 22
-crumble_url: https://algassert.com/crumble#circuit=Z_18_12_9_8_7_6_5_3_2_1_0;C_ZYX_14_10_4_16_13_20_19_17_11_21_15_18_12_9_8_7_6_5_3_2_1_0_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["Z","Z","Z","Z","~Czyx","Z","Z","Z","Z","Z","~Czyx","~Czyx","Z","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","Z","~Czyx","~Czyx","~Czyx"],["~Czyx","~Czyx","~Czyx","~Czyx",1,"~Czyx","~Czyx","~Czyx","~Czyx","~Czyx",1,1,"~Czyx",1,1,1,1,1,"~Czyx"]],"gates":[{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
 tags:
   [

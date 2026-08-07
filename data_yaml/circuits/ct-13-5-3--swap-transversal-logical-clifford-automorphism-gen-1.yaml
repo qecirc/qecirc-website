@@ -1,4 +1,4 @@
-qec_id: 1202
+qec_id: 14420
 name: SWAP-transversal logical Clifford (automorphism gen 1)
 tool: autqec
 notes:
@@ -27,7 +27,6 @@ gate_count: 20
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 13
-crumble_url: https://algassert.com/crumble#circuit=Z_6_4_3;Y_10;X_7_11;Y_5;SQRT_X_8;S_9;SQRT_X_2;S_12;SQRT_X_1;I_0;H_6;SQRT_X_4;H_3;S_10;SQRT_X_7;S_11;H_5;SWAP_9_2_7_11_3_9_6_2_10_11_8_7_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…","X^½","X^½","Z","Z","Y","Z","X","X^½","Z^½","Y","X","Z^½"],[1,1,1,"H","X^½","H","H","X^½",1,1,"Z^½","Z^½"],[1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1]]}
 tags:
   [

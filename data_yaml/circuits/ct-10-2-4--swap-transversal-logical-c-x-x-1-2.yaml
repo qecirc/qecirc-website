@@ -1,4 +1,4 @@
-qec_id: 1114
+qec_id: 14332
 name: SWAP-transversal logical C(X,X)(1,2)
 tool: autqec
 notes: Logical C(X,X)(1,2) (gates in application order) from generator 0 of the code's
@@ -15,7 +15,6 @@ gate_count: 12
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 10
-crumble_url: https://algassert.com/crumble#circuit=Z_8_4_2;X_9;Z_1_5;H_7_3_8_4_2_9;SWAP_1_0_4_3_7_2_8_9_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,"Z","Z","H","Z","Z",1,"H","Z","X"],[1,1,"H",1,"H",1,1,1,"H","H"],["Swap","Swap"],[1,1],[1,1,1,"Swap","Swap"],[1,1,1,1,1],[1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1]]}
 tags: [logical-gate, swap-transversal, "logical-op:XCX"]
 original_matrices: e1a48ec0db59ca94

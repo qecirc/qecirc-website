@@ -18,7 +18,6 @@ gate_count: 3
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 17
-crumble_url: https://algassert.com/crumble#circuit=Z_4_3;SWAP_15_16_5_6_7_8_10_11;I_0_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,"Z","Z"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],["…"]]}
 tags: [logical-gate, swap-transversal, "logical-op:CX", "logical-op:XCX"]
 original_matrices: 92a76810a884237f

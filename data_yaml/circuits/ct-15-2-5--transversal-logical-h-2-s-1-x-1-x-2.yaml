@@ -1,4 +1,4 @@
-qec_id: 1291
+qec_id: 14505
 name: Transversal logical H(2)·S(1)·√X(1)·√X(2)
 tool: autqec
 notes: Logical H(2)·S(1)·√X(1)·√X(2) (gates in application order) from generator 4
@@ -17,7 +17,6 @@ gate_count: 25
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 15
-crumble_url: https://algassert.com/crumble#circuit=Z_13_11_10_7_4_3_2_1;Y_14;Z_12;C_ZYX_9;C_XYZ_8_6;C_ZYX_5;I_0;C_XYZ_13;C_ZYX_11;C_XYZ_10;C_ZYX_7;C_XYZ_4;C_ZYX_3;C_XYZ_2;C_ZYX_1;C_XYZ_14;C_ZYX_12_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…","Z","Z","Z","Z","~Czyx","~Cxyz","Z","~Cxyz","~Czyx","Z","Z","Z","Z","Y"],[1,"~Czyx","~Cxyz","~Czyx","~Cxyz",1,1,"~Czyx",1,1,"~Cxyz","~Czyx","~Czyx","~Cxyz","~Cxyz"]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"},{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
 tags: [logical-gate, transversal, ft, "logical-op:H", "logical-op:S", "logical-op:SQRT_X"]
 original_matrices: 3a3df1367d0c979e

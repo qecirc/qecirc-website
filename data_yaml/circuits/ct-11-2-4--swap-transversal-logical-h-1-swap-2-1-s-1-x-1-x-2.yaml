@@ -1,4 +1,4 @@
-qec_id: 1129
+qec_id: 14347
 name: SWAP-transversal logical H(1)·SWAP(2,1)·S(1)·√X(1)·√X(2)
 tool: autqec
 notes: Logical H(1)·SWAP(2,1)·S(1)·√X(1)·√X(2) (gates in application order) from generator
@@ -20,7 +20,6 @@ gate_count: 12
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 11
-crumble_url: https://algassert.com/crumble#circuit=Z_4;X_10;Y_7;S_9;SQRT_X_8;H_5;C_ZYX_3;H_2;SQRT_X_1;I_0;C_XYZ_10;S_7;SWAP_5_2_8_1_3_10_9_7_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…","X^½","H","~Czyx","Z","H",1,"Y","X^½","Z^½","X"],[1,1,1,1,1,1,1,"Z^½",1,1,"~Cxyz"],[1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1],[1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1,1]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"},{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
 tags:
   [

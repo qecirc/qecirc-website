@@ -1,4 +1,4 @@
-qec_id: 1256
+qec_id: 14474
 name: SWAP-transversal logical Clifford (automorphism gen 5)
 tool: autqec
 notes:
@@ -33,7 +33,6 @@ gate_count: 25
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 14
-crumble_url: https://algassert.com/crumble#circuit=Z_7_4_2;X_12_10;Y_3;X_13;Z_9;Y_6;X_8;Y_5;H_1_11_0_7_4_2_12_10_3_13_9_6_8_5;SWAP_1_11_8_5_3_13_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H","Z","Y","Z","Y","Y","Z","X","Z","X","H","X","X"],[1,1,"H","H","H","H","H","H","H","H","H",1,"H","H"],[1,"Swap",1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1]]}
 tags:
   [

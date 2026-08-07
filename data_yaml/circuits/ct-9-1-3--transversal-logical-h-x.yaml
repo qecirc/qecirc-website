@@ -15,7 +15,6 @@ gate_count: 6
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 9
-crumble_url: https://algassert.com/crumble#circuit=C_XYZ_6_5_4_7_8;I_0_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,1,1,"~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz"]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"}]}
 tags: [logical-gate, transversal, ft, "logical-op:H", "logical-op:SQRT_X"]
 original_matrices: 155b629118dfbbcb

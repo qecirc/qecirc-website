@@ -1,4 +1,4 @@
-qec_id: 1284
+qec_id: 14498
 name: SWAP-transversal logical Clifford (automorphism gen 5)
 tool: autqec
 notes:
@@ -38,7 +38,6 @@ gate_count: 18
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 14
-crumble_url: https://algassert.com/crumble#circuit=Z_8_7;X_9;Z_11_3_0_2;Y_4;C_XYZ_10_13;C_ZYX_1_6_8;C_XYZ_9_11;C_ZYX_3;C_XYZ_0;C_ZYX_4;SWAP_1_6_2_4_3_6_13_1_5_4_12_3_7_13_10_2_0_5_8_7_11_0_9_0_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["Z","~Czyx","Z","Z","Y",1,"~Czyx","Z","Z","X","~Cxyz","Z",1,"~Cxyz"],["~Cxyz",1,1,"~Czyx","~Czyx",1,1,1,"~Czyx","~Cxyz",1,"~Cxyz"],[1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1],[1,1,"Swap",1,"Swap"],[1,1,1,1,1],[1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1],[1,"Swap",1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,"Swap",1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],["Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1],["Swap",1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],["Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"},{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
 tags:
   [

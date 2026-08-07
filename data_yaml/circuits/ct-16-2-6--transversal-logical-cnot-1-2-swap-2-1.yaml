@@ -15,7 +15,6 @@ gate_count: 16
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 16
-crumble_url: https://algassert.com/crumble#circuit=C_XYZ_14_12_11_10_9_8_7_6_5_4_3_2_1_0_13_15_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz","~Cxyz"]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"}]}
 tags: [logical-gate, transversal, ft, "logical-op:CX", "logical-op:SWAP"]
 original_matrices: 437b7a0cd0cc8dc0

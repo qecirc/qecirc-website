@@ -1,4 +1,4 @@
-qec_id: 1293
+qec_id: 14507
 name: SWAP-transversal logical SWAP(2,1) (2)
 tool: autqec
 notes: Logical SWAP(2,1) (gates in application order) from generator 1 of the code's
@@ -15,7 +15,6 @@ gate_count: 1
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 15
-crumble_url: https://algassert.com/crumble#circuit=SWAP_3_2_4_1_5_14_6_12_10_9_11_8_13_7;I_0_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"Swap","Swap"],[1,1,1,1],[1,"Swap",1,1,"Swap"],[1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],["…"]]}
 tags: [logical-gate, swap-transversal, "logical-op:SWAP"]
 original_matrices: 3a3df1367d0c979e

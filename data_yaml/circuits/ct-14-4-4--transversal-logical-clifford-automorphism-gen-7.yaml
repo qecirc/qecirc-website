@@ -1,4 +1,4 @@
-qec_id: 1241
+qec_id: 14459
 name: Transversal logical Clifford (automorphism gen 7)
 tool: autqec
 notes:
@@ -22,7 +22,6 @@ gate_count: 20
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 14
-crumble_url: https://algassert.com/crumble#circuit=Z_6_13_5_12_3;Y_10;Z_8;C_XYZ_9_7_4_11_2;I_0;C_XYZ_6_13_5_12_3_10_8_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,"~Cxyz","Z","~Cxyz","Z","Z","~Cxyz","Z","~Cxyz","Y","~Cxyz","Z","Z"],[1,1,1,"~Cxyz",1,"~Cxyz","~Cxyz",1,"~Cxyz",1,"~Cxyz",1,"~Cxyz","~Cxyz"]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"}]}
 tags:
   [

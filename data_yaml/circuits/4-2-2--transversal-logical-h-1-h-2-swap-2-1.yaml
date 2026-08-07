@@ -14,7 +14,6 @@ gate_count: 4
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 4
-crumble_url: https://algassert.com/crumble#circuit=H_0_1_2_3_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H","H","H"]]}
 tags: [logical-gate, transversal, ft, "logical-op:H", "logical-op:SWAP"]
 original_matrices: a3e75dbdeaf815cc

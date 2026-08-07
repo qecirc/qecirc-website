@@ -1,4 +1,4 @@
-qec_id: 1189
+qec_id: 14407
 name: SWAP-transversal logical H(1)·SWAP(2,1)·S(1)·C(X,X)(1,2)·√X(1)·√X(2)
 tool: autqec
 notes: Logical H(1)·SWAP(2,1)·S(1)·C(X,X)(1,2)·√X(1)·√X(2) (gates in application order)
@@ -21,7 +21,6 @@ gate_count: 15
 two_qubit_gate_count: 0
 depth: 0
 qubit_count: 13
-crumble_url: https://algassert.com/crumble#circuit=Z_11_10_7_6_4_3;SQRT_X_5;S_12;C_XYZ_9;I_0;S_11;SQRT_X_10;H_7_6;C_ZYX_3;SWAP_9_3_4_3_5_9_12_4_6_3_11_9_7_3_10_4_
 quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,1,"Z","Z","X^½","Z","Z",1,"~Cxyz","Z","Z","Z^½"],[1,1,1,"~Czyx",1,1,"H","H",1,1,"X^½","Z^½"],[1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap","Swap"],[1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"},{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
 tags:
   [
