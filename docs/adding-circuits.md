@@ -261,7 +261,7 @@ Add a `tags:` list. Common circuit tags:
 
 | Category        | Examples                                                                                       |
 | --------------- | ---------------------------------------------------------------------------------------------- |
-| Circuit type    | `encoding`, `state-preparation`, `syndrome-extraction`, `logical-state:zero`                   |
+| Circuit type    | `encoding`, `state-preparation`, `syndrome-extraction`, `logical-gate`, `logical-state:zero`   |
 | Fault tolerance | `ft`, `non-ft`, `flag`, `deterministic`                                                        |
 | Hardware        | `connectivity:2d-grid`, `device:tokyo`, `1D-AOD` (full connectivity is the default — untagged) |
 | Method          | `prep:opt`, `prep:heuristic`, `verification:opt`                                               |
@@ -674,7 +674,7 @@ quote it and save yourself the round trip.
 Yes. For an encoding circuit use [`extract_code`](#extract-code-from-circuit-optional); for a state-prep circuit use the [derive-matrices helpers](#get-the-check-matrices-from-the-circuit). Both recover the code from the circuit.
 
 **Encoding vs state-preparation vs syndrome extraction — which is my circuit?**
-An _encoding_ circuit maps `k` data qubits (plus ancillas) into the codespace; the first `k` qubits carry the logical input. A _state-preparation_ circuit starts from `|0…0⟩` and outputs a fixed logical state (`|0⟩_L`, `|+⟩_L`, …). A _syndrome-extraction_ round acts on a state that is **already** encoded, and reads the checks into ancillas. Most library circuits are state-prep. The choice sets the `encoding` / `state-preparation` / `syndrome-extraction` tag, which routes `validate:circuits` — and the three are validated by genuinely different means, so tagging it wrong means checking the wrong property.
+An _encoding_ circuit maps `k` data qubits (plus ancillas) into the codespace; the first `k` qubits carry the logical input. A _state-preparation_ circuit starts from `|0…0⟩` and outputs a fixed logical state (`|0⟩_L`, `|+⟩_L`, …). A _syndrome-extraction_ round acts on a state that is **already** encoded, and reads the checks into ancillas. Most library circuits are state-prep. The choice sets the `encoding` / `state-preparation` / `syndrome-extraction` tag, which routes `validate:circuits` — and the three are validated by genuinely different means, so tagging it wrong means checking the wrong property. (A fourth type, `logical-gate`, marks unitary logical Clifford operations — produced by the autqec and two-fold-transversal bulk imports, validated via their `logical_action` field.)
 
 **My circuit uses different qubit indices than the stored code.**
 Expected — see [Fitting to an existing code](#fitting-to-an-existing-code). You rarely need to work out the permutation by hand.

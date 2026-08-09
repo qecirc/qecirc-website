@@ -1,0 +1,19 @@
+qec_id: 1058
+name: SWAP-transversal logical S (2)
+tool: autqec
+notes: Logical S (gates in application order) from generator 1 of the code's YZ-duality
+  group, computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal
+  — single-qubit Cliffords + SWAPs, with Pauli corrections that fix the stabilizer
+  signs. The logical_action field states the claim in the stored code's logical basis;
+  validate:circuits checks it. SWAP-transversal circuits are fault-tolerant on architectures
+  where SWAPs are error-benign (shuttling ion traps, atom arrays), hence no unconditional
+  ft tag.
+source: https://arxiv.org/abs/2409.18175
+logical_action: S 0
+gate_count: 5
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 5
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["Z^½","Z^½","Z^½","Z^½","Z^½"],["Swap",1,1,1,"Swap"],[1,1,1,1,1],["Swap","Swap"],[1,1],["Swap",1,"Swap"],[1,1,1]]}
+tags: [logical-gate, swap-transversal, "logical-op:S"]
+original_matrices: 9a6719cb1848182c

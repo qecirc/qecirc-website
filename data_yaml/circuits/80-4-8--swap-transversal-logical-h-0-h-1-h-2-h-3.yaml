@@ -1,0 +1,26 @@
+qec_id: 6342
+name: SWAP-transversal logical H(0)·H(1)·H(2)·H(3)
+tool: two-fold-transversal
+notes: "Logical H(0)·H(1)·H(2)·H(3) (gates in application order), from generator 228
+  of dataset entry [[80,4,8]]dd422:7b0834e2 (full_codes_depth1.json) of arXiv:2608.05688.
+  The physical circuit is depth-one two-local (two-fold transversal): one layer in
+  which each qubit is touched by at most one two-qubit gate; a trailing SWAP network,
+  where present, is the string's compensating qubit permutation. The dataset is binary-symplectic
+  (sign-free), so the circuit is one Pauli frame of the gate — the paper's certificate
+  verifies the full recorded generator set realizes the full logical Clifford group
+  Sp(2k,2). The logical_action field states the claim in the stored code's logical
+  basis; validate:circuits checks it. This circuit is part of the certificate's verified
+  generating prefix: the paper's exact Schreier-Sims certificate confirms the logical
+  actions of these 30 circuits generate the full logical Clifford group Sp(2k,2)."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 0
+  H 1
+  H 2
+  H 3
+gate_count: 80
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 80
+tags: [logical-gate, two-fold-transversal, swap-transversal, "logical-class:h-type", "logical-op:H"]
+original_matrices: f9a3d72190e025fb

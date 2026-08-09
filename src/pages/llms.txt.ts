@@ -20,7 +20,7 @@ export const GET: APIRoute = ({ site }) => {
 
   const body = `# QECirc
 
-> A community-driven library for quantum error correction (QEC) circuits. Browse and download reusable STIM circuits — encoding, state preparation, syndrome extraction, and more — organized by error-correcting code. ${codes.length} codes, ${totalCircuits} circuits.
+> A community-driven library for quantum error correction (QEC) circuits. Browse and download reusable STIM circuits — encoding, state preparation, logical gates, syndrome extraction, and more — organized by error-correcting code. ${codes.length} codes, ${totalCircuits} circuits.
 
 Circuits are stored in STIM format and also offered as QASM. Each code page lists its circuits with metrics (gate count, two-qubit gate count, depth, qubit count) and links to the original source. Circuit data is licensed CC BY-SA 4.0; please cite the source of each circuit when using it.
 

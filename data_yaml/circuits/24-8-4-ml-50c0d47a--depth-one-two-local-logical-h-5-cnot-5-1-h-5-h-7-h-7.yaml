@@ -1,0 +1,28 @@
+qec_id: 14540
+name: Depth-one two-local logical H(5)·CNOT(5,1)·H(5)·H(7)·H(7)
+tool: two-fold-transversal
+notes: "Logical H(5)·CNOT(5,1)·H(5)·H(7)·H(7) (gates in application order), from generator
+  24 of dataset entry [[24,8,4]]ml:50c0d47a (ldpc_codes_depth1.json) of arXiv:2608.05688.
+  The physical circuit is depth-one two-local (two-fold transversal): one layer in
+  which each qubit is touched by at most one two-qubit gate; a trailing SWAP network,
+  where present, is the string's compensating qubit permutation. The dataset is binary-symplectic
+  (sign-free), so the circuit is one Pauli frame of the gate — the paper's certificate
+  verifies the exact order of the logical group the full recorded generator set realizes.
+  The logical_action field states the claim in the stored code's logical basis; validate:circuits
+  checks it. One circuit per distinct logical action is kept from the recorded generator
+  set; dropping duplicate actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 5
+  CX 5 1
+  H 5
+  H 7
+  H 7
+gate_count: 24
+two_qubit_gate_count: 8
+depth: 1
+qubit_count: 24
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"X^½","X^½","X^½","X^½","X^½",1,1,"X^½","X^½","X^½","X^½","X^½","X^½","X^½",1,1,1,1,"X^½","X^½","X^½","X^½"],[1,1,1,1,1,1,1,1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,"X",1,1,"⊖"],[1,1,1,1,"⊖",1,1,1,1,"X"],[1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,"⊖"],[1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,"⊖"],[1,1,1,1,1,1,1,1,1,1,1,"X",1,1,"⊖"],[1,1,1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"]]}
+tags:
+  [logical-gate, two-fold-transversal, "logical-class:x-diagonal", "logical-op:H", "logical-op:CX"]
+original_matrices: 1a14a17bdbd18bed

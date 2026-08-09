@@ -1,0 +1,163 @@
+qec_id: 15797
+name: Depth-one two-local logical X-diagonal (√X/XX) gate on 41/90 qubits (gen 18)
+tool: two-fold-transversal
+notes: "Logical X-diagonal (√X/XX) gate acting on 41 of the 90 logical qubits, from
+  generator 18 of dataset entry [[120,90,4]]cons:johnson16 (full_codes_depth1.json)
+  of arXiv:2608.05688. The physical circuit is depth-one two-local (two-fold transversal):
+  one layer in which each qubit is touched by at most one two-qubit gate; a trailing
+  SWAP network, where present, is the string's compensating qubit permutation. The
+  dataset is binary-symplectic (sign-free), so the circuit is one Pauli frame of the
+  gate — the paper's certificate verifies the full recorded generator set realizes
+  the full logical Clifford group Sp(2k,2). The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. One circuit per
+  distinct logical action is kept from the recorded generator set; dropping duplicate
+  actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 1
+  H 12
+  CX 1 0
+  CX 12 0
+  H 1
+  CX 12 1
+  S 2
+  H 2
+  S 2
+  H 3
+  H 4
+  H 15
+  H 17
+  CX 3 2
+  CX 4 2
+  CX 12 2
+  CX 15 2
+  CX 17 2
+  H 3
+  CX 12 3
+  S 4
+  H 4
+  H 5
+  CX 5 4
+  CX 12 4
+  CX 15 4
+  CX 17 4
+  H 5
+  CX 12 5
+  H 7
+  CX 7 6
+  CX 12 6
+  H 7
+  CX 12 7
+  H 9
+  CX 9 8
+  CX 12 8
+  H 9
+  CX 12 9
+  H 11
+  CX 11 10
+  CX 12 10
+  H 11
+  CX 12 11
+  H 12
+  H 15
+  H 17
+  H 36
+  H 38
+  CX 36 26
+  CX 38 26
+  CX 36 28
+  CX 38 28
+  H 36
+  H 38
+  H 49
+  H 50
+  H 51
+  H 52
+  H 53
+  H 54
+  H 56
+  H 57
+  H 58
+  H 59
+  H 60
+  H 61
+  H 62
+  H 63
+  CX 49 46
+  CX 50 46
+  CX 51 46
+  CX 52 46
+  CX 53 46
+  CX 54 46
+  CX 56 46
+  CX 57 46
+  CX 58 46
+  CX 59 46
+  CX 60 46
+  CX 61 46
+  CX 62 46
+  CX 63 46
+  CX 49 47
+  CX 50 47
+  CX 51 47
+  CX 52 47
+  CX 53 47
+  CX 54 47
+  CX 56 47
+  CX 57 47
+  CX 58 47
+  CX 59 47
+  CX 60 47
+  CX 61 47
+  CX 62 47
+  CX 63 47
+  H 49
+  H 65
+  CX 50 49
+  CX 65 49
+  H 50
+  H 64
+  CX 64 50
+  H 51
+  H 67
+  CX 52 51
+  CX 67 51
+  H 52
+  H 66
+  CX 66 52
+  H 53
+  H 69
+  CX 54 53
+  CX 69 53
+  H 54
+  H 68
+  CX 68 54
+  H 56
+  H 57
+  H 58
+  H 59
+  H 60
+  H 61
+  H 62
+  H 63
+  H 64
+  CX 65 64
+  H 65
+  H 66
+  CX 67 66
+  H 67
+  H 68
+  CX 69 68
+  H 69
+  H 4
+  S 4
+  S 4
+  H 4
+  H 89
+  H 89
+gate_count: 79
+two_qubit_gate_count: 26
+depth: 1
+qubit_count: 120
+tags: [logical-gate, two-fold-transversal, "logical-class:x-diagonal"]
+original_matrices: a6427e22ca676806

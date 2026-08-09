@@ -27,6 +27,19 @@ Both levels support **tags** to aid discovery and filtering:
 
 Tags can be either **structured** (`key:value`, e.g. `distance:3`) or **free-form strings**.
 
+**Hidden codes** — a code tagged `codetables` (`HIDDEN_CODE_TAG` in
+`src/lib/constants.ts`) is a reference-shelf entry, not part of the curated
+library: the /codes listing suppresses it until the "Show codetables" switch
+(`HiddenCodesToggle.astro`, `show_hidden` URL param, off by default) is
+ticked or the tag is selected in the filter (`hiddenTags` /
+`hiddenToggleSelector` in `list-filter-client.ts`), and every displayed
+count (`countAllCodes`,
+`countAllCircuits`, homepage stats/examples, `getLatestCircuits`) excludes it
+and its circuits. Search — both engines — includes them fully, and detail
+pages stay reachable. Used by the codetables.de best-known-code import
+(`data-imports/autqec/`); apply the same tag to any future bulk reference
+import that should not dilute the browsing surfaces.
+
 Circuits also have numeric **metrics** for filtering: `gate_count`, `depth`, `qubit_count`.
 
 A circuit taken from a published work also links to a **paper**, which is what makes it
@@ -401,7 +414,7 @@ npm run papers:add -- 2402.17761    # Fetch a paper (arXiv id/DOI/link) into dat
 npm run papers:missing              # Fetch every circuit source that has no paper yet
 npm test                            # Node tests (crumbleUrl vs stim's to_crumble_url, over every body)
 npm run validate:yaml               # Validate data_yaml/ schemas
-npm run validate:circuits           # Validate encoding/state-prep circuits against the code's symplectic h (CSS and non-CSS alike)
+npm run validate:circuits           # Validate encoding/state-prep/logical-gate circuits against the code's symplectic h (CSS and non-CSS alike)
 uv run ruff check scripts/          # Lint Python code
 uv run ruff format scripts/          # Format Python code
 npm run db:create                   # Build database from data_yaml/ (restart dev server after)

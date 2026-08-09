@@ -1,0 +1,8 @@
+Z 10 9 4
+X 8 7
+C_ZYX 6 11
+C_XYZ 3
+C_ZYX 2
+I 0
+C_XYZ 10 4
+SWAP 11 3 5 8 4 2 10 6

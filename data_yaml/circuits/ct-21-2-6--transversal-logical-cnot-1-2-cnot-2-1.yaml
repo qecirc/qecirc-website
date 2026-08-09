@@ -1,0 +1,19 @@
+qec_id: 1642
+name: Transversal logical CNOT(1,2)·CNOT(2,1)
+tool: autqec
+notes: Logical CNOT(1,2)·CNOT(2,1) (gates in application order) from generator 12
+  of the code's automorphism group, computed by autqec (arXiv:2409.18175). Physical
+  circuit is transversal — single-qubit Cliffords, with Pauli corrections that fix
+  the stabilizer signs. The logical_action field states the claim in the stored code's
+  logical basis; validate:circuits checks it. The code is the best-known-distance
+  [[21,2]] stabilizer code from Grassl's codetables.de tables (snapshotted in the
+  autqec repository).
+source: https://arxiv.org/abs/2409.18175
+logical_action: CX 0 1 1 0
+gate_count: 17
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 21
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["…",1,1,1,1,"~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx"]],"gates":[{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
+tags: [logical-gate, transversal, ft, "logical-op:CX"]
+original_matrices: 9ae30dd013466a9f

@@ -1,4 +1,6 @@
 import { getDb } from "../db";
+import { HIDDEN_CODE_TAG } from "../constants";
+import { visibleCodePredicate } from "./shared";
 import type {
   Circuit,
   CircuitBody,
@@ -51,10 +53,25 @@ export function codeHasWeightedCircuits(codeId: number): boolean {
 }
 
 export function countAllCircuits(): number {
+  // Circuits of hidden (HIDDEN_CODE_TAG) codes are excluded, matching
+  // countAllCodes: the advertised numbers describe the curated library.
   const db = getDb();
-  const row = db.prepare("SELECT COUNT(*) as count FROM circuits").get() as {
-    count: number;
-  };
+  const row = db
+    .prepare(
+      `SELECT COUNT(*) as count FROM circuits ci
+       JOIN codes c ON c.id = ci.code_id
+       WHERE ${visibleCodePredicate()}`,
+    )
+    .get(HIDDEN_CODE_TAG) as { count: number };
+  return row.count;
+}
+
+/** Every circuit including those of hidden (codetables) codes — shown
+ * alongside the curated count where both numbers are stated, and the honest
+ * total for anything describing search, which spans the full library. */
+export function countAllCircuitsTotal(): number {
+  const db = getDb();
+  const row = db.prepare("SELECT COUNT(*) as count FROM circuits").get() as { count: number };
   return row.count;
 }
 
@@ -69,13 +86,16 @@ export function getLatestCircuits(
   limit: number,
 ): (Circuit & { tags: string[]; code_slug: string; code_name: string })[] {
   const db = getDb();
+  // Hidden-code circuits are excluded: this feeds the homepage "latest"
+  // panel, and a bulk reference import would otherwise monopolize it.
   const rows = db
     .prepare(
       `SELECT c.*, co.slug AS code_slug, co.name AS code_name
        FROM circuits c JOIN codes co ON co.id = c.code_id
+       WHERE ${visibleCodePredicate("co")}
        ORDER BY c.qec_id DESC LIMIT ?`,
     )
-    .all(limit) as (Circuit & { code_slug: string; code_name: string })[];
+    .all(HIDDEN_CODE_TAG, limit) as (Circuit & { code_slug: string; code_name: string })[];
   return withTags(rows, "circuit") as (Circuit & {
     tags: string[];
     code_slug: string;

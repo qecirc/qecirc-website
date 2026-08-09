@@ -1,0 +1,34 @@
+OPENQASM 2.0;
+include "qelib1.inc";
+
+qreg q[120];
+
+swap q[76], q[7];
+swap q[44], q[6];
+swap q[32], q[5];
+swap q[26], q[4];
+swap q[25], q[2];
+swap q[22], q[90];
+swap q[21], q[82];
+swap q[113], q[70];
+swap q[20], q[1];
+swap q[17], q[88];
+swap q[16], q[80];
+swap q[112], q[68];
+swap q[15], q[46];
+swap q[117], q[74];
+swap q[111], q[72];
+swap q[87], q[50];
+swap q[10], q[62];
+swap q[119], q[66];
+swap q[99], q[41];
+swap q[59], q[37];
+swap q[97], q[40];
+swap q[57], q[36];
+swap q[43], q[53];
+swap q[115], q[65];
+swap q[103], q[35];
+swap q[55], q[39];
+swap q[95], q[29];
+swap q[61], q[31];
+id q[27];

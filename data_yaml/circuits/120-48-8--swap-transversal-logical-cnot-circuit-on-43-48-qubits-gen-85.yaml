@@ -1,0 +1,182 @@
+qec_id: 16872
+name: SWAP-transversal logical CNOT circuit on 43/48 qubits (gen 85)
+tool: two-fold-transversal
+notes: "Logical CNOT circuit acting on 43 of the 48 logical qubits, from generator
+  85 of dataset entry [[120,48,8]]cons:quadric4 (full_codes_depth1.json) of arXiv:2608.05688.
+  The physical circuit is depth-one two-local (two-fold transversal): one layer in
+  which each qubit is touched by at most one two-qubit gate; a trailing SWAP network,
+  where present, is the string's compensating qubit permutation. The dataset is binary-symplectic
+  (sign-free), so the circuit is one Pauli frame of the gate — the paper's certificate
+  verifies the full recorded generator set realizes the full logical Clifford group
+  Sp(2k,2). The logical_action field states the claim in the stored code's logical
+  basis; validate:circuits checks it. One circuit per distinct logical action is kept
+  from the recorded generator set; dropping duplicate actions preserves the generated
+  logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  CX 30 0
+  CX 47 0
+  CX 2 1
+  CX 8 1
+  CX 26 1
+  CX 29 1
+  CX 30 1
+  CX 31 1
+  CX 34 1
+  CX 47 1
+  CX 2 3
+  CX 8 3
+  CX 18 3
+  CX 19 3
+  CX 20 3
+  CX 21 3
+  CX 25 3
+  CX 29 3
+  CX 31 3
+  CX 34 3
+  CX 36 3
+  CX 37 3
+  CX 47 3
+  CX 8 14
+  CX 8 15
+  CX 8 24
+  CX 8 33
+  CX 9 13
+  CX 30 10
+  CX 47 10
+  CX 18 11
+  CX 19 11
+  CX 20 11
+  CX 21 11
+  CX 25 11
+  CX 26 11
+  CX 30 11
+  CX 36 11
+  CX 37 11
+  CX 44 12
+  CX 45 12
+  CX 14 13
+  CX 15 13
+  CX 17 13
+  CX 20 13
+  CX 21 13
+  CX 34 13
+  CX 35 13
+  CX 37 13
+  CX 38 13
+  CX 15 14
+  CX 14 15
+  CX 15 14
+  CX 14 24
+  CX 14 33
+  CX 26 14
+  CX 34 14
+  CX 35 14
+  CX 45 14
+  CX 15 24
+  CX 15 33
+  CX 26 15
+  CX 30 15
+  CX 34 15
+  CX 47 15
+  CX 17 16
+  CX 18 16
+  CX 19 16
+  CX 37 16
+  CX 44 16
+  CX 45 16
+  CX 46 16
+  CX 18 17
+  CX 17 18
+  CX 18 17
+  CX 17 21
+  CX 17 23
+  CX 19 17
+  CX 30 17
+  CX 37 17
+  CX 46 17
+  CX 47 17
+  CX 18 21
+  CX 18 22
+  CX 18 23
+  CX 19 18
+  CX 30 18
+  CX 37 18
+  CX 46 18
+  CX 47 18
+  CX 19 21
+  CX 19 23
+  CX 20 22
+  CX 30 20
+  CX 35 20
+  CX 44 20
+  CX 47 20
+  CX 21 22
+  CX 30 21
+  CX 37 21
+  CX 44 21
+  CX 45 21
+  CX 46 21
+  CX 47 21
+  CX 25 22
+  CX 26 22
+  CX 30 22
+  CX 31 22
+  CX 34 22
+  CX 35 22
+  CX 38 22
+  CX 46 22
+  CX 30 23
+  CX 37 23
+  CX 46 23
+  CX 47 23
+  CX 26 24
+  CX 30 24
+  CX 31 24
+  CX 36 24
+  CX 40 24
+  CX 46 24
+  CX 47 24
+  CX 26 33
+  CX 30 26
+  CX 35 26
+  CX 45 26
+  CX 47 26
+  CX 37 28
+  CX 45 28
+  CX 30 29
+  CX 35 29
+  CX 45 29
+  CX 47 29
+  CX 30 32
+  CX 37 32
+  CX 39 32
+  CX 40 32
+  CX 44 32
+  CX 46 32
+  CX 34 33
+  CX 37 33
+  CX 38 33
+  CX 39 33
+  CX 45 33
+  CX 46 33
+  CX 47 33
+  CX 35 41
+  CX 37 41
+  CX 37 42
+  CX 38 42
+  CX 38 43
+  CX 44 41
+  CX 45 41
+  CX 44 42
+  CX 45 42
+  CX 44 43
+  CX 45 43
+  CX 46 43
+  CX 47 43
+gate_count: 1
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 118
+tags: [logical-gate, two-fold-transversal, swap-transversal, "logical-class:cnot"]
+original_matrices: 3f1fe90279b98334
