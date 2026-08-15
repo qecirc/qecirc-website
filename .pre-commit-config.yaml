@@ -32,7 +32,7 @@ repos:
       - id: uv-lock
 
   - repo: https://github.com/adhtruong/mirrors-typos
-    rev: v1.48.0
+    rev: v1.49.0
     hooks:
       - id: typos
 
