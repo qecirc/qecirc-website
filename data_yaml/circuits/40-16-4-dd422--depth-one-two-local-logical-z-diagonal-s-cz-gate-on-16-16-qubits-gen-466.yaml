@@ -1,0 +1,74 @@
+qec_id: 15503
+name: Depth-one two-local logical Z-diagonal (S/CZ) gate on 16/16 qubits (gen 466)
+tool: two-fold-transversal
+notes: "Logical Z-diagonal (S/CZ) gate acting on 16 of the 16 logical qubits, from
+  generator 466 of dataset entry [[40,16,4]]dd422:a132b525 (full_codes_depth1.json)
+  of arXiv:2608.05688. The physical circuit is depth-one two-local (two-fold transversal):
+  one layer in which each qubit is touched by at most one two-qubit gate; a trailing
+  SWAP network, where present, is the string's compensating qubit permutation. The
+  dataset is binary-symplectic (sign-free), so the circuit is one Pauli frame of the
+  gate — the paper's certificate verifies the full recorded generator set realizes
+  the full logical Clifford group Sp(2k,2). The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. One circuit per
+  distinct logical action is kept from the recorded generator set; dropping duplicate
+  actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 8
+  CX 0 8
+  H 9
+  CX 1 9
+  H 10
+  H 11
+  H 12
+  CX 2 10
+  CX 2 11
+  CX 2 12
+  H 13
+  H 15
+  CX 3 8
+  CX 3 10
+  CX 3 12
+  CX 3 13
+  CX 3 15
+  CX 4 8
+  CX 4 10
+  CX 4 11
+  CX 4 13
+  CX 4 15
+  CX 5 11
+  CX 5 12
+  CX 5 13
+  H 14
+  CX 6 14
+  CX 7 15
+  H 8
+  S 8
+  CX 8 9
+  CX 8 10
+  CX 8 11
+  H 9
+  H 10
+  S 10
+  CX 10 11
+  H 11
+  S 11
+  CX 11 12
+  H 12
+  S 12
+  CX 12 13
+  CX 12 15
+  H 13
+  S 13
+  CX 13 15
+  H 14
+  CX 14 15
+  H 15
+  S 15
+gate_count: 26
+two_qubit_gate_count: 14
+depth: 1
+qubit_count: 40
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,"Z^½","Z^½",1,1,1,"Z^½","Z^½","Z^½",1,1,1,"Z^½","Z^½",1,1,1,"Z^½","Z^½","Z^½","Z^½",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Z^½"],[1,1,1,1,1,1,1,1,1,"Z","•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Z",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Z",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Z",1,1,1,1,1,1,1,1,"•"],[1,1,1,"Z",1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Z",1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,"Z"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Z",1,"•"],["Z",1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Z",1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,"Z"],[1,1,1,1,1,1,1,1,1,1,1,"Z",1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Z",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Z",1,1,1,1,1,1,1,1,"•"]]}
+tags: [logical-gate, two-fold-transversal, "logical-class:z-diagonal"]
+original_matrices: c5fa962c4e15987c

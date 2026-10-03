@@ -1,0 +1,23 @@
+qec_id: 1774
+name: SWAP-transversal logical CNOT(0,2)
+tool: two-fold-transversal
+notes: "Logical CNOT(0,2) (gates in application order), from generator 1 of dataset
+  entry [[14,3,3]]eczoo:880eb7d7 (full_codes_depth1.json) of arXiv:2608.05688. The
+  physical circuit is depth-one two-local (two-fold transversal): one layer in which
+  each qubit is touched by at most one two-qubit gate; a trailing SWAP network, where
+  present, is the string's compensating qubit permutation. The dataset is binary-symplectic
+  (sign-free), so the circuit is one Pauli frame of the gate — the paper's certificate
+  verifies the full recorded generator set realizes the full logical Clifford group
+  Sp(2k,2). The logical_action field states the claim in the stored code's logical
+  basis; validate:circuits checks it. This circuit is part of the certificate's verified
+  generating prefix: the paper's exact Schreier-Sims certificate confirms the logical
+  actions of these 6 circuits generate the full logical Clifford group Sp(2k,2)."
+source: https://arxiv.org/abs/2608.05688
+logical_action: CX 0 2
+gate_count: 1
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 14
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,"Swap",1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap","Swap"],[1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,"…"]]}
+tags: [logical-gate, two-fold-transversal, swap-transversal, "logical-class:cnot", "logical-op:CX"]
+original_matrices: 06edfc912750142d

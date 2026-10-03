@@ -1,0 +1,29 @@
+OPENQASM 2.0;
+include "qelib1.inc";
+gate czyx q0 { U(pi/2, pi/2, pi/2) q0; }
+
+qreg q[15];
+
+z q[11];
+z q[9];
+z q[7];
+z q[5];
+z q[3];
+z q[1];
+z q[12];
+swap q[6], q[4];
+swap q[8], q[14];
+id q[0];
+czyx q[11];
+czyx q[9];
+czyx q[7];
+czyx q[5];
+czyx q[3];
+czyx q[1];
+czyx q[12];
+swap q[10], q[4];
+swap q[13], q[8];
+swap q[3], q[12];
+swap q[5], q[1];
+swap q[7], q[5];
+swap q[11], q[12];

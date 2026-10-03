@@ -1,0 +1,76 @@
+qec_id: 1732
+name: SWAP-transversal logical Clifford (automorphism gen 0)
+tool: autqec
+notes:
+  Logical H(5)·CNOT(11,12)·CNOT(9,12)·CNOT(7,12)·CNOT(4,12)·CNOT(3,12)·CNOT(1,12)·CNOT(9,11)·CNOT(7,11)·CNOT(6,11)·CNOT(5,11)·CNOT(3,11)·CNOT(2,11)·CNOT(1,11)·SWAP(12,11)·CNOT(12,10)·CNOT(11,10)·CNOT(9,10)·CNOT(8,10)·CNOT(6,10)·CNOT(4,10)·CNOT(2,10)·CNOT(1,10)·CNOT(12,9)·CNOT(10,9)·CNOT(8,9)·CNOT(7,9)·CNOT(6,9)·CNOT(3,9)·CNOT(7,8)·CNOT(3,8)·CNOT(10,7)·CNOT(9,7)·CNOT(5,7)·CNOT(4,7)·CNOT(3,7)·CNOT(1,7)·SWAP(8,7)·CNOT(12,6)·CNOT(9,6)·CNOT(4,6)·CNOT(3,6)·CNOT(2,6)·SWAP(8,6)·CNOT(12,5)·CNOT(11,5)·CNOT(10,5)·SWAP(6,5)·CNOT(11,4)·CNOT(9,4)·CNOT(3,4)·CNOT(2,4)·CNOT(1,4)·SWAP(5,4)·CNOT(9,3)·CNOT(2,3)·SWAP(7,3)·CNOT(12,2)·CNOT(11,2)·CNOT(10,2)·CNOT(6,2)·SWAP(5,2)·CNOT(11,1)·CNOT(9,1)·CNOT(8,1)·SWAP(7,1)·CZ(2,3)·CZ(2,9)·CZ(6,10)·CZ(3,6)·CZ(4,7)·CZ(2,4)·CZ(6,11)·CZ(7,12)·CZ(1,12)·CZ(8,9)·S(5)·S(8)·CZ(10,12)·CZ(3,11)·CZ(1,8)·CZ(1,9)·CZ(3,12)·CZ(7,9)·CZ(2,10)·CZ(3,7)·CZ(1,4)·CZ(9,12)·S(1)·S(7)·CZ(6,12)·CZ(2,11)·S(10)·CZ(5,11)·CZ(1,6)·CZ(5,6)·CZ(3,9)·CZ(4,10)·CZ(2,7)·CZ(10,11)·CZ(6,9)·S(6)·CZ(11,12)·S(3)·CZ(8,12)·S(12)·CZ(9,10)·CZ(1,11)·CZ(3,5)·C(X,X)(1,8)·C(X,X)(8,10)·C(X,X)(4,9)·C(X,X)(9,11)·√X(3)·C(X,X)(1,9)·C(X,X)(3,12)·√X(9)·C(X,X)(8,11)·√X(12)·C(X,X)(9,12)·C(X,X)(1,4)·C(X,X)(2,11)·C(X,X)(3,8)·C(X,X)(1,5)·C(X,X)(2,6)·C(X,X)(5,11)·C(X,X)(2,12)·√X(2)·C(X,X)(3,9)·C(X,X)(1,6)·C(X,X)(6,8)·√X(8)·C(X,X)(4,10)·C(X,X)(3,4)·C(X,X)(6,9)·C(X,X)(8,12)·C(X,X)(9,10)·C(X,X)(1,2)·C(X,X)(4,6)·C(X,X)(6,10)·C(X,X)(7,11)·√X(4)·C(X,X)(6,11)·C(X,X)(1,12)·C(X,X)(4,7)·C(X,X)(5,9)·C(X,X)(8,9)·C(X,X)(4,8)·C(X,X)(2,5)·C(X,X)(5,10)
+  (gates in application order) from generator 0 of the code's automorphism group,
+  computed by autqec (arXiv:2409.18175). Physical circuit is swap-transversal — single-qubit
+  Cliffords + SWAPs, with Pauli corrections that fix the stabilizer signs. The logical_action
+  field states the claim in the stored code's logical basis; validate:circuits checks
+  it. SWAP-transversal circuits are fault-tolerant on architectures where SWAPs are
+  error-benign (shuttling ion traps, atom arrays), hence no unconditional ft tag.
+  The code is the best-known-distance [[22,12]] stabilizer code from Grassl's codetables.de
+  tables (snapshotted in the autqec repository).
+source: https://arxiv.org/abs/2409.18175
+logical_action: |-
+  H 4
+  CX 10 11 8 11 6 11 3 11 2 11 0 11 8 10 6 10 5 10 4 10 2 10 1 10 0 10
+  SWAP 11 10
+  CX 11 9 10 9 8 9 7 9 5 9 3 9 1 9 0 9 11 8 9 8 7 8 6 8 5 8 2 8 6 7 2 7 9 6 8 6 4 6 3 6 2 6 0 6
+  SWAP 7 6
+  CX 11 5 8 5 3 5 2 5 1 5
+  SWAP 7 5
+  CX 11 4 10 4 9 4
+  SWAP 5 4
+  CX 10 3 8 3 2 3 1 3 0 3
+  SWAP 4 3
+  CX 8 2 1 2
+  SWAP 6 2
+  CX 11 1 10 1 9 1 5 1
+  SWAP 4 1
+  CX 10 0 8 0 7 0
+  SWAP 6 0
+  CZ 1 2 1 8 5 9 2 5 3 6 1 3 5 10 6 11 0 11 7 8
+  S 4 7
+  CZ 9 11 2 10 0 7 0 8 2 11 6 8 1 9 2 6 0 3 8 11
+  S 0 6
+  CZ 5 11 1 10
+  S 9
+  CZ 4 10 0 5 4 5 2 8 3 9 1 6 9 10 5 8
+  S 5
+  CZ 10 11
+  S 2
+  CZ 7 11
+  S 11
+  CZ 8 9 0 10 2 4
+  XCX 0 7 7 9 3 8 8 10
+  SQRT_X 2
+  XCX 0 8 2 11
+  SQRT_X 8
+  XCX 7 10
+  SQRT_X 11
+  XCX 8 11 0 3 1 10 2 7 0 4 1 5 4 10 1 11
+  SQRT_X 1
+  XCX 2 8 0 5 5 7
+  SQRT_X 7
+  XCX 3 9 2 3 5 8 7 11 8 9 0 1 3 5 5 9 6 10
+  SQRT_X 3
+  XCX 5 10 0 11 3 6 4 8 7 8 3 7 1 4 4 9
+gate_count: 17
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 22
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,"Z","~Czyx","Z","Z","~Czyx",1,"Z",1,"~Cxyz",1,"~Cxyz","Z","~Czyx",1,"~Cxyz",1,1,"~Czyx","~Czyx","~Czyx"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1],[1,"~Cxyz",1,"~Cxyz",1,1,1,1,1,1,1,1,"~Cxyz"],[1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,"Swap",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1]],"gates":[{"id":"~Cxyz","name":"Cxyz","matrix":"{{½-½i,-½-½i},{½-½i,½+½i}}"},{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
+tags:
+  [
+    logical-gate,
+    swap-transversal,
+    "logical-op:H",
+    "logical-op:CX",
+    "logical-op:SWAP",
+    "logical-op:CZ",
+    "logical-op:S",
+    "logical-op:XCX",
+    "logical-op:SQRT_X",
+  ]
+original_matrices: 8880f2c783092ef1

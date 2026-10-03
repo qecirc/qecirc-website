@@ -1,0 +1,62 @@
+qec_id: 17289
+name: SWAP-transversal logical CNOT circuit on 16/16 qubits (gen 1)
+tool: two-fold-transversal
+notes: "Logical CNOT circuit acting on 16 of the 16 logical qubits, from generator
+  1 of dataset entry [[64,16,4]]2bga:502aeab6 (ldpc_codes_depth1.json) of arXiv:2608.05688.
+  The physical circuit is depth-one two-local (two-fold transversal): one layer in
+  which each qubit is touched by at most one two-qubit gate; a trailing SWAP network,
+  where present, is the string's compensating qubit permutation. The dataset is binary-symplectic
+  (sign-free), so the circuit is one Pauli frame of the gate — the paper's certificate
+  verifies the exact order of the logical group the full recorded generator set realizes.
+  The logical_action field states the claim in the stored code's logical basis; validate:circuits
+  checks it. One circuit per distinct logical action is kept from the recorded generator
+  set; dropping duplicate actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  CX 0 5
+  CX 3 0
+  CX 8 0
+  CX 15 1
+  CX 1 15
+  CX 15 1
+  CX 1 2
+  CX 1 4
+  CX 1 5
+  CX 1 6
+  CX 13 1
+  CX 2 6
+  CX 13 2
+  CX 15 2
+  CX 13 3
+  CX 3 13
+  CX 13 3
+  CX 3 5
+  CX 3 8
+  CX 3 10
+  CX 13 4
+  CX 15 4
+  CX 7 5
+  CX 8 5
+  CX 9 5
+  CX 13 5
+  CX 15 5
+  CX 8 6
+  CX 10 6
+  CX 14 6
+  CX 15 6
+  CX 8 7
+  CX 8 12
+  CX 13 8
+  CX 11 10
+  CX 13 10
+  CX 14 10
+  CX 14 11
+  CX 11 14
+  CX 14 11
+  CX 13 15
+gate_count: 0
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 64
+tags: [logical-gate, two-fold-transversal, swap-transversal, "logical-class:cnot"]
+original_matrices: 8bc037b4f1601f5d

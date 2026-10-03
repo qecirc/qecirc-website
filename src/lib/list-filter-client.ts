@@ -18,6 +18,8 @@
 
 import {
   FILTER_PART_REGEX,
+  TAB_ACTIVE_CLASS,
+  TAB_INACTIVE_CLASS,
   TAG_SELECTED,
   TAG_UNSELECTED,
   DROPDOWN_ENTRY_SELECTED,
@@ -41,12 +43,23 @@ export interface ListFilterConfig {
   containerSelector: string;
   basePath: string;
   // Element whose textContent shows the count; formatCount renders it.
+  // `hiddenExcluded` is how many rows the hidden-tag rule is currently
+  // suppressing (0 unless hiddenTags is configured), so the text can state
+  // both the curated and the full number.
   countSelector?: string;
-  formatCount?: (visible: number, total: number, active: boolean) => string;
+  formatCount?: (visible: number, total: number, active: boolean, hiddenExcluded: number) => string;
   // Block shown when filters hide every row.
   emptyStateSelector?: string;
   // The sort the server rendered the rows in (never null).
   defaultSort: { field: string; dir: SortDir };
+  // Rows carrying one of these tags are hidden unless that tag is explicitly
+  // selected in the filter, or the hide-toggle (below) is switched off. Such
+  // rows are also left out of the visible/total counts while excluded.
+  hiddenTags?: string[];
+  // Optional role="switch" button controlling the hidden-tag rule: unchecked
+  // (the default) hides the tagged rows, checked reveals them among the rest.
+  // State round-trips through the `show_hidden` URL param.
+  hiddenToggleSelector?: string;
 }
 
 interface RowData {
@@ -60,6 +73,8 @@ interface ListState {
   conditions: Record<string, FilterCondition[] | null>;
   tags: string[];
   sort: { field: string; dir: SortDir };
+  // True = the hide-toggle is switched OFF and default-hidden rows show.
+  showHidden: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -190,7 +205,8 @@ export function initListFilter(config: ListFilterConfig): void {
     const sort = config.fields.includes(rawSort)
       ? { field: rawSort, dir: VALID_DIRS.has(rawDir as SortDir) ? (rawDir as SortDir) : "asc" }
       : { ...config.defaultSort };
-    return { raw, conditions, tags, sort };
+    const showHidden = params.get("show_hidden") === "1";
+    return { raw, conditions, tags, sort, showHidden };
   }
 
   function urlFromState(): string {
@@ -200,6 +216,7 @@ export function initListFilter(config: ListFilterConfig): void {
       if (value) params.set(field, value);
     }
     for (const tag of state.tags) params.append("tag", tag);
+    if (state.showHidden) params.set("show_hidden", "1");
     if (
       state.sort.field !== config.defaultSort.field ||
       state.sort.dir !== config.defaultSort.dir
@@ -239,6 +256,16 @@ export function initListFilter(config: ListFilterConfig): void {
     hintEl?.classList.toggle("hidden", inputError || active);
   }
 
+  /** Default-hidden rows: excluded until their hidden tag is selected in the
+   *  filter or the hide-toggle is switched off. */
+  function passesHiddenRule(data: RowData): boolean {
+    if (state.showHidden) return true;
+    for (const tag of config.hiddenTags ?? []) {
+      if (data.tags.has(tag) && !state.tags.includes(tag)) return false;
+    }
+    return true;
+  }
+
   function rowMatches(data: RowData): boolean {
     for (const field of config.fields) {
       const conds = state.conditions[field];
@@ -267,9 +294,16 @@ export function initListFilter(config: ListFilterConfig): void {
   }
 
   function apply(): void {
+    // `eligible` is the denominator the user sees: rows not suppressed by the
+    // hidden-tag rule under the CURRENT selection. With no hidden tag selected
+    // that's the curated list; selecting the tag widens it.
     let visible = 0;
+    let eligible = 0;
     for (const row of rows) {
-      const ok = rowMatches(rowData.get(row)!);
+      const data = rowData.get(row)!;
+      const elig = passesHiddenRule(data);
+      if (elig) eligible++;
+      const ok = elig && rowMatches(data);
       row.classList.toggle("hidden", !ok);
       if (ok) visible++;
     }
@@ -286,7 +320,7 @@ export function initListFilter(config: ListFilterConfig): void {
 
     const active = hasActiveFilters();
     if (countEl && config.formatCount) {
-      countEl.textContent = config.formatCount(visible, rows.length, active);
+      countEl.textContent = config.formatCount(visible, eligible, active, rows.length - eligible);
     }
     if (emptyEl) emptyEl.classList.toggle("hidden", visible > 0);
     renderStatus();
@@ -295,6 +329,25 @@ export function initListFilter(config: ListFilterConfig): void {
   // -------------------------------------------------------------------------
   // Control styling
   // -------------------------------------------------------------------------
+
+  /** The show-toggle mirrors the Coords/Detectors switches: checked =
+   *  revealing the default-hidden rows (highlight + ticked box); unchecked
+   *  (the default) keeps them hidden. */
+  function updateHiddenToggle(): void {
+    const btn = config.hiddenToggleSelector
+      ? document.querySelector<HTMLElement>(config.hiddenToggleSelector)
+      : null;
+    if (!btn) return;
+    const checked = state.showHidden;
+    btn.setAttribute("aria-checked", String(checked));
+    btn.querySelector(".hidden-toggle-on")?.classList.toggle("hidden", !checked);
+    btn.querySelector(".hidden-toggle-off")?.classList.toggle("hidden", checked);
+    swapClasses(
+      btn,
+      checked ? TAB_INACTIVE_CLASS : TAB_ACTIVE_CLASS,
+      checked ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS,
+    );
+  }
 
   function updateSortIndicators(): void {
     for (const link of document.querySelectorAll<HTMLElement>("[data-sort-field]")) {
@@ -424,6 +477,15 @@ export function initListFilter(config: ListFilterConfig): void {
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     const target = e.target as HTMLElement;
 
+    if (config.hiddenToggleSelector && target.closest(config.hiddenToggleSelector)) {
+      e.preventDefault();
+      state.showHidden = !state.showHidden;
+      apply();
+      updateHiddenToggle();
+      syncUrl("push");
+      return;
+    }
+
     const tagLink = target.closest<HTMLElement>("[data-tag]");
     if (tagLink && tagLink.dataset.tag) {
       e.preventDefault();
@@ -460,10 +522,12 @@ export function initListFilter(config: ListFilterConfig): void {
       }
       state.tags = [];
       state.sort = { ...config.defaultSort };
+      state.showHidden = false;
       syncInputsFromState();
       apply();
       updateSortIndicators();
       updateTagStyling();
+      updateHiddenToggle();
       syncUrl("push");
     }
   });
@@ -474,6 +538,7 @@ export function initListFilter(config: ListFilterConfig): void {
     apply();
     updateSortIndicators();
     updateTagStyling();
+    updateHiddenToggle();
   });
 
   // -------------------------------------------------------------------------
@@ -484,4 +549,5 @@ export function initListFilter(config: ListFilterConfig): void {
   apply();
   updateSortIndicators();
   updateTagStyling();
+  updateHiddenToggle();
 }

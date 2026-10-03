@@ -1,0 +1,76 @@
+qec_id: 17488
+name: Depth-one two-local logical X-diagonal (√X/XX) gate on 12/12 qubits (gen 26)
+tool: two-fold-transversal
+notes: "Logical X-diagonal (√X/XX) gate acting on 12 of the 12 logical qubits, from
+  generator 26 of dataset entry [[144,12,12]]cons:gross144 (ldpc_codes_depth1.json)
+  of arXiv:2608.05688. The physical circuit is depth-one two-local (two-fold transversal):
+  one layer in which each qubit is touched by at most one two-qubit gate; a trailing
+  SWAP network, where present, is the string's compensating qubit permutation. The
+  dataset is binary-symplectic (sign-free), so the circuit is one Pauli frame of the
+  gate — the paper's certificate verifies the exact order of the logical group the
+  full recorded generator set realizes. The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. One circuit per
+  distinct logical action is kept from the recorded generator set; dropping duplicate
+  actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 2
+  H 6
+  H 7
+  H 9
+  H 11
+  CX 2 0
+  CX 6 0
+  CX 7 0
+  CX 9 0
+  CX 11 0
+  H 3
+  H 4
+  H 10
+  CX 2 1
+  CX 3 1
+  CX 4 1
+  CX 9 1
+  CX 10 1
+  H 2
+  H 8
+  CX 3 2
+  CX 4 2
+  CX 7 2
+  CX 8 2
+  CX 9 2
+  CX 10 2
+  CX 11 2
+  H 3
+  H 5
+  CX 4 3
+  CX 5 3
+  CX 7 3
+  CX 8 3
+  CX 11 3
+  H 4
+  CX 6 4
+  CX 8 4
+  CX 10 4
+  CX 11 4
+  H 5
+  CX 6 5
+  CX 9 5
+  H 6
+  CX 7 6
+  CX 9 6
+  CX 10 6
+  H 7
+  CX 8 7
+  H 8
+  CX 9 8
+  H 9
+  CX 10 9
+  H 10
+  H 11
+gate_count: 72
+two_qubit_gate_count: 72
+depth: 1
+qubit_count: 144
+tags: [logical-gate, two-fold-transversal, "logical-class:x-diagonal"]
+original_matrices: 1b6f8dbf6e6e8880

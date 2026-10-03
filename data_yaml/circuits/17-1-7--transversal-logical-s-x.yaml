@@ -1,0 +1,19 @@
+qec_id: 1064
+name: Transversal logical S·√X
+tool: autqec
+notes: Logical S·√X (gates in application order) from generator 5 of the code's automorphism
+  group, computed by autqec (arXiv:2409.18175). Physical circuit is transversal —
+  single-qubit Cliffords, with Pauli corrections that fix the stabilizer signs. The
+  logical_action field states the claim in the stored code's logical basis; validate:circuits
+  checks it.
+source: https://arxiv.org/abs/2409.18175
+logical_action: |-
+  S 0
+  SQRT_X 0
+gate_count: 17
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 17
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx","~Czyx"]],"gates":[{"id":"~Czyx","name":"Czyx","matrix":"{{½+½i,½+½i},{-½+½i,½-½i}}"}]}
+tags: [logical-gate, transversal, ft, "logical-op:S", "logical-op:SQRT_X"]
+original_matrices: e9375f71fe21b950
