@@ -1,0 +1,21 @@
+qec_id: 1047
+name: SWAP-transversal logical CNOT(1,2)·SWAP(2,1)
+tool: autqec
+notes: Logical CNOT(1,2)·SWAP(2,1) (gates in application order) from generator 4 of
+  the code's automorphism group, computed by autqec (arXiv:2409.18175). Physical circuit
+  is swap-transversal — single-qubit Cliffords + SWAPs, with Pauli corrections that
+  fix the stabilizer signs. The logical_action field states the claim in the stored
+  code's logical basis; validate:circuits checks it. SWAP-transversal circuits are
+  fault-tolerant on architectures where SWAPs are error-benign (shuttling ion traps,
+  atom arrays), hence no unconditional ft tag.
+source: https://arxiv.org/abs/2409.18175
+logical_action: |-
+  CX 0 1
+  SWAP 1 0
+gate_count: 0
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 4
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"Swap","Swap"],[1,1,1,1],["Swap",1,"Swap"],[1,1,1]]}
+tags: [logical-gate, swap-transversal, "logical-op:CX", "logical-op:SWAP"]
+original_matrices: a3e75dbdeaf815cc

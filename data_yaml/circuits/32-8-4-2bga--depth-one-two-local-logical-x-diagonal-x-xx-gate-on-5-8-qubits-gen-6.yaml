@@ -1,0 +1,35 @@
+qec_id: 17231
+name: Depth-one two-local logical X-diagonal (√X/XX) gate on 5/8 qubits (gen 6)
+tool: two-fold-transversal
+notes: "Logical H(2)·H(7)·CNOT(2,0)·CNOT(7,0)·H(2)·H(3)·H(4)·CNOT(3,2)·CNOT(4,2)·H(3)·H(4)·H(7)
+  (gates in application order), from generator 6 of dataset entry [[32,8,4]]2bga:606c7fbd
+  (ldpc_codes_depth1.json) of arXiv:2608.05688. The physical circuit is depth-one
+  two-local (two-fold transversal): one layer in which each qubit is touched by at
+  most one two-qubit gate; a trailing SWAP network, where present, is the string's
+  compensating qubit permutation. The dataset is binary-symplectic (sign-free), so
+  the circuit is one Pauli frame of the gate — the paper's certificate verifies the
+  exact order of the logical group the full recorded generator set realizes. The logical_action
+  field states the claim in the stored code's logical basis; validate:circuits checks
+  it. One circuit per distinct logical action is kept from the recorded generator
+  set; dropping duplicate actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 2
+  H 7
+  CX 2 0
+  CX 7 0
+  H 2
+  H 3
+  H 4
+  CX 3 2
+  CX 4 2
+  H 3
+  H 4
+  H 7
+gate_count: 48
+two_qubit_gate_count: 16
+depth: 1
+qubit_count: 32
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½"],[1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"⊖"],[1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,"⊖"],[1,"X",1,1,1,1,1,1,1,1,1,1,1,"⊖"],["X",1,1,1,1,1,1,1,1,1,"⊖"],[1,1,1,1,1,1,1,1,1,"⊖",1,1,1,1,"X"],[1,1,1,1,1,1,1,1,"⊖",1,1,"X"],[1,1,1,1,1,1,1,"⊖",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,"⊖"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,"⊖"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,"⊖"],[1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"⊖"],[1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,"⊖"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,"⊖"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"⊖",1,1,1,1,1,"X"]]}
+tags: [logical-gate, two-fold-transversal, "logical-class:x-diagonal"]
+original_matrices: 8491b0e7e5936fa5

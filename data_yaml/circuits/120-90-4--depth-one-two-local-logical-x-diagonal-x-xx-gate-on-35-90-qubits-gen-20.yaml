@@ -1,0 +1,113 @@
+qec_id: 15799
+name: Depth-one two-local logical X-diagonal (√X/XX) gate on 35/90 qubits (gen 20)
+tool: two-fold-transversal
+notes: "Logical X-diagonal (√X/XX) gate acting on 35 of the 90 logical qubits, from
+  generator 20 of dataset entry [[120,90,4]]cons:johnson16 (full_codes_depth1.json)
+  of arXiv:2608.05688. The physical circuit is depth-one two-local (two-fold transversal):
+  one layer in which each qubit is touched by at most one two-qubit gate; a trailing
+  SWAP network, where present, is the string's compensating qubit permutation. The
+  dataset is binary-symplectic (sign-free), so the circuit is one Pauli frame of the
+  gate — the paper's certificate verifies the full recorded generator set realizes
+  the full logical Clifford group Sp(2k,2). The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. One circuit per
+  distinct logical action is kept from the recorded generator set; dropping duplicate
+  actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 1
+  H 12
+  CX 1 0
+  CX 12 0
+  H 1
+  CX 12 1
+  H 3
+  CX 3 2
+  CX 12 2
+  H 3
+  CX 12 3
+  S 4
+  H 4
+  S 4
+  H 17
+  H 18
+  CX 12 4
+  CX 17 4
+  CX 18 4
+  S 5
+  H 5
+  S 5
+  CX 12 5
+  CX 17 5
+  CX 18 5
+  H 7
+  CX 7 6
+  CX 12 6
+  H 7
+  CX 12 7
+  H 9
+  CX 9 8
+  CX 12 8
+  H 9
+  CX 12 9
+  H 11
+  CX 11 10
+  CX 12 10
+  H 11
+  CX 12 11
+  H 12
+  H 17
+  H 18
+  H 38
+  H 39
+  CX 38 28
+  CX 39 28
+  CX 38 29
+  CX 39 29
+  H 38
+  H 39
+  H 55
+  H 56
+  CX 55 47
+  CX 56 47
+  CX 55 48
+  CX 56 48
+  H 55
+  H 56
+  H 65
+  H 71
+  CX 65 64
+  CX 71 64
+  H 65
+  H 70
+  CX 70 65
+  H 67
+  H 73
+  CX 67 66
+  CX 73 66
+  H 67
+  H 72
+  CX 72 67
+  H 69
+  H 75
+  CX 69 68
+  CX 75 68
+  H 69
+  H 74
+  CX 74 69
+  H 70
+  CX 71 70
+  H 71
+  H 72
+  CX 73 72
+  H 73
+  H 74
+  CX 75 74
+  H 75
+  H 89
+  H 89
+gate_count: 79
+two_qubit_gate_count: 26
+depth: 1
+qubit_count: 120
+tags: [logical-gate, two-fold-transversal, "logical-class:x-diagonal"]
+original_matrices: a6427e22ca676806

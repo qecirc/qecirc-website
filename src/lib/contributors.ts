@@ -23,6 +23,7 @@ export const CONTRIBUTORS: readonly Contributor[] = [
   { name: "Diego Forlivesi", github: "DiegoForlivesi" },
   { name: "David Amaro", github: "davamaro" },
   { name: "Luis Colmenarez", github: "luis2colmena" },
+  { name: "Hasan Sayginel", github: "hsayginel" },
   { name: "Michael A. Perlin", github: "perlinm" },
   { name: "Mingyu Kang", github: "mkangquantum" },
   { name: "Yuhao Liu", github: "acasta-yhliu" },

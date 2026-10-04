@@ -10,7 +10,25 @@ import type {
   TagWithCount,
   ToolFilters,
 } from "../../types";
-import { CIRCUIT_SORT_FIELDS, CODE_SORT_FIELDS, FILTER_PART_REGEX } from "../constants";
+import {
+  CIRCUIT_SORT_FIELDS,
+  CODE_SORT_FIELDS,
+  FILTER_PART_REGEX,
+  HIDDEN_CODE_TAG,
+} from "../constants";
+
+// Codes tagged HIDDEN_CODE_TAG (and their circuits) are left out of every
+// displayed count and of the homepage discovery surfaces — they are a
+// reference shelf, not part of the curated library the numbers advertise.
+// `codesAlias` is the codes table's alias in the calling query; the caller
+// must bind HIDDEN_CODE_TAG for the `?`. Lives here (not codes.ts) because
+// circuits.ts and withCircuitCounts below need it too.
+export function visibleCodePredicate(codesAlias = "c"): string {
+  return `NOT EXISTS (
+    SELECT 1 FROM taggings tg JOIN tags t ON t.id = tg.tag_id
+    WHERE tg.taggable_id = ${codesAlias}.id AND tg.taggable_type = 'code' AND t.name = ?
+  )`;
+}
 
 export function getTagsFor(taggableType: TaggableType, taggableId: number): string[] {
   const db = getDb();
@@ -60,16 +78,26 @@ export function withTags<T extends { id: number }>(
 export function withCircuitCounts<T extends { id: number }>(
   items: T[],
   fkColumn: "code_id" | "tool_id",
+  opts: { visibleCodesOnly?: boolean } = {},
 ): (T & { circuit_count: number })[] {
   if (items.length === 0) return [];
   const db = getDb();
   const placeholders = items.map(() => "?").join(",");
+  // visibleCodesOnly: count only circuits of non-hidden codes — used for tool
+  // counts, where a bulk reference import would otherwise dwarf everything.
+  // Per-code counts (fkColumn "code_id") never set it: a hidden code's own
+  // card should state its true count when revealed.
+  const visibility = opts.visibleCodesOnly
+    ? `JOIN codes co ON co.id = circuits.code_id AND ${visibleCodePredicate("co")}`
+    : "";
+  const params: (number | string)[] = opts.visibleCodesOnly ? [HIDDEN_CODE_TAG] : [];
   const rows = db
     .prepare(
       `SELECT ${fkColumn} AS fk, COUNT(*) AS count FROM circuits
+       ${visibility}
        WHERE ${fkColumn} IN (${placeholders}) GROUP BY ${fkColumn}`,
     )
-    .all(items.map((i) => i.id)) as { fk: number; count: number }[];
+    .all(...params, ...items.map((i) => i.id)) as { fk: number; count: number }[];
   const counts = new Map(rows.map((r) => [r.fk, r.count]));
   return items.map((i) => ({ ...i, circuit_count: counts.get(i.id) ?? 0 }));
 }

@@ -28,9 +28,12 @@ import stim
 
 from .circuit_validate import (  # noqa: F401
     extract_code,
+    induced_logical_action,
     measured_stabilizers,
+    transversality_class,
     validate_encoding,
     validate_encoding_h,
+    validate_logical_gate_h,
     validate_state_prep,
     validate_state_prep_h,
     validate_syndrome_extraction,

@@ -1,0 +1,9 @@
+name: two-fold-transversal
+description: Search and certification pipeline for depth-one two-local (two-fold transversal)
+  Clifford circuits of CSS codes — the software behind the certified survey of
+  arXiv:2608.05688, whose repository ships the gate strings imported here.
+homepage_url: https://github.com/valbert4/two-fold-transversal
+github_url: https://github.com/valbert4/two-fold-transversal
+paper_urls: [https://arxiv.org/abs/2608.05688]
+aliases: ["Beyond transversality"]
+tags: [Python, logical-gate]

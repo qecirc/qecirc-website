@@ -1,0 +1,115 @@
+qec_id: 15502
+name: SWAP-transversal logical Hadamard-type gate on 16/16 qubits (gen 465)
+tool: two-fold-transversal
+notes: "Logical Hadamard-type gate acting on 16 of the 16 logical qubits, from generator
+  465 of dataset entry [[40,16,4]]dd422:a132b525 (full_codes_depth1.json) of arXiv:2608.05688.
+  The physical circuit is depth-one two-local (two-fold transversal): one layer in
+  which each qubit is touched by at most one two-qubit gate; a trailing SWAP network,
+  where present, is the string's compensating qubit permutation. The dataset is binary-symplectic
+  (sign-free), so the circuit is one Pauli frame of the gate — the paper's certificate
+  verifies the full recorded generator set realizes the full logical Clifford group
+  Sp(2k,2). The logical_action field states the claim in the stored code's logical
+  basis; validate:circuits checks it. One circuit per distinct logical action is kept
+  from the recorded generator set; dropping duplicate actions preserves the generated
+  logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  CX 8 0
+  CX 0 8
+  CX 8 0
+  H 0
+  H 1
+  H 2
+  H 3
+  H 8
+  H 11
+  H 12
+  CX 1 0
+  CX 2 0
+  CX 3 0
+  CX 8 0
+  CX 11 0
+  CX 12 0
+  CX 9 1
+  CX 1 9
+  CX 9 1
+  H 1
+  CX 8 1
+  CX 10 2
+  CX 2 10
+  CX 10 2
+  H 2
+  CX 2 11
+  CX 2 12
+  CX 3 2
+  CX 8 2
+  CX 10 2
+  CX 11 2
+  CX 12 2
+  CX 13 3
+  CX 3 13
+  CX 13 3
+  H 3
+  H 15
+  CX 3 11
+  CX 3 15
+  H 4
+  CX 4 3
+  CX 8 3
+  CX 10 3
+  CX 12 3
+  CX 13 3
+  CX 11 4
+  CX 4 11
+  CX 11 4
+  CX 4 12
+  H 5
+  H 7
+  CX 5 4
+  CX 7 4
+  CX 11 4
+  CX 13 4
+  CX 12 5
+  CX 5 12
+  CX 12 5
+  CX 5 15
+  CX 7 5
+  CX 11 5
+  CX 12 5
+  CX 14 6
+  CX 6 14
+  CX 14 6
+  H 6
+  CX 7 6
+  CX 15 7
+  CX 7 15
+  CX 15 7
+  H 14
+  CX 11 7
+  CX 12 7
+  CX 14 7
+  CX 15 7
+  CX 8 11
+  CX 8 13
+  CX 10 11
+  CX 10 13
+  CX 11 10
+  CX 13 10
+  CX 12 11
+  CX 11 12
+  CX 12 11
+  CX 11 13
+  CX 12 11
+  CX 15 11
+  CX 13 12
+  CX 12 13
+  CX 13 12
+  CX 12 13
+  CX 15 12
+gate_count: 40
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 40
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H"],[1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],["Swap",1,1,1,"Swap"],[1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]]}
+tags: [logical-gate, two-fold-transversal, swap-transversal, "logical-class:h-type"]
+original_matrices: c5fa962c4e15987c
