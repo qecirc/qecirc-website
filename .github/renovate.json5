@@ -52,6 +52,15 @@
       automerge: true,
     },
 
+    {
+      // @astrojs/check (peer `^5 || ^6`) and typescript-eslint (peer `<6.1.0`)
+      // don't accept TS 7 yet; #174 failed `npm ci` on exactly that. Lift this
+      // once both widen their peer range.
+      description: "Hold TypeScript below 7 until its tooling peers support it",
+      matchPackageNames: ["typescript"],
+      allowedVersions: "<7",
+    },
+
     // Last, so nothing above can hand the automerge back.
     //
     // `pyproject.toml` pins `mqt-qecc` to a git BRANCH (`@encoding-circuits`),
