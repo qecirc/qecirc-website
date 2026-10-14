@@ -83,14 +83,16 @@ print(summarize_circuit(circuit_text))
 
 ```python
 from scripts.add_circuit import (
-    validate_encoding, validate_state_prep, validate_syndrome_extraction,
+    validate_encoding,
+    validate_state_prep,
+    validate_syndrome_extraction,
 )
 
 # For encoding circuits:
-print(validate_encoding(circuit, Hx, Hz))   # 'passed' or 'failed: ...'
+print(validate_encoding(circuit, Hx, Hz))  # 'passed' or 'failed: ...'
 
 # For state-preparation circuits:
-print(validate_state_prep(circuit, Hx, Hz)) # 'passed' or 'failed: ...'
+print(validate_state_prep(circuit, Hx, Hz))  # 'passed' or 'failed: ...'
 
 # For syndrome-extraction circuits (one round):
 print(validate_syndrome_extraction(circuit, Hx, Hz))  # 'passed' or 'failed: ...'
@@ -103,10 +105,12 @@ For a **non-CSS** code there is no Hx/Hz split; pass the symplectic `h` (shape
 
 ```python
 from scripts.add_circuit import (
-    validate_encoding_h, validate_state_prep_h, validate_syndrome_extraction_h,
+    validate_encoding_h,
+    validate_state_prep_h,
+    validate_syndrome_extraction_h,
 )
 
-print(validate_encoding_h(circuit, h, n))    # 'passed' or 'failed: ...'
+print(validate_encoding_h(circuit, h, n))  # 'passed' or 'failed: ...'
 print(validate_state_prep_h(circuit, h, n))  # 'passed' or 'failed: ...'
 print(validate_syndrome_extraction_h(circuit, h, n, logical=logical))
 ```
@@ -155,28 +159,42 @@ from scripts.add_circuit import add_circuit, preview_circuit
 
 # Preview first (dry run)
 result = preview_circuit(
-    Hx=Hx, Hz=Hz, circuit=circuit,
-    circuit_name="Standard Encoding", d=3,
-    code_name="Steane Code", source="https://doi.org/...",
-    tool="mqt-qecc", zoo_url="https://errorcorrectionzoo.org/c/steane",
+    Hx=Hx,
+    Hz=Hz,
+    circuit=circuit,
+    circuit_name="Standard Encoding",
+    d=3,
+    code_name="Steane Code",
+    source="https://doi.org/...",
+    tool="mqt-qecc",
+    zoo_url="https://errorcorrectionzoo.org/c/steane",
 )
 print(result.summary())
 
 # Generate for real (CSS code)
 result = add_circuit(
-    Hx=Hx, Hz=Hz, circuit=circuit,
-    circuit_name="Standard Encoding", d=3,
-    code_name="Steane Code", source="https://doi.org/...",
-    tool="mqt-qecc", zoo_url="https://errorcorrectionzoo.org/c/steane",
+    Hx=Hx,
+    Hz=Hz,
+    circuit=circuit,
+    circuit_name="Standard Encoding",
+    d=3,
+    code_name="Steane Code",
+    source="https://doi.org/...",
+    tool="mqt-qecc",
+    zoo_url="https://errorcorrectionzoo.org/c/steane",
 )
 print(result.summary())
 
 # Non-CSS code: pass the symplectic stabilizer matrix H instead of Hx/Hz.
 # H has shape (n-k, 2n) — X-half on the left, Z-half on the right.
 result = add_circuit(
-    H=H, n=5, circuit=circuit,
-    circuit_name="Standard Encoding", d=3,
-    code_name="Five-Qubit Code", source="https://doi.org/...",
+    H=H,
+    n=5,
+    circuit=circuit,
+    circuit_name="Standard Encoding",
+    d=3,
+    code_name="Five-Qubit Code",
+    source="https://doi.org/...",
 )
 print(result.summary())
 ```
@@ -308,8 +326,11 @@ If you don't have `Hx/Hz`, derive them from the prep circuit itself:
 
 ```python
 from scripts.add_circuit import (
-    derive_matrices_self_dual, derive_matrices_two_circuit,
-    strip_flags, symplectic_validate, logical_state_of,
+    derive_matrices_self_dual,
+    derive_matrices_two_circuit,
+    strip_flags,
+    symplectic_validate,
+    logical_state_of,
 )
 
 # Self-dual CSS code (Hz == Hx) from a single |0⟩_L circuit:
@@ -327,13 +348,16 @@ Hx, Hz = derive_matrices_two_circuit(zero_circuit, plus_circuit, n)
 from scripts.add_circuit import import_state_prep
 
 result = import_state_prep(
-    circuit=zero_circuit, n=7, d=3,
-    method="self_dual",                  # or "two_circuit" / "anchor"
+    circuit=zero_circuit,
+    n=7,
+    d=3,
+    method="self_dual",  # or "two_circuit" / "anchor"
     code_name="Steane Code",
     circuit_name="FT |0⟩ prep (flag)",
-    source="https://arxiv.org/abs/...", tool="mqt-qecc",
+    source="https://arxiv.org/abs/...",
+    tool="mqt-qecc",
     tags=["state-preparation", "ft", "flag"],
-    logical_state="zero",                # provenance → note + logical-state:zero tag
+    logical_state="zero",  # provenance → note + logical-state:zero tag
 )
 print(result.summary())
 ```
@@ -364,10 +388,10 @@ that run in parallel. `build_se_round` turns one into STIM.
 from scripts.add_circuit import build_se_round, validate_syndrome_extraction_h
 
 ticks = [
-    [(0, 7, "X"), (1, 10, "Z")],   # tick 0: two checks, in parallel
-    [(2, 7, "X"), (3, 10, "Z")],   # tick 1
+    [(0, 7, "X"), (1, 10, "Z")],  # tick 0: two checks, in parallel
+    [(2, 7, "X"), (3, 10, "Z")],  # tick 1
 ]
-circuit = build_se_round(ticks, n=7)          # hadamards="basis" | "per-check"
+circuit = build_se_round(ticks, n=7)  # hadamards="basis" | "per-check"
 ```
 
 Data qubits are `0..n-1`; every ancilla must be `>= n`. The ticks are emitted **verbatim** — a
@@ -400,9 +424,15 @@ conflict-free schedule. `measured_stabilizers` reports what the round actually m
 detectors, observable).
 
 ```python
-add_circuit(circuit=circuit, circuit_name="Depth-optimal schedule", d=3,
-            H=h, n=n, source="https://arxiv.org/abs/...",
-            tags=["syndrome-extraction", "schedule:depth-optimal"])
+add_circuit(
+    circuit=circuit,
+    circuit_name="Depth-optimal schedule",
+    d=3,
+    H=h,
+    n=n,
+    source="https://arxiv.org/abs/...",
+    tags=["syndrome-extraction", "schedule:depth-optimal"],
+)
 ```
 
 The importers under `data-imports/` are the worked examples —

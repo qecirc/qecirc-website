@@ -43,27 +43,33 @@ import pytest
 
 from scripts.add_circuit.perm_find import find_code_permutation
 
-STEANE_H = np.array([
-    [0, 0, 0, 1, 1, 1, 1],
-    [0, 1, 1, 0, 0, 1, 1],
-    [1, 0, 1, 0, 1, 0, 1],
-])
+STEANE_H = np.array(
+    [
+        [0, 0, 0, 1, 1, 1, 1],
+        [0, 1, 1, 0, 0, 1, 1],
+        [1, 0, 1, 0, 1, 0, 1],
+    ]
+)
 
 # MQT carbon code (from mqt-qecc src/mqt/qecc/codes/carbon/{hx,hz}.npy)
-CARBON_HX = np.array([
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0],
-    [0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1],
-    [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
-])
-CARBON_HZ = np.array([
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0],
-    [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1],
-    [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
-])
+CARBON_HX = np.array(
+    [
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0],
+        [0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1],
+        [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
+    ]
+)
+CARBON_HZ = np.array(
+    [
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0],
+        [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1],
+        [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
+    ]
+)
 # NOTE: verify these fixture literals against the .npy files before first
 # test run: np.load('/tmp/mqt-qecc/src/mqt/qecc/codes/carbon/hx.npy').
 # If they differ, replace the literals with the actual arrays.
@@ -71,6 +77,7 @@ CARBON_HZ = np.array([
 
 def _rowspace_rref(m: np.ndarray) -> np.ndarray:
     from scripts.add_circuit.code_identify import gf2_rref
+
     r = gf2_rref(np.asarray(m) % 2)
     return r[~np.all(r == 0, axis=1)]
 
@@ -214,11 +221,7 @@ def _invariants(hx: np.ndarray, hz: np.ndarray):
     for _ in range(n):
         new = {}
         for i in range(n):
-            nb = tuple(
-                sorted(
-                    (pair[tuple(sorted((i, j)))], colors[j]) for j in range(n) if j != i
-                )
-            )
+            nb = tuple(sorted((pair[tuple(sorted((i, j)))], colors[j]) for j in range(n) if j != i))
             new[i] = hash((colors[i], nb))
         if len(set(new.values())) <= len(set(colors.values())):
             break
@@ -280,17 +283,13 @@ def find_code_permutation(
         nonlocal steps
         if len(assigned) == n:
             p = np.array(sigma)
-            return (
-                _rowspace_key(hx1[:, p]) == target_x
-                and _rowspace_key(hz1[:, p]) == target_z
-            )
+            return _rowspace_key(hx1[:, p]) == target_x and _rowspace_key(hz1[:, p]) == target_z
         j = next_col()
         for i in cands[j]:
             if i in used:
                 continue
             if not all(
-                p1[tuple(sorted((i, sigma[jj])))] == p2[tuple(sorted((j, jj)))]
-                for jj in assigned
+                p1[tuple(sorted((i, sigma[jj])))] == p2[tuple(sorted((j, jj)))] for jj in assigned
             ):
                 continue
             steps += 1
@@ -401,10 +400,10 @@ DEFECTIVE = {
 
 @dataclass
 class EvalCode:
-    slug: str          # stored code slug in data_yaml/codes/
+    slug: str  # stored code slug in data_yaml/codes/
     n: int
     d: int
-    fit: str           # "identity" | "search" | "self_dual" | "perm_find"
+    fit: str  # "identity" | "search" | "self_dual" | "perm_find"
     mqt_dir: str = ""  # matrices dir under DATASET/src/mqt/qecc/codes/ (perm_find only)
 
 
@@ -622,6 +621,7 @@ import stim
 
 # ---------- CSV parsing ----------
 
+
 def _parse_np(cell: str):
     """Parse a numpy-repr CSV cell like "[array([0, 1, ...]), ...]" or
     "{1: ([array(...)], {0: array(...), 1: array(...)}), ...}"."""
@@ -632,15 +632,15 @@ def _parse_np(cell: str):
 
 @dataclass
 class Layer:
-    stabs: list[np.ndarray]                     # round-1 verification stabs
-    flagged: list[bool]                          # hook flag per stab
+    stabs: list[np.ndarray]  # round-1 verification stabs
+    flagged: list[bool]  # hook flag per stab
     corrections: dict[int, tuple[list[np.ndarray], dict[int, np.ndarray]]]
-    hook_corrections: list[dict]                 # per-stab hook branch tables
+    hook_corrections: list[dict]  # per-stab hook branch tables
 
 
 @dataclass
 class DetProtocol:
-    variant: str                                 # heuristic | optimal | global
+    variant: str  # heuristic | optimal | global
     layers: tuple[Layer, Layer]
 
 
@@ -680,6 +680,7 @@ def pick_variant(variants: dict[str, DetProtocol]) -> DetProtocol:
 
 # ---------- qasm -> stim prep ----------
 
+
 def qasm_prep_to_stim(qasm: str) -> stim.Circuit:
     """Convert the bare h/cx OPENQASM 2.0 encoders to stim (verified: the 18
     eval_det files contain only qreg/h/cx lines)."""
@@ -699,6 +700,7 @@ def qasm_prep_to_stim(qasm: str) -> stim.Circuit:
 
 # ---------- worst-case body ----------
 
+
 def _support(vec: np.ndarray) -> list[int]:
     return [int(i) for i in np.flatnonzero(np.asarray(vec) % 2)]
 
@@ -707,8 +709,8 @@ def _measure_block(stabs, flagged, z_stabs: bool, n: int) -> tuple[stim.Circuit,
     """Port of _create_stab_measurement_circuit; returns (circuit, block_width)."""
     c = stim.Circuit()
     num_stabs = len(stabs)
-    anc = n                                   # measurement ancillas: n .. n+num_stabs-1
-    flag = n + num_stabs                      # flag ancillas after
+    anc = n  # measurement ancillas: n .. n+num_stabs-1
+    flag = n + num_stabs  # flag ancillas after
     measured: list[int] = []
     for s_idx, (stab, has_flag) in enumerate(zip(stabs, flagged)):
         a = n + s_idx
@@ -794,6 +796,7 @@ def build_worst_case_body(
 
 
 # ---------- notes rendering ----------
+
 
 def render_notes(proto: DetProtocol, zero_state: bool, source_file: str) -> str:
     lines = [
@@ -888,7 +891,11 @@ NEW_CODES = {
     "11_1_3": dict(slug="11-1-3", name="[[11,1,3]]", n=11, d=3, hx=np.array([...])),
     "16_2_4": dict(slug="16-2-4", name="[[16,2,4]]", n=16, d=4, hx=np.array([...])),
     "hypercube": dict(
-        slug="16-6-4", name="Tesseract Code", n=16, d=4, hx=np.array([...]),
+        slug="16-6-4",
+        name="Tesseract Code",
+        n=16,
+        d=4,
+        hx=np.array([...]),
         zoo_url="https://errorcorrectionzoo.org/c/stab_16_6_4",
     ),
 }
@@ -921,9 +928,13 @@ def det_procedure(fname: str) -> str:
 
 def run_det(write: bool, data_dir: Path) -> None:
     from det_protocol import (
-        build_worst_case_body, load_protocols, pick_variant,
-        qasm_prep_to_stim, render_notes,
+        build_worst_case_body,
+        load_protocols,
+        pick_variant,
+        qasm_prep_to_stim,
+        render_notes,
     )
+
     protos = load_protocols(EVAL_DET / "results.csv")
     imported = deferred = 0
     report: list[str] = []
@@ -948,7 +959,9 @@ def run_det(write: bool, data_dir: Path) -> None:
             )
             got_verif_cnots = stats["cnots"]  # includes worst-branch round-2
             if got_verif_cnots < expected_cnots:
-                report.append(f"DEFER {rel}: consistency gate (cnots {got_verif_cnots} < {expected_cnots})")
+                report.append(
+                    f"DEFER {rel}: consistency gate (cnots {got_verif_cnots} < {expected_cnots})"
+                )
                 deferred += 1
                 continue
             state = "zero" if state_zero else "plus"
@@ -964,8 +977,13 @@ def run_det(write: bool, data_dir: Path) -> None:
                 source_file=f"scripts/ft_stateprep/eval_det/circuits/{rel}",
                 logical_state=state,
                 connectivity="fully-connected",
-                tags=["state-preparation", "ft", "deterministic",
-                      f"prep:{proc}", f"verification:{proto.variant}"],
+                tags=[
+                    "state-preparation",
+                    "ft",
+                    "deterministic",
+                    f"prep:{proc}",
+                    f"verification:{proto.variant}",
+                ],
                 notes=render_notes(proto, state_zero, rel),
                 data_dir=str(data_dir),
             )
@@ -982,8 +1000,12 @@ def run_det(write: bool, data_dir: Path) -> None:
                 kwargs.update(method="anchor", anchor_H=h, permutation=list(range(n)))
             elif cfg["fit"] == "perm_find":
                 h = anchor_h(cfg["slug"], data_dir)
-                hx1 = np.load(DATASET / "src/mqt/qecc/codes" / cfg["mqt_dir"] / "hx.npy").astype(int)
-                hz1 = np.load(DATASET / "src/mqt/qecc/codes" / cfg["mqt_dir"] / "hz.npy").astype(int)
+                hx1 = np.load(DATASET / "src/mqt/qecc/codes" / cfg["mqt_dir"] / "hx.npy").astype(
+                    int
+                )
+                hz1 = np.load(DATASET / "src/mqt/qecc/codes" / cfg["mqt_dir"] / "hz.npy").astype(
+                    int
+                )
                 hx2, hz2 = split_h_to_css(h, n)
                 sigma = find_code_permutation(hx1, hz1, np.asarray(hx2), np.asarray(hz2))
                 if sigma is None:
