@@ -99,7 +99,9 @@ If the user says what the circuit does, run the appropriate validation:
 
 ```python
 from scripts.add_circuit import (
-    validate_encoding, validate_state_prep, validate_syndrome_extraction,
+    validate_encoding,
+    validate_state_prep,
+    validate_syndrome_extraction,
 )
 
 # For encoding circuits:
