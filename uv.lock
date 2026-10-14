@@ -1,6 +1,10 @@
 version = 1
 revision = 3
 requires-python = ">=3.13"
+resolution-markers = [
+    "python_full_version >= '3.14'",
+    "python_full_version < '3.14'",
+]
 
 [[package]]
 name = "antlr4-python3-runtime"
@@ -341,7 +345,8 @@ version = "2.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
-    { name = "pymatching" },
+    { name = "pymatching", version = "2.3.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+    { name = "pymatching", version = "2.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
     { name = "pytest" },
     { name = "scipy" },
     { name = "sinter" },
@@ -440,17 +445,18 @@ wheels = [
 
 [[package]]
 name = "mqt-qecc"
-version = "1.9.1.dev669+g060d97ec5"
-source = { git = "https://github.com/munich-quantum-toolkit/qecc.git?rev=encoding-circuits#060d97ec51b538186ec5c762c22b44fa1e1b244d" }
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "bposd" },
     { name = "ldpc" },
+    { name = "matplotlib" },
     { name = "multiprocess" },
     { name = "networkx" },
     { name = "numba" },
     { name = "numpy" },
-    { name = "protobuf" },
-    { name = "pymatching" },
+    { name = "pymatching", version = "2.3.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+    { name = "pymatching", version = "2.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
     { name = "qecsim" },
     { name = "qiskit", extra = ["qasm3-import"] },
     { name = "scipy" },
@@ -458,6 +464,10 @@ dependencies = [
     { name = "stim" },
     { name = "tqdm" },
     { name = "z3-solver" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/89/dc/d40bc6f3354e95f6dbbed6ebb730e550721d835602c740a14b480e11ea9f/mqt_qecc-2.0.0.tar.gz", hash = "sha256:7c9fc59912bfc142f0446264b1ee523cf6293288542311748b583b7e6ea0ce36", size = 2431664, upload-time = "2026-07-13T18:40:00.925Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cb/63/46b31e3413b34e56cc936bda37fc1e40fd706fa426f5d6cdf7866558b258/mqt_qecc-2.0.0-py3-none-any.whl", hash = "sha256:4dd54b320aef9c6a4df34ca4ad2a13674c77fe9f812adf0cfdb845d1b8ff652d", size = 667673, upload-time = "2026-07-13T18:39:59.391Z" },
 ]
 
 [[package]]
@@ -691,20 +701,6 @@ wheels = [
 ]
 
 [[package]]
-name = "protobuf"
-version = "6.31.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/52/f3/b9655a711b32c19720253f6f06326faf90580834e2e83f840472d752bc8b/protobuf-6.31.1.tar.gz", hash = "sha256:d8cac4c982f0b957a4dc73a80e2ea24fab08e679c0de9deb835f4a12d69aca9a", size = 441797, upload-time = "2025-05-28T19:25:54.947Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f3/6f/6ab8e4bf962fd5570d3deaa2d5c38f0a363f57b4501047b5ebeb83ab1125/protobuf-6.31.1-cp310-abi3-win32.whl", hash = "sha256:7fa17d5a29c2e04b7d90e5e32388b8bfd0e7107cd8e616feef7ed3fa6bdab5c9", size = 423603, upload-time = "2025-05-28T19:25:41.198Z" },
-    { url = "https://files.pythonhosted.org/packages/44/3a/b15c4347dd4bf3a1b0ee882f384623e2063bb5cf9fa9d57990a4f7df2fb6/protobuf-6.31.1-cp310-abi3-win_amd64.whl", hash = "sha256:426f59d2964864a1a366254fa703b8632dcec0790d8862d30034d8245e1cd447", size = 435283, upload-time = "2025-05-28T19:25:44.275Z" },
-    { url = "https://files.pythonhosted.org/packages/6a/c9/b9689a2a250264a84e66c46d8862ba788ee7a641cdca39bccf64f59284b7/protobuf-6.31.1-cp39-abi3-macosx_10_9_universal2.whl", hash = "sha256:6f1227473dc43d44ed644425268eb7c2e488ae245d51c6866d19fe158e207402", size = 425604, upload-time = "2025-05-28T19:25:45.702Z" },
-    { url = "https://files.pythonhosted.org/packages/76/a1/7a5a94032c83375e4fe7e7f56e3976ea6ac90c5e85fac8576409e25c39c3/protobuf-6.31.1-cp39-abi3-manylinux2014_aarch64.whl", hash = "sha256:a40fc12b84c154884d7d4c4ebd675d5b3b5283e155f324049ae396b95ddebc39", size = 322115, upload-time = "2025-05-28T19:25:47.128Z" },
-    { url = "https://files.pythonhosted.org/packages/fa/b1/b59d405d64d31999244643d88c45c8241c58f17cc887e73bcb90602327f8/protobuf-6.31.1-cp39-abi3-manylinux2014_x86_64.whl", hash = "sha256:4ee898bf66f7a8b0bd21bce523814e6fbd8c6add948045ce958b73af7e8878c6", size = 321070, upload-time = "2025-05-28T19:25:50.036Z" },
-    { url = "https://files.pythonhosted.org/packages/f7/af/ab3c51ab7507a7325e98ffe691d9495ee3d3aa5f589afad65ec920d39821/protobuf-6.31.1-py3-none-any.whl", hash = "sha256:720a6c7e6b77288b85063569baae8536671b39f15cc22037ec7045658d80489e", size = 168724, upload-time = "2025-05-28T19:25:53.926Z" },
-]
-
-[[package]]
 name = "pygments"
 version = "2.20.0"
 source = { registry = "https://pypi.org/simple" }
@@ -717,6 +713,9 @@ wheels = [
 name = "pymatching"
 version = "2.3.1"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.14'",
+]
 dependencies = [
     { name = "matplotlib" },
     { name = "networkx" },
@@ -729,6 +728,31 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/f8/ef/a3114a4c29cd43e180f0c494aa71beda969a347ee34459c4f816597d5e53/pymatching-2.3.1-cp313-cp313-macosx_11_0_x86_64.whl", hash = "sha256:8e3122358a398853d9e809beadcf52b2d7f38a7cac21e14bca6ce0b44045c376", size = 413004, upload-time = "2025-09-25T21:46:12.883Z" },
     { url = "https://files.pythonhosted.org/packages/6f/22/0d0494562792575be67358dcd8951678449b273af168dd5e52b887e51ab1/pymatching-2.3.1-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d0edddbae8437d173d7c1314c9cb853d4abc9b84be9b2274f76972ba89b1b5b5", size = 625873, upload-time = "2025-09-25T21:46:14.068Z" },
     { url = "https://files.pythonhosted.org/packages/1f/c4/0e53ff3c9312ffb0e1677ebb62172660c5614077dca9c69ccfc31b90b7e4/pymatching-2.3.1-cp313-cp313-win_amd64.whl", hash = "sha256:7ebce2e8bc98379f0bb7643a0ef0171142cf384ba626e46108c84249c868f0a6", size = 347977, upload-time = "2025-09-25T21:46:15.044Z" },
+]
+
+[[package]]
+name = "pymatching"
+version = "2.4.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.14'",
+]
+dependencies = [
+    { name = "matplotlib" },
+    { name = "networkx" },
+    { name = "numpy" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7d/19/39472c89d532e576890320eff5e9738e4b4d7828d027315f7e198ba0be8c/pymatching-2.4.0.tar.gz", hash = "sha256:0c30dafa506b086f50d15530debd7b7b39228597d22c52d5ccd114bcbb0a2326", size = 347169, upload-time = "2026-05-22T18:10:07.471Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ac/18/375faa94219e1781ef5fc05aac95a2ba1047e0071069f2aae1416bfeb393/pymatching-2.4.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:fe3baa498155a227f5ce1ee6fe07f40524d9fb9961ac299a2050e69f7de50dba", size = 380257, upload-time = "2026-05-22T18:09:43.042Z" },
+    { url = "https://files.pythonhosted.org/packages/79/eb/36ceb0597d6ec4fc2c976b076c9523450ef61812173fc8c58bce669d6328/pymatching-2.4.0-cp313-cp313-macosx_11_0_x86_64.whl", hash = "sha256:a49db8f20d01523c9e12fc8207a5831ed261b53fb8e629c78e45b0081fcd5199", size = 413005, upload-time = "2026-05-22T18:09:44.574Z" },
+    { url = "https://files.pythonhosted.org/packages/80/8d/a4450b34a032cc7eee70b45c21a03d32c89dad311ea5b41deb386539fbcb/pymatching-2.4.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:6450797ca5001449fcf5b43a68181a783f4ca50650f880a02ef5bf91b13aa359", size = 625936, upload-time = "2026-05-22T18:09:46.059Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/c5/ca8cd432ce388cdbdc7df86110a2987d7526743269416d0a1cc83d5b2fd7/pymatching-2.4.0-cp313-cp313-win_amd64.whl", hash = "sha256:a14022ecf4e810152db998d14429d430630433b9ed1edc2abe53494753b0a0ca", size = 347728, upload-time = "2026-05-22T18:09:47.678Z" },
+    { url = "https://files.pythonhosted.org/packages/13/65/4289d2923789a407ca34e67b0d44f47caeba1f2219abdfa5f679a66e6e72/pymatching-2.4.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:0e071c90c108daf1c6f8cefcac9ad4989a1a1694fe7433ee413cef7b65f4207e", size = 381252, upload-time = "2026-05-22T18:09:49.122Z" },
+    { url = "https://files.pythonhosted.org/packages/6c/0f/5d532d693eca9bfe49e4a798a3e3d3b05f1da24b8aee7b4e21c3ade55502/pymatching-2.4.0-cp314-cp314-macosx_11_0_x86_64.whl", hash = "sha256:f2390db2679b5009509b6ea1b0838187966c2d8fd1ab8050e5d9b6c908a3ea7e", size = 413276, upload-time = "2026-05-22T18:09:50.624Z" },
+    { url = "https://files.pythonhosted.org/packages/33/13/be44c3e2f8749652c23adc77a94c4efe5383287a4c01a548cc031d0e439c/pymatching-2.4.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:70869b2a4a8fab2f1e54cc0b68fd050b7556133b5ce8c2d2d5d4f4d1319c14d3", size = 625898, upload-time = "2026-05-22T18:09:52.415Z" },
+    { url = "https://files.pythonhosted.org/packages/17/0d/eb2df17fe0bf089c43445ba759e89150a0d36fb7fcbc44e750d8d31f0dbe/pymatching-2.4.0-cp314-cp314-win_amd64.whl", hash = "sha256:5c5ce4ed245d3670ea7d62b09f8a29b105533b032a3d21fdf6df04c9b6441ff1", size = 356304, upload-time = "2026-05-22T18:09:54.3Z" },
 ]
 
 [[package]]
@@ -848,7 +872,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "mqt-qecc", git = "https://github.com/munich-quantum-toolkit/qecc.git?rev=encoding-circuits" },
+    { name = "mqt-qecc", specifier = ">=2.0.0,<3" },
     { name = "numpy", specifier = ">=2.0,<3" },
     { name = "pyyaml", specifier = ">=6,<7" },
     { name = "stim", specifier = ">=1.15,<2" },

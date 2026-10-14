@@ -63,14 +63,21 @@
 
     // Last, so nothing above can hand the automerge back.
     //
-    // `pyproject.toml` pins `mqt-qecc` to a git BRANCH (`@encoding-circuits`),
-    // not a release, so the sha it resolves to is whatever that branch points
-    // at today. Auto-merging a refresh of it lands arbitrary new upstream code
-    // in the circuit ingestion pipeline with nobody having read it — which is
-    // what f476ffa1 did. These two rules keep the updates coming and take away
-    // only the automerge. Two of them because there are two routes in: a digest
-    // bump of the ref itself (`:automergeDigest` above), and a
-    // `lockFileMaintenance` run re-resolving the branch inside `uv.lock`.
+    // `mqt-qecc` runs inside the circuit ingestion pipeline, and both call sites
+    // (`compute.py`'s `CSSCode`, `compute_circuit.py`'s `compact_stim_circuit`)
+    // swallow exceptions and fall back, so a behaviour change upstream passes CI
+    // unnoticed. It used to be pinned to a git branch, which let a digest bump
+    // land arbitrary upstream code unread (f476ffa1); it is a PyPI release range
+    // now, but the silent fallbacks still mean a green CI proves nothing about it.
+    // These rules keep the updates coming and take away only the automerge, for
+    // each route a new mqt-qecc can arrive by: its own update, a `uv.lock`
+    // refresh re-resolving it inside the range, and any future git-sourced pin.
+    {
+      description: "Never auto-merge an mqt-qecc update — its call sites fall back silently",
+      matchPackageNames: ["mqt-qecc"],
+      automerge: false,
+      addLabels: ["needs-manual-review"],
+    },
     {
       description: "Never auto-merge a git-sourced dependency — its ref is mutable",
       matchDatasources: ["git-refs", "git-tags"],
@@ -78,7 +85,7 @@
       addLabels: ["needs-manual-review"],
     },
     {
-      description: "Never auto-merge a uv.lock refresh — it can move the mqt-qecc branch",
+      description: "Never auto-merge a uv.lock refresh — it can move mqt-qecc within its range",
       matchManagers: ["pep621"],
       matchUpdateTypes: ["lockFileMaintenance"],
       automerge: false,
