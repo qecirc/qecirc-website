@@ -1,6 +1,11 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   minimumReleaseAge: "7 days",
+  // Generate lockfiles with the npm that CI and deploy run: Node 24 ships
+  // npm 11. Renovate otherwise picks npm 12, whose `allow-remote=none` default
+  // rejects registry tarballs of packages with bundleDependencies
+  // (npm/cli#9800) — `@tailwindcss/oxide-wasm32-wasi` broke #178 that way.
+  constraints: { npm: "^11" },
   extends: [
     "config:recommended",
     "helpers:pinGitHubActionDigestsToSemver",
