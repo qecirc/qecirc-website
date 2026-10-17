@@ -1,0 +1,46 @@
+OPENQASM 2.0;
+include "qelib1.inc";
+gate xcx q0, q1 { h q0; cx q0, q1; h q0; }
+
+qreg q[64];
+
+sx q[28];
+sx q[22];
+sx q[20];
+sx q[18];
+sx q[14];
+sx q[13];
+sx q[12];
+sx q[62];
+sx q[10];
+sx q[9];
+sx q[8];
+sx q[61];
+sx q[6];
+sx q[56];
+sx q[50];
+sx q[44];
+xcx q[17], q[15];
+xcx q[16], q[63];
+xcx q[11], q[53];
+xcx q[59], q[47];
+xcx q[7], q[52];
+xcx q[58], q[46];
+xcx q[41], q[35];
+xcx q[38], q[27];
+xcx q[5], q[0];
+xcx q[4], q[54];
+xcx q[3], q[48];
+xcx q[60], q[42];
+xcx q[2], q[33];
+xcx q[57], q[25];
+xcx q[51], q[39];
+xcx q[45], q[36];
+xcx q[1], q[32];
+xcx q[55], q[31];
+xcx q[49], q[30];
+xcx q[43], q[24];
+xcx q[40], q[21];
+xcx q[37], q[19];
+xcx q[34], q[29];
+xcx q[26], q[23];

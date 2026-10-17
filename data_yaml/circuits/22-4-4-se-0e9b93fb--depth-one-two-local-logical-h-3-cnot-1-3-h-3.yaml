@@ -1,0 +1,27 @@
+qec_id: 1945
+name: Depth-one two-local logical H(3)·CNOT(1,3)·H(3)
+tool: two-fold-transversal
+notes: "Logical H(3)·CNOT(1,3)·H(3) (gates in application order), from generator 0
+  of dataset entry [[22,4,4]]se:0e9b93fb (full_codes_depth1.json) of arXiv:2608.05688.
+  The physical circuit is depth-one two-local (two-fold transversal): one layer in
+  which each qubit is touched by at most one two-qubit gate; a trailing SWAP network,
+  where present, is the string's compensating qubit permutation. The dataset is binary-symplectic
+  (sign-free), so the circuit is one Pauli frame of the gate — the paper's certificate
+  verifies the full recorded generator set realizes the full logical Clifford group
+  Sp(2k,2). The logical_action field states the claim in the stored code's logical
+  basis; validate:circuits checks it. This circuit is part of the certificate's verified
+  generating prefix: the paper's exact Schreier-Sims certificate confirms the logical
+  actions of these 6 circuits generate the full logical Clifford group Sp(2k,2)."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 3
+  CX 1 3
+  H 3
+gate_count: 13
+two_qubit_gate_count: 4
+depth: 1
+qubit_count: 16
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"Z^½","Z^½","Z^½","Z^½",1,"Z^½",1,"Z^½","Z^½","Z^½",1,1,1,"…"],[1,1,"Z",1,1,1,1,"•"],[1,1,1,1,1,"•",1,1,1,1,1,"Z"],[1,1,1,"•",1,1,1,1,1,"Z"],[1,1,1,1,"Z",1,1,1,1,1,"•"]]}
+tags:
+  [logical-gate, two-fold-transversal, "logical-class:z-diagonal", "logical-op:H", "logical-op:CX"]
+original_matrices: c6c3485f45cbab69

@@ -1,0 +1,54 @@
+qec_id: 15021
+name: Depth-one two-local logical X-diagonal (√X/XX) gate on 5/6 qubits (gen 4)
+tool: two-fold-transversal
+notes: "Logical X-diagonal (√X/XX) gate acting on 5 of the 6 logical qubits, from
+  generator 4 of dataset entry [[15,6,3]]cons:blk45k18 (full_codes_depth1.json) of
+  arXiv:2608.05688. The physical circuit is depth-one two-local (two-fold transversal):
+  one layer in which each qubit is touched by at most one two-qubit gate; a trailing
+  SWAP network, where present, is the string's compensating qubit permutation. The
+  dataset is binary-symplectic (sign-free), so the circuit is one Pauli frame of the
+  gate — the paper's certificate verifies the full recorded generator set realizes
+  the full logical Clifford group Sp(2k,2). The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. This circuit is
+  part of the certificate's verified generating prefix: the paper's exact Schreier-Sims
+  certificate confirms the logical actions of these 9 circuits generate the full logical
+  Clifford group Sp(2k,2)."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  S 0
+  H 0
+  S 0
+  H 1
+  H 2
+  H 4
+  CX 1 0
+  CX 2 0
+  CX 4 0
+  H 1
+  H 3
+  CX 3 1
+  CX 4 1
+  H 2
+  CX 3 2
+  CX 4 2
+  S 3
+  H 3
+  S 4
+  H 4
+  H 3
+  H 4
+  S 3
+  S 3
+  S 4
+  S 4
+  H 3
+  H 4
+  H 5
+  H 5
+gate_count: 19
+two_qubit_gate_count: 6
+depth: 1
+qubit_count: 15
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,"X^½","X^½",1,"X^½","X^½","X^½","X^½","X^½","…","X^½","X^½","X^½","X^½","X^½"],[1,1,1,1,1,1,1,1,"⊖",1,"X"],[1,1,1,1,"⊖",1,1,1,1,1,1,1,"X"],[1,"X","⊖"],[1,1,1,1,1,1,"⊖",1,1,1,1,"X"],[1,1,1,1,1,1,1,"X",1,1,1,1,1,"⊖"],[1,1,1,1,1,"⊖",1,1,1,1,1,1,1,1,"X"]]}
+tags: [logical-gate, two-fold-transversal, "logical-class:x-diagonal"]
+original_matrices: df0fce2571d15f9c

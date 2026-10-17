@@ -1,0 +1,68 @@
+qec_id: 15217
+name: Depth-one two-local logical X-diagonal (√X/XX) gate on 10/16 qubits (gen 12)
+tool: two-fold-transversal
+notes: "Logical X-diagonal (√X/XX) gate acting on 10 of the 16 logical qubits, from
+  generator 12 of dataset entry [[40,16,4]]cons:grid4x10 (full_codes_depth1.json)
+  of arXiv:2608.05688. The physical circuit is depth-one two-local (two-fold transversal):
+  one layer in which each qubit is touched by at most one two-qubit gate; a trailing
+  SWAP network, where present, is the string's compensating qubit permutation. The
+  dataset is binary-symplectic (sign-free), so the circuit is one Pauli frame of the
+  gate — the paper's certificate verifies the full recorded generator set realizes
+  the full logical Clifford group Sp(2k,2). The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. One circuit per
+  distinct logical action is kept from the recorded generator set; dropping duplicate
+  actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 1
+  H 3
+  H 5
+  H 7
+  H 9
+  CX 1 0
+  CX 3 0
+  CX 5 0
+  CX 7 0
+  CX 9 0
+  H 1
+  H 2
+  H 4
+  H 6
+  H 8
+  CX 2 1
+  CX 4 1
+  CX 6 1
+  CX 8 1
+  H 2
+  CX 3 2
+  CX 5 2
+  CX 7 2
+  CX 9 2
+  H 3
+  CX 4 3
+  CX 6 3
+  CX 8 3
+  H 4
+  CX 5 4
+  CX 7 4
+  CX 9 4
+  H 5
+  CX 6 5
+  CX 8 5
+  H 6
+  CX 7 6
+  CX 9 6
+  H 7
+  CX 8 7
+  H 8
+  CX 9 8
+  H 9
+  H 15
+  H 15
+gate_count: 13
+two_qubit_gate_count: 4
+depth: 1
+qubit_count: 40
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["X^½","X^½",1,1,1,1,"X^½",1,1,1,1,"X^½","X^½",1,1,1,1,1,1,1,1,"X^½","X^½",1,1,1,1,1,1,1,1,1,1,1,1,"X^½",1,1,1,"…"],[1,1,1,1,1,1,"X",1,1,1,1,1,"⊖"],[1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],["⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"]]}
+tags: [logical-gate, two-fold-transversal, "logical-class:x-diagonal"]
+original_matrices: 7bfb8250bc1be6dc

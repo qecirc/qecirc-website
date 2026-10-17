@@ -1,0 +1,40 @@
+qec_id: 17390
+name: Depth-one two-local logical Z-diagonal (S/CZ) gate on 8/8 qubits (gen 8)
+tool: two-fold-transversal
+notes:
+  "Logical H(7)·CNOT(0,7)·H(5)·H(6)·CNOT(1,5)·CNOT(1,6)·CNOT(1,7)·CNOT(2,6)·H(4)·CNOT(3,4)·CNOT(3,5)·H(4)·CNOT(4,6)·H(5)·CNOT(5,6)·H(6)·H(7)
+  (gates in application order), from generator 8 of dataset entry [[48,8,6]]2bga:83cff0f7
+  (ldpc_codes_depth1.json) of arXiv:2608.05688. The physical circuit is depth-one
+  two-local (two-fold transversal): one layer in which each qubit is touched by at
+  most one two-qubit gate; a trailing SWAP network, where present, is the string's
+  compensating qubit permutation. The dataset is binary-symplectic (sign-free), so
+  the circuit is one Pauli frame of the gate — the paper's certificate verifies the
+  exact order of the logical group the full recorded generator set realizes. The logical_action
+  field states the claim in the stored code's logical basis; validate:circuits checks
+  it. One circuit per distinct logical action is kept from the recorded generator
+  set; dropping duplicate actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 7
+  CX 0 7
+  H 5
+  H 6
+  CX 1 5
+  CX 1 6
+  CX 1 7
+  CX 2 6
+  H 4
+  CX 3 4
+  CX 3 5
+  H 4
+  CX 4 6
+  H 5
+  CX 5 6
+  H 6
+  H 7
+gate_count: 24
+two_qubit_gate_count: 24
+depth: 1
+qubit_count: 48
+tags: [logical-gate, two-fold-transversal, "logical-class:z-diagonal"]
+original_matrices: 88167892a0c18c83

@@ -1,0 +1,691 @@
+qec_id: 15783
+name: Depth-one two-local logical Z-diagonal (S/CZ) gate on 90/90 qubits (gen 4)
+tool: two-fold-transversal
+notes: "Logical Z-diagonal (S/CZ) gate acting on 90 of the 90 logical qubits, from
+  generator 4 of dataset entry [[120,90,4]]cons:johnson16 (full_codes_depth1.json)
+  of arXiv:2608.05688. The physical circuit is depth-one two-local (two-fold transversal):
+  one layer in which each qubit is touched by at most one two-qubit gate; a trailing
+  SWAP network, where present, is the string's compensating qubit permutation. The
+  dataset is binary-symplectic (sign-free), so the circuit is one Pauli frame of the
+  gate — the paper's certificate verifies the full recorded generator set realizes
+  the full logical Clifford group Sp(2k,2). The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. One circuit per
+  distinct logical action is kept from the recorded generator set; dropping duplicate
+  actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  S 0
+  H 1
+  H 2
+  H 3
+  H 4
+  H 5
+  H 6
+  H 7
+  H 8
+  H 9
+  H 10
+  H 11
+  H 12
+  H 13
+  H 14
+  H 25
+  H 46
+  H 47
+  H 48
+  H 55
+  H 56
+  H 63
+  H 70
+  H 73
+  H 82
+  CX 0 1
+  CX 0 2
+  CX 0 3
+  CX 0 4
+  CX 0 5
+  CX 0 6
+  CX 0 7
+  CX 0 8
+  CX 0 9
+  CX 0 10
+  CX 0 11
+  CX 0 12
+  CX 0 13
+  CX 0 14
+  CX 0 25
+  CX 0 46
+  CX 0 47
+  CX 0 48
+  CX 0 55
+  CX 0 56
+  CX 0 63
+  CX 0 70
+  CX 0 73
+  CX 0 82
+  H 1
+  S 1
+  H 72
+  H 81
+  CX 1 2
+  CX 1 3
+  CX 1 4
+  CX 1 5
+  CX 1 6
+  CX 1 7
+  CX 1 8
+  CX 1 9
+  CX 1 10
+  CX 1 11
+  CX 1 12
+  CX 1 13
+  CX 1 14
+  CX 1 25
+  CX 1 46
+  CX 1 47
+  CX 1 48
+  CX 1 55
+  CX 1 56
+  CX 1 63
+  CX 1 70
+  CX 1 72
+  CX 1 81
+  H 2
+  S 2
+  H 75
+  H 84
+  CX 2 3
+  CX 2 4
+  CX 2 5
+  CX 2 6
+  CX 2 7
+  CX 2 8
+  CX 2 9
+  CX 2 10
+  CX 2 11
+  CX 2 12
+  CX 2 13
+  CX 2 14
+  CX 2 25
+  CX 2 46
+  CX 2 47
+  CX 2 48
+  CX 2 55
+  CX 2 56
+  CX 2 63
+  CX 2 70
+  CX 2 75
+  CX 2 84
+  H 3
+  S 3
+  H 74
+  H 83
+  CX 3 4
+  CX 3 5
+  CX 3 6
+  CX 3 7
+  CX 3 8
+  CX 3 9
+  CX 3 10
+  CX 3 11
+  CX 3 12
+  CX 3 13
+  CX 3 14
+  CX 3 25
+  CX 3 46
+  CX 3 47
+  CX 3 48
+  CX 3 55
+  CX 3 56
+  CX 3 63
+  CX 3 70
+  CX 3 74
+  CX 3 83
+  H 4
+  S 4
+  H 85
+  CX 4 5
+  CX 4 6
+  CX 4 7
+  CX 4 8
+  CX 4 9
+  CX 4 10
+  CX 4 11
+  CX 4 12
+  CX 4 13
+  CX 4 14
+  CX 4 25
+  CX 4 46
+  CX 4 47
+  CX 4 48
+  CX 4 55
+  CX 4 56
+  CX 4 63
+  CX 4 70
+  CX 4 85
+  H 5
+  H 18
+  H 20
+  H 29
+  H 31
+  H 39
+  H 41
+  H 50
+  H 58
+  H 65
+  CX 5 6
+  CX 5 8
+  CX 5 9
+  CX 5 10
+  CX 5 11
+  CX 5 12
+  CX 5 13
+  CX 5 14
+  CX 5 18
+  CX 5 20
+  CX 5 25
+  CX 5 29
+  CX 5 31
+  CX 5 39
+  CX 5 41
+  CX 5 46
+  CX 5 47
+  CX 5 50
+  CX 5 55
+  CX 5 58
+  CX 5 65
+  CX 5 72
+  CX 5 73
+  CX 5 74
+  CX 5 75
+  CX 5 81
+  CX 5 82
+  CX 5 83
+  CX 5 84
+  H 6
+  S 6
+  CX 6 7
+  CX 6 8
+  CX 6 9
+  CX 6 10
+  CX 6 11
+  CX 6 12
+  CX 6 13
+  CX 6 14
+  CX 6 18
+  CX 6 20
+  CX 6 25
+  CX 6 46
+  CX 6 47
+  CX 6 48
+  CX 6 55
+  CX 6 56
+  CX 6 63
+  CX 6 70
+  CX 6 85
+  H 7
+  CX 7 8
+  CX 7 9
+  CX 7 10
+  CX 7 11
+  CX 7 12
+  CX 7 13
+  CX 7 14
+  CX 7 25
+  CX 7 46
+  CX 7 47
+  CX 7 48
+  CX 7 55
+  CX 7 56
+  CX 7 63
+  CX 7 70
+  CX 7 85
+  H 8
+  S 8
+  CX 8 9
+  CX 8 10
+  CX 8 11
+  CX 8 12
+  CX 8 13
+  CX 8 14
+  CX 8 25
+  CX 8 39
+  CX 8 41
+  CX 8 46
+  CX 8 47
+  CX 8 48
+  CX 8 55
+  CX 8 56
+  CX 8 63
+  CX 8 70
+  CX 8 85
+  H 9
+  S 9
+  CX 9 10
+  CX 9 11
+  CX 9 12
+  CX 9 13
+  CX 9 14
+  CX 9 25
+  CX 9 29
+  CX 9 31
+  CX 9 46
+  CX 9 47
+  CX 9 48
+  CX 9 55
+  CX 9 56
+  CX 9 63
+  CX 9 70
+  CX 9 85
+  H 10
+  S 10
+  CX 10 11
+  CX 10 12
+  CX 10 13
+  CX 10 14
+  CX 10 25
+  CX 10 46
+  CX 10 47
+  CX 10 48
+  CX 10 55
+  CX 10 58
+  CX 10 63
+  CX 10 70
+  CX 10 85
+  H 11
+  S 11
+  CX 11 12
+  CX 11 13
+  CX 11 14
+  CX 11 25
+  CX 11 46
+  CX 11 47
+  CX 11 50
+  CX 11 55
+  CX 11 56
+  CX 11 63
+  CX 11 70
+  CX 11 85
+  H 12
+  S 12
+  H 71
+  CX 12 13
+  CX 12 14
+  CX 12 25
+  CX 12 46
+  CX 12 47
+  CX 12 48
+  CX 12 55
+  CX 12 56
+  CX 12 63
+  CX 12 70
+  CX 12 71
+  CX 12 85
+  H 13
+  S 13
+  H 78
+  CX 13 14
+  CX 13 25
+  CX 13 46
+  CX 13 47
+  CX 13 48
+  CX 13 55
+  CX 13 56
+  CX 13 63
+  CX 13 71
+  CX 13 73
+  CX 13 78
+  H 14
+  S 14
+  H 77
+  CX 14 25
+  CX 14 46
+  CX 14 47
+  CX 14 48
+  CX 14 55
+  CX 14 56
+  CX 14 63
+  CX 14 71
+  CX 14 72
+  CX 14 77
+  H 80
+  CX 15 70
+  CX 15 75
+  CX 15 80
+  CX 15 85
+  H 79
+  CX 16 70
+  CX 16 74
+  CX 16 79
+  CX 16 85
+  CX 17 70
+  H 18
+  S 18
+  H 19
+  H 30
+  H 40
+  H 49
+  H 57
+  H 64
+  CX 18 19
+  CX 18 29
+  CX 18 30
+  CX 18 39
+  CX 18 40
+  CX 18 48
+  CX 18 49
+  CX 18 56
+  CX 18 57
+  CX 18 63
+  CX 18 64
+  CX 18 70
+  CX 18 71
+  CX 18 72
+  CX 18 73
+  CX 18 74
+  CX 18 75
+  CX 18 77
+  CX 18 78
+  CX 18 79
+  CX 18 80
+  CX 18 85
+  H 19
+  S 19
+  CX 19 70
+  H 20
+  CX 20 70
+  CX 21 39
+  CX 21 40
+  CX 21 70
+  CX 22 29
+  CX 22 30
+  CX 22 70
+  CX 23 56
+  CX 23 57
+  CX 23 70
+  CX 24 48
+  CX 24 49
+  CX 24 70
+  H 25
+  S 25
+  H 76
+  CX 25 46
+  CX 25 47
+  CX 25 48
+  CX 25 55
+  CX 25 56
+  CX 25 63
+  CX 25 64
+  CX 25 65
+  CX 25 70
+  CX 25 71
+  CX 25 72
+  CX 25 73
+  CX 25 76
+  CX 25 77
+  CX 25 78
+  CX 25 81
+  CX 25 82
+  H 89
+  CX 26 73
+  CX 26 75
+  CX 26 89
+  H 88
+  CX 27 73
+  CX 27 74
+  CX 27 88
+  CX 28 73
+  H 29
+  S 29
+  H 33
+  H 43
+  H 52
+  H 60
+  H 67
+  CX 29 33
+  CX 29 39
+  CX 29 43
+  CX 29 48
+  CX 29 52
+  CX 29 56
+  CX 29 60
+  CX 29 63
+  CX 29 67
+  CX 29 70
+  CX 29 71
+  CX 29 72
+  CX 29 73
+  CX 29 74
+  CX 29 75
+  CX 29 76
+  CX 29 77
+  CX 29 81
+  CX 29 88
+  CX 29 89
+  H 30
+  CX 30 73
+  H 31
+  CX 31 73
+  CX 32 39
+  CX 32 43
+  CX 32 73
+  H 33
+  S 33
+  CX 33 73
+  CX 34 56
+  CX 34 60
+  CX 34 73
+  CX 35 48
+  CX 35 52
+  CX 35 73
+  H 87
+  CX 36 72
+  CX 36 75
+  CX 36 87
+  H 86
+  CX 37 72
+  CX 37 74
+  CX 37 86
+  CX 38 72
+  H 39
+  S 39
+  H 42
+  H 51
+  H 59
+  H 66
+  CX 39 42
+  CX 39 48
+  CX 39 51
+  CX 39 56
+  CX 39 59
+  CX 39 63
+  CX 39 66
+  CX 39 70
+  CX 39 71
+  CX 39 72
+  CX 39 73
+  CX 39 74
+  CX 39 75
+  CX 39 76
+  CX 39 78
+  CX 39 82
+  CX 39 86
+  CX 39 87
+  H 40
+  CX 40 72
+  H 41
+  CX 41 72
+  H 42
+  S 42
+  CX 42 72
+  H 43
+  CX 43 72
+  CX 44 56
+  CX 44 59
+  CX 44 72
+  CX 45 48
+  CX 45 51
+  CX 45 72
+  H 46
+  S 46
+  CX 46 47
+  CX 46 48
+  CX 46 55
+  CX 46 56
+  CX 46 63
+  CX 46 70
+  CX 46 71
+  CX 46 72
+  CX 46 73
+  CX 46 74
+  CX 46 75
+  H 47
+  S 47
+  CX 47 48
+  CX 47 55
+  CX 47 56
+  CX 47 63
+  CX 47 70
+  CX 47 71
+  CX 47 72
+  CX 47 73
+  CX 47 74
+  H 48
+  H 54
+  H 62
+  H 69
+  CX 48 54
+  CX 48 55
+  CX 48 62
+  CX 48 69
+  CX 48 76
+  CX 48 77
+  CX 48 78
+  CX 48 80
+  CX 48 81
+  CX 48 82
+  CX 48 84
+  CX 48 85
+  CX 48 87
+  CX 48 89
+  H 49
+  CX 49 75
+  H 50
+  CX 50 75
+  H 51
+  CX 51 75
+  H 52
+  CX 52 75
+  CX 53 56
+  CX 53 62
+  CX 53 75
+  H 54
+  S 54
+  CX 54 75
+  H 55
+  S 55
+  CX 55 56
+  CX 55 63
+  CX 55 70
+  CX 55 71
+  CX 55 72
+  CX 55 73
+  CX 55 75
+  H 56
+  H 61
+  H 68
+  CX 56 61
+  CX 56 68
+  CX 56 76
+  CX 56 77
+  CX 56 78
+  CX 56 79
+  CX 56 81
+  CX 56 82
+  CX 56 83
+  CX 56 85
+  CX 56 86
+  CX 56 88
+  H 57
+  CX 57 74
+  H 58
+  CX 58 74
+  H 59
+  CX 59 74
+  H 60
+  CX 60 74
+  H 61
+  S 61
+  CX 61 74
+  H 62
+  CX 62 74
+  H 63
+  CX 63 68
+  CX 63 69
+  CX 63 76
+  CX 63 77
+  CX 63 78
+  CX 63 79
+  CX 63 80
+  CX 63 81
+  CX 63 82
+  CX 63 83
+  CX 63 84
+  CX 63 85
+  CX 63 86
+  CX 63 87
+  CX 63 88
+  CX 63 89
+  H 64
+  H 65
+  H 66
+  H 67
+  H 68
+  H 69
+  H 70
+  S 70
+  CX 70 71
+  CX 70 72
+  CX 70 73
+  CX 70 74
+  CX 70 75
+  H 71
+  S 71
+  CX 71 72
+  CX 71 73
+  CX 71 74
+  CX 71 75
+  H 72
+  S 72
+  CX 72 73
+  CX 72 74
+  CX 72 75
+  H 73
+  S 73
+  CX 73 74
+  CX 73 75
+  H 74
+  S 74
+  CX 74 75
+  H 75
+  S 75
+  H 76
+  H 77
+  H 78
+  H 79
+  H 80
+  H 81
+  H 82
+  H 83
+  H 84
+  H 85
+  H 86
+  H 87
+  H 88
+  H 89
+gate_count: 64
+two_qubit_gate_count: 56
+depth: 1
+qubit_count: 120
+tags: [logical-gate, two-fold-transversal, "logical-class:z-diagonal"]
+original_matrices: a6427e22ca676806
