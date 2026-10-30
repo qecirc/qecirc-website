@@ -1,0 +1,186 @@
+qec_id: 15727
+name: Depth-one two-local logical X-diagonal (√X/XX) gate on 24/24 qubits (gen 27)
+tool: two-fold-transversal
+notes: "Logical X-diagonal (√X/XX) gate acting on 24 of the 24 logical qubits, from
+  generator 27 of dataset entry [[48,24,4]]cons:grid6x8 (full_codes_depth1.json) of
+  arXiv:2608.05688. The physical circuit is depth-one two-local (two-fold transversal):
+  one layer in which each qubit is touched by at most one two-qubit gate; a trailing
+  SWAP network, where present, is the string's compensating qubit permutation. The
+  dataset is binary-symplectic (sign-free), so the circuit is one Pauli frame of the
+  gate — the paper's certificate verifies the full recorded generator set realizes
+  the full logical Clifford group Sp(2k,2). The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. One circuit per
+  distinct logical action is kept from the recorded generator set; dropping duplicate
+  actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 1
+  H 5
+  H 9
+  H 13
+  H 17
+  H 21
+  CX 1 0
+  CX 5 0
+  CX 9 0
+  CX 13 0
+  CX 17 0
+  CX 21 0
+  H 1
+  H 4
+  H 8
+  H 12
+  H 16
+  H 20
+  CX 4 1
+  CX 8 1
+  CX 12 1
+  CX 16 1
+  CX 20 1
+  S 2
+  H 2
+  S 2
+  H 7
+  H 10
+  H 14
+  H 18
+  H 22
+  CX 7 2
+  CX 10 2
+  CX 14 2
+  CX 18 2
+  CX 22 2
+  S 3
+  H 3
+  S 3
+  H 6
+  H 11
+  H 15
+  H 19
+  H 23
+  CX 6 3
+  CX 11 3
+  CX 15 3
+  CX 19 3
+  CX 23 3
+  H 4
+  CX 5 4
+  CX 9 4
+  CX 13 4
+  CX 17 4
+  CX 21 4
+  H 5
+  CX 8 5
+  CX 12 5
+  CX 16 5
+  CX 20 5
+  S 6
+  H 6
+  CX 10 6
+  CX 14 6
+  CX 18 6
+  CX 22 6
+  S 7
+  H 7
+  CX 11 7
+  CX 15 7
+  CX 19 7
+  CX 23 7
+  H 8
+  CX 9 8
+  CX 13 8
+  CX 17 8
+  CX 21 8
+  H 9
+  CX 12 9
+  CX 16 9
+  CX 20 9
+  S 10
+  H 10
+  CX 15 10
+  CX 18 10
+  CX 22 10
+  S 11
+  H 11
+  CX 14 11
+  CX 19 11
+  CX 23 11
+  H 12
+  CX 13 12
+  CX 17 12
+  CX 21 12
+  H 13
+  CX 16 13
+  CX 20 13
+  S 14
+  H 14
+  CX 18 14
+  CX 22 14
+  S 15
+  H 15
+  CX 19 15
+  CX 23 15
+  H 16
+  CX 17 16
+  CX 21 16
+  H 17
+  CX 20 17
+  S 18
+  H 18
+  CX 23 18
+  S 19
+  H 19
+  CX 22 19
+  H 20
+  CX 21 20
+  H 21
+  S 22
+  H 22
+  S 23
+  H 23
+  H 6
+  H 7
+  H 10
+  H 11
+  H 14
+  H 15
+  H 18
+  H 19
+  H 22
+  H 23
+  S 6
+  S 6
+  S 7
+  S 7
+  S 10
+  S 10
+  S 11
+  S 11
+  S 14
+  S 14
+  S 15
+  S 15
+  S 18
+  S 18
+  S 19
+  S 19
+  S 22
+  S 22
+  S 23
+  S 23
+  H 6
+  H 7
+  H 10
+  H 11
+  H 14
+  H 15
+  H 18
+  H 19
+  H 22
+  H 23
+gate_count: 37
+two_qubit_gate_count: 12
+depth: 1
+qubit_count: 48
+tags: [logical-gate, two-fold-transversal, "logical-class:x-diagonal"]
+original_matrices: 531d2290d8ef5648

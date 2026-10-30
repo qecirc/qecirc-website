@@ -140,7 +140,13 @@ export type CodeListItem = Omit<Code, "h" | "logical">;
 export type CodeDetail = CodeListItem & { has_matrices: 0 | 1 };
 
 export type CodeWithMeta = CodeListItem & { tags: string[]; circuit_count: number };
-export type ToolWithMeta = Tool & { tags: string[]; circuit_count: number };
+export type ToolWithMeta = Tool & {
+  tags: string[];
+  /** Circuits of visible (non-codetables) codes — the curated number. */
+  circuit_count: number;
+  /** Remainder from hidden (codetables) codes; 0 for most tools. */
+  hidden_circuit_count: number;
+};
 
 /**
  * Narrower view of CircuitOriginal without the large `original_h` /

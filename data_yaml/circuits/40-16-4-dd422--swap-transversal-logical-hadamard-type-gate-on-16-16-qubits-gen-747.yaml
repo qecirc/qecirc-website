@@ -1,0 +1,90 @@
+qec_id: 15662
+name: SWAP-transversal logical Hadamard-type gate on 16/16 qubits (gen 747)
+tool: two-fold-transversal
+notes: "Logical Hadamard-type gate acting on 16 of the 16 logical qubits, from generator
+  747 of dataset entry [[40,16,4]]dd422:a132b525 (full_codes_depth1.json) of arXiv:2608.05688.
+  The physical circuit is depth-one two-local (two-fold transversal): one layer in
+  which each qubit is touched by at most one two-qubit gate; a trailing SWAP network,
+  where present, is the string's compensating qubit permutation. The dataset is binary-symplectic
+  (sign-free), so the circuit is one Pauli frame of the gate — the paper's certificate
+  verifies the full recorded generator set realizes the full logical Clifford group
+  Sp(2k,2). The logical_action field states the claim in the stored code's logical
+  basis; validate:circuits checks it. One circuit per distinct logical action is kept
+  from the recorded generator set; dropping duplicate actions preserves the generated
+  logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  CX 15 0
+  CX 0 15
+  CX 15 0
+  H 0
+  H 9
+  H 10
+  H 11
+  H 12
+  H 13
+  H 14
+  CX 0 9
+  CX 0 10
+  CX 0 11
+  CX 0 12
+  CX 0 13
+  CX 0 14
+  CX 9 1
+  CX 1 9
+  CX 9 1
+  H 8
+  CX 8 1
+  CX 10 2
+  CX 2 10
+  CX 10 2
+  CX 2 11
+  CX 8 2
+  CX 11 3
+  CX 3 11
+  CX 11 3
+  CX 8 3
+  CX 12 3
+  CX 12 4
+  CX 4 12
+  CX 12 4
+  CX 8 4
+  CX 13 5
+  CX 5 13
+  CX 13 5
+  CX 8 5
+  CX 14 6
+  CX 6 14
+  CX 14 6
+  CX 8 6
+  CX 8 7
+  CX 7 8
+  CX 8 7
+  H 8
+  H 9
+  H 10
+  H 11
+  H 12
+  H 13
+  H 14
+  CX 9 8
+  CX 10 8
+  CX 11 8
+  CX 12 8
+  CX 13 8
+  CX 14 8
+  H 15
+  CX 9 15
+  CX 10 15
+  CX 11 10
+  CX 11 12
+  CX 12 15
+  CX 13 15
+  CX 14 15
+gate_count: 40
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 40
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H","H"],[1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,"Swap","Swap"],[1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"Swap","Swap"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]]}
+tags: [logical-gate, two-fold-transversal, swap-transversal, "logical-class:h-type"]
+original_matrices: c5fa962c4e15987c

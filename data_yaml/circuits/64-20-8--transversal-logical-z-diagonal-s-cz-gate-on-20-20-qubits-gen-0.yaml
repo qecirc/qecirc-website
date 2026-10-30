@@ -1,0 +1,53 @@
+qec_id: 16760
+name: Transversal logical Z-diagonal (S/CZ) gate on 20/20 qubits (gen 0)
+tool: two-fold-transversal
+notes: "Logical Z-diagonal (S/CZ) gate acting on 20 of the 20 logical qubits, from
+  generator 0 of dataset entry [[64,20,8]]cons:qrm6 (full_codes_depth1.json) of arXiv:2608.05688.
+  The physical circuit is depth-one two-local (two-fold transversal): one layer in
+  which each qubit is touched by at most one two-qubit gate; a trailing SWAP network,
+  where present, is the string's compensating qubit permutation. The dataset is binary-symplectic
+  (sign-free), so the circuit is one Pauli frame of the gate — the paper's certificate
+  verifies the full recorded generator set realizes the full logical Clifford group
+  Sp(2k,2). The logical_action field states the claim in the stored code's logical
+  basis; validate:circuits checks it. One circuit per distinct logical action is kept
+  from the recorded generator set; dropping duplicate actions preserves the generated
+  logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 9
+  CX 0 9
+  H 7
+  CX 1 7
+  H 6
+  CX 2 6
+  H 8
+  CX 3 8
+  CX 3 9
+  H 10
+  CX 4 10
+  H 11
+  CX 5 11
+  H 6
+  H 7
+  H 8
+  H 9
+  H 10
+  H 11
+  H 19
+  CX 12 19
+  H 18
+  CX 13 18
+  H 17
+  CX 14 17
+  H 16
+  CX 15 16
+  H 16
+  H 17
+  H 18
+  H 19
+gate_count: 64
+two_qubit_gate_count: 0
+depth: 0
+qubit_count: 64
+tags: [logical-gate, two-fold-transversal, transversal, ft, "logical-class:z-diagonal"]
+original_matrices: abb2a0b9a2bb7ecf

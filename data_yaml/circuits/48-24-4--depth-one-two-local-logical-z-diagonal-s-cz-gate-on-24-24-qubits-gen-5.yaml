@@ -1,0 +1,222 @@
+qec_id: 15705
+name: Depth-one two-local logical Z-diagonal (S/CZ) gate on 24/24 qubits (gen 5)
+tool: two-fold-transversal
+notes: "Logical Z-diagonal (S/CZ) gate acting on 24 of the 24 logical qubits, from
+  generator 5 of dataset entry [[48,24,4]]cons:grid6x8 (full_codes_depth1.json) of
+  arXiv:2608.05688. The physical circuit is depth-one two-local (two-fold transversal):
+  one layer in which each qubit is touched by at most one two-qubit gate; a trailing
+  SWAP network, where present, is the string's compensating qubit permutation. The
+  dataset is binary-symplectic (sign-free), so the circuit is one Pauli frame of the
+  gate — the paper's certificate verifies the full recorded generator set realizes
+  the full logical Clifford group Sp(2k,2). The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. One circuit per
+  distinct logical action is kept from the recorded generator set; dropping duplicate
+  actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  S 0
+  H 2
+  H 5
+  H 8
+  H 10
+  H 12
+  H 14
+  H 16
+  H 18
+  H 20
+  H 22
+  CX 0 2
+  CX 0 5
+  CX 0 8
+  CX 0 10
+  CX 0 12
+  CX 0 14
+  CX 0 16
+  CX 0 18
+  CX 0 20
+  CX 0 22
+  S 1
+  H 4
+  H 9
+  H 13
+  H 17
+  H 21
+  CX 1 2
+  CX 1 4
+  CX 1 9
+  CX 1 10
+  CX 1 13
+  CX 1 14
+  CX 1 17
+  CX 1 18
+  CX 1 21
+  CX 1 22
+  H 2
+  S 2
+  H 3
+  H 7
+  H 11
+  H 15
+  H 19
+  H 23
+  CX 2 3
+  CX 2 7
+  CX 2 8
+  CX 2 9
+  CX 2 10
+  CX 2 11
+  CX 2 12
+  CX 2 13
+  CX 2 14
+  CX 2 15
+  CX 2 16
+  CX 2 17
+  CX 2 18
+  CX 2 19
+  CX 2 20
+  CX 2 21
+  CX 2 22
+  CX 2 23
+  H 3
+  H 6
+  CX 3 6
+  CX 3 10
+  CX 3 14
+  CX 3 18
+  CX 3 22
+  H 4
+  S 4
+  CX 4 6
+  CX 4 8
+  CX 4 10
+  CX 4 12
+  CX 4 14
+  CX 4 16
+  CX 4 18
+  CX 4 20
+  CX 4 22
+  H 5
+  S 5
+  CX 5 6
+  CX 5 9
+  CX 5 10
+  CX 5 13
+  CX 5 14
+  CX 5 17
+  CX 5 18
+  CX 5 21
+  CX 5 22
+  H 6
+  S 6
+  CX 6 7
+  CX 6 8
+  CX 6 9
+  CX 6 10
+  CX 6 11
+  CX 6 12
+  CX 6 13
+  CX 6 14
+  CX 6 15
+  CX 6 16
+  CX 6 17
+  CX 6 18
+  CX 6 19
+  CX 6 20
+  CX 6 21
+  CX 6 22
+  CX 6 23
+  H 7
+  CX 7 10
+  CX 7 14
+  CX 7 18
+  CX 7 22
+  H 8
+  S 8
+  CX 8 10
+  CX 8 13
+  CX 8 16
+  CX 8 18
+  CX 8 20
+  CX 8 22
+  H 9
+  S 9
+  CX 9 10
+  CX 9 12
+  CX 9 17
+  CX 9 18
+  CX 9 21
+  CX 9 22
+  H 10
+  S 10
+  CX 10 11
+  CX 10 15
+  CX 10 16
+  CX 10 17
+  CX 10 18
+  CX 10 19
+  CX 10 20
+  CX 10 21
+  CX 10 22
+  CX 10 23
+  H 11
+  CX 11 14
+  CX 11 18
+  CX 11 22
+  H 12
+  S 12
+  CX 12 14
+  CX 12 16
+  CX 12 18
+  CX 12 20
+  CX 12 22
+  H 13
+  S 13
+  CX 13 14
+  CX 13 17
+  CX 13 18
+  CX 13 21
+  CX 13 22
+  H 14
+  S 14
+  CX 14 15
+  CX 14 16
+  CX 14 17
+  CX 14 18
+  CX 14 19
+  CX 14 20
+  CX 14 21
+  CX 14 22
+  CX 14 23
+  H 15
+  CX 15 18
+  CX 15 22
+  H 16
+  S 16
+  CX 16 18
+  CX 16 21
+  H 17
+  S 17
+  CX 17 18
+  CX 17 20
+  H 18
+  S 18
+  CX 18 19
+  CX 18 23
+  H 19
+  CX 19 22
+  H 20
+  S 20
+  CX 20 22
+  H 21
+  S 21
+  CX 21 22
+  H 22
+  S 22
+  CX 22 23
+  H 23
+gate_count: 37
+two_qubit_gate_count: 12
+depth: 1
+qubit_count: 48
+tags: [logical-gate, two-fold-transversal, "logical-class:z-diagonal"]
+original_matrices: 531d2290d8ef5648

@@ -1,0 +1,31 @@
+---
+// Reveal the codetables reference-shelf codes on the /codes listing. Sits
+// opposite the result count — a view control over the list, styled like the
+// Coords/Detectors switches on circuit bodies. Unchecked (the default) keeps
+// the `codetables`-tagged codes hidden; checked reveals them among the rest.
+//
+// Wired by list-filter-client.ts (`hiddenToggleSelector`), which keeps the
+// aria-checked state, the box icon, and the `show_hidden` URL param in sync.
+// Server-renders in the unchecked state to match the client's default.
+import { TAB_INACTIVE_CLASS } from "../lib/constants";
+
+const BASE =
+  "flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-md cursor-pointer transition-colors";
+---
+
+<button
+  data-hidden-toggle
+  class:list={[BASE, TAB_INACTIVE_CLASS]}
+  role="switch"
+  aria-checked="false"
+  title="Show the codetables.de best-known reference codes"
+>
+  <svg class="hidden-toggle-off w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="3" />
+  </svg>
+  <svg class="hidden-toggle-on hidden w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="3" />
+    <path d="M7.5 12.5l3 3 6-6.5" />
+  </svg>
+  <span>Show codetables</span>
+</button>

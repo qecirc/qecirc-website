@@ -1,0 +1,167 @@
+qec_id: 15220
+name: Depth-one two-local logical X-diagonal (√X/XX) gate on 16/16 qubits (gen 15)
+tool: two-fold-transversal
+notes: "Logical X-diagonal (√X/XX) gate acting on 16 of the 16 logical qubits, from
+  generator 15 of dataset entry [[40,16,4]]cons:grid4x10 (full_codes_depth1.json)
+  of arXiv:2608.05688. The physical circuit is depth-one two-local (two-fold transversal):
+  one layer in which each qubit is touched by at most one two-qubit gate; a trailing
+  SWAP network, where present, is the string's compensating qubit permutation. The
+  dataset is binary-symplectic (sign-free), so the circuit is one Pauli frame of the
+  gate — the paper's certificate verifies the full recorded generator set realizes
+  the full logical Clifford group Sp(2k,2). The logical_action field states the claim
+  in the stored code's logical basis; validate:circuits checks it. One circuit per
+  distinct logical action is kept from the recorded generator set; dropping duplicate
+  actions preserves the generated logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  S 0
+  H 0
+  S 0
+  H 4
+  H 6
+  H 8
+  H 10
+  H 12
+  H 14
+  CX 4 0
+  CX 6 0
+  CX 8 0
+  CX 10 0
+  CX 12 0
+  CX 14 0
+  S 1
+  H 1
+  S 1
+  H 5
+  H 7
+  H 9
+  H 11
+  H 13
+  H 15
+  CX 5 1
+  CX 7 1
+  CX 9 1
+  CX 11 1
+  CX 13 1
+  CX 15 1
+  S 2
+  H 2
+  S 2
+  CX 4 2
+  CX 6 2
+  CX 8 2
+  CX 10 2
+  CX 12 2
+  CX 14 2
+  S 3
+  H 3
+  S 3
+  CX 5 3
+  CX 7 3
+  CX 9 3
+  CX 11 3
+  CX 13 3
+  CX 15 3
+  S 4
+  H 4
+  CX 8 4
+  CX 10 4
+  CX 12 4
+  CX 14 4
+  S 5
+  H 5
+  CX 9 5
+  CX 11 5
+  CX 13 5
+  CX 15 5
+  S 6
+  H 6
+  CX 8 6
+  CX 10 6
+  CX 12 6
+  CX 14 6
+  S 7
+  H 7
+  CX 9 7
+  CX 11 7
+  CX 13 7
+  CX 15 7
+  S 8
+  H 8
+  CX 12 8
+  CX 14 8
+  S 9
+  H 9
+  CX 13 9
+  CX 15 9
+  S 10
+  H 10
+  CX 12 10
+  CX 14 10
+  S 11
+  H 11
+  CX 13 11
+  CX 15 11
+  S 12
+  H 12
+  S 13
+  H 13
+  S 14
+  H 14
+  S 15
+  H 15
+  H 4
+  H 5
+  H 6
+  H 7
+  H 8
+  H 9
+  H 10
+  H 11
+  H 12
+  H 13
+  H 14
+  H 15
+  S 4
+  S 4
+  S 5
+  S 5
+  S 6
+  S 6
+  S 7
+  S 7
+  S 8
+  S 8
+  S 9
+  S 9
+  S 10
+  S 10
+  S 11
+  S 11
+  S 12
+  S 12
+  S 13
+  S 13
+  S 14
+  S 14
+  S 15
+  S 15
+  H 4
+  H 5
+  H 6
+  H 7
+  H 8
+  H 9
+  H 10
+  H 11
+  H 12
+  H 13
+  H 14
+  H 15
+gate_count: 28
+two_qubit_gate_count: 12
+depth: 1
+qubit_count: 40
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,1,1,1,1,1,1,1,1,1,"X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½","X^½"],[1,1,1,1,1,1,1,1,1,1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"⊖","X"],[1,1,1,1,1,1,1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,"⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],["⊖",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"]]}
+tags: [logical-gate, two-fold-transversal, "logical-class:x-diagonal"]
+original_matrices: 7bfb8250bc1be6dc

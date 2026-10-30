@@ -12,6 +12,14 @@ export const CODE_SORT_FIELDS: readonly CodeSortField[] = ["n", "k", "d"];
 
 export const FILTER_PART_REGEX = /^(!=|>=|<=|>|<|=)?\s*(\d+)$/;
 
+// Codes carrying this tag are hidden by default: excluded from the /codes
+// listing (until the tag is explicitly selected in the filter) and from every
+// displayed code/circuit count. They stay fully searchable and their detail
+// pages stay reachable — hiding governs discovery surfaces, not existence.
+// Applied to the codetables.de best-known-distance sweep (mostly anonymous
+// record-holder codes) so it doesn't drown the curated library.
+export const HIDDEN_CODE_TAG = "codetables";
+
 // Shared tab-toggle styling (FormatSwitcher, CodeMatrices). Compose with any
 // component-specific base classes (e.g. `format-tab`, `code-matrix-toggle`,
 // focus rings) at the call site. Both carry border-b-2 so switching tabs

@@ -16,6 +16,9 @@ node_modules/
 dist/
 .astro/
 
+# Content-addressed result caches for validate_circuits.py / annotate_circuits.py
+.cache/
+
 # Database (derived from data_yaml/, not committed)
 data/*.db
 data/*.db-wal

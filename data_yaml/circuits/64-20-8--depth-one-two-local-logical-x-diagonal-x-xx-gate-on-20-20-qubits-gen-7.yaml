@@ -1,0 +1,135 @@
+qec_id: 16767
+name: Depth-one two-local logical X-diagonal (√X/XX) gate on 20/20 qubits (gen 7)
+tool: two-fold-transversal
+notes: "Logical X-diagonal (√X/XX) gate acting on 20 of the 20 logical qubits, from
+  generator 7 of dataset entry [[64,20,8]]cons:qrm6 (full_codes_depth1.json) of arXiv:2608.05688.
+  The physical circuit is depth-one two-local (two-fold transversal): one layer in
+  which each qubit is touched by at most one two-qubit gate; a trailing SWAP network,
+  where present, is the string's compensating qubit permutation. The dataset is binary-symplectic
+  (sign-free), so the circuit is one Pauli frame of the gate — the paper's certificate
+  verifies the full recorded generator set realizes the full logical Clifford group
+  Sp(2k,2). The logical_action field states the claim in the stored code's logical
+  basis; validate:circuits checks it. One circuit per distinct logical action is kept
+  from the recorded generator set; dropping duplicate actions preserves the generated
+  logical group."
+source: https://arxiv.org/abs/2608.05688
+logical_action: |-
+  H 8
+  H 9
+  CX 8 0
+  CX 9 0
+  H 4
+  H 12
+  H 13
+  H 14
+  H 15
+  H 16
+  H 17
+  CX 4 1
+  CX 8 1
+  CX 9 1
+  CX 12 1
+  CX 13 1
+  CX 14 1
+  CX 15 1
+  CX 16 1
+  CX 17 1
+  H 11
+  CX 9 2
+  CX 11 2
+  CX 14 2
+  CX 15 2
+  H 18
+  H 19
+  CX 4 3
+  CX 9 3
+  CX 11 3
+  CX 12 3
+  CX 13 3
+  CX 14 3
+  CX 15 3
+  CX 16 3
+  CX 17 3
+  CX 18 3
+  CX 19 3
+  H 4
+  H 6
+  H 10
+  CX 6 4
+  CX 9 4
+  CX 10 4
+  CX 11 4
+  CX 13 4
+  CX 14 4
+  CX 15 4
+  CX 16 4
+  H 7
+  CX 6 5
+  CX 7 5
+  CX 11 5
+  CX 12 5
+  CX 13 5
+  CX 18 5
+  CX 19 5
+  H 6
+  CX 8 6
+  CX 9 6
+  CX 10 6
+  CX 13 6
+  CX 15 6
+  CX 18 6
+  CX 19 6
+  H 7
+  CX 9 7
+  CX 10 7
+  CX 11 7
+  CX 12 7
+  CX 13 7
+  CX 16 7
+  CX 18 7
+  H 8
+  CX 9 8
+  CX 11 8
+  CX 13 8
+  CX 14 8
+  CX 15 8
+  CX 16 8
+  H 9
+  CX 13 9
+  CX 14 9
+  CX 15 9
+  CX 18 9
+  H 10
+  CX 12 10
+  CX 13 10
+  CX 18 10
+  CX 19 10
+  H 11
+  CX 12 11
+  CX 13 11
+  CX 15 11
+  CX 18 11
+  H 12
+  CX 15 12
+  H 13
+  CX 14 13
+  CX 16 13
+  CX 17 13
+  H 14
+  CX 17 14
+  CX 19 14
+  H 15
+  CX 16 15
+  CX 19 15
+  H 16
+  CX 17 16
+  H 17
+  H 18
+  CX 19 18
+  H 19
+gate_count: 40
+two_qubit_gate_count: 24
+depth: 1
+qubit_count: 64
+tags: [logical-gate, two-fold-transversal, "logical-class:x-diagonal"]
+original_matrices: abb2a0b9a2bb7ecf

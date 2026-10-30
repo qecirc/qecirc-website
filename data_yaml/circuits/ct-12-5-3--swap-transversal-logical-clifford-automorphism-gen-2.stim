@@ -1,0 +1,15 @@
+Z 5 3
+X 11
+Z 9 6
+SQRT_X 7
+H 2
+S 8
+SQRT_X 1
+S 10
+H 4
+SQRT_X 0
+H 5
+SQRT_X 3
+S 11 9
+SQRT_X 6
+SWAP 10 4 8 1 9 4 3 1 5 1 7 9

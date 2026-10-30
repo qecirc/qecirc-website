@@ -7,6 +7,7 @@ export {
   getCodeBySlug,
   filterCodes,
   countAllCodes,
+  countAllCodesTotal,
 } from "./codes";
 export {
   formatCircuitId,
@@ -14,6 +15,7 @@ export {
   countCircuitsForCode,
   codeHasWeightedCircuits,
   countAllCircuits,
+  countAllCircuitsTotal,
   getLatestCircuits,
   getCircuitTagsForCode,
   filterCircuitsForCode,
