@@ -1,0 +1,14 @@
+code,n,k,d,t,state,ops,cnots,measurements,depth,qubits,file
+color_17_1_5,17,1,5,2,zero,60,52,8,9,25,circuits/color_17_1_5/zero_60_9.stim
+bga_24_4_5,24,4,5,2,zero,144,122,22,15,46,circuits/bga_24_4_5/zero_144_15.stim
+color_31_1_7,31,1,7,3,zero,210,181,29,41,60,circuits/color_31_1_7/zero_210_41.stim
+color_31_1_7,31,1,7,3,zero,213,183,30,36,61,circuits/color_31_1_7/zero_213_36.stim
+color_31_1_7,31,1,7,3,zero,215,177,38,28,69,circuits/color_31_1_7/zero_215_28.stim
+color_31_1_7,31,1,7,3,zero,217,178,39,22,70,circuits/color_31_1_7/zero_217_22.stim
+color_31_1_7,31,1,7,3,zero,222,182,40,21,71,circuits/color_31_1_7/zero_222_21.stim
+color_31_1_7,31,1,7,3,zero,224,181,43,20,74,circuits/color_31_1_7/zero_224_20.stim
+color_31_1_7,31,1,7,3,zero,229,185,44,18,75,circuits/color_31_1_7/zero_229_18.stim
+color_31_1_7,31,1,7,3,zero,230,186,44,17,75,circuits/color_31_1_7/zero_230_17.stim
+color_31_1_7,31,1,7,3,zero,232,187,45,16,76,circuits/color_31_1_7/zero_232_16.stim
+color_31_1_7,31,1,7,3,zero,236,190,46,15,77,circuits/color_31_1_7/zero_236_15.stim
+color_31_1_7,31,1,7,3,zero,239,192,47,14,78,circuits/color_31_1_7/zero_239_14.stim

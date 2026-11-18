@@ -500,6 +500,27 @@ def test_strip_readout_preserves_a_body_ending_in_a_flag_measurement():
     assert names[0] == "R"
 
 
+def test_strip_readout_keeps_a_bodys_own_mid_circuit_detectors():
+    """A stored prep body may carry its own DETECTORs (its post-selection
+    condition). Only the annotator's trailing epilogue may be removed."""
+    body = STEANE_ZERO + "CX 0 7 1 7 2 7 3 7\nM 7\nDETECTOR rec[-1]\n"
+    circ = build_annotated(
+        body,
+        STEANE_H,
+        STEANE_LOGICAL,
+        n=7,
+        k=1,
+        kind="state-preparation",
+        logical_state="zero",
+    )
+    assert circ is not None
+    stripped = strip_readout(circ)
+    names = [op.name for op in stripped]
+    assert names.count("DETECTOR") == 1  # the body's own
+    assert names[-2:] == ["M", "DETECTOR"]  # its measurement survives, readout gone
+    assert "OBSERVABLE_INCLUDE" not in names
+
+
 def test_strip_readout_leaves_the_body_gates_untouched():
     circ = build_annotated(
         STEANE_ZERO,

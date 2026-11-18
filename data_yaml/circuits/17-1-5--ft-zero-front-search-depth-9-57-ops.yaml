@@ -1,0 +1,25 @@
+qec_id: 1305
+name: FT zero (front search, depth 9, 57 ops)
+tool: mqt-qecc
+notes: "Fault-tolerant preparation of the logical all-zero state, found by the front
+  search of MQT QECC (mqt.qecc.circuit_synthesis.ft_search). Tolerates t = 2 faults:
+  every set of at most t faults either sets a detector to 1 or leaves X and Z errors
+  of weight at most the number of faults each, up to stabilizers. Post-selection protocol:
+  a shot is accepted if every DETECTOR is 0 (detectors are parities of the verification
+  measurements and are kept in the stored body). Checked with MQT QECC's exact fault-tolerance
+  check, which enumerates every set of up to t faults. 50 CNOTs, 7 measurements, two-qubit
+  depth 9 (ASAP schedule). On this code's depth/operation-count front: no other circuit
+  in the collection has fewer operations without greater depth, or lower depth without
+  more operations. Source file: scripts/ft_stateprep/front_search/circuits/color_17_1_5/zero_57_9.stim.
+  Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,M,MX. Flag/ancilla
+  qubits: [17, 18, 19, 20, 21, 22, 23]. Canonicalization qubit permutation (stored
+  qubit i = original qubit permutation[i]): [1, 5, 8, 9, 13, 0, 2, 11, 10, 4, 12,
+  15, 6, 3, 14, 7, 16]"
+source: MQT QECC, scripts/ft_stateprep/front_search
+gate_count: 62
+two_qubit_gate_count: 50
+depth: 9
+qubit_count: 24
+quirk_url: https://algassert.com/quirk#circuit={"cols":[["H",1,1,"H","H",1,"H",1,1,1,1,"H","H","H","H",1,1,1,"H","H",1,"H","H"],[1,1,1,1,1,1,"•",1,1,"X"],[1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,"•"],[1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,"•",1,1,"X"],[1,1,"X",1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"•","X"],["•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,"X","•"],[1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,"X","•"],[1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,"X",1,"•"],["•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"•",1,"X"],[1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,"•"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"•","X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"XDetector"],[1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetector","XDetector",1,1,1,"ZDetector","XDetector"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetector","ZDetector"]]}
+tags: [state-preparation, ft, "verification:front-search", "distance:5", "logical-state:zero", flag]
+original_matrices: 33d6628a2643c0dc

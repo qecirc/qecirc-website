@@ -99,9 +99,8 @@ function paint(scope: HTMLElement, block: HTMLElement, raw: string, view: View):
   setSwitch(scope.querySelector<HTMLElement>(".coords-btn"), view.coords, "coords");
   const detectorsBtn = scope.querySelector<HTMLElement>(".detectors-btn");
   setSwitch(detectorsBtn, view.detectors, "detectors");
-  // Only a live Detectors switch can move the link, and its presence is also
-  // what tells us `raw` is the annotated body (a canonical STIM body never
-  // carries DETECTOR lines).
+  // Only a live Detectors switch can move the link, and it exists only when
+  // `raw` is the annotated body (see initBodyView).
   if (detectorsBtn) paintCrumble(scope, raw, view.detectors);
 
   // Both switches change how many lines are on screen, so the row's collapse
@@ -135,10 +134,15 @@ export function initBodyView(scope: HTMLElement): void {
     return;
   }
 
+  // The epilogue the Detectors switch subtracts exists only on an annotated
+  // body. Any other body is shown whole and gets no switch: a stored body may
+  // carry DETECTORs of its own, and subtracting its tail would also drop its
+  // final measurement. The server made the same call (`data-annotated`).
+  const isAnnotated = block.dataset.annotated !== undefined;
   if (!hasQubitCoords(raw)) coordsBtn?.remove();
-  if (!hasDetectors(raw)) detectorsBtn?.remove();
+  if (!isAnnotated || !hasDetectors(raw)) detectorsBtn?.remove();
 
-  const view: View = { coords: false, detectors: false };
+  const view: View = { coords: false, detectors: !isAnnotated };
   paint(scope, block, raw, view);
 
   scope.querySelector<HTMLElement>(".coords-btn")?.addEventListener("click", function () {

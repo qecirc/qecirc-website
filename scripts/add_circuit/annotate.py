@@ -477,7 +477,8 @@ def strip_readout(circ: stim.Circuit) -> stim.Circuit:
     part of the circuit — a large share of bodies carry flag/verification
     measurements — and must survive. :func:`build_annotated` appends exactly one readout
     instruction, last, so after the annotations are dropped it is the final
-    instruction — anything earlier belongs to the body.
+    instruction — anything earlier belongs to the body. That includes a body's own
+    mid-circuit ``DETECTOR``s, which only a body without ``REPEAT`` can have.
 
     Annotations inside a ``REPEAT`` block go too — a syndrome-extraction round is
     annotated as a repeated memory experiment, so that is where most of its
@@ -487,7 +488,16 @@ def strip_readout(circ: stim.Circuit) -> stim.Circuit:
     Mirrors ``stripReadout`` in src/lib/stim-format.ts, which does the same for
     the browser. Keep the two in step.
     """
-    ops = [op for op in circ if op.name not in ("DETECTOR", "OBSERVABLE_INCLUDE")]
+    annotations = ("DETECTOR", "OBSERVABLE_INCLUDE")
+    if any(isinstance(op, stim.CircuitRepeatBlock) for op in circ):
+        ops = [op for op in circ if op.name not in annotations]
+    else:
+        # A prep or encoder: only the trailing epilogue is the annotator's. A
+        # body may carry DETECTORs of its own (its post-selection condition),
+        # and those stay.
+        ops = list(circ)
+        while ops and ops[-1].name in annotations:
+            ops.pop()
     if ops and ops[-1].name in ("M", "MX"):
         ops.pop()
     while ops and ops[-1].name == "TICK":

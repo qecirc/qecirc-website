@@ -460,6 +460,7 @@ Importing a whole dataset (a paper's circuits, a tool's output) is a repeatable 
 Worked examples to copy from:
 
 - [`data-imports/mqt-ftsp/`](../data-imports/mqt-ftsp/README.md) — MQT QECC fault-tolerant state-prep circuits.
+- [`data-imports/mqt-front-search/`](../data-imports/mqt-front-search/README.md) — MQT QECC front-search FT `|0⟩_L` preps. Shows keeping mid-circuit `DETECTOR`s in the stored body (they are the post-selection condition), and an importer driven by the dataset's `index.csv` so it can be re-run as the dataset grows.
 - [`data-imports/rlftqc/`](../data-imports/rlftqc/README.md) — RL-discovered fault-tolerant state-prep circuits.
 - [`data-imports/flag-at-origin/`](../data-imports/flag-at-origin/README.md) — flag-at-origin FT preps (converts pytket circuits to STIM, fits via precomputed/`assume_new` strategies) **and** standalone flag gadgets collected under a placeholder `flag-gadgets` code (`n = k = 0`, no check matrices) for circuits that don't belong to a code.
 - [`data-imports/qldpc/`](../data-imports/qldpc/README.md) — qLDPC encoders, state preps and rounds, including the first subsystem codes. Shows building the codes by calling a library rather than reading files.
@@ -554,6 +555,12 @@ views from it.
 A prep or encoder's canonical `.stim` body must stay **reset-free** —
 `to_tableau()` and the derive/fit machinery depend on that. A syndrome-extraction
 body cannot be: its resets and measurements are the circuit.
+
+A prep may carry mid-circuit `DETECTOR`s of its own when they are its
+post-selection condition (parities of several verification measurements, as in
+[`mqt-front-search`](../data-imports/mqt-front-search/README.md)). They stay in
+the stored body and show in both positions of the Detectors switch, which only
+adds and removes the readout epilogue the annotator appends.
 
 ### Original submission
 

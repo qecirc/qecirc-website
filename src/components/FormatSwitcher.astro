@@ -31,12 +31,12 @@ const hasMultipleFormats = tabs.length > 1;
 // while another format is selected, rather than left doing nothing. See
 // format-switcher-client. The annotated body supersedes the plain one for
 // display, so ask it about coordinates when it exists.
-const stimBody = tabs.find((b) => b.format === ANNOTATED_OF)?.body;
-const displayed = annotated ?? stimBody;
 const coordsFormat =
   tabs.find((b) => hasQubitCoords(annotated && b.format === ANNOTATED_OF ? annotated : b.body))
     ?.format ?? undefined;
-const detectorsFormat = displayed && hasDetectors(displayed) ? ANNOTATED_OF : undefined;
+// Only an annotated body has a readout epilogue for the switch to subtract; a
+// stored body with DETECTORs of its own is shown whole (see CodeBlock.astro).
+const detectorsFormat = annotated && hasDetectors(annotated) ? ANNOTATED_OF : undefined;
 const switchFormat = coordsFormat ?? detectorsFormat;
 
 function annotatedFor(format: string): string | undefined {

@@ -121,7 +121,9 @@ function buildSwitcher(
     // repaints it once the whole switcher is assembled. Copy and download read
     // the copy button's data-code rather than `raw`, so they follow what is on
     // screen.
-    const shown = bodyForDisplay(display, false, false);
+    // Only an annotated body has an epilogue to subtract; see CodeBlock.astro.
+    const isAnnotated = entry.format === ANNOTATED_OF && annotated !== undefined;
+    const shown = bodyForDisplay(display, false, !isAnnotated);
     const codeEl = bodyEl.querySelector<HTMLElement>("pre code");
     if (codeEl) codeEl.textContent = lineNumbered(shown);
     const copyBtn = bodyEl.querySelector<HTMLElement>(".copy-btn");
@@ -131,6 +133,7 @@ function buildSwitcher(
     // The switches subtract from the full body, so hand it over whenever either
     // switch is live on this format.
     if (block && entry.format === switchFormat) block.dataset.rawCode = display;
+    if (block && isAnnotated) block.dataset.annotated = "";
 
     const downloadBtn = bodyEl.querySelector<HTMLElement>(".download-btn");
     if (downloadBtn) {
