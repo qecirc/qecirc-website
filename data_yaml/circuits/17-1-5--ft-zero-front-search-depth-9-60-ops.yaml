@@ -1,0 +1,27 @@
+qec_id: 1399
+name: FT zero (front search, depth 9, 60 ops)
+tool: mqt-qecc
+notes: "Fault-tolerant preparation of the logical all-zero state, found by the front
+  search of MQT QECC (mqt.qecc.circuit_synthesis.ft_search). Tolerates t = 2 faults:
+  every set of at most t faults either sets a detector to 1 or leaves X and Z errors
+  of weight at most the number of faults each, up to stabilizers. Post-selection protocol:
+  a shot is accepted if every DETECTOR is 0 (detectors are parities of the verification
+  measurements and are kept in the stored body). Checked with MQT QECC's exact fault-tolerance
+  check, which enumerates every set of up to t faults. 52 CNOTs, 8 measurements, two-qubit
+  depth 9 (ASAP schedule). Not in the current collection: an earlier version held
+  it, and a later circuit with at most as many operations and no greater depth, better
+  in one of the two, replaced it. Kept here as an alternative; a copy of the source
+  file is in the QECirc repository, data-imports/mqt-front-search/superseded. Source
+  file: scripts/ft_stateprep/front_search/circuits/color_17_1_5/zero_60_9.stim. Logical
+  state: zero. Connectivity: fully-connected. Gate set: CX,H,M,MX. Flag/ancilla qubits:
+  [17, 18, 19, 20, 21, 22, 23, 24]. Canonicalization qubit permutation (stored qubit
+  i = original qubit permutation[i]): [1, 5, 8, 9, 13, 0, 2, 11, 10, 4, 12, 15, 6,
+  3, 14, 7, 16]"
+source: MQT QECC, scripts/ft_stateprep/front_search
+gate_count: 64
+two_qubit_gate_count: 52
+depth: 9
+qubit_count: 25
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,"•"],["H","H","H","H",1,"H","H",1,1,"H",1,1,1,"H"],[1,1,1,"•",1,1,1,"X"],[1,1,"•",1,1,1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,"X"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,"•","X"],["•",1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,"•",1,1,1,1,1,1,"X"],["•",1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"XDetector"],[1,"•",1,1,1,1,1,1,1,1,"X"],["•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetector"],["•",1,1,1,1,"X"],[1,1,1,1,"X",1,1,1,"•"],["X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"H"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,"•"],[1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,"•"],[1,1,1,1,"X",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,1,1,1,1,1,"•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"XDetector",1,1,1,1,1,"ZDetector","H"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,"•"],[1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X",1,1,1,"•"],["•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetector",1,"H",1,"XDetector"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"X","•"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,"•",1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,"ZDetector","XDetector"]]}
+tags: [state-preparation, ft, "verification:front-search", "distance:5", "logical-state:zero", flag]
+original_matrices: 33d6628a2643c0dc

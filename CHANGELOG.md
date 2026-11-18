@@ -58,6 +58,13 @@ a copy of the database or parsing the YAML will need the columns removed.
 
 ### Added
 
+- **MQT QECC front-search FT state preparations** (`data-imports/mqt-front-search/`): 113
+  fault-tolerant `|0…0⟩_L` circuits for seven stored codes and one new one, the two-block
+  group algebra code [[24,4,5]]. Each code's depth/operation-count front, five circuits kept
+  although the front beats them, and 13 that an earlier version of the collection held; their
+  notes say which. They are the first stored bodies with mid-circuit `DETECTOR`s of their own:
+  the post-selection condition their fault tolerance is stated against. The importer reads
+  the dataset's `index.csv`, so it can be re-run as the dataset changes.
 - **`npm test` — `crumbleUrl` against stim's own `to_crumble_url()`, over all 1646 committed
   bodies.** The Crumble link is now derived by a hand-written reimplementation of a stim
   function, and nothing else in the repository compares the two: a stim upgrade, or an edit
@@ -70,6 +77,14 @@ a copy of the database or parsing the YAML will need the columns removed.
 
 ### Fixed
 
+- **A body's own `DETECTOR`s are no longer hidden.** The Detectors switch subtracted every
+  `DETECTOR` line and then the last measurement, which was right while only the annotator
+  wrote detectors. A stored body that carries its own would have lost them, and on the
+  "Original submission" block, which has no switch, its final measurement too, for good —
+  Copy and Download included. The switch now removes only the epilogue the annotator appends
+  to a prep or encoder (syndrome-extraction bodies keep the old rule), and only on an
+  annotated body; the server and the client make that call from the same `data-annotated`
+  flag. The output for every body already in the library is unchanged.
 - **A circuit row announced itself as a button that does something else.** It carried
   `role="button"`, `tabindex="0"` and `aria-expanded="false"`, so a screen reader said
   "button, collapsed" — and then `Enter` on it navigated to the circuit page. `l`, Space and

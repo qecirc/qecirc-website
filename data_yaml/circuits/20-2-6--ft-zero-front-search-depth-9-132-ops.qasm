@@ -1,0 +1,164 @@
+OPENQASM 2.0;
+include "qelib1.inc";
+
+qreg q[47];
+creg rec[27];
+
+h q[9];
+h q[8];
+h q[18];
+h q[2];
+h q[11];
+h q[16];
+h q[17];
+h q[14];
+h q[4];
+cx q[18], q[0];
+cx q[16], q[15];
+cx q[14], q[12];
+cx q[2], q[12];
+cx q[2], q[10];
+cx q[11], q[13];
+cx q[4], q[3];
+cx q[8], q[7];
+cx q[18], q[5];
+cx q[2], q[0];
+cx q[17], q[0];
+cx q[14], q[1];
+cx q[11], q[3];
+cx q[8], q[19];
+cx q[5], q[16];
+cx q[9], q[18];
+cx q[14], q[19];
+cx q[10], q[8];
+cx q[11], q[7];
+cx q[12], q[3];
+cx q[5], q[6];
+cx q[1], q[16];
+cx q[13], q[18];
+cx q[17], q[11];
+cx q[15], q[10];
+cx q[7], q[12];
+cx q[4], q[5];
+cx q[9], q[1];
+cx q[16], q[2];
+cx q[0], q[13];
+cx q[18], q[14];
+h q[23];
+h q[26];
+h q[27];
+h q[28];
+cx q[26], q[25];
+cx q[23], q[20];
+cx q[28], q[21];
+cx q[20], q[22];
+cx q[27], q[25];
+cx q[21], q[26];
+cx q[26], q[23];
+cx q[27], q[22];
+cx q[25], q[24];
+cx q[20], q[28];
+cx q[20], q[0];
+cx q[20], q[11];
+h q[20]; measure q[20] -> rec[0]; h q[20]; // decomposed MX
+cx q[3], q[6];
+cx q[21], q[1];
+cx q[22], q[9];
+cx q[23], q[14];
+cx q[24], q[18];
+cx q[25], q[4];
+cx q[26], q[19];
+cx q[27], q[8];
+cx q[28], q[3];
+cx q[21], q[12];
+h q[21]; measure q[21] -> rec[1]; h q[21]; // decomposed MX
+cx q[22], q[15];
+h q[22]; measure q[22] -> rec[2]; h q[22]; // decomposed MX
+cx q[23], q[6];
+h q[23]; measure q[23] -> rec[3]; h q[23]; // decomposed MX
+cx q[24], q[7];
+h q[24]; measure q[24] -> rec[4]; h q[24]; // decomposed MX
+cx q[25], q[10];
+h q[25]; measure q[25] -> rec[5]; h q[25]; // decomposed MX
+cx q[26], q[16];
+h q[26]; measure q[26] -> rec[6]; h q[26]; // decomposed MX
+cx q[27], q[5];
+h q[27]; measure q[27] -> rec[7]; h q[27]; // decomposed MX
+cx q[28], q[2];
+h q[28]; measure q[28] -> rec[8]; h q[28]; // decomposed MX
+h q[43];
+cx q[43], q[35];
+h q[29];
+h q[30];
+h q[31];
+h q[32];
+h q[33];
+h q[34];
+h q[36];
+h q[37];
+h q[40];
+cx q[37], q[39];
+cx q[29], q[42];
+cx q[32], q[35];
+h q[45];
+cx q[45], q[35];
+cx q[36], q[41];
+cx q[43], q[36];
+cx q[40], q[42];
+cx q[45], q[40];
+cx q[30], q[32];
+cx q[34], q[36];
+cx q[37], q[38];
+cx q[29], q[39];
+cx q[35], q[38];
+cx q[30], q[34];
+cx q[31], q[29];
+h q[46];
+cx q[46], q[29];
+cx q[41], q[37];
+cx q[32], q[42];
+cx q[31], q[30];
+cx q[43], q[30];
+h q[43]; measure q[43] -> rec[9]; h q[43]; // decomposed MX
+cx q[40], q[41];
+cx q[46], q[41];
+cx q[34], q[35];
+cx q[46], q[34];
+cx q[33], q[32];
+h q[44];
+cx q[44], q[31];
+cx q[44], q[35];
+cx q[44], q[40];
+h q[44]; measure q[44] -> rec[10]; h q[44]; // decomposed MX
+cx q[45], q[32];
+h q[45]; measure q[45] -> rec[11]; h q[45]; // decomposed MX
+cx q[46], q[32];
+h q[46]; measure q[46] -> rec[12]; h q[46]; // decomposed MX
+cx q[11], q[29];
+measure q[29] -> rec[13];
+cx q[13], q[30];
+measure q[30] -> rec[14];
+cx q[17], q[31];
+measure q[31] -> rec[15];
+cx q[1], q[32];
+measure q[32] -> rec[16];
+cx q[18], q[33];
+measure q[33] -> rec[17];
+cx q[7], q[34];
+measure q[34] -> rec[18];
+cx q[12], q[35];
+measure q[35] -> rec[19];
+cx q[19], q[36];
+measure q[36] -> rec[20];
+cx q[4], q[37];
+measure q[37] -> rec[21];
+cx q[5], q[38];
+measure q[38] -> rec[22];
+cx q[6], q[39];
+measure q[39] -> rec[23];
+cx q[2], q[40];
+measure q[40] -> rec[24];
+cx q[15], q[41];
+measure q[41] -> rec[25];
+cx q[10], q[42];
+measure q[42] -> rec[26];

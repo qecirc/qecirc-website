@@ -1,0 +1,24 @@
+qec_id: 1299
+name: FT zero (front search, depth 4, 12 ops)
+tool: mqt-qecc
+notes: "Fault-tolerant preparation of the logical all-zero state, found by the front
+  search of MQT QECC (mqt.qecc.circuit_synthesis.ft_search). Tolerates t = 1 faults:
+  every set of at most t faults either sets a detector to 1 or leaves X and Z errors
+  of weight at most the number of faults each, up to stabilizers. Post-selection protocol:
+  a shot is accepted if every DETECTOR is 0 (detectors are parities of the verification
+  measurements and are kept in the stored body). Checked with MQT QECC's exact fault-tolerance
+  check, which enumerates every set of up to t faults. 11 CNOTs, 1 measurements, two-qubit
+  depth 4 (ASAP schedule). On this code's depth/operation-count front: no other circuit
+  in the collection has fewer operations without greater depth, or lower depth without
+  more operations. Source file: scripts/ft_stateprep/front_search/circuits/surface_9_1_3/zero_12_4.stim.
+  Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,M. Flag/ancilla
+  qubits: [9]. Canonicalization qubit permutation (stored qubit i = original qubit
+  permutation[i]): [4, 0, 7, 2, 5, 3, 6, 1, 8]"
+source: MQT QECC, scripts/ft_stateprep/front_search
+gate_count: 15
+two_qubit_gate_count: 11
+depth: 4
+qubit_count: 10
+quirk_url: https://algassert.com/quirk#circuit={"cols":[[1,1,"H",1,"H",1,"H","H"],[1,1,1,1,1,1,"•",1,"X"],[1,"X",1,1,1,1,1,"•"],[1,1,1,"X","•"],["X",1,1,1,1,1,1,1,"•"],[1,1,1,1,1,"X","•"],[1,1,1,"•",1,1,1,"X"],["X",1,1,"•"],[1,1,"•",1,1,1,1,1,"X"],[1,1,1,1,"•",1,1,1,1,"X"],[1,1,1,1,1,"•",1,1,1,"X"],["•",1,1,1,1,1,1,1,1,"X"],[1,1,1,1,1,1,1,1,1,"ZDetector"]]}
+tags: [state-preparation, ft, "verification:front-search", "distance:3", "logical-state:zero", flag]
+original_matrices: 3b7142c9da69f3f2
