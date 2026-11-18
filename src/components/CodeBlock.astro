@@ -31,10 +31,18 @@ const hasCoords = hasQubitCoords(raw);
 // Render the default state server-side (coordinates and detectors hidden) so
 // there is no flash before the switches initialise, and so it reads correctly
 // without JS.
-const formatted = lineNumbered(bodyForDisplay(raw, false, false));
+//
+// The readout epilogue is subtracted only from an annotated body, the one thing
+// the Detectors switch exists for. Any other body is shown whole: a stored body
+// may carry DETECTORs of its own (the original submission of a post-selected
+// prep does), and treating its tail as an epilogue would also drop its final
+// measurement with no switch to restore it. `data-annotated` hands the same
+// decision to body-view-client, so server and client agree.
+const isAnnotated = annotated !== undefined;
+const formatted = lineNumbered(bodyForDisplay(raw, false, !isAnnotated));
 const ownToggle = coordsToggle && hasCoords;
 // The block needs the full body whenever either switch is live.
-const needsRaw = hasCoords || hasDetectors(raw);
+const needsRaw = hasCoords || (isAnnotated && hasDetectors(raw));
 ---
 
 <div data-coords-scope={ownToggle ? "" : undefined}>
@@ -49,6 +57,7 @@ const needsRaw = hasCoords || hasDetectors(raw);
     data-source={source ?? ""}
     data-citation={citation || undefined}
     data-raw-code={needsRaw ? raw : undefined}
+    data-annotated={isAnnotated ? "" : undefined}
   >
     <div class="border-b border-gray-200 dark:border-gray-800 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
       <span>{label ?? ""}</span>
@@ -71,7 +80,7 @@ const needsRaw = hasCoords || hasDetectors(raw);
         )}
         <button
           class="copy-btn flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
-          data-code={bodyForDisplay(raw, false, false)}
+          data-code={bodyForDisplay(raw, false, !isAnnotated)}
           aria-label="Copy to clipboard"
           title="Copy to clipboard (c)"
         >

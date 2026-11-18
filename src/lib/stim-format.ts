@@ -65,24 +65,33 @@ export function hasDetectors(code: string): boolean {
   return code.split("\n").some((line) => ANNOTATION_LINE.test(line));
 }
 
+/** A `REPEAT` block opener: the shape of an annotated syndrome-extraction body. */
+const REPEAT_LINE = /^\s*REPEAT\b/;
+
 /** Drop the readout epilogue, keeping the reset prologue and the body.
  *
- *  Only the *added* epilogue goes. Pre-existing mid-circuit measurements are
- *  part of the circuit — most bodies carry flag/verification measurements — and
- *  must survive. The annotator appends exactly one readout instruction, last, so
- *  once the annotations are dropped it is the final line; anything earlier
- *  belongs to the body.
+ *  Only what the annotator *added* goes. Pre-existing mid-circuit measurements
+ *  are part of the circuit — most bodies carry flag/verification measurements —
+ *  and must survive, and so must a prep body's own mid-circuit `DETECTOR`s: some
+ *  stored bodies carry them, because they are the post-selection condition the
+ *  circuit's fault tolerance is stated against. For a prep or encoder the
+ *  annotator appends exactly one epilogue — `TICK`, one readout instruction, its
+ *  detectors and observables — so that is the trailing run of annotation lines
+ *  plus the readout line before it; anything earlier belongs to the body.
+ *
+ *  A syndrome-extraction body is annotated as a whole memory experiment, with
+ *  detectors inside its `REPEAT` block and after the first round, and never has
+ *  detectors of its own. There every annotation line goes, as before.
  *
  *  **An unannotated body is returned untouched**, and that guard is load-bearing
- *  rather than an optimisation. `hasDetectors` is what decides whether the
- *  Detectors switch exists, so without it a body with no annotations had its
+ *  rather than an optimisation. Without it a body with no annotations had its
  *  final measurement removed with no control anywhere on the page to bring it
  *  back: 294 canonical bodies end in a readout, and `/circuits/662` rendered
  *  `H 0 / CX …` while its Crumble link opened the same circuit *with* `M 10`.
  *  Copy and Download hand over what is displayed, so the user could take away a
- *  circuit missing its final measurement. Tying the subtraction to the presence
- *  of annotations means the readout is only ever hidden when there is a switch
- *  that restores it.
+ *  circuit missing its final measurement. The same holds for a stored body that
+ *  carries its own detectors: callers apply this only to an annotated body,
+ *  where the Detectors switch restores what it removes.
  *
  *  Mirrors `strip_readout` in scripts/add_circuit/annotate.py, which the
  *  annotator's own tests use as the reference for the same rule. Keep the two in
@@ -93,7 +102,12 @@ export function hasDetectors(code: string): boolean {
 export function stripReadout(code: string): string {
   const trimmed = code.trimEnd();
   if (!hasDetectors(trimmed)) return trimmed;
-  const lines = trimmed.split("\n").filter((line) => !ANNOTATION_LINE.test(line));
+  let lines = trimmed.split("\n");
+  if (lines.some((line) => REPEAT_LINE.test(line))) {
+    lines = lines.filter((line) => !ANNOTATION_LINE.test(line));
+  } else {
+    while (lines.length && ANNOTATION_LINE.test(lines[lines.length - 1])) lines.pop();
+  }
   if (lines.length && READOUT_LINE.test(lines[lines.length - 1])) lines.pop();
   while (lines.length && TICK_LINE.test(lines[lines.length - 1])) lines.pop();
   return lines.join("\n").trimEnd();
