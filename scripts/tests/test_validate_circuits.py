@@ -337,3 +337,49 @@ def test_a_wrong_k_is_still_caught_on_a_subsystem_code(tmp_path):
     check = _checks(results)["logical_input_count"]
     assert check.status == "failed"
     assert "k=3 plus 4 gauge qubits" in check.detail
+
+
+def test_steane_state_prep_detects_missing_cnot(tmp_path):
+    """A missing CNOT in Steane state preparation must be detected."""
+
+    code_path = _REPO_ROOT / "data_yaml/codes/steane-code.yaml"
+    code = yaml.safe_load(code_path.read_text())
+
+    circuit_path = (
+        _REPO_ROOT / "data_yaml/circuits/"
+        "steane-code--circuit-synth-zero-state-preparation-gate-optimized.stim"
+    )
+    original = circuit_path.read_text()
+
+    # Test the original circuit in its own temporary directory.
+    original_dir = tmp_path / "original"
+    original_dir.mkdir()
+
+    original_results = _build(
+        original_dir,
+        original,
+        code=code,
+        tags=("state-preparation", "logical-state:zero"),
+    )
+
+    original_checks = _checks(original_results)
+    assert original_checks["validate_state_prep"].status == "passed"
+    assert original_checks["logical_basis"].status == "passed"
+
+    # Remove the final CNOT pair (CX 2 4).
+    assert original.rstrip().endswith("2 4")
+    corrupted = original.rstrip()[:-3] + "\n"
+
+    # Test the corrupted circuit in a separate directory.
+    corrupted_dir = tmp_path / "corrupted"
+    corrupted_dir.mkdir()
+
+    corrupted_results = _build(
+        corrupted_dir,
+        corrupted,
+        code=code,
+        tags=("state-preparation", "logical-state:zero"),
+    )
+
+    corrupted_checks = _checks(corrupted_results)
+    assert corrupted_checks["validate_state_prep"].status == "failed"
