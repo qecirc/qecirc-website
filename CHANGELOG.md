@@ -58,6 +58,11 @@ a copy of the database or parsing the YAML will need the columns removed.
 
 ### Added
 
+- **[[20,2,6]] front-search circuits that tolerate t = 3 faults** (14, `FT zero (front search,
+t = 3, …)`). For the code's even distance, t = d/2 = 3 is one fault more than the t = 2 of
+  its existing front-search circuits; the new ones form a second front, and their names and
+  notes say so (no tag exists for t). The importer's front test now compares circuits of the
+  same t only.
 - **MQT QECC front-search FT state preparations** (`data-imports/mqt-front-search/`): 113
   fault-tolerant `|0…0⟩_L` circuits for seven stored codes and one new one, the two-block
   group algebra code [[24,4,5]]. Each code's depth/operation-count front, five circuits kept

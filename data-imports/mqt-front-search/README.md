@@ -15,6 +15,12 @@ circuit for a code of distance `d` tolerates `t = (d − 1) // 2` faults under
 post-selection on all detectors, and every circuit passed MQT QECC's exact
 fault-tolerance check, which enumerates every set of up to `t` faults.
 
+For the even distance of `sd_20_2_6`, the dataset also has a second front of
+circuits that tolerate `t = d/2 = 3` faults (column `t` of `index.csv`). Their
+names carry the `t` (`FT zero (front search, t = 3, depth 16, 149 ops)`), their
+notes explain it, and `on_front` compares only circuits of the same `t`. The
+library has no tag for `t`, so none is added.
+
 Reusable logic lives in `scripts.add_circuit` (`import_state_prep`,
 `find_sigma`); this directory holds only dataset knowledge.
 
