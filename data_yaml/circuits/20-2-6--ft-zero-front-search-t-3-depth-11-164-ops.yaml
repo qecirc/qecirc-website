@@ -1,0 +1,26 @@
+qec_id: 1415
+name: FT zero (front search, t = 3, depth 11, 164 ops)
+tool: mqt-qecc
+notes: "Fault-tolerant preparation of the logical all-zero state, found by the front
+  search of MQT QECC (mqt.qecc.circuit_synthesis.ft_search). Tolerates t = 3 faults:
+  every set of at most t faults either sets a detector to 1 or leaves X and Z errors
+  of weight at most the number of faults each, up to stabilizers. For the even distance
+  d = 6 this is t = d/2, one more than t = (d - 1)/2: sets of 3 faults leave errors
+  of weight at most 3, which the code still detects. Post-selection protocol: a shot
+  is accepted if every DETECTOR is 0 (detectors are parities of the verification measurements
+  and are kept in the stored body). Checked with MQT QECC's exact fault-tolerance
+  check, which enumerates every set of up to t faults. 133 CNOTs, 31 measurements,
+  two-qubit depth 11 (ASAP schedule). On this code's depth/operation-count front
+  of t = 3 circuits: no other circuit with t = 3 in the collection has fewer operations
+  without greater depth, or lower depth without more operations. Source file: scripts/ft_stateprep/front_search/circuits/sd_20_2_6/zero_t3_164_11.stim.
+  Logical state: zero. Connectivity: fully-connected. Gate set: CX,H,M,MX. Flag/ancilla
+  qubits: 20-50 (31 qubits). Canonicalization qubit permutation (stored qubit i =
+  original qubit permutation[i]): [0, 4, 16, 12, 13, 14, 15, 8, 11, 5, 19, 1, 9, 2,
+  6, 17, 18, 3, 7, 10]"
+source: MQT QECC, scripts/ft_stateprep/front_search
+gate_count: 160
+two_qubit_gate_count: 133
+depth: 11
+qubit_count: 51
+tags: [state-preparation, ft, "verification:front-search", "distance:6", "logical-state:zero", flag]
+original_matrices: 1923a8ec2897b91d

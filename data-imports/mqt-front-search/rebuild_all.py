@@ -241,11 +241,14 @@ def check_source(circ: stim.Circuit, code: dict, row: Row) -> str | None:
 
 
 def on_front(row: Row, rows: list[Row]) -> bool:
-    """No other circuit of the same code has at most as many operations and at
-    most the depth, and is strictly better in one of them. The collection is the
-    front plus a few circuits kept on purpose although the front beats them."""
+    """No other circuit of the same code and the same t has at most as many
+    operations and at most the depth, and is strictly better in one of them. The
+    collection is the front plus a few circuits kept on purpose although the
+    front beats them; a code of even distance can have a second front of
+    circuits that tolerate t = d/2 faults."""
     return not any(
         o.code == row.code
+        and o.t == row.t
         and o.ops <= row.ops
         and o.depth <= row.depth
         and (o.ops, o.depth) != (row.ops, row.depth)
@@ -254,6 +257,11 @@ def on_front(row: Row, rows: list[Row]) -> bool:
 
 
 def describe(row: Row, front: bool) -> tuple[str, list[str], str]:
+    # t = d/2 for an even d: one fault more than t = (d - 1) // 2. These circuits
+    # form a second front of their code; name and notes say so (no tag exists).
+    high_t = row.t > (row.d - 1) // 2
+    of_t = f" of t = {row.t} circuits" if high_t else ""
+    same_t = f" with t = {row.t}" if high_t else ""
     if row.extra:
         standing = (
             "Not in the current collection: an earlier version held it, and a later "
@@ -263,24 +271,35 @@ def describe(row: Row, front: bool) -> tuple[str, list[str], str]:
         )
     elif front:
         standing = (
-            "On this code's depth/operation-count front: no other circuit in the "
+            f"On this code's depth/operation-count front{of_t}: no other circuit{same_t} in the "
             "collection has fewer operations without greater depth, or lower depth "
             "without more operations"
         )
     else:
         standing = (
-            "Not on this code's depth/operation-count front: another circuit in the "
+            f"Not on this code's depth/operation-count front{of_t}: another circuit{same_t} in the "
             "collection has fewer operations at no greater depth, or lower depth with no "
             "more operations. Kept in the collection as an alternative"
         )
-    name = f"FT zero (front search, depth {row.depth}, {row.ops} ops)"
+    name = (
+        f"FT zero (front search, t = {row.t}, depth {row.depth}, {row.ops} ops)"
+        if high_t
+        else f"FT zero (front search, depth {row.depth}, {row.ops} ops)"
+    )
     tags = ["state-preparation", "ft", METHOD_TAG, f"distance:{row.d}"]
     notes = (
         f"Fault-tolerant preparation of the logical all-zero state, found by the front "
         f"search of MQT QECC (mqt.qecc.circuit_synthesis.ft_search). Tolerates t = {row.t} "
         f"faults: every set of at most t faults either sets a detector to 1 or leaves X "
         f"and Z errors of weight at most the number of faults each, up to stabilizers. "
-        f"Post-selection protocol: a shot is accepted if every DETECTOR is 0 (detectors "
+        + (
+            f"For the even distance d = {row.d} this is t = d/2, one more than t = (d - 1)/2: "
+            f"sets of {row.t} faults leave errors of weight at most {row.t}, which the code "
+            "still detects. "
+            if high_t
+            else ""
+        )
+        + "Post-selection protocol: a shot is accepted if every DETECTOR is 0 (detectors "
         f"are parities of the verification measurements and are kept in the stored "
         f"body). Checked with MQT QECC's exact fault-tolerance check, which enumerates "
         f"every set of up to t faults. {row.cnots} CNOTs, "
